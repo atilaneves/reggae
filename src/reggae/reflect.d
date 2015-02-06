@@ -6,7 +6,13 @@ import std.traits;
 import std.conv;
 import std.array: empty;
 
-const(Build) getBuild(alias Module)() {
+
+const(Build) getBuild(alias Module)() if(is(typeof(Module)) && isSomeString!(typeof(Module))) {
+    mixin("import " ~ Module ~ ";");
+    return getBuild!(mixin(Module));
+}
+
+const(Build) getBuild(alias Module)() if(!is(typeof(Module))) {
     mixin("import " ~ fullyQualifiedName!Module ~ ";");
     const(Build)[] builds;
     foreach(moduleMember; __traits(allMembers, Module)) {

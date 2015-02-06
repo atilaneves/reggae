@@ -2,7 +2,15 @@ module reggae.build;
 
 
 struct Build {
-    Target target;
+    Target[] targets;
+
+    this(Target target) {
+        this([target]);
+    }
+
+    this(Target[] targets) {
+        this.targets = targets;
+    }
 }
 
 struct Target {

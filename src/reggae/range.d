@@ -7,11 +7,11 @@ import std.algorithm;
 struct DepthFirst {
     const(Target)[] targets;
 
-    this(Target target) {
+    this(in Target target) @safe pure nothrow {
         this.targets = depthFirstTargets(target);
     }
 
-    const(Target)[] depthFirstTargets(in Target target) {
+    const(Target)[] depthFirstTargets(in Target target) @safe pure nothrow {
         //if leaf, return
         if(target.dependencies is null) return target.command is null ? [] : [target];
 
@@ -24,7 +24,7 @@ struct DepthFirst {
         return targets.front;
     }
 
-    void popFront() @safe nothrow {
+    void popFront() @safe pure nothrow {
         targets.popFront;
     }
 

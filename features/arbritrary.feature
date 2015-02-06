@@ -13,6 +13,7 @@ Feature: Arbritrary rules
                          [mainObj, mathsObj],
                          [`dmd` ,`-ofmyapp`, `main.o`, `maths.o`]
                          )
+      const build = Build(app);
       """
     And a file named "path/to/src/main.d" with:
       """
@@ -40,6 +41,7 @@ Feature: Arbritrary rules
                          [mainObj, mathsObj],
                          [`dmd` ,`-ofappp`, `main.o`, `foo.o`]
                          )
+      const build = Build(app);
       """
     And a file named "different/path/source/main.d" with:
       """

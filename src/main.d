@@ -1,7 +1,7 @@
 import std.stdio;
 
 
-void main() {
+void main(string[] args) {
     auto makefile = File("Makefile", "w");
     makefile.writeln("all: myapp");
     makefile.writeln("main.o: path/to/src/main.d");

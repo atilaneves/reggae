@@ -1,7 +1,7 @@
 all: reggae
 
-reggae: src/reggae.d
+reggae: src/main.d
 	rdmd -Isrc --build-only -ofbin/reggae $<
 
 test: reggae
-	cucumber
+	dtest --nodub -Isrc && cucumber

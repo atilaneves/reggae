@@ -31,8 +31,30 @@ Feature: Arbritrary rules
       int adder(int a, int b) { return a + b; }
       int prodder(int a, int b) { return a * b; }
       """
+    And a file named "different/path/reggaefile.d" with:
+      """
+      import reggae;
+      const mainObj  = Target(`main.o`,  leaf(`main.d`),  [`dmd`, `-c`, `main.d`,  `-ofmain.o`]);
+      const fooObj   = Target(`maths.o`, leaf(`foo.d`),   [`dmd`, `-c`, `foo.d`,   `-offoo.o`]);
+      const app = Target(`appp`,
+                         [mainObj, mathsObj],
+                         [`dmd` ,`-ofappp`, `main.o`, `foo.o`]
+                         )
+      """
+    And a file named "different/path/source/main.d" with:
+      """
+      import std.stdio;
+      import foo;
+      void main(string[] args) {
+          writeln(`Appending to `, args[1], ` yields `, appender(args[1]));
+      }
+      """
+    And a file named "different/path/source/foo.d" with:
+      """
+      string appender(string str) { return str ~ ` appended!`}
+      """
 
-  Scenario: Backend is make
+  Scenario: Make backend for 1st example
     When I run `reggae path/to`
     Then the exit status should be 0
     And a file named "Makefile" should exist
@@ -53,4 +75,25 @@ Feature: Arbritrary rules
       """
       The sum     of 3 and 4 is 7
       The product of 3 and 4 is 12
+      """
+
+  Scenario: Make backend for 2nd example
+    When I run `reggae different/path`
+    Then the exit status should be 0
+    And a file named "Makefile" should exist
+    When I run `make`
+    Then the exit status should be 0
+    And the following files should exist:
+      |main.o|
+      |foo.o|
+      |appp|
+    When I run `./appp hello`
+    Then the output should contain:
+      """
+      Appending to hello yields hello appended!
+      """
+    When I run `./appp ohnoes`
+    Then the output should contain:
+      """
+      Appending to ohnoes yields ohnoes appended!
       """

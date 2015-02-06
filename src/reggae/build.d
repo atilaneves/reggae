@@ -2,23 +2,23 @@ module reggae.build;
 
 
 struct Build {
-    Target[] targets;
+    const(Target)[] targets;
 
-    this(Target target) {
+    this(in Target target) {
         this([target]);
     }
 
-    this(Target[] targets) {
+    this(in Target[] targets) {
         this.targets = targets;
     }
 }
 
 struct Target {
     string[] outputs;
-    Target[] dependencies;
+    const(Target)[] dependencies;
     string[] command;
 
-    this(string output, Target[] dependencies, string[] command) {
+    this(string output, in Target[] dependencies, string[] command) {
         this.outputs = [output];
         this.dependencies = dependencies;
         this.command = command;

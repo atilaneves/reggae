@@ -1,5 +1,9 @@
 module reggae.build;
 
+import std.string: replace;
+import std.algorithm: map, join;
+import std.path: buildPath;
+
 
 struct Build {
     const(Target)[] targets;
@@ -16,7 +20,6 @@ struct Build {
 struct Target {
     string[] outputs;
     const(Target)[] dependencies;
-    string command;
 
     this(string output) {
         this(output, null, null);
@@ -31,12 +34,39 @@ struct Target {
     }
 
     this(string[] outputs, in Target[] dependencies, string command) {
-        import std.string: replace;
-        import std.algorithm: map, join;
-
         this.outputs = outputs;
         this.dependencies = dependencies;
-        auto replaceIn = command.replace("$in", dependencies.map!(a => a.outputs.join(" ")).join(" "));
-        this.command = replaceIn.replace("$out", outputs.join(" "));
+        this._command = command;
     }
+
+    @property string dependencyFiles(in string projectPath = "") @trusted const nothrow {
+        import std.conv;
+        string files;
+        //join doesn't do const, resort to loops
+        foreach(i, dep; dependencies) {
+            files ~= text(dep.outputs.map!(a => dep.isLeaf ? buildPath(projectPath, a) : a).join(" "));
+            if(i != dependencies.length - 1) files ~= " ";
+        }
+        return files;
+    }
+
+    @property string command(in string projectPath = "") @trusted pure const nothrow {
+        //functional didn't work here, I don't know why so sticking with loops for now
+        string[] depOutputs;
+        foreach(dep; dependencies) {
+            foreach(output; dep.outputs) {
+                depOutputs ~= dep.isLeaf ? buildPath(projectPath, output) : output;
+            }
+        }
+        auto replaceIn = _command.replace("$in", depOutputs.join(" "));
+        return replaceIn.replace("$out", outputs.join(" "));
+    }
+
+    bool isLeaf() @safe pure const nothrow {
+        return dependencies is null;
+    }
+
+private:
+
+    string _command;
 }

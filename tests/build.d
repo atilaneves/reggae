@@ -4,7 +4,7 @@ import unit_threaded;
 import reggae;
 
 
-void testMakefileD() {
+void testMakefileNoPath() {
     const build = Build(Target("leapp",
                                [Target("foo.o", [Target("foo.d")], "dmd -c -offoo.o foo.d"),
                                 Target("bar.o", [Target("bar.d")], "dmd -c -ofbar.o bar.d")],
@@ -23,22 +23,27 @@ void testMakefileD() {
 }
 
 
-void testMakefileC() {
+void testMakefilePath() {
     const build = Build(Target("otherapp",
-                               [Target("boo.o", [Target("boo.c")], "gcc -c -o boo.o boo.c"),
-                                Target("baz.o", [Target("baz.c")], "gcc -c -o baz.o baz.c")],
-                               "gcc -o otherapp boo.o baz.o"));
-    auto backend = new Makefile(build);
+                               [Target("boo.o", [Target("boo.c")], "gcc -c -o $out $in"),
+                                Target("baz.o", [Target("baz.c")], "gcc -c -o $out $in")],
+                               "gcc -o $out $in"));
+    auto backend = new Makefile(build, "/global/path/to/");
     backend.fileName.shouldEqual("Makefile");
     backend.output.shouldEqual(
         "all: otherapp\n"
-        "boo.o: boo.c\n"
-        "\tgcc -c -o boo.o boo.c\n"
-        "baz.o: baz.c\n"
-        "\tgcc -c -o baz.o baz.c\n"
+        "boo.o: /global/path/to/boo.c\n"
+        "\tgcc -c -o boo.o /global/path/to/boo.c\n"
+        "baz.o: /global/path/to/baz.c\n"
+        "\tgcc -c -o baz.o /global/path/to/baz.c\n"
         "otherapp: boo.o baz.o\n"
         "\tgcc -o otherapp boo.o baz.o\n"
         );
+}
+
+void testIsLeaf() {
+    Target("tgt").isLeaf.shouldBeTrue;
+    Target("other", [Target("foo"), Target("bar")], "").isLeaf.shouldBeFalse;
 }
 
 

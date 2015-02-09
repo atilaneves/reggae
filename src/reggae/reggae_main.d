@@ -2,7 +2,7 @@ import reggae;
 import std.stdio;
 import std.process: execute;
 import std.array: array, join;
-import std.path: absolutePath;
+import std.path: absolutePath, buildPath;
 import std.typetuple;
 
 
@@ -13,7 +13,7 @@ int main(string[] args) {
     writeSrcFiles!(fileNames);
     string[] reggaeSrcs;
     foreach(fileName; fileNames) {
-        reggaeSrcs ~= fileName;
+        reggaeSrcs ~= reggaeSrcFileName(fileName);
     }
 
     const projectPath = args[1];
@@ -38,8 +38,19 @@ int main(string[] args) {
 
 
 void writeSrcFiles(fileNames...)() {
+    import std.file: mkdir;
+    mkdir(reggaeSrcDirName);
     foreach(fileName; fileNames) {
-        auto file = File(fileName, "w");
+        auto file = File(reggaeSrcFileName(fileName), "w");
         file.write(import(fileName));
     }
+}
+
+
+string reggaeSrcFileName(in string fileName) @safe pure nothrow {
+    return buildPath(reggaeSrcDirName, fileName);
+}
+
+string reggaeSrcDirName() @safe pure nothrow {
+    return "reggae_srcs";
 }

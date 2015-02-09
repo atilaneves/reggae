@@ -52,5 +52,5 @@ string reggaeSrcFileName(in string fileName) @safe pure nothrow {
 }
 
 string reggaeSrcDirName() @safe pure nothrow {
-    return "reggae_srcs";
+    return "reggae";
 }

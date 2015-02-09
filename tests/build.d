@@ -81,3 +81,11 @@ void testInOut() {
         target.command.shouldEqual("ar -olib1.a foo1.o foo2.o bar.o baz.o");
     }
 }
+
+
+void testProject() {
+    const target = Target("foo",
+                          [Target("bar"), Target("baz")],
+                          "makefoo -i $in -o $out -p $project");
+    target.command("/tmp").shouldEqual("makefoo -i /tmp/bar /tmp/baz -o foo -p /tmp");
+}

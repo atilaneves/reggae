@@ -59,7 +59,8 @@ struct Target {
             }
         }
         auto replaceIn = _command.replace("$in", depOutputs.join(" "));
-        return replaceIn.replace("$out", outputs.join(" "));
+        auto replaceOut = replaceIn.replace("$out", outputs.join(" "));
+        return replaceOut.replace("$project", projectPath);
     }
 
     bool isLeaf() @safe pure const nothrow {

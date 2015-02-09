@@ -7,7 +7,7 @@ Feature: Arbritrary rules
     Given a file named "path/to/reggaefile.d" with:
       """
       import reggae;
-      const mainObj  = Target(`main.o`,  Target(`src/main.d`),  `dmd -c $in -of$out`);
+      const mainObj  = Target(`main.o`,  Target(`src/main.d`),  `dmd -I$project/src -c $in -of$out`);
       const mathsObj = Target(`maths.o`, Target(`src/maths.d`), `dmd -c $in -of$out`);
       const app = Target(`myapp`,
                          [mainObj, mathsObj],
@@ -36,7 +36,7 @@ Feature: Arbritrary rules
       """
       import reggae;
       const mainObj  = Target(`main.o`,  Target(`source/main.d`),  `dmd -I$project -c $in -of$out`);
-      const fooObj   = Target(`maths.o`, Target(`source/foo.d`),   `dmd -c $in -of$out`);
+      const fooObj   = Target(`foo.o`, Target(`source/foo.d`),     `dmd -c $in -of$out`);
       const app = Target(`appp`,
                          [mainObj, fooObj],
                          `dmd -of$out $in`

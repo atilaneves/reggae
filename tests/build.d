@@ -40,3 +40,39 @@ void testMakefileC() {
         "\tgcc -o otherapp boo.o baz.o\n"
         );
 }
+
+
+void testInOut() {
+    //Tests that specifying $in and $out in the command string gets substituted correctly
+    {
+        const target = Target("foo",
+                              [leaf("bar.txt"), leaf("baz.txt")],
+                              "createfoo -o $out $in");
+        target.command.shouldEqual("createfoo -o foo bar.txt baz.txt");
+    }
+    {
+        const target = Target("tgt",
+                              [
+                                  Target("src1.o", [leaf("src1.c")], "gcc -c -o $out $in"),
+                                  Target("src2.o", [leaf("src2.c")], "gcc -c -o $out $in")
+                                  ],
+                              "gcc -o $out $in");
+        target.command.shouldEqual("gcc -o tgt src1.o src2.o");
+    }
+
+    {
+        const target = Target(["proto.h", "proto.c"],
+                              [leaf("proto.idl")],
+                              "protocompile $out -i $in");
+        target.command.shouldEqual("protocompile proto.h proto.c -i proto.idl");
+    }
+
+    {
+        const target = Target("lib1.a",
+                              [Target(["foo1.o", "foo2.o"], [Target("tmp")], "cmd"),
+                               Target("bar.o"),
+                               Target("baz.o")],
+                              "ar -o$out $in");
+        target.command.shouldEqual("ar -olib1.a foo1.o foo2.o bar.o baz.o");
+    }
+}

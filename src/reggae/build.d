@@ -18,6 +18,10 @@ struct Target {
     const(Target)[] dependencies;
     string[] command;
 
+    this(string output, in Target dependency, string[] command) {
+        this(output, [dependency], command);
+    }
+
     this(string output, in Target[] dependencies, string[] command) {
         this.outputs = [output];
         this.dependencies = dependencies;

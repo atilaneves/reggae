@@ -12,7 +12,7 @@ Feature: Arbritrary rules
       const app = Target(`myapp`,
                          [mainObj, mathsObj],
                          [`dmd` ,`-ofmyapp`, `main.o`, `maths.o`]
-                         )
+                         );
       const build = Build(app);
       """
     And a file named "path/to/src/main.d" with:
@@ -38,22 +38,23 @@ Feature: Arbritrary rules
       const mainObj  = Target(`main.o`,  leaf(`main.d`),  [`dmd`, `-c`, `main.d`,  `-ofmain.o`]);
       const fooObj   = Target(`maths.o`, leaf(`foo.d`),   [`dmd`, `-c`, `foo.d`,   `-offoo.o`]);
       const app = Target(`appp`,
-                         [mainObj, mathsObj],
+                         [mainObj, fooObj],
                          [`dmd` ,`-ofappp`, `main.o`, `foo.o`]
-                         )
+                         );
       const build = Build(app);
       """
     And a file named "different/path/source/main.d" with:
       """
       import std.stdio;
-      import foo;
+      import source.foo;
       void main(string[] args) {
           writeln(`Appending to `, args[1], ` yields `, appender(args[1]));
       }
       """
     And a file named "different/path/source/foo.d" with:
       """
-      string appender(string str) { return str ~ ` appended!`}
+      module source.foo;
+      string appender(string str) { return str ~ ` appended!`; }
       """
 
   Scenario: Make backend for 1st example

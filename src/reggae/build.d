@@ -16,13 +16,13 @@ struct Build {
 struct Target {
     string[] outputs;
     const(Target)[] dependencies;
-    string[] command;
+    string command;
 
-    this(string output, in Target dependency, string[] command) {
+    this(string output, in Target dependency, string command) {
         this(output, [dependency], command);
     }
 
-    this(string output, in Target[] dependencies, string[] command) {
+    this(string output, in Target[] dependencies, string command) {
         this.outputs = [output];
         this.dependencies = dependencies;
         this.command = command;

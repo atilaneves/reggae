@@ -25,9 +25,9 @@ class Makefile {
                 if(i != t.dependencies.length - 1) ret ~= " ";
             }
             ret ~= "\n";
-            ret ~= "\t" ~ join(t.command, " ") ~ "\n";
-        }
+            ret ~= "\t" ~ t.command ~ "\n";
+    }
 
-        return ret;
+    return ret;
     }
 }

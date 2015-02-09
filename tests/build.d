@@ -6,9 +6,9 @@ import reggae;
 
 void testMakefileD() {
     const build = Build(Target("leapp",
-                               [Target("foo.o", [leaf("foo.d")], ["dmd", "-c", "-offoo.o", "foo.d"]),
-                                Target("bar.o", [leaf("bar.d")], ["dmd", "-c", "-ofbar.o", "bar.d"])],
-                               ["dmd", "-ofleapp", "foo.o", "bar.o"]));
+                               [Target("foo.o", [leaf("foo.d")], "dmd -c -offoo.o foo.d"),
+                                Target("bar.o", [leaf("bar.d")], "dmd -c -ofbar.o bar.d")],
+                               "dmd -ofleapp foo.o bar.o"));
     auto backend = new Makefile(build);
     backend.fileName.shouldEqual("Makefile");
     backend.output.shouldEqual(
@@ -25,9 +25,9 @@ void testMakefileD() {
 
 void testMakefileC() {
     const build = Build(Target("otherapp",
-                               [Target("boo.o", [leaf("boo.c")], ["gcc", "-c", "-o", "boo.o", "boo.c"]),
-                                Target("baz.o", [leaf("baz.c")], ["gcc", "-c", "-o", "baz.o", "baz.c"])],
-                               ["gcc", "-o", "otherapp", "boo.o", "baz.o"]));
+                               [Target("boo.o", [leaf("boo.c")], "gcc -c -o boo.o boo.c"),
+                                Target("baz.o", [leaf("baz.c")], "gcc -c -o baz.o baz.c")],
+                               "gcc -o otherapp boo.o baz.o"));
     auto backend = new Makefile(build);
     backend.fileName.shouldEqual("Makefile");
     backend.output.shouldEqual(

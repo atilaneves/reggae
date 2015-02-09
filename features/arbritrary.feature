@@ -7,8 +7,8 @@ Feature: Arbritrary rules
     Given a file named "path/to/reggaefile.d" with:
       """
       import reggae;
-      const mainObj  = Target(`main.o`,  leaf(`src/main.d`),  [`dmd`, `-c`, `src/main.d`,  `-ofmain.o`]);
-      const mathsObj = Target(`maths.o`, leaf(`src/maths.d`), [`dmd`, `-c`, `src/maths.d`, `-ofmaths.o`]);
+      const mainObj  = Target(`main.o`,  Target(`src/main.d`),  [`dmd`, `-c`, `src/main.d`,  `-ofmain.o`]);
+      const mathsObj = Target(`maths.o`, Target(`src/maths.d`), [`dmd`, `-c`, `src/maths.d`, `-ofmaths.o`]);
       const app = Target(`myapp`,
                          [mainObj, mathsObj],
                          [`dmd` ,`-ofmyapp`, `main.o`, `maths.o`]
@@ -35,8 +35,8 @@ Feature: Arbritrary rules
     And a file named "different/path/reggaefile.d" with:
       """
       import reggae;
-      const mainObj  = Target(`main.o`,  leaf(`source/main.d`),  [`dmd`, `-c`, `source/main.d`,  `-ofmain.o`]);
-      const fooObj   = Target(`maths.o`, leaf(`source/foo.d`),   [`dmd`, `-c`, `source/foo.d`,   `-offoo.o`]);
+      const mainObj  = Target(`main.o`,  Target(`source/main.d`),  [`dmd`, `-c`, `source/main.d`,  `-ofmain.o`]);
+      const fooObj   = Target(`maths.o`, Target(`source/foo.d`),   [`dmd`, `-c`, `source/foo.d`,   `-offoo.o`]);
       const app = Target(`appp`,
                          [mainObj, fooObj],
                          [`dmd` ,`-ofappp`, `main.o`, `foo.o`]

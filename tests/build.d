@@ -6,8 +6,8 @@ import reggae;
 
 void testMakefileD() {
     const build = Build(Target("leapp",
-                               [Target("foo.o", [leaf("foo.d")], "dmd -c -offoo.o foo.d"),
-                                Target("bar.o", [leaf("bar.d")], "dmd -c -ofbar.o bar.d")],
+                               [Target("foo.o", [Target("foo.d")], "dmd -c -offoo.o foo.d"),
+                                Target("bar.o", [Target("bar.d")], "dmd -c -ofbar.o bar.d")],
                                "dmd -ofleapp foo.o bar.o"));
     auto backend = new Makefile(build);
     backend.fileName.shouldEqual("Makefile");
@@ -25,8 +25,8 @@ void testMakefileD() {
 
 void testMakefileC() {
     const build = Build(Target("otherapp",
-                               [Target("boo.o", [leaf("boo.c")], "gcc -c -o boo.o boo.c"),
-                                Target("baz.o", [leaf("baz.c")], "gcc -c -o baz.o baz.c")],
+                               [Target("boo.o", [Target("boo.c")], "gcc -c -o boo.o boo.c"),
+                                Target("baz.o", [Target("baz.c")], "gcc -c -o baz.o baz.c")],
                                "gcc -o otherapp boo.o baz.o"));
     auto backend = new Makefile(build);
     backend.fileName.shouldEqual("Makefile");
@@ -46,15 +46,15 @@ void testInOut() {
     //Tests that specifying $in and $out in the command string gets substituted correctly
     {
         const target = Target("foo",
-                              [leaf("bar.txt"), leaf("baz.txt")],
+                              [Target("bar.txt"), Target("baz.txt")],
                               "createfoo -o $out $in");
         target.command.shouldEqual("createfoo -o foo bar.txt baz.txt");
     }
     {
         const target = Target("tgt",
                               [
-                                  Target("src1.o", [leaf("src1.c")], "gcc -c -o $out $in"),
-                                  Target("src2.o", [leaf("src2.c")], "gcc -c -o $out $in")
+                                  Target("src1.o", [Target("src1.c")], "gcc -c -o $out $in"),
+                                  Target("src2.o", [Target("src2.c")], "gcc -c -o $out $in")
                                   ],
                               "gcc -o $out $in");
         target.command.shouldEqual("gcc -o tgt src1.o src2.o");
@@ -62,7 +62,7 @@ void testInOut() {
 
     {
         const target = Target(["proto.h", "proto.c"],
-                              [leaf("proto.idl")],
+                              [Target("proto.idl")],
                               "protocompile $out -i $in");
         target.command.shouldEqual("protocompile proto.h proto.c -i proto.idl");
     }

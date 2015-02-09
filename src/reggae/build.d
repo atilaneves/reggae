@@ -40,8 +40,3 @@ struct Target {
         this.command = replaceIn.replace("$out", outputs.join(" "));
     }
 }
-
-
-Target leaf(in string str) {
-    return Target(str, null, null);
-}

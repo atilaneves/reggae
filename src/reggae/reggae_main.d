@@ -3,11 +3,16 @@ import std.process: execute;
 import std.array: array, join;
 import std.path: absolutePath, buildPath;
 import std.typetuple;
+import reggae.options;
+
+
+immutable reggaeSrcDirName = "reggae";
 
 
 int main(string[] args) {
-    alias fileNames = TypeTuple!("run_main.d", "backend.d", "build.d",
-                                 "makefile.d",
+    alias fileNames = TypeTuple!("run_main.d",
+                                 "backend.d", "build.d",
+                                 "makefile.d", "options.d",
                                  "package.d", "range.d", "reflect.d");
     writeSrcFiles!(fileNames);
     string[] reggaeSrcs;
@@ -15,11 +20,11 @@ int main(string[] args) {
         reggaeSrcs ~= reggaeSrcFileName(fileName);
     }
 
-    immutable projectPath = args[1];
+    immutable options = getOptions(args);
     immutable binName = "build";
-    const compile = ["dmd", "-g", "-debug","-I" ~ projectPath, "-I.",
+    const compile = ["dmd", "-g", "-debug","-I" ~ options.projectPath, "-I.",
                      "-of" ~ binName,
-                     buildPath(projectPath, "reggaefile.d")] ~ reggaeSrcs;
+                     buildPath(options.projectPath, "reggaefile.d")] ~ reggaeSrcs;
 
     immutable retComp = execute(compile);
     if(retComp.status != 0) {
@@ -27,7 +32,7 @@ int main(string[] args) {
         return 1;
     }
 
-    immutable retRun = execute([buildPath(".",  binName), projectPath]);
+    immutable retRun = execute([buildPath(".",  binName), "-b", options.backend, options.projectPath]);
     if(retRun.status != 0) {
         stderr.writeln("Couldn't execute the produced ", binName, " binary:\n", retRun.output);
         return 1;
@@ -50,5 +55,3 @@ void writeSrcFiles(fileNames...)() {
 string reggaeSrcFileName(in string fileName) @safe pure nothrow {
     return buildPath(reggaeSrcDirName, fileName);
 }
-
-immutable reggaeSrcDirName = "reggae";

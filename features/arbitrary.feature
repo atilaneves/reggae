@@ -58,7 +58,7 @@ Feature: Arbritrary rules
       """
 
   Scenario: Make backend for 1st example
-    When I run `reggae path/to`
+    When I run `reggae -b make path/to`
     Then the exit status should be 0
     And a file named "Makefile" should exist
     When I run `make`
@@ -80,8 +80,33 @@ Feature: Arbritrary rules
       The product of 3 and 4 is 12
       """
 
+  Scenario: Ninja backend for 1st example
+    When I run `reggae -b ninja path/to`
+    Then the exit status should be 0
+    And the following files should exist:
+      |build.ninja|
+      |rules.ninja|
+    When I run `ninja`
+    Then the exit status should be 0
+    And the following files should exist:
+      |main.o|
+      |maths.o|
+      |myapp|
+    When I run `./myapp 2 3`
+    Then the output should contain:
+      """
+      The sum     of 2 and 3 is 5
+      The product of 2 and 3 is 6
+      """
+    When I run `./myapp 3 4`
+    Then the output should contain:
+      """
+      The sum     of 3 and 4 is 7
+      The product of 3 and 4 is 12
+      """
+
   Scenario: Make backend for 2nd example
-    When I run `reggae different/path`
+    When I run `reggae -b make different/path`
     Then the exit status should be 0
     And a file named "Makefile" should exist
     When I run `make`

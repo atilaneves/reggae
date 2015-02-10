@@ -2,16 +2,21 @@ import reggaefile;
 import reggae;
 import std.stdio;
 
+
 int main(string[] args) {
-    if(args.length != 2) {
-        stderr.writeln("Error! Usage: <bin> project_path");
-        return 1;
+    immutable options = getOptions(args);
+    const build = getBuild!reggaefile;
+
+    if(options.backend == "make") {
+        const makefile = new Makefile(build, options.projectPath);
+        auto file = File(makefile.fileName, "w");
+        file.write(makefile.output);
+    } else if(options.backend == "ninja") {
+        foreach(fileName; ["build.ninja", "rules.ninja"]) {
+            auto file = File(fileName, "w");
+            file.write("");
+        }
     }
-    auto projectPath = args[1];
-    auto build = getBuild!reggaefile;
-    auto makefile = new Makefile(build, projectPath);
-    auto file = File(makefile.fileName, "w");
-    file.write(makefile.output);
 
     return 0;
 }

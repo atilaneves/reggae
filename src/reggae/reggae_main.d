@@ -1,4 +1,3 @@
-import reggae;
 import std.stdio;
 import std.process: execute;
 import std.array: array, join;
@@ -51,6 +50,4 @@ string reggaeSrcFileName(in string fileName) @safe pure nothrow {
     return buildPath(reggaeSrcDirName, fileName);
 }
 
-string reggaeSrcDirName() @safe pure nothrow {
-    return "reggae";
-}
+immutable reggaeSrcDirName = "reggae";

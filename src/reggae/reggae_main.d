@@ -16,8 +16,9 @@ int main(string[] args) {
     }
 
     const projectPath = args[1];
+    const binName = "build";
     auto compile = ["dmd", "-g", "-debug","-I" ~ projectPath, "-I.",
-                    "-ofbuild",
+                    "-of" ~ binName,
                     buildPath(projectPath, "reggaefile.d")] ~ reggaeSrcs;
 
     auto retComp = execute(compile);
@@ -26,9 +27,9 @@ int main(string[] args) {
         return 1;
     }
 
-    auto retRun = execute(["./build", projectPath]);
+    auto retRun = execute([buildPath(".",  binName), projectPath]);
     if(retRun.status != 0) {
-        stderr.writeln("Couldn't execute the produced build binary:\n", retRun.output);
+        stderr.writeln("Couldn't execute the produced ", binName, " binary:\n", retRun.output);
         return 1;
     }
 

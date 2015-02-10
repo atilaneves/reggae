@@ -15,19 +15,19 @@ int main(string[] args) {
         reggaeSrcs ~= reggaeSrcFileName(fileName);
     }
 
-    const projectPath = args[1];
-    const binName = "build";
-    auto compile = ["dmd", "-g", "-debug","-I" ~ projectPath, "-I.",
-                    "-of" ~ binName,
-                    buildPath(projectPath, "reggaefile.d")] ~ reggaeSrcs;
+    immutable projectPath = args[1];
+    immutable binName = "build";
+    const compile = ["dmd", "-g", "-debug","-I" ~ projectPath, "-I.",
+                     "-of" ~ binName,
+                     buildPath(projectPath, "reggaefile.d")] ~ reggaeSrcs;
 
-    auto retComp = execute(compile);
+    immutable retComp = execute(compile);
     if(retComp.status != 0) {
         stderr.writeln("Couldn't execute ", compile.join(" "), ":\n", retComp.output);
         return 1;
     }
 
-    auto retRun = execute([buildPath(".",  binName), projectPath]);
+    immutable retRun = execute([buildPath(".",  binName), projectPath]);
     if(retRun.status != 0) {
         stderr.writeln("Couldn't execute the produced ", binName, " binary:\n", retRun.output);
         return 1;

@@ -5,3 +5,8 @@ reggae: src/reggae/reggae_main.d
 
 test: reggae
 	dtest --nodub -Isrc && cucumber
+
+.PHONY: ut
+
+ut:
+	dtest --nodub -Isrc

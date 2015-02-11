@@ -15,27 +15,17 @@ struct NinjaEntry {
 
 struct Ninja {
     void addTarget(in Target target) @safe pure nothrow {
-        if(_targets.canFind(target)) return;
-        _targets ~= target;
+        if(!_targets.canFind(target)) _targets ~= target;
     }
 
     NinjaEntry[] buildEntries() nothrow const {
-        NinjaEntry[] entries;
-        foreach(const target; _targets) {
-            const cmd = targetCommand(target);
-            entries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~ cmd ~ " " ~ target.dependencyFiles);
-        }
-        return entries;
+        return _targets.map!(a => NinjaEntry("build " ~ a.outputs[0] ~ ": " ~ targetCommand(a) ~
+                                             " " ~ a.dependencyFiles)).array;
     }
 
     NinjaEntry[] ruleEntries() pure nothrow const {
-        NinjaEntry[] entries;
-        foreach(const target; _targets) {
-            const cmd = targetCommand(target);
-            entries ~= NinjaEntry("rule " ~ cmd,
-                                  ["  command = " ~ cmd ~ " $in $out"]);
-        }
-        return entries;
+        return _targets.map!(a => NinjaEntry("rule " ~ targetCommand(a),
+                                             ["command = " ~ targetCommand(a) ~ " $in $out"])).array;
     }
 
 

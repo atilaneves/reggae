@@ -19,14 +19,14 @@ void testNinjaSimple() {
     ninja.addTarget(target);
     ninja.buildEntries.shouldEqual([NinjaEntry("build mytarget: by_your_command med1 med2 med3")]);
     ninja.ruleEntries.shouldEqual([NinjaEntry("rule by_your_command",
-                                              ["  command = by_your_command $in $out"])
+                                              ["command = by_your_command $in $out"])
                                       ]);
 
     //make sure calling it again doesn't add the same rule
     ninja.addTarget(target);
     ninja.buildEntries.shouldEqual([NinjaEntry("build mytarget: by_your_command med1 med2 med3")]);
     ninja.ruleEntries.shouldEqual([NinjaEntry("rule by_your_command",
-                                              ["  command = by_your_command $in $out"])
+                                              ["command = by_your_command $in $out"])
                                       ]);
 
     //but adding something different should have an effect
@@ -44,9 +44,9 @@ void testCppLinker() {
                            [Target("foo.o"), Target("bar.o")],
                            "/usr/bin/c++ $in -o $out""command"));
     ninja.buildEntries.shouldEqual([NinjaEntry("build mybin: cpp foo.o bar.o",
-                                               ["  between = -o"])
+                                               ["between = -o"])
                                        ]);
     ninja.ruleEntries.shouldEqual([NinjaEntry("rule cpp",
-                                              ["  command = /usr/bin/c++ $in $between $out"])
+                                              ["command = /usr/bin/c++ $in $between $out"])
                                       ]);
 }

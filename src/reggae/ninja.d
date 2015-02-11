@@ -19,23 +19,23 @@ struct Ninja {
         _targets ~= target;
     }
 
-    NinjaEntry[] buildLines() nothrow const {
-        NinjaEntry[] lines;
+    NinjaEntry[] buildEntries() nothrow const {
+        NinjaEntry[] entries;
         foreach(const target; _targets) {
-            const cmd = target.command.splitter(" ").front.sanitizeCmd;
-            lines ~= NinjaEntry("build " ~ target. outputs [0] ~ ": " ~ cmd ~ " " ~ target. dependencyFiles);
+            const cmd = targetCommand(target);
+            entries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~ cmd ~ " " ~ target.dependencyFiles);
         }
-        return lines;
+        return entries;
     }
 
-    NinjaEntry[] ruleLines() pure nothrow const {
-        NinjaEntry[] lines;
+    NinjaEntry[] ruleEntries() pure nothrow const {
+        NinjaEntry[] entries;
         foreach(const target; _targets) {
-            const cmd = target.command.splitter(" ").front.sanitizeCmd;
-            lines ~= NinjaEntry("rule " ~ cmd,
-                                ["  command = " ~ cmd ~ " $in $out"]);
+            const cmd = targetCommand(target);
+            entries ~= NinjaEntry("rule " ~ cmd,
+                                  ["  command = " ~ cmd ~ " $in $out"]);
         }
-        return lines;
+        return entries;
     }
 
 
@@ -43,7 +43,12 @@ private:
     const(Target)[] _targets;
 }
 
+//@trusted because of splitter
+private string targetCommand(in Target target) @trusted pure nothrow {
+    return target.command.splitter(" ").front.sanitizeCmd;
+}
 
+//@trusted because of replace
 private string sanitizeCmd(in string cmd) @trusted pure nothrow {
     import std.path;
     //only handles c++ compilers so far...

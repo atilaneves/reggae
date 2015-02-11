@@ -67,6 +67,10 @@ struct Target {
         return dependencies is null;
     }
 
+    package string rawCommand() @safe pure nothrow {
+        return _command;
+    }
+
 private:
 
     string _command;

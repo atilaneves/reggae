@@ -7,29 +7,33 @@ import std.range;
 import std.algorithm;
 
 
+struct NinjaEntry {
+    string buildLine;
+    string[] paramLines;
+}
+
+
 struct Ninja {
     void addTarget(in Target target) @safe pure nothrow {
         if(_targets.canFind(target)) return;
         _targets ~= target;
     }
 
-    string[] buildLines() nothrow const {
-        string[] lines;
+    NinjaEntry[] buildLines() nothrow const {
+        NinjaEntry[] lines;
         foreach(const target; _targets) {
-            const cmd = target.command.splitter(" ").front;
-            lines ~= "build " ~ target.outputs[0] ~ ": " ~ cmd ~ " " ~ target.dependencyFiles;
-            lines ~= "";
+            const cmd = target.command.splitter(" ").front.sanitizeCmd;
+            lines ~= NinjaEntry("build " ~ target. outputs [0] ~ ": " ~ cmd ~ " " ~ target. dependencyFiles);
         }
         return lines;
     }
 
-    string[] ruleLines() pure nothrow const {
-        string[] lines;
+    NinjaEntry[] ruleLines() pure nothrow const {
+        NinjaEntry[] lines;
         foreach(const target; _targets) {
-            const cmd = target.command.splitter(" ").front;
-            lines ~= "rule " ~ cmd;
-            lines ~= "  command = " ~ cmd ~ " $in $out";
-            lines ~= "";
+            const cmd = target.command.splitter(" ").front.sanitizeCmd;
+            lines ~= NinjaEntry("rule " ~ cmd,
+                                ["  command = " ~ cmd ~ " $in $out"]);
         }
         return lines;
     }
@@ -37,6 +41,13 @@ struct Ninja {
 
 private:
     const(Target)[] _targets;
+}
+
+
+private string sanitizeCmd(in string cmd) @trusted pure nothrow {
+    import std.path;
+    //only handles c++ compilers so far...
+    return cmd.baseName.replace("+", "p");
 }
 
 

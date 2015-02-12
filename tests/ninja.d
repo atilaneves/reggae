@@ -60,3 +60,17 @@ void testIccBuild() {
     ninja.ruleEntries.shouldEqual([NinjaEntry("rule icc.12.0.022b.i686-linux",
                                               ["command = icc.12.0.022b.i686-linux $before $out $in"])]);
 }
+
+
+void testBeforeAndAfter() {
+    auto ninja = Ninja();
+    ninja.addTarget(Target("foo.temp",
+                           [Target("main.o"), Target("extra.o"), Target("sub_foo.o"), Target("sub_bar.o"),
+                            Target("sub_baz.a")],
+                           "icc @/path/to/icc-ld.cfg -o $out $in -Wl,-rpath-link -Wl,/usr/lib"));
+    ninja.buildEntries.shouldEqual([NinjaEntry("build foo.temp: icc main.o extra.o sub_foo.o sub_bar.o sub_baz.a",
+                                               ["before = @/path/to/icc-ld.cfg -o",
+                                                "after = -Wl,-rpath-link -Wl,/usr/lib"])]);
+    ninja.ruleEntries.shouldEqual([NinjaEntry("rule icc",
+                                              ["command = icc $before $out $in $after"])]);
+}

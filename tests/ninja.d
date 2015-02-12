@@ -11,32 +11,6 @@ void testEmpty() {
     ninja.ruleEntries.shouldEqual([]);
 }
 
-
-// void testNinjaSimple() {
-//     const target = Target("mytarget", [Target("med1"), Target("med2"), Target("med3")],
-//                           "by_your_command $in $out");
-//     auto ninja = Ninja(Build(target));
-//     ninja.addTarget(target);
-//     ninja.buildEntries.shouldEqual([NinjaEntry("build mytarget: by_your_command med1 med2 med3")]);
-//     ninja.ruleEntries.shouldEqual([NinjaEntry("rule by_your_command",
-//                                               ["command = by_your_command $in $out"])
-//                                       ]);
-
-//     //make sure calling it again doesn't add the same rule
-//     ninja.addTarget(target);
-//     ninja.buildEntries.shouldEqual([NinjaEntry("build mytarget: by_your_command med1 med2 med3")]);
-//     ninja.ruleEntries.shouldEqual([NinjaEntry("rule by_your_command",
-//                                               ["command = by_your_command $in $out"])
-//                                       ]);
-
-//     //but adding something different should have an effect
-//     ninja.addTarget(Target("med2", [Target("file2_1"), Target("file2_2")],
-//                            "medcmd $out $in"));
-//     ninja.buildEntries.shouldEqual([NinjaEntry("build mytarget: by_your_command med1 med2 med3"),
-//                                     NinjaEntry("build med2: medcmd file2_1 file2_2")]);
-// }
-
-
 void testCppLinker() {
     const ninja = Ninja(Build(Target("mybin",
                                      [Target("foo.o"), Target("bar.o")],

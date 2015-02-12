@@ -12,9 +12,18 @@ int main(string[] args) {
         auto file = File(makefile.fileName, "w");
         file.write(makefile.output);
     } else if(options.backend == "ninja") {
-        foreach(fileName; ["build.ninja", "rules.ninja"]) {
-            auto file = File(fileName, "w");
-            file.write("");
+        auto ninja = Ninja(build, options.projectPath);
+
+        auto buildNinja = File("build.ninja", "w");
+        buildNinja.writeln("include rules.ninja\n");
+
+        foreach(entry; ninja.buildEntries) {
+            buildNinja.writeln(entry.toString);
+        }
+
+        auto rulesNinja = File("rules.ninja", "w");
+        foreach(entry; ninja.ruleEntries) {
+            rulesNinja.writeln(entry.toString);
         }
     }
 

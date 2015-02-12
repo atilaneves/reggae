@@ -12,7 +12,7 @@ immutable reggaeSrcDirName = "reggae";
 int main(string[] args) {
     alias fileNames = TypeTuple!("run_main.d",
                                  "backend.d", "build.d",
-                                 "makefile.d", "options.d",
+                                 "makefile.d", "ninja.d", "options.d",
                                  "package.d", "range.d", "reflect.d");
     writeSrcFiles!(fileNames);
     string[] reggaeSrcs;

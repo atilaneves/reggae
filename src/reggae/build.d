@@ -67,8 +67,9 @@ struct Target {
         return dependencies is null;
     }
 
-    package string rawCommand() @safe pure nothrow const {
-        return _command;
+    //@trusted because of replace
+    package string inOutCommand(in string projectPath = "") @trusted pure nothrow const {
+        return _command.replace("$project", projectPath);
     }
 
 private:

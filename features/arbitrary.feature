@@ -125,3 +125,26 @@ Feature: Arbritrary rules
       """
       Appending to ohnoes yields ohnoes appended!
       """
+
+  Scenario: Ninja backend for 2nd example
+    When I run `reggae -b ninja different/path`
+    Then the exit status should be 0
+    When I run `ninja`
+    Then the exit status should be 0
+    And the following files should exist:
+      |build.ninja|
+      |rules.ninja|
+    And the following files should exist:
+      |main.o|
+      |foo.o|
+      |appp|
+    When I run `./appp hello`
+    Then the output should contain:
+      """
+      Appending to hello yields hello appended!
+      """
+    When I run `./appp ohnoes`
+    Then the output should contain:
+      """
+      Appending to ohnoes yields ohnoes appended!
+      """

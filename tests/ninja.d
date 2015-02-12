@@ -95,8 +95,8 @@ void testSimpleDBuild() {
 
     ninja.ruleEntries.shouldEqual(
         [NinjaEntry("rule dmd",
-                    ["command = dmd $before $in $between $out"]),
+                    ["command = dmd $before $in $between$out"]),
          NinjaEntry("rule dmd_2",
-                    ["command = dmd $before $out $in"])
+                    ["command = dmd $before$out $in"])
             ]);
 }

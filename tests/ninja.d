@@ -37,12 +37,11 @@ void testNinjaSimple() {
 }
 
 
-@ShouldFail
 void testCppLinker() {
     auto ninja = Ninja();
     ninja.addTarget(Target("mybin",
                            [Target("foo.o"), Target("bar.o")],
-                           "/usr/bin/c++ $in -o $out""command"));
+                           "/usr/bin/c++ $in -o $out"));
     ninja.buildEntries.shouldEqual([NinjaEntry("build mybin: cpp foo.o bar.o",
                                                ["between = -o"])
                                        ]);

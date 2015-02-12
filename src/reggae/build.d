@@ -67,7 +67,7 @@ struct Target {
         return dependencies is null;
     }
 
-    package string rawCommand() @safe pure nothrow {
+    package string rawCommand() @safe pure nothrow const {
         return _command;
     }
 

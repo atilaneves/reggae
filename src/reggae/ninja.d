@@ -5,7 +5,9 @@ import reggae.build;
 import std.array;
 import std.range;
 import std.algorithm;
-
+import std.exception: enforce;
+import std.conv: text;
+import std.string: strip;
 
 struct NinjaEntry {
     string buildLine;
@@ -18,14 +20,55 @@ struct Ninja {
         if(!_targets.canFind(target)) _targets ~= target;
     }
 
-    NinjaEntry[] buildEntries() nothrow const {
-        return _targets.map!(a => NinjaEntry("build " ~ a.outputs[0] ~ ": " ~ targetCommand(a) ~
-                                             " " ~ a.dependencyFiles)).array;
+    NinjaEntry[] buildEntries() const {
+        // return _targets.map!(a => NinjaEntry("build " ~ a.outputs[0] ~ ": " ~ targetCommand(a) ~
+        //                                      " " ~ a.dependencyFiles)).array;
+        NinjaEntry[] entries;
+        auto inOrOut = (in string str) { return str == "$in" || str == "$out"; };
+        foreach(target; _targets) {
+            immutable rawCmdLine = target.rawCommand;
+            import std.regex;
+            auto reg = regex(`^[^ ]+ +(.*?)(\$in|\$out)(.*?)(\$in|\$out)(.*?)$`);
+            auto mat = target.rawCommand.match(reg);
+            enforce(!mat.captures.empty, text("Command: ", target.rawCommand, " Captures: ", mat.captures));
+            immutable before = mat.captures[1].strip;
+            immutable between = mat.captures[3].strip;
+            immutable after = mat.captures[5].strip;
+            immutable buildLine = "build " ~ target.outputs[0] ~ ": " ~ targetCommand(target) ~
+                " " ~ target.dependencyFiles;
+            string[] paramLines;
+            if(!before.empty)  paramLines ~= "before = "  ~ before;
+            if(!between.empty) paramLines ~= "between = " ~ between;
+            if(!after.empty)   paramLines ~= "after = "   ~ after;
+
+            entries ~= NinjaEntry(buildLine, paramLines);
+        }
+        return entries;
     }
 
-    NinjaEntry[] ruleEntries() pure nothrow const {
-        return _targets.map!(a => NinjaEntry("rule " ~ targetCommand(a),
-                                             ["command = " ~ targetCommand(a) ~ " $in $out"])).array;
+    NinjaEntry[] ruleEntries() const {
+        NinjaEntry[] entries;
+        foreach(target; _targets) {
+            immutable rawCmdLine = target.rawCommand;
+            import std.regex;
+            auto reg = regex(`^[^ ]+ +(.*?)(\$in|\$out)(.*?)(\$in|\$out)(.*?)$`);
+            auto mat = target.rawCommand.match(reg);
+            enforce(!mat.captures.empty, text("Command: ", target.rawCommand, " Captures: ", mat.captures));
+            immutable before = mat.captures[1].strip;
+            immutable between = mat.captures[3].strip;
+            immutable after = mat.captures[5].strip;
+            immutable first = mat.captures[2];
+            immutable last  = mat.captures[4];
+            auto cmdLine = ["command", "=", targetRawCommand(target)];
+            if(!before.empty) cmdLine ~= "$before";
+            cmdLine ~= first;
+            if(!between.empty) cmdLine ~= "$between";
+            cmdLine ~= last;
+            if(!after.empty) cmdLine ~= "$after";
+            entries  ~= NinjaEntry("rule " ~ targetCommand(target),
+                                   [cmdLine.join(" ")]);
+        }
+        return entries;
     }
 
 
@@ -37,6 +80,12 @@ private:
 private string targetCommand(in Target target) @trusted pure nothrow {
     return target.command.splitter(" ").front.sanitizeCmd;
 }
+
+//@trusted because of splitter
+private string targetRawCommand(in Target target) @trusted pure nothrow {
+    return target.command.splitter(" ").front;
+}
+
 
 //@trusted because of replace
 private string sanitizeCmd(in string cmd) @trusted pure nothrow {

@@ -4,6 +4,8 @@ import std.array: array, join;
 import std.path: absolutePath, buildPath;
 import std.typetuple;
 import std.file: exists;
+import std.conv: text;
+import std.exception: enforce;
 import reggae.options;
 
 
@@ -11,43 +13,38 @@ immutable reggaeSrcDirName = "reggae";
 
 
 int main(string[] args) {
-    immutable options = getOptions(args);
+    try {
+        immutable options = getOptions(args);
 
-    if(options.projectPath == "") {
-        stderr.writeln("A project path must be specified");
-        return 1;
-    }
 
-    immutable buildFileName = buildPath(options.projectPath, "reggaefile.d");
-    if(!buildFileName.exists) {
-        stderr.writeln("Could not find ", buildFileName);
-        return 1;
-    }
+        enforce(options.projectPath != "", "A project path must be specified");
 
-    alias fileNames = TypeTuple!("run_main.d",
-                                 "backend.d", "build.d",
-                                 "makefile.d", "ninja.d", "options.d",
-                                 "package.d", "range.d", "reflect.d");
-    writeSrcFiles!(fileNames);
-    string[] reggaeSrcs;
-    foreach(fileName; fileNames) {
-        reggaeSrcs ~= reggaeSrcFileName(fileName);
-    }
+        immutable buildFileName = buildPath(options.projectPath, "reggaefile.d");
+        enforce(buildFileName.exists, text("Could not find ", buildFileName));
 
-    immutable binName = "build";
-    const compile = ["dmd", "-g", "-debug","-I" ~ options.projectPath, "-I.",
-                     "-of" ~ binName,
-                     buildFileName] ~ reggaeSrcs;
+        alias fileNames = TypeTuple!("run_main.d",
+                                     "backend.d", "build.d",
+                                     "makefile.d", "ninja.d", "options.d",
+                                     "package.d", "range.d", "reflect.d");
+        writeSrcFiles!(fileNames);
+        string[] reggaeSrcs;
+        foreach(fileName; fileNames) {
+            reggaeSrcs ~= reggaeSrcFileName(fileName);
+        }
 
-    immutable retComp = execute(compile);
-    if(retComp.status != 0) {
-        stderr.writeln("Couldn't execute ", compile.join(" "), ":\n", retComp.output);
-        return 1;
-    }
+        immutable binName = "build";
+        const compile = ["dmd", "-g", "-debug","-I" ~ options.projectPath, "-I.",
+                         "-of" ~ binName,
+                         buildFileName] ~ reggaeSrcs;
 
-    immutable retRun = execute([buildPath(".",  binName), "-b", options.backend, options.projectPath]);
-    if(retRun.status != 0) {
-        stderr.writeln("Couldn't execute the produced ", binName, " binary:\n", retRun.output);
+        immutable retComp = execute(compile);
+        enforce(retComp.status == 0, text("Couldn't execute ", compile.join(" "), ":\n", retComp.output));
+
+
+        immutable retRun = execute([buildPath(".",  binName), "-b", options.backend, options.projectPath]);
+        enforce(retRun.status == 0, text("Couldn't execute the produced ", binName, " binary:\n", retRun.output));
+    } catch(Exception ex) {
+        stderr.writeln(ex.msg);
         return 1;
     }
 

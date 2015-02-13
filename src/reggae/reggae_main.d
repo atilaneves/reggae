@@ -14,9 +14,8 @@ immutable reggaeSrcDirName = "reggae";
 
 int main(string[] args) {
     try {
+
         immutable options = getOptions(args);
-
-
         enforce(options.projectPath != "", "A project path must be specified");
 
         immutable buildFileName = buildPath(options.projectPath, "reggaefile.d");
@@ -36,13 +35,13 @@ int main(string[] args) {
         const compile = ["dmd", "-g", "-debug","-I" ~ options.projectPath, "-I.",
                          "-of" ~ binName,
                          buildFileName] ~ reggaeSrcs;
-
         immutable retComp = execute(compile);
         enforce(retComp.status == 0, text("Couldn't execute ", compile.join(" "), ":\n", retComp.output));
 
 
         immutable retRun = execute([buildPath(".",  binName), "-b", options.backend, options.projectPath]);
         enforce(retRun.status == 0, text("Couldn't execute the produced ", binName, " binary:\n", retRun.output));
+
     } catch(Exception ex) {
         stderr.writeln(ex.msg);
         return 1;

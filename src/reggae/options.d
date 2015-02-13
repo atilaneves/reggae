@@ -16,7 +16,7 @@ Options getOptions(string[] args) {
            "backend|b", &options.backend,
         );
 
-    options.projectPath = args[1];
+    if(args.length > 1) options.projectPath = args[1];
 
     return options;
 }

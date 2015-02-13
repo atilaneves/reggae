@@ -3,6 +3,7 @@ import std.process: execute;
 import std.array: array, join;
 import std.path: absolutePath, buildPath;
 import std.typetuple;
+import std.file: exists;
 import reggae.options;
 
 
@@ -10,6 +11,19 @@ immutable reggaeSrcDirName = "reggae";
 
 
 int main(string[] args) {
+    immutable options = getOptions(args);
+
+    if(options.projectPath == "") {
+        stderr.writeln("A project path must be specified");
+        return 1;
+    }
+
+    immutable buildFileName = buildPath(options.projectPath, "reggaefile.d");
+    if(!buildFileName.exists) {
+        stderr.writeln("Could not find ", buildFileName);
+        return 1;
+    }
+
     alias fileNames = TypeTuple!("run_main.d",
                                  "backend.d", "build.d",
                                  "makefile.d", "ninja.d", "options.d",
@@ -20,11 +34,10 @@ int main(string[] args) {
         reggaeSrcs ~= reggaeSrcFileName(fileName);
     }
 
-    immutable options = getOptions(args);
     immutable binName = "build";
     const compile = ["dmd", "-g", "-debug","-I" ~ options.projectPath, "-I.",
                      "-of" ~ binName,
-                     buildPath(options.projectPath, "reggaefile.d")] ~ reggaeSrcs;
+                     buildFileName] ~ reggaeSrcs;
 
     immutable retComp = execute(compile);
     if(retComp.status != 0) {

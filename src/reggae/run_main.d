@@ -25,6 +25,12 @@ int main(string[] args) {
         foreach(entry; ninja.ruleEntries) {
             rulesNinja.writeln(entry.toString);
         }
+    } else if(options.backend == "") {
+        stderr.writeln("A backend must be specified with -b/--backend");
+        return 1;
+    } else {
+        stderr.writeln("Unsupported backend ", options.backend);
+        return 1;
     }
 
     return 0;

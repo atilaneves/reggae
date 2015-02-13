@@ -6,9 +6,10 @@ import reggae;
 
 void testMakefileNoPath() {
     const build = Build(Target("leapp",
-                               [Target("foo.o", [Target("foo.d")], "dmd -c -offoo.o foo.d"),
-                                Target("bar.o", [Target("bar.d")], "dmd -c -ofbar.o bar.d")],
-                                     "dmd -ofleapp foo.o bar.o"));
+                               "dmd -ofleapp foo.o bar.o",
+                               [Target("foo.o", "dmd -c -offoo.o foo.d", [Target("foo.d")]),
+                                Target("bar.o", "dmd -c -ofbar.o bar.d", [Target("bar.d")])],
+                            ));
     auto backend = Makefile(build);
     backend.fileName.shouldEqual("Makefile");
     backend.output.shouldEqual(
@@ -25,9 +26,10 @@ void testMakefileNoPath() {
 
 void testMakefilePath() {
     const build = Build(Target("otherapp",
-                               [Target("boo.o", [Target("boo.c")], "gcc -c -o $out $in"),
-                                Target("baz.o", [Target("baz.c")], "gcc -c -o $out $in")],
-                               "gcc -o $out $in"));
+                               "gcc -o $out $in",
+                               [Target("boo.o", "gcc -c -o $out $in", [Target("boo.c")]),
+                                Target("baz.o", "gcc -c -o $out $in", [Target("baz.c")])],
+                            ));
     auto backend = Makefile(build, "/global/path/to/");
     backend.fileName.shouldEqual("Makefile");
     backend.output.shouldEqual(
@@ -43,7 +45,7 @@ void testMakefilePath() {
 
 void testIsLeaf() {
     Target("tgt").isLeaf.shouldBeTrue;
-    Target("other", [Target("foo"), Target("bar")], "").isLeaf.shouldBeFalse;
+    Target("other", "", [Target("foo"), Target("bar")]).isLeaf.shouldBeFalse;
 }
 
 
@@ -51,33 +53,34 @@ void testInOut() {
     //Tests that specifying $in and $out in the command string gets substituted correctly
     {
         const target = Target("foo",
-                              [Target("bar.txt"), Target("baz.txt")],
-                              "createfoo -o $out $in");
+                              "createfoo -o $out $in",
+                              [Target("bar.txt"), Target("baz.txt")]);
         target.command.shouldEqual("createfoo -o foo bar.txt baz.txt");
     }
     {
         const target = Target("tgt",
+                              "gcc -o $out $in",
                               [
-                                  Target("src1.o", [Target("src1.c")], "gcc -c -o $out $in"),
-                                  Target("src2.o", [Target("src2.c")], "gcc -c -o $out $in")
+                                  Target("src1.o", "gcc -c -o $out $in", [Target("src1.c")]),
+                                  Target("src2.o", "gcc -c -o $out $in", [Target("src2.c")])
                                   ],
-                              "gcc -o $out $in");
+);
         target.command.shouldEqual("gcc -o tgt src1.o src2.o");
     }
 
     {
         const target = Target(["proto.h", "proto.c"],
-                              [Target("proto.idl")],
-                              "protocompile $out -i $in");
+                              "protocompile $out -i $in",
+                              [Target("proto.idl")]);
         target.command.shouldEqual("protocompile proto.h proto.c -i proto.idl");
     }
 
     {
         const target = Target("lib1.a",
-                              [Target(["foo1.o", "foo2.o"], [Target("tmp")], "cmd"),
+                              "ar -o$out $in",
+                              [Target(["foo1.o", "foo2.o"], "cmd", [Target("tmp")]),
                                Target("bar.o"),
-                               Target("baz.o")],
-                              "ar -o$out $in");
+                               Target("baz.o")]);
         target.command.shouldEqual("ar -olib1.a foo1.o foo2.o bar.o baz.o");
     }
 }
@@ -85,7 +88,7 @@ void testInOut() {
 
 void testProject() {
     const target = Target("foo",
-                          [Target("bar"), Target("baz")],
-                          "makefoo -i $in -o $out -p $project");
+                          "makefoo -i $in -o $out -p $project",
+                          [Target("bar"), Target("baz")]);
     target.command("/tmp").shouldEqual("makefoo -i /tmp/bar /tmp/baz -o foo -p /tmp");
 }

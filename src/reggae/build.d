@@ -25,15 +25,15 @@ struct Target {
         this(output, null, null);
     }
 
-    this(string output, in Target dependency, string command) {
-        this([output], [dependency], command);
+    this(string output, string command, in Target dependency) {
+        this([output], command, [dependency]);
     }
 
-    this(string output, in Target[] dependencies, string command) {
-        this([output], dependencies, command);
+    this(string output, string command, in Target[] dependencies) {
+        this([output], command, dependencies);
     }
 
-    this(string[] outputs, in Target[] dependencies, string command) {
+    this(string[] outputs, string command, in Target[] dependencies) {
         this.outputs = outputs;
         this.dependencies = dependencies;
         this._command = command;

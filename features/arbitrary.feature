@@ -7,11 +7,11 @@ Feature: Arbritrary rules
     Given a file named "path/to/reggaefile.d" with:
       """
       import reggae;
-      const mainObj  = Target(`main.o`,  Target(`src/main.d`),  `dmd -I$project/src -c $in -of$out`);
-      const mathsObj = Target(`maths.o`, Target(`src/maths.d`), `dmd -c $in -of$out`);
+      const mainObj  = Target(`main.o`,  `dmd -I$project/src -c $in -of$out`, Target(`src/main.d`));
+      const mathsObj = Target(`maths.o`, `dmd -c $in -of$out`, Target(`src/maths.d`));
       const app = Target(`myapp`,
+                         `dmd -of$out $in`,
                          [mainObj, mathsObj],
-                         `dmd -of$out $in`
                          );
       const build = Build(app);
       """
@@ -35,11 +35,11 @@ Feature: Arbritrary rules
     And a file named "different/path/reggaefile.d" with:
       """
       import reggae;
-      const mainObj  = Target(`main.o`,  Target(`source/main.d`),  `dmd -I$project -c $in -of$out`);
-      const fooObj   = Target(`foo.o`, Target(`source/foo.d`),     `dmd -c $in -of$out`);
+      const mainObj  = Target(`main.o`, `dmd -I$project -c $in -of$out`, Target(`source/main.d`));
+      const fooObj   = Target(`foo.o`,  `dmd -c $in -of$out`, Target(`source/foo.d`));
       const app = Target(`appp`,
+                         `dmd -of$out $in`,
                          [mainObj, fooObj],
-                         `dmd -of$out $in`
                          );
       const build = Build(app);
       """

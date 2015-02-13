@@ -20,7 +20,7 @@ void testSimpleBuild() {
 void testRealisticBuild() {
     const build = getBuild!"tests.realistic_build";
     build.shouldEqual(Build(Target("leapp",
-                                   [Target("foo.o", [Target("foo.d")], "dmd -c -offoo.o foo.d"),
-                                    Target("bar.o", [Target("bar.d")], "dmd -c -ofbar.o bar.d")],
-                                   "dmd -ofleapp foo.o bar.o")));
+                                   "dmd -ofleapp foo.o bar.o",
+                                   [Target("foo.o", "dmd -c -offoo.o foo.d", [Target("foo.d")]),
+                                    Target("bar.o", "dmd -c -ofbar.o bar.d", [Target("bar.d")])])));
 }

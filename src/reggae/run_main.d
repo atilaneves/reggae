@@ -10,13 +10,13 @@ int main(string[] args) {
     switch(options.backend) {
 
     case "make":
-        const makefile = new Makefile(build, options.projectPath);
+        const makefile = Makefile(build, options.projectPath);
         auto file = File(makefile.fileName, "w");
         file.write(makefile.output);
         break;
 
     case "ninja":
-        auto ninja = Ninja(build, options.projectPath);
+        const ninja = Ninja(build, options.projectPath);
 
         auto buildNinja = File("build.ninja", "w");
         buildNinja.writeln("include rules.ninja\n");

@@ -8,8 +8,8 @@ void testMakefileNoPath() {
     const build = Build(Target("leapp",
                                [Target("foo.o", [Target("foo.d")], "dmd -c -offoo.o foo.d"),
                                 Target("bar.o", [Target("bar.d")], "dmd -c -ofbar.o bar.d")],
-                               "dmd -ofleapp foo.o bar.o"));
-    auto backend = new Makefile(build);
+                                     "dmd -ofleapp foo.o bar.o"));
+    auto backend = Makefile(build);
     backend.fileName.shouldEqual("Makefile");
     backend.output.shouldEqual(
         "all: leapp\n"
@@ -28,7 +28,7 @@ void testMakefilePath() {
                                [Target("boo.o", [Target("boo.c")], "gcc -c -o $out $in"),
                                 Target("baz.o", [Target("baz.c")], "gcc -c -o $out $in")],
                                "gcc -o $out $in"));
-    auto backend = new Makefile(build, "/global/path/to/");
+    auto backend = Makefile(build, "/global/path/to/");
     backend.fileName.shouldEqual("Makefile");
     backend.output.shouldEqual(
         "all: otherapp\n"

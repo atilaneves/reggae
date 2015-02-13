@@ -8,16 +8,16 @@ import std.path;
 import std.algorithm;
 
 
-class Makefile {
+struct Makefile {
     Build build;
     string projectPath;
 
-    this(Build build) {
+    this(Build build) @safe pure {
         this.build = build;
         this.projectPath = "";
     }
 
-    this(Build build, string projectPath) {
+    this(Build build, string projectPath) @safe pure {
         this.build = build;
         this.projectPath = projectPath.absolutePath;
     }
@@ -26,7 +26,7 @@ class Makefile {
         return "Makefile";
     }
 
-    string output() const {
+    string output() @safe nothrow const {
         auto ret = text("all: ", build.targets[0].outputs[0], "\n");
 
         foreach(t; DepthFirst(build.targets[0])) {

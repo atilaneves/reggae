@@ -32,6 +32,8 @@ struct Makefile {
         foreach(t; DepthFirst(build.targets[0])) {
             ret ~= text(t.outputs[0], ": ");
             ret ~= t.dependencyFiles(projectPath);
+            immutable implicitFiles = t.implicitFiles(projectPath);
+            if(!implicitFiles.empty) ret ~= " " ~ t.implicitFiles(projectPath);
             ret ~= "\n";
             ret ~= "\t" ~ t.command(projectPath) ~ "\n";
         }

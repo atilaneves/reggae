@@ -20,34 +20,33 @@ struct Build {
 struct Target {
     string[] outputs;
     const(Target)[] dependencies;
+    const(Target)[] implicits;
 
     this(string output) {
         this(output, null, null);
     }
 
-    this(string output, string command, in Target dependency) {
-        this([output], command, [dependency]);
+    this(string output, string command, in Target dependency, in Target[] implicits = []) {
+        this([output], command, [dependency], implicits);
     }
 
-    this(string output, string command, in Target[] dependencies) {
-        this([output], command, dependencies);
+    this(string output, string command, in Target[] dependencies, in Target[] implicits = []) {
+        this([output], command, dependencies, implicits);
     }
 
-    this(string[] outputs, string command, in Target[] dependencies) {
+    this(string[] outputs, string command, in Target[] dependencies, in Target[] implicits = []) {
         this.outputs = outputs;
         this.dependencies = dependencies;
+        this.implicits = implicits;
         this._command = command;
     }
 
-    @property string dependencyFiles(in string projectPath = "") @trusted const nothrow {
-        import std.conv;
-        string files;
-        //join doesn't do const, resort to loops
-        foreach(i, dep; dependencies) {
-            files ~= text(dep.outputs.map!(a => dep.isLeaf ? buildPath(projectPath, a) : a).join(" "));
-            if(i != dependencies.length - 1) files ~= " ";
-        }
-        return files;
+    @property string dependencyFiles(in string projectPath = "") @safe const nothrow {
+        return depFilesImpl(dependencies, projectPath);
+    }
+
+    @property string implicitFiles(in string projectPath = "") @safe const nothrow {
+        return depFilesImpl(implicits, projectPath);
     }
 
     @property string command(in string projectPath = "") @trusted pure const nothrow {
@@ -75,4 +74,17 @@ struct Target {
 private:
 
     string _command;
+
+    //@trusted because of join
+    string depFilesImpl(in Target[] deps, in string projectPath) @trusted const nothrow {
+        import std.conv;
+        string files;
+        //join doesn't do const, resort to loops
+        foreach(i, dep; deps) {
+            files ~= text(dep.outputs.map!(a => dep.isLeaf ? buildPath(projectPath, a) : a).join(" "));
+            if(i != dependencies.length - 1) files ~= " ";
+        }
+        return files;
+    }
+
 }

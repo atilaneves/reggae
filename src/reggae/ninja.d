@@ -42,8 +42,9 @@ struct Ninja {
             immutable ruleCmdLine = getRuleCommandLine(target, before, first, between, last, after);
             bool haveToAdd;
             immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAdd);
-            immutable buildLine = "build " ~ target.outputs[0] ~ ": " ~ ruleName ~
+            auto buildLine = "build " ~ target.outputs[0] ~ ": " ~ ruleName ~
                 " " ~ target.dependencyFiles(_projectPath);
+            if(!target.implicits.empty) buildLine ~= " | " ~ target.implicitFiles(_projectPath);
             string[] buildParamLines;
             if(!before.empty)  buildParamLines ~= "before = "  ~ before;
             if(!between.empty) buildParamLines ~= "between = " ~ between;

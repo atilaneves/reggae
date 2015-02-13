@@ -105,3 +105,18 @@ void testSimpleDBuild() {
                     ["command = dmd $before$out $in"])
             ]);
 }
+
+
+void testImplicitDependencies() {
+    const target = Target("foo.o", "gcc -o $out -c $in", [Target("foo.c")], [Target("foo.h")]);
+    const ninja = Ninja(Build(target));
+    ninja.buildEntries.shouldEqual(
+        [NinjaEntry("build foo.o: gcc foo.c | foo.h",
+                    ["before = -o",
+                     "between = -c"])
+            ]);
+
+    ninja.ruleEntries.shouldEqual(
+        [NinjaEntry("rule gcc",
+                    ["command = gcc $before $out $between $in"])]);
+}

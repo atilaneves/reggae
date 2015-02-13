@@ -7,11 +7,15 @@ int main(string[] args) {
     immutable options = getOptions(args);
     const build = getBuild!reggaefile;
 
-    if(options.backend == "make") {
+    switch(options.backend) {
+
+    case "make":
         const makefile = new Makefile(build, options.projectPath);
         auto file = File(makefile.fileName, "w");
         file.write(makefile.output);
-    } else if(options.backend == "ninja") {
+        break;
+
+    case "ninja":
         auto ninja = Ninja(build, options.projectPath);
 
         auto buildNinja = File("build.ninja", "w");
@@ -25,10 +29,13 @@ int main(string[] args) {
         foreach(entry; ninja.ruleEntries) {
             rulesNinja.writeln(entry.toString);
         }
-    } else if(options.backend == "") {
+        break;
+
+    case "":
         stderr.writeln("A backend must be specified with -b/--backend");
         return 1;
-    } else {
+
+    default:
         stderr.writeln("Unsupported backend ", options.backend);
         return 1;
     }

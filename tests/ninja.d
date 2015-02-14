@@ -120,3 +120,17 @@ void testImplicitDependencies() {
         [NinjaEntry("rule gcc",
                     ["command = gcc $before $out $between $in"])]);
 }
+
+void testImplicitDependenciesMoreThanOne() {
+    const target = Target("foo.o", "gcc -o $out -c $in", [Target("foo.c")], [Target("foo.h"), Target("foo.idl")]);
+    const ninja = Ninja(Build(target));
+    ninja.buildEntries.shouldEqual(
+        [NinjaEntry("build foo.o: gcc foo.c | foo.h foo.idl",
+                    ["before = -o",
+                     "between = -c"])
+            ]);
+
+    ninja.ruleEntries.shouldEqual(
+        [NinjaEntry("rule gcc",
+                    ["command = gcc $before $out $between $in"])]);
+}

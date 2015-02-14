@@ -11,14 +11,20 @@ Feature: D compilation rule
       import std.conv;
       void main(string[] args) {
           auto number = args[1].to!int;
-          auto result = factorial(number);
-          println(`The factorial of `, number, ` is `, result);
+          auto result = calc(number);
+          println(`The result of `, number, ` is `, result);
       }
       """
 
     And a file named "leproj/source/maths.d" with:
       """
-      int factorial(int n) { return n > 0 ? n * factorial(n - 1) : 1; }
+      import constants;
+      int calc(int n) { return n * leconst; }
+      """
+
+    And a file named "leproj/source/constants.d" with:
+      """
+      immutable int leconst = 24;
       """
 
     And a file named "leproj/source/io.d" with:
@@ -33,15 +39,26 @@ Feature: D compilation rule
       const mainObj = dcompile(`source/main.d`, [`source`]);
       const mathsObj = dcompile(`source/maths.d`, [`source`]);
       const ioObj = dcompile(`source/io.d`, [`source`]);
-      const b = Build(Target(`fac`, `dmd -of$out $in`, [mainObj, mathsObj, ioObj]));
+      const b = Build(Target(`calc`, `dmd -of$out $in`, [mainObj, mathsObj, ioObj]));
       """
 
-    When I run `reggae -b ninja leproj`
-    Then the exit status should be 0
-    When I run `ninja`
-    Then the exit status should be 0
-    When I run `./fac 5`
+    When I successfully run `reggae -b ninja leproj`
+    And I successfully run `ninja`
+    And I run `./calc 5`
     Then the output should contain:
       """
-      output: The factorial of 5 is 120
+      output: The result of 5 is 120
+      """
+    Given a file named "leproj/source/constants.d" with:
+      """
+      immutable int leconst = 2;
+      """
+    And I run `touch leproj/source/constants.d`
+    And I run `touch leproj/source/constants.d`
+    And I run `touch leproj/source/constants.d`
+    When I successfully run `ninja`
+    And I successfully run `./calc 5`
+    Then the output should contain:
+      """
+      output: The result of 5 is 10
       """

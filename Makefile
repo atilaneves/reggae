@@ -8,5 +8,5 @@ test: reggae
 
 .PHONY: ut
 
-ut:
+ut: reggae
 	dtest --nodub -Isrc

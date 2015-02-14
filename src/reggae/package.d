@@ -7,3 +7,4 @@ public import reggae.backend;
 public import reggae.makefile;
 public import reggae.ninja;
 public import reggae.options;
+public import reggae.rules;

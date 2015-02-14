@@ -24,15 +24,15 @@ Feature: D compilation rule
     And a file named "leproj/source/io.d" with:
       """
       import std.stdio;
-      void println(T... args) { writeln(`ouput: `, args); }
+      void println(T...)(T args) { writeln(`output: `, args); }
       """
 
     And a file named "leproj/reggaefile.d" with:
       """
       import reggae;
-      const mainObj = dcompile(`source/main.d`);
-      const mathsObj = dcompile(`source/maths.d`);
-      const ioObj = dcompile(`source/io.d`);
+      const mainObj = dcompile(`source/main.d`, [`source`]);
+      const mathsObj = dcompile(`source/maths.d`, [`source`]);
+      const ioObj = dcompile(`source/io.d`, [`source`]);
       const b = Build(Target(`fac`, `dmd -of$out $in`, [mainObj, mathsObj, ioObj]));
       """
 

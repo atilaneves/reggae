@@ -61,12 +61,14 @@ void writeSrcFiles(fileNames...)(in Options options) {
         file.write(import(fileName));
     }
 
-    auto file = File(reggaeSrcFileName("config.d"), "w");
-    file.writeln("module reggae.config;");
-    file.writeln;
-    file.writeln("string getProjectPath() {");
-    file.writeln("    return `" ~ options.projectPath.absolutePath ~ "`;");
-    file.writeln("}");
+    {
+        auto file = File(reggaeSrcFileName("config.d"), "w");
+        file.writeln("module reggae.config;");
+        file.writeln;
+        file.writeln("string getProjectPath() {");
+        file.writeln("    return `" ~ options.projectPath.absolutePath ~ "`;");
+        file.writeln("}");
+    }
 }
 
 

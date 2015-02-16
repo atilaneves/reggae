@@ -82,7 +82,7 @@ private:
         //join doesn't do const, resort to loops
         foreach(i, dep; deps) {
             files ~= text(dep.outputs.map!(a => dep.isLeaf ? buildPath(projectPath, a) : a).join(" "));
-            if(i != dependencies.length - 1) files ~= " ";
+            if(i != deps.length - 1) files ~= " ";
         }
         return files;
     }

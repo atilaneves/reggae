@@ -37,61 +37,13 @@ struct Ninja {
     NinjaEntry[] buildEntries;
     NinjaEntry[] ruleEntries;
 
-    //@trusted because of join
-    this(Build build, in string projectPath = "") @trusted {
+    this(Build build, in string projectPath = "") @safe {
         _build = build;
         _projectPath = projectPath;
 
         foreach(target; DepthFirst(_build.targets[0])) {
-            import std.regex;
-            auto reg = regex(`^[^ ]+ +(.*?)(\$in|\$out)(.*?)(\$in|\$out)(.*?)$`);
             auto rawCmdLine = target.inOutCommand(_projectPath);
-            //built-in rules start with an underscore by convention
-            if(rawCmdLine.startsWith("_")) {
-                auto parts = std.algorithm.splitter(rawCmdLine);
-                immutable cmd = parts.front;
-                parts.popFront;
-                string[] extraLines;
-
-                if(parts.empty) { //includes
-                    extraLines = ["includes = "];
-                } else {
-                    auto includes = std.algorithm.splitter(parts.front, ",");
-                    extraLines = ["includes = " ~ includes.join(" "),
-                                  "DEPFILE = " ~ target.outputs[0] ~ ".d"];
-                }
-                buildEntries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~ cmd ~ " " ~
-                                           target.dependencyFiles(_projectPath),
-                                           extraLines);
-                continue;
-            }
-
-            auto mat = rawCmdLine.match(reg);
-            enforce(!mat.captures.empty, text("Could not find both $in and $out. Command: ",
-                                              rawCmdLine, ", Captures: ", mat.captures));
-            immutable before = mat.captures[1].strip;
-            immutable first = mat.captures[2];
-            immutable between = mat.captures[3].strip;
-            immutable last  = mat.captures[4];
-            immutable after = mat.captures[5].strip;
-
-            immutable ruleCmdLine = getRuleCommandLine(target, before, first, between, last, after);
-            bool haveToAdd;
-            immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAdd);
-            auto buildLine = "build " ~ target.outputs[0] ~ ": " ~ ruleName ~
-                " " ~ target.dependencyFiles(_projectPath);
-            if(!target.implicits.empty) buildLine ~= " | " ~ target.implicitFiles(_projectPath);
-            string[] buildParamLines;
-            if(!before.empty)  buildParamLines ~= "before = "  ~ before;
-            if(!between.empty) buildParamLines ~= "between = " ~ between;
-            if(!after.empty)   buildParamLines ~= "after = "   ~ after;
-
-            buildEntries ~= NinjaEntry(buildLine, buildParamLines);
-
-            if(haveToAdd) {
-                ruleEntries ~= NinjaEntry("rule " ~ ruleName,
-                                          [ruleCmdLine]);
-            }
+            rawCmdLine.startsWith("_") ? defaultRule(target, rawCmdLine) : customRule(target, rawCmdLine);
         }
     }
 
@@ -102,6 +54,57 @@ struct Ninja {
 private:
     Build _build;
     string _projectPath;
+
+    //@trusted because of join
+    void defaultRule(in Target target, in string rawCmdLine) @trusted {
+        auto parts = rawCmdLine.splitter;
+        immutable cmd = parts.front;
+        parts.popFront;
+        string[] extraLines;
+
+        if(parts.empty) { //includes
+            extraLines = ["includes = "];
+        } else {
+            auto includes = parts.front.splitter(",");
+            extraLines = ["includes = " ~ includes.join(" "),
+                          "DEPFILE = " ~ target.outputs[0] ~ ".d"];
+        }
+        buildEntries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~ cmd ~ " " ~
+                                   target.dependencyFiles(_projectPath),
+                                   extraLines);
+    }
+
+    void customRule(in Target target, in string rawCmdLine) @safe {
+        import std.regex;
+        auto reg = regex(`^[^ ]+ +(.*?)(\$in|\$out)(.*?)(\$in|\$out)(.*?)$`);
+
+        auto mat = rawCmdLine.match(reg);
+        enforce(!mat.captures.empty, text("Could not find both $in and $out. Command: ",
+                                          rawCmdLine, ", Captures: ", mat.captures));
+        immutable before = mat.captures[1].strip;
+        immutable first = mat.captures[2];
+        immutable between = mat.captures[3].strip;
+        immutable last  = mat.captures[4];
+        immutable after = mat.captures[5].strip;
+
+        immutable ruleCmdLine = getRuleCommandLine(target, before, first, between, last, after);
+        bool haveToAdd;
+        immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAdd);
+        auto buildLine = "build " ~ target.outputs[0] ~ ": " ~ ruleName ~
+            " " ~ target.dependencyFiles(_projectPath);
+        if(!target.implicits.empty) buildLine ~= " | " ~ target.implicitFiles(_projectPath);
+        string[] buildParamLines;
+        if(!before.empty)  buildParamLines ~= "before = "  ~ before;
+        if(!between.empty) buildParamLines ~= "between = " ~ between;
+        if(!after.empty)   buildParamLines ~= "after = "   ~ after;
+
+        buildEntries ~= NinjaEntry(buildLine, buildParamLines);
+
+        if(haveToAdd) {
+            ruleEntries ~= NinjaEntry("rule " ~ ruleName,
+                                      [ruleCmdLine]);
+        }
+    }
 
     //@trusted because of canFind
     string getRuleCommandLine(in Target target, in string before, in string first, in string between,

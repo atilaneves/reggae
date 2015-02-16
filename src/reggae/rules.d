@@ -15,3 +15,8 @@ Target dcompile(in string srcFileName, in string[] includePaths = []) {
     return Target(objFileName, "_dcompile " ~ includes,
                   [Target(srcFileName)]);
 }
+
+
+Target cppcompile(in string srcFileName) {
+    return Target();
+}

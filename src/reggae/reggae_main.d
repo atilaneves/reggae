@@ -22,7 +22,7 @@ int main(string[] args) {
         enforce(buildFileName.exists, text("Could not find ", buildFileName));
 
         alias fileNames = TypeTuple!("run_main.d",
-                                     "backend.d", "build.d",
+                                     "build.d",
                                      "makefile.d", "ninja.d", "options.d",
                                      "package.d", "range.d", "reflect.d",
                                      "rules.d", "dependencies.d", "rdmd.d");

@@ -26,13 +26,6 @@ int main(string[] args) {
         }
 
         auto rulesNinja = File("rules.ninja", "w");
-        const compiler = "dmd";
-        const defaultRules = [NinjaEntry("rule _dcompile",
-                                         ["command = " ~ compiler ~ " $includes -c -of$out $in" ~
-                                          " && " ~ compiler ~ ` -v -o- $includes -c -of$out $in | perl -e 'print "$out: ";  while(<>) {if(/^import +([^\t]+)\t+\((.+)\)$$/) {print "$$2 " unless($$1 =~ /^(std\.|core\.|object$$)/);}} print "\n";' > $DEPFILE`,
-                                          "deps = gcc",
-                                          "depfile = $DEPFILE"])];
-
         foreach(entry; ninja.ruleEntries ~ defaultRules) {
             rulesNinja.writeln(entry.toString);
         }

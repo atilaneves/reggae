@@ -1,10 +1,9 @@
-Automatic dependency detection for individual D files (foo.o: dcompile foo.d| src1.d src2.d ...)
-  Given a D file, get list of implicit dependencies (since the explicit one is the D file itself)
-Automatic dependency detection for a whole D script/app
-Well-known pre-made Ninja rules (dlink, dcompile, ccompile, ...), including a good way to specify it
+Unhackify the Perl nonsense necessary for individual D source dependencies
+Automatic dependency detection for a whole D script/app (a dlink default rule)
 Function for obtaining list of dub targets (all "source" files from all packages):
   should return a simple Target[] with dependencies for each D file baked in
 Static libraries
 CMake-like rules for rerunning itself
-Include paths, compiler flags and the like for convenience functions
+Fix errors when trying to write out source files, test rerunning reggae
+Compiler flags and the like for convenience functions such as dcompile, cppcompile, etc
 Make global configuration available

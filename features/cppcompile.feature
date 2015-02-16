@@ -18,9 +18,14 @@ Feature: C++ compilation rule
 
     And a file named "mixproj/src/cpp/maths.cpp" with:
       """
+      #include "maths.hpp"
       int calc(int i) {
-          return i * 3;
+          return i * factor;
       }
+      """
+    And a file named "mixproj/headers/maths.hpp" with:
+      """
+      const int factor = 3;
       """
     And a file named "mixproj/reggaefile.d" with:
       """
@@ -28,7 +33,7 @@ Feature: C++ compilation rule
       Build bb;
       shared static this() {
         const mainObj  = dcompile(`src/d/main.d`);
-        const mathsObj = cppcompile(`src/cpp/maths.cpp`);
+        const mathsObj = cppcompile(`src/cpp/maths.cpp`, [`headers`]);
         bb = Build(Target(`calc`, `dmd -of$out $in`, [mainObj, mathsObj]));
       }
       """
@@ -38,4 +43,16 @@ Feature: C++ compilation rule
     Then the output should contain:
       """
       The result of calc(5) is 15
+      """
+    Given a file named "mixproj/headers/maths.hpp" with:
+      """
+      const int factor = 10;
+      """
+    And I successfully run `touch mixproj/headers/maths.hpp`
+    And I successfully run `touch mixproj/headers/maths.hpp`
+    And I successfully run `ninja`
+    And I successfully run `./calc 3`
+    Then the output should contain:
+      """
+      The result of calc(3) is 30
       """

@@ -12,7 +12,7 @@ Feature: C++ compilation rule
       void main(string[] args) {
           immutable number = args[1].to!int;
           immutable result = calc(number);
-          writeln(`The result of calc(`, result, `) is `, result);
+          writeln(`The result of calc(`, number, `) is `, result);
       }
       """
 
@@ -29,7 +29,7 @@ Feature: C++ compilation rule
       shared static this() {
         const mainObj  = dcompile(`src/d/main.d`);
         const mathsObj = cppcompile(`src/cpp/maths.cpp`);
-        bb = Build(Target(`calc`), `dmd -of$out $in`, [mainObj, mathsObj]);
+        bb = Build(Target(`calc`, `dmd -of$out $in`, [mainObj, mathsObj]));
       }
       """
     When I successfully run `reggae -b ninja mixproj`
@@ -37,5 +37,5 @@ Feature: C++ compilation rule
     And I successfully run `./calc 5`
     Then the output should contain:
       """
-      The result of calc(5) is 10
+      The result of calc(5) is 15
       """

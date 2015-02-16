@@ -9,14 +9,19 @@ import std.algorithm;
 import std.array;
 
 
+private string objFileName(in string srcFileName) @safe pure nothrow {
+    return srcFileName.baseName.stripExtension.defaultExtension(objExt);
+}
+
 Target dcompile(in string srcFileName, in string[] includePaths = []) {
-    immutable objFileName = srcFileName.baseName.stripExtension.defaultExtension(objExt);
     immutable includes = includePaths.map!(a => "-I$project/" ~ a).join(",");
-    return Target(objFileName, "_dcompile " ~ includes,
+    return Target(srcFileName.objFileName, "_dcompile " ~ includes,
                   [Target(srcFileName)]);
 }
 
 
-Target cppcompile(in string srcFileName) {
-    return Target();
+Target cppcompile(in string srcFileName, in string[] includePaths = []) {
+    immutable includes = includePaths.map!(a => "-I$project/" ~ a).join(",");
+    return Target(srcFileName.objFileName, "_cppcompile " ~ includes,
+                  [Target(srcFileName)]);
 }

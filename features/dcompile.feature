@@ -65,3 +65,28 @@ Feature: D compilation rule
       """
       output: The result of 5 is 10
       """
+    Given a file named "leproj/source/constants.d" with:
+      """
+      import generator;
+      immutable int leconst = constInt();
+      """
+    And a file named "leproj/source/generator.d" with:
+      """
+      int constInt() { return  5; }
+      """
+    When I successfully run `ninja`
+    And I successfully run `./calc 5`
+    Then the output should contain:
+      """
+      output: The result of 5 is 25
+      """
+    Given a file named "leproj/source/generator.d" with:
+      """
+      int constInt() { return 6; }
+      """
+    When I successfully run `ninja`
+    And I successfully run `./calc 7`
+    Then the output should contain:
+      """
+      output: The result of 7 is 42
+      """

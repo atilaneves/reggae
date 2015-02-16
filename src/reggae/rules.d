@@ -3,10 +3,9 @@ module reggae.rules;
 
 import reggae.build;
 import reggae.rdmd: objExt;
-import reggae.dependencies;
-import std.path;
-import std.algorithm;
-import std.array;
+import std.path : baseName, stripExtension, defaultExtension;
+import std.algorithm: map;
+import std.array: array;
 
 
 private string objFileName(in string srcFileName) @safe pure nothrow {

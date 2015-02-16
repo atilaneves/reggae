@@ -31,7 +31,6 @@ int main(string[] args) {
         foreach(fileName; fileNames) {
             reggaeSrcs ~= reggaeSrcFileName(fileName);
         }
-        reggaeSrcs ~= reggaeSrcFileName("config.d");
 
         immutable binName = "build";
         const compile = ["dmd", "-g", "-debug","-I" ~ options.projectPath, "-I.",
@@ -59,15 +58,6 @@ void writeSrcFiles(fileNames...)(in Options options) {
     foreach(fileName; fileNames) {
         auto file = File(reggaeSrcFileName(fileName), "w");
         file.write(import(fileName));
-    }
-
-    {
-        auto file = File(reggaeSrcFileName("config.d"), "w");
-        file.writeln("module reggae.config;");
-        file.writeln;
-        file.writeln("string getProjectPath() {");
-        file.writeln("    return `" ~ options.projectPath.absolutePath ~ "`;");
-        file.writeln("}");
     }
 }
 

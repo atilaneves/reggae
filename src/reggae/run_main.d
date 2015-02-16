@@ -26,7 +26,7 @@ int main(string[] args) {
         }
 
         auto rulesNinja = File("rules.ninja", "w");
-        foreach(entry; ninja.ruleEntries ~ defaultRules) {
+        foreach(entry; ninja.allRuleEntries) {
             rulesNinja.writeln(entry.toString);
         }
 

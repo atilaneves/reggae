@@ -25,3 +25,8 @@ Target cppcompile(in string srcFileName, in string[] includePaths = []) {
     return Target(srcFileName.objFileName, "_cppcompile " ~ includes,
                   [Target(srcFileName)]);
 }
+
+
+Target ccompile(in string srcFileName, in string[] includePaths = []) {
+    return cppcompile(srcFileName, includePaths);
+}

@@ -25,12 +25,13 @@ int main(string[] args) {
                                      "backend.d", "build.d",
                                      "makefile.d", "ninja.d", "options.d",
                                      "package.d", "range.d", "reflect.d",
-                                     "rules.d", "dependencies.d", "rdmd.d", "config.d");
-        writeSrcFiles!(fileNames);
+                                     "rules.d", "dependencies.d", "rdmd.d");
+        writeSrcFiles!(fileNames)(options);
         string[] reggaeSrcs;
         foreach(fileName; fileNames) {
             reggaeSrcs ~= reggaeSrcFileName(fileName);
         }
+        reggaeSrcs ~= reggaeSrcFileName("config.d");
 
         immutable binName = "build";
         const compile = ["dmd", "-g", "-debug","-I" ~ options.projectPath, "-I.",
@@ -52,13 +53,20 @@ int main(string[] args) {
 }
 
 
-void writeSrcFiles(fileNames...)() {
+void writeSrcFiles(fileNames...)(in Options options) {
     import std.file: mkdir;
     mkdir(reggaeSrcDirName);
     foreach(fileName; fileNames) {
         auto file = File(reggaeSrcFileName(fileName), "w");
         file.write(import(fileName));
     }
+
+    auto file = File(reggaeSrcFileName("config.d"), "w");
+    file.writeln("module reggae.config;");
+    file.writeln;
+    file.writeln("string getProjectPath() {");
+    file.writeln("    return `" ~ options.projectPath.absolutePath ~ "`;");
+    file.writeln("}");
 }
 
 

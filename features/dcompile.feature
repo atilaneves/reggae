@@ -85,6 +85,8 @@ Feature: D compilation rule
       int constInt() { return 6; }
       """
     When I successfully run `touch leproj/source/generator.d`
+    When I successfully run `touch leproj/source/generator.d`
+    When I successfully run `touch leproj/source/generator.d`
     And I successfully run `ninja`
     And I successfully run `./calc 7`
     Then the output should contain:

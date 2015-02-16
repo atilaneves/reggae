@@ -50,6 +50,8 @@ Feature: C++ compilation rule
       """
     And I successfully run `touch mixproj/headers/maths.hpp`
     And I successfully run `touch mixproj/headers/maths.hpp`
+    And I successfully run `touch mixproj/headers/maths.hpp`
+    And I successfully run `touch mixproj/headers/maths.hpp`
     And I successfully run `ninja`
     And I successfully run `./calc 3`
     Then the output should contain:

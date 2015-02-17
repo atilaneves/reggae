@@ -38,7 +38,7 @@ void testDLinkAllOptions() {
     const build = Build(dlink("my/src/foo.d", "", ["my/src"], [], [Target("boo.o")]));
     const ninja = Ninja(build, "/projs/lefoo");
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build foo: _dlink /projs/lefoo/my/src/foo.d /projs/lefoo/my/src/boo.o",
+        [NinjaEntry("build foo: _dlink /projs/lefoo/my/src/foo.d /projs/lefoo/boo.o",
                     ["DEPFILE = foo.d"])]);
 
 }

@@ -64,19 +64,27 @@ private:
         auto parts = rawCmdLine.splitter;
         immutable cmd = parts.front;
         parts.popFront;
-        string includesLine;
 
-        if(parts.empty) { //includes
-            includesLine = "includes = ";
-        } else {
-            auto includes = parts.front.splitter(",");
-            includesLine = "includes = " ~ includes.join(" ");
+        string[] paramLines;
+
+        if(cmd != "_dlink") {
+
+            string includesLine;
+
+            if(parts.empty) { //includes
+                includesLine = "includes = ";
+            } else {
+                auto includes = parts.front.splitter(",");
+                includesLine = "includes = " ~ includes.join(" ");
+            }
+            paramLines ~= includesLine;
         }
-
         immutable depFileLine = "DEPFILE = " ~ target.outputs[0] ~ ".d";
+        paramLines ~= depFileLine;
+
         buildEntries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~ cmd ~ " " ~
                                    target.dependencyFiles(_projectPath),
-                                   [includesLine, depFileLine]);
+                                   paramLines);
     }
 
     void customRule(in Target target, in string rawCmdLine) @safe {

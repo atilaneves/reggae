@@ -22,19 +22,19 @@ struct Target {
     const(Target)[] dependencies;
     const(Target)[] implicits;
 
-    this(string output) {
+    this(string output) @safe pure nothrow {
         this(output, null, null);
     }
 
-    this(string output, string command, in Target dependency, in Target[] implicits = []) {
+    this(string output, string command, in Target dependency, in Target[] implicits = []) @safe pure nothrow {
         this([output], command, [dependency], implicits);
     }
 
-    this(string output, string command, in Target[] dependencies, in Target[] implicits = []) {
+    this(string output, string command, in Target[] dependencies, in Target[] implicits = []) @safe pure nothrow {
         this([output], command, dependencies, implicits);
     }
 
-    this(string[] outputs, string command, in Target[] dependencies, in Target[] implicits = []) {
+    this(string[] outputs, string command, in Target[] dependencies, in Target[] implicits = []) @safe pure nothrow {
         this.outputs = outputs;
         this.dependencies = dependencies;
         this.implicits = implicits;

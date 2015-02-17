@@ -140,10 +140,9 @@ void testDefaultRules() {
     immutable compiler = "dmd";
     defaultRules().shouldEqual(
         [NinjaEntry("rule _dcompile",
-                   ["command = dmd $includes -c -of$out $in" ~
-                    ` && dmd -v -o- $includes -c -of$out $in | perl -e 'print "$out: ";  while(<>) {if(/^import +([^\t]+)\t+\((.+)\)$$/) {print "$$2 " unless($$1 =~ /^(std\.|core\.|object$$)/);}} print "\n";' > $DEPFILE`,
-                    "deps = gcc",
-                    "depfile = $DEPFILE"]),
+                    ["command = ./dcompile dmd $includes $out $in $DEPFILE",
+                     "deps = gcc",
+                     "depfile = $DEPFILE"]),
          NinjaEntry("rule _cppcompile",
                     ["command = gcc $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
                      "deps = gcc",

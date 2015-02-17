@@ -2,10 +2,15 @@ module reggae.rules;
 
 
 import reggae.build;
-import reggae.rdmd: objExt;
 import std.path : baseName, stripExtension, defaultExtension;
 import std.algorithm: map;
 import std.array: array;
+
+version(Windows) {
+    immutable objExt = ".obj";
+} else {
+    immutable objExt = ".o";
+}
 
 
 private string objFileName(in string srcFileName) @safe pure nothrow {

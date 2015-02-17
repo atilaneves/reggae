@@ -137,12 +137,13 @@ void testImplicitDependenciesMoreThanOne() {
 
 
 void testDefaultRules() {
-    immutable compiler = "dmd";
     defaultRules().shouldEqual(
         [NinjaEntry("rule _dcompile",
                     ["command = ./dcompile dmd $includes $out $in $DEPFILE",
                      "deps = gcc",
                      "depfile = $DEPFILE"]),
+         NinjaEntry("rule _dlink",
+                    ["command = dmd -of$out $in"]),
          NinjaEntry("rule _cppcompile",
                     ["command = gcc $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
                      "deps = gcc",

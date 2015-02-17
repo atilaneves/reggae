@@ -37,7 +37,7 @@ Feature: Linking a D executable
       """
       import reggae;
       const mathsObj = cppcompile(`cpp/maths.cpp`);
-      const bld = Build(dlink(`d/main.d`, [`d`], [], [mathsObj]));
+      const bld = Build(dlink(`d/main.d`, ``, [`d`], [], [mathsObj]));
       """
 
     When I successfully run `reggae -b ninja linkproj`

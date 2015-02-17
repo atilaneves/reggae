@@ -27,8 +27,7 @@ NinjaEntry[] defaultRules() @safe pure nothrow {
     immutable dcompiler = "dmd";
     immutable cppcompiler = "gcc";
     return [NinjaEntry("rule _dcompile",
-                       ["command = " ~ dcompiler ~ " $includes -c -of$out $in" ~
-                        " && " ~ dcompiler ~ ` -v -o- $includes -c -of$out $in | perl -e 'print "$out: ";  while(<>) {if(/^import +([^\t]+)\t+\((.+)\)$$/) {print "$$2 " unless($$1 =~ /^(std\.|core\.|object$$)/);}} print "\n";' > $DEPFILE`,
+                       ["command = ./dcompile " ~ dcompiler ~ " $includes $out $in $DEPFILE",
                         "deps = gcc",
                         "depfile = $DEPFILE"]),
             NinjaEntry("rule _cppcompile",

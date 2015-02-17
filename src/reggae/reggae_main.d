@@ -36,12 +36,17 @@ int main(string[] args) {
         const compile = ["dmd", "-g", "-debug","-I" ~ options.projectPath, "-I.",
                          "-of" ~ binName,
                          buildFileName] ~ reggaeSrcs;
-        immutable retComp = execute(compile);
-        enforce(retComp.status == 0, text("Couldn't execute ", compile.join(" "), ":\n", retComp.output));
 
+        immutable retCompBuildgen = execute(compile);
+        enforce(retCompBuildgen.status == 0,
+                text("Couldn't execute ", compile.join(" "), ":\n", retCompBuildgen.output));
 
-        immutable retRun = execute([buildPath(".",  binName), "-b", options.backend, options.projectPath]);
-        enforce(retRun.status == 0, text("Couldn't execute the produced ", binName, " binary:\n", retRun.output));
+        immutable retRunBuildgen = execute([buildPath(".",  binName), "-b", options.backend, options.projectPath]);
+        enforce(retRunBuildgen.status == 0,
+                text("Couldn't execute the produced ", binName, " binary:\n", retRunBuildgen.output));
+
+        immutable retCompDcompile = execute(["dmd", reggaeSrcFileName("dcompile.d")]);
+        enforce(retCompDcompile.status == 0, text("Couldn't compile dcompile.d:\n", retCompDcompile.output));
 
     } catch(Exception ex) {
         stderr.writeln(ex.msg);
@@ -59,6 +64,8 @@ void writeSrcFiles(fileNames...)(in Options options) {
         auto file = File(reggaeSrcFileName(fileName), "w");
         file.write(import(fileName));
     }
+    auto file = File(reggaeSrcFileName("dcompile.d"), "w");
+    file.write(import("dcompile.d"));
 }
 
 

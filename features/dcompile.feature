@@ -36,7 +36,7 @@ Feature: D compilation rule
     And a file named "leproj/reggaefile.d" with:
       """
       import reggae;
-      const mainObj = dcompile(`source/main.d`, [`source`]);
+      const mainObj  = dcompile(`source/main.d`,  [`source`]);
       const mathsObj = dcompile(`source/maths.d`, [`source`]);
       const ioObj = dcompile(`source/io.d`, [`source`]);
       const b = Build(Target(`calc`, `dmd -of$out $in`, [mainObj, mathsObj, ioObj]));
@@ -49,20 +49,19 @@ Feature: D compilation rule
       """
       output: The result of 5 is 120
       """
-    Given a file named "leproj/source/constants.d" with:
+    Given I successfully run `sleep 1` for up to 1 seconds
+    And I overwrite "leproj/source/constants.d" with:
       """
       immutable int leconst = 2;
       """
-    And I run `touch leproj/source/constants.d`
-    And I run `touch leproj/source/constants.d`
-    And I run `touch leproj/source/constants.d`
     When I successfully run `ninja`
     And I successfully run `./calc 5`
     Then the output should contain:
       """
       output: The result of 5 is 10
       """
-    Given a file named "leproj/source/constants.d" with:
+    Given I successfully run `sleep 1` for up to 1 seconds
+    And I overwrite "leproj/source/constants.d" with:
       """
       import generator;
       immutable int leconst = constInt();
@@ -77,14 +76,12 @@ Feature: D compilation rule
       """
       output: The result of 5 is 25
       """
-    Given a file named "leproj/source/generator.d" with:
+    Given I successfully run `sleep 1` for up to 1 seconds
+    And I overwrite "leproj/source/generator.d" with:
       """
       int constInt() { return 6; }
       """
-    When I successfully run `touch leproj/source/generator.d`
-    When I successfully run `touch leproj/source/generator.d`
-    When I successfully run `touch leproj/source/generator.d`
-    And I successfully run `ninja`
+    When I successfully run `ninja`
     And I successfully run `./calc 7`
     Then the output should contain:
       """

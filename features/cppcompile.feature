@@ -41,15 +41,12 @@ Feature: C++ compilation rule
       """
       The result of calc(5) is 15
       """
-    Given a file named "mixproj/headers/maths.hpp" with:
+    Given I successfully run `sleep 1` for up to 1 seconds
+    And I overwrite "mixproj/headers/maths.hpp" with:
       """
       const int factor = 10;
       """
-    And I successfully run `touch mixproj/headers/maths.hpp`
-    And I successfully run `touch mixproj/headers/maths.hpp`
-    And I successfully run `touch mixproj/headers/maths.hpp`
-    And I successfully run `touch mixproj/headers/maths.hpp`
-    And I successfully run `ninja`
+    When I successfully run `ninja`
     And I successfully run `./calc 3`
     Then the output should contain:
       """

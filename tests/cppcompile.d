@@ -16,7 +16,7 @@ void testNoIncludePaths() {
 
 
 void testIncludePaths() {
-    const build = Build(cppcompile("path/to/src/foo.cpp", ["path/to/src", "other/path"]));
+    const build = Build(cppcompile("path/to/src/foo.cpp", "", ["path/to/src", "other/path"]));
     const ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",

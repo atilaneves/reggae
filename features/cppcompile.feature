@@ -31,7 +31,7 @@ Feature: C++ compilation rule
       """
       import reggae;
       const mainObj  = dcompile(`src/d/main.d`);
-      const mathsObj = cppcompile(`src/cpp/maths.cpp`, [`headers`]);
+      const mathsObj = cppcompile(`src/cpp/maths.cpp`, ``, [`headers`]);
       const Build bb = Build(Target(`calc`, `dmd -of$out $in`, [mainObj, mathsObj]));
       """
     When I successfully run `reggae -b ninja mixproj`

@@ -45,6 +45,8 @@ Target ccompile(in string srcFileName, in string flags = "", in string[] include
 }
 
 
-Target dlink(in string srcFileName) @safe pure nothrow {
+Target dlink(in string srcFileName, in string flags = "",
+             in string[] includePaths = [], in string stringPaths = [],
+             in Target[] linkWith = []) @safe pure nothrow {
     return Target(srcFileName.exeFileName, "_dlink", [Target(srcFileName)]);
 }

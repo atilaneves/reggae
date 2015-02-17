@@ -25,10 +25,20 @@ void testDCompileIncludePaths() {
 }
 
 
-void testDLink() {
+void testDLinkOnlyName() {
     const build = Build(dlink("my/src/foo.d"));
     const ninja = Ninja(build, "/projs/lefoo");
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build foo: _dlink /projs/lefoo/my/src/foo.d",
                     ["DEPFILE = foo.d"])]);
+}
+
+
+void testDLinkAllOptions() {
+    const build = Build(dlink("my/src/foo.d", "", ["my/src"], [], [Target("boo.o")]));
+    const ninja = Ninja(build, "/projs/lefoo");
+    ninja.buildEntries.shouldEqual(
+        [NinjaEntry("build foo: _dlink /projs/lefoo/my/src/foo.d /projs/lefoo/my/src/boo.o",
+                    ["DEPFILE = foo.d"])]);
+
 }

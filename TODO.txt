@@ -1,6 +1,7 @@
-Unhackify the Perl nonsense necessary for individual D source dependencies
 Automatic dependency detection for a whole D script/app (a dlink default rule)
 A nice way to pass all compiler flags to the system
+Makefile backend for dcompile, cppcompile, etc.
+Tup backend
 Function for obtaining list of dub targets (all "source" files from all packages):
   should return a simple Target[] with dependencies for each D file baked in
 Static libraries

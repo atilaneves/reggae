@@ -21,7 +21,7 @@ int main(string[] args) {
         immutable buildFileName = buildPath(options.projectPath, "reggaefile.d");
         enforce(buildFileName.exists, text("Could not find ", buildFileName));
 
-        alias fileNames = TypeTuple!("run_main.d",
+        alias fileNames = TypeTuple!("buildgen_main.d",
                                      "build.d",
                                      "makefile.d", "ninja.d", "options.d",
                                      "package.d", "range.d", "reflect.d",
@@ -32,7 +32,7 @@ int main(string[] args) {
             reggaeSrcs ~= reggaeSrcFileName(fileName);
         }
 
-        immutable binName = "build";
+        immutable binName = "buildgen";
         const compile = ["dmd", "-g", "-debug","-I" ~ options.projectPath, "-I.",
                          "-of" ~ binName,
                          buildFileName] ~ reggaeSrcs;

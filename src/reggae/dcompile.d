@@ -20,8 +20,8 @@ int main(string[] args) {
         auto file = File(depFile, "w");
         file.write(objFile, ": ");
 
-        auto importReg = regex(`^import +([^\t]+)\t+\((.+)\)$`);
-        auto stdlibReg = regex(`^(std\.|core\.|object$)`);
+        auto importReg = ctRegex!`^import +([^\t]+)\t+\((.+)\)$`;
+        auto stdlibReg = ctRegex!`^(std\.|core\.|object$)`;
         foreach(line; compRes.output.splitter("\n")) {
             auto importMatch = line.matchFirst(importReg);
             if(importMatch) {

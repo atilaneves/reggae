@@ -7,7 +7,10 @@ Feature: Correct dependencies
     Given a file named "proj/reggaefile.d" with:
       """
       import reggae;
-      const mainObj = Target(`main.o`, `dmd -c -J$project/src -of$out $in`, [Target(`src/main.d`)], [Target(`src/string.txt`)]);
+      const mainObj = Target(`main.o`,
+                             `dmd -c -J$project/src -of$out $in`,
+                             [Target(`src/main.d`)],
+                             [Target(`src/string.txt`)]);
       const build = Build(Target(`leapp`, `dmd -of$out $in`, mainObj));
       """
     And a file named "proj/src/main.d" with:
@@ -24,10 +27,8 @@ Feature: Correct dependencies
 
 
   Scenario: String import with make
-    Given I run `reggae -b make proj`
-    And the exit status should be 0
-    When I run `make`
-    Then the exit status should be 0
+    Given I successfully run `reggae -b make proj`
+    When I successfully run `make`
     When I run `./leapp`
     Then the output should contain:
       """
@@ -45,10 +46,8 @@ Feature: Correct dependencies
       """
 
   Scenario: String import with ninja
-    Given I run `reggae -b ninja proj`
-    And the exit status should be 0
-    When I run `ninja`
-    Then the exit status should be 0
+    Given I successfully run `reggae -b ninja proj`
+    When I successfully run `ninja`
     When I run `./leapp`
     Then the output should contain:
       """

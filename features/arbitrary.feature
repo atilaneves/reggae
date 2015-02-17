@@ -58,11 +58,9 @@ Feature: Arbritrary rules
       """
 
   Scenario: Make backend for 1st example
-    When I run `reggae -b make path/to`
-    Then the exit status should be 0
+    When I successfully run `reggae -b make path/to`
     And a file named "Makefile" should exist
-    When I run `make`
-    Then the exit status should be 0
+    When I successfully run `make`
     And the following files should exist:
       |main.o|
       |maths.o|
@@ -81,13 +79,11 @@ Feature: Arbritrary rules
       """
 
   Scenario: Ninja backend for 1st example
-    When I run `reggae -b ninja path/to`
-    Then the exit status should be 0
+    When I successfully run `reggae -b ninja path/to`
     And the following files should exist:
       |build.ninja|
       |rules.ninja|
-    When I run `ninja`
-    Then the exit status should be 0
+    When I successfully run `ninja`
     And the following files should exist:
       |main.o|
       |maths.o|
@@ -106,11 +102,9 @@ Feature: Arbritrary rules
       """
 
   Scenario: Make backend for 2nd example
-    When I run `reggae -b make different/path`
-    Then the exit status should be 0
+    When I successfully run `reggae -b make different/path`
     And a file named "Makefile" should exist
-    When I run `make`
-    Then the exit status should be 0
+    When I successfully run `make`
     And the following files should exist:
       |main.o|
       |foo.o|
@@ -127,10 +121,8 @@ Feature: Arbritrary rules
       """
 
   Scenario: Ninja backend for 2nd example
-    When I run `reggae -b ninja different/path`
-    Then the exit status should be 0
-    When I run `ninja`
-    Then the exit status should be 0
+    When I successfully run `reggae -b ninja different/path`
+    When I successfully run `ninja`
     And the following files should exist:
       |build.ninja|
       |rules.ninja|

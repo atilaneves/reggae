@@ -36,9 +36,9 @@ Feature: D compilation rule
     And a file named "leproj/reggaefile.d" with:
       """
       import reggae;
-      const mainObj  = dcompile(`source/main.d`,  ``, [`source`]);
-      const mathsObj = dcompile(`source/maths.d`, ``, [`source`]);
-      const ioObj    = dcompile(`source/io.d`,    ``, [`source`]);
+      const mainObj  = dCompile(`source/main.d`,  ``, [`source`]);
+      const mathsObj = dCompile(`source/maths.d`, ``, [`source`]);
+      const ioObj    = dCompile(`source/io.d`,    ``, [`source`]);
       const b = Build(Target(`calc`, `dmd -of$out $in`, [mainObj, mathsObj, ioObj]));
       """
 

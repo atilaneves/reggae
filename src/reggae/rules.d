@@ -26,28 +26,28 @@ private string exeFileName(in string srcFileName) @safe pure nothrow {
 }
 
 
-Target dcompile(in string srcFileName, in string flags = "", in string[] includePaths = []) @safe pure nothrow {
+Target dCompile(in string srcFileName, in string flags = "", in string[] includePaths = []) @safe pure nothrow {
     immutable includes = includePaths.map!(a => "-I$project/" ~ a).join(",");
     return Target(srcFileName.objFileName, "_dcompile " ~ includes,
                   [Target(srcFileName)]);
 }
 
 
-Target cppcompile(in string srcFileName, in string flags = "", in string[] includePaths = []) @safe pure nothrow {
+Target cppCompile(in string srcFileName, in string flags = "", in string[] includePaths = []) @safe pure nothrow {
     immutable includes = includePaths.map!(a => "-I$project/" ~ a).join(",");
     return Target(srcFileName.objFileName, "_cppcompile " ~ includes,
                   [Target(srcFileName)]);
 }
 
 
-Target ccompile(in string srcFileName, in string flags = "", in string[] includePaths = []) @safe pure nothrow {
-    return cppcompile(srcFileName, flags, includePaths);
+Target cCompile(in string srcFileName, in string flags = "", in string[] includePaths = []) @safe pure nothrow {
+    return cppCompile(srcFileName, flags, includePaths);
 }
 
 
-Target dlink(in string srcFileName, in string flags = "",
-             in string[] includePaths = [], in string stringPaths = [],
-             in Target[] linkWith = []) @safe pure nothrow {
+Target dExe(in string srcFileName, in string flags = "",
+            in string[] includePaths = [], in string stringPaths = [],
+            in Target[] linkWith = []) @safe pure nothrow {
     const dependencies = [Target(srcFileName)] ~ linkWith;
     return Target(srcFileName.exeFileName, "_dlink", dependencies);
 }

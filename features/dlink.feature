@@ -40,13 +40,13 @@ Feature: Linking a D executable
       const mathsObj = cppCompile(`cpp/maths.cpp`);
       Build bld;
       shared static this() {
-          bld = Build(dExe(`d/main.d`, ``, [`d`], [], [mathsObj]));
+          bld = Build(dExe(App(`d/main.d`, `calc`), ``, [`d`], [], [mathsObj]));
       }
       """
 
     When I successfully run `reggae -b ninja linkproj`
     And I successfully run `ninja`
-    And I successfully run `./main 2 3`
+    And I successfully run `./calc 2 3`
     Then the output should contain:
       """
       Logger says... woohoo The result of feeding 2 and 3 to C++ is 7
@@ -58,7 +58,7 @@ Feature: Linking a D executable
       immutable myconst = `ohnoes`;
       """
     When I successfully run `ninja`
-    And I successfully run `./main 7 10`
+    And I successfully run `./calc 7 10`
     Then the output should contain:
       """
       Logger says... ohnoes The result of feeding 7 and 10 to C++ is 24

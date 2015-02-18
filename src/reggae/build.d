@@ -1,8 +1,9 @@
 module reggae.build;
 
+import reggae.rules: exeExt;
 import std.string: replace;
 import std.algorithm: map, join;
-import std.path: buildPath;
+import std.path: buildPath, baseName, stripExtension, defaultExtension;
 
 
 struct Build {
@@ -17,6 +18,23 @@ struct Build {
     }
 }
 
+struct App {
+    string srcFileName;
+    string exeFileName;
+
+    this(string srcFileName) @safe pure nothrow {
+        immutable stripped = srcFileName.baseName.stripExtension;
+        immutable exeFileName =  exeExt == "" ? stripped : stripped.defaultExtension(exeExt);
+
+        this(srcFileName, exeFileName);
+    }
+
+    this(string srcFileName, string exeFileName) @safe pure nothrow {
+        this.srcFileName = srcFileName;
+        this.exeFileName = exeFileName;
+    }
+}
+
 struct Target {
     string[] outputs;
     const(Target)[] dependencies;
@@ -26,15 +44,18 @@ struct Target {
         this(output, null, null);
     }
 
-    this(string output, string command, in Target dependency, in Target[] implicits = []) @safe pure nothrow {
+    this(string output, string command, in Target dependency,
+         in Target[] implicits = []) @safe pure nothrow {
         this([output], command, [dependency], implicits);
     }
 
-    this(string output, string command, in Target[] dependencies, in Target[] implicits = []) @safe pure nothrow {
+    this(string output, string command,
+         in Target[] dependencies, in Target[] implicits = []) @safe pure nothrow {
         this([output], command, dependencies, implicits);
     }
 
-    this(string[] outputs, string command, in Target[] dependencies, in Target[] implicits = []) @safe pure nothrow {
+    this(string[] outputs, string command,
+         in Target[] dependencies, in Target[] implicits = []) @safe pure nothrow {
         this.outputs = outputs;
         this.dependencies = dependencies;
         this.implicits = implicits;
@@ -86,5 +107,4 @@ private:
         }
         return files;
     }
-
 }

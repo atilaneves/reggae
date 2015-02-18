@@ -23,12 +23,6 @@ private string objFileName(in string srcFileName) @safe pure nothrow {
 }
 
 
-private string exeFileName(in string srcFileName) @safe pure nothrow {
-    immutable stripped = srcFileName.baseName.stripExtension;
-    return exeExt == "" ? stripped : stripped.defaultExtension(exeExt);
-}
-
-
 Target dCompile(in string srcFileName, in string flags = "", in string[] includePaths = []) @safe pure nothrow {
     immutable includes = includePaths.map!(a => "-I$project/" ~ a).join(",");
     return Target(srcFileName.objFileName, "_dcompile " ~ includes,
@@ -49,14 +43,14 @@ Target cCompile(in string srcFileName, in string flags = "", in string[] include
 
 
 //@trusted because of .array
-Target dExe(in string srcFileName, in string flags = "",
+Target dExe(in App app, in string flags = "",
             in string[] includePaths = [], in string[] stringPaths = [],
             in Target[] linkWith = []) @trusted {
 
-    const dependencies = dSources(buildPath(projectPath, srcFileName), flags,
+    const dependencies = dSources(buildPath(projectPath, app.srcFileName), flags,
                                   includePaths.map!(a => buildPath(projectPath, a)).array,
                                   stringPaths.map!(a => buildPath(projectPath, a)).array);
-    return Target(srcFileName.exeFileName, "_dlink", dependencies ~ linkWith);
+    return Target(app.exeFileName, "_dlink", dependencies ~ linkWith);
 }
 
 

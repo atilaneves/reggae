@@ -5,7 +5,7 @@ import std.string: replace;
 import std.algorithm: map, join;
 import std.path: buildPath, baseName, stripExtension, defaultExtension;
 import std.typetuple: allSatisfy;
-import std.traits: Unqual;
+import std.traits: Unqual, isSomeFunction, ReturnType, arity;
 
 struct Build {
     const(Target)[] targets;
@@ -15,17 +15,44 @@ struct Build {
     }
 }
 
-private enum isTarget(T) = is(Unqual!T == Target);
+enum isTarget(alias T) = is(Unqual!(typeof(T)) == Target);
 
 unittest {
     auto  t1 = Target();
     const t2 = Target();
-    static assert(isTarget!(typeof(t1)));
-    static assert(isTarget!(typeof(t2)));
+    static assert(isTarget!t1);
+    static assert(isTarget!t2);
 }
 
-Build build(T...)(T targets) if(T.length > 0 && allSatisfy!(isTarget, T)) {
-    return Build(targets);
+mixin template build(T...) if(allSatisfy!(isTarget, T)) {
+    auto buildFunc() {
+        return Build(T);
+    }
+}
+
+
+package template isBuildFunction(alias T) {
+    static if(!isSomeFunction!T) {
+        enum isBuildFunction = false;
+    } else {
+        enum isBuildFunction = is(ReturnType!T == Build) && arity!T == 0;
+    }
+}
+
+unittest {
+    Build myBuildFunction() { return Build(); }
+    static assert(isBuildFunction!myBuildFunction);
+    float foo;
+    static assert(!isBuildFunction!foo);
+}
+
+package enum isBuildObject(alias T) = is(typeof(T)) && is(Unqual!(typeof(T)) == Build);
+
+unittest {
+    Build bld;
+    static assert(isBuildObject!bld);
+    int i;
+    static assert(!isBuildObject!i);
 }
 
 struct App {

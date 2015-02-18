@@ -38,10 +38,7 @@ Feature: Linking a D executable
       """
       import reggae;
       const mathsObj = cppCompile(`cpp/maths.cpp`);
-      Build bld;
-      shared static this() {
-          bld = build(dExe(App(`d/main.d`, `calc`), ``, [`d`], [], [mathsObj]));
-      }
+      mixin dExe!(App(`d/main.d`, `calc`), ``, [`d`], [], [mathsObj]);
       """
 
     When I successfully run `reggae -b ninja linkproj`

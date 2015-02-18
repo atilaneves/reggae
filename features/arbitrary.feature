@@ -13,7 +13,7 @@ Feature: Arbritrary rules
                          `dmd -of$out $in`,
                          [mainObj, mathsObj],
                          );
-      const bld = build(app);
+      mixin build!(app);
       """
     And a file named "path/to/src/main.d" with:
       """
@@ -41,7 +41,7 @@ Feature: Arbritrary rules
                          `dmd -of$out $in`,
                          [mainObj, fooObj],
                          );
-      const bld = build(app);
+      mixin build!(app);
       """
     And a file named "different/path/source/main.d" with:
       """

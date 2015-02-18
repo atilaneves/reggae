@@ -5,7 +5,8 @@ import std.stdio;
 
 int main(string[] args) {
     immutable options = getOptions(args);
-    const build = getBuild!reggaefile;
+    const buildFunc = getBuild!(reggaefile);
+    const build = buildFunc();
 
     switch(options.backend) {
 

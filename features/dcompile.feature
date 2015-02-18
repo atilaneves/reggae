@@ -39,7 +39,7 @@ Feature: D compilation rule
       const mainObj  = dCompile(`source/main.d`,  ``, [`source`]);
       const mathsObj = dCompile(`source/maths.d`, ``, [`source`]);
       const ioObj    = dCompile(`source/io.d`,    ``, [`source`]);
-      const b = build(Target(`calc`, `dmd -of$out $in`, [mainObj, mathsObj, ioObj]));
+      mixin build!(Target(`calc`, `dmd -of$out $in`, [mainObj, mathsObj, ioObj]));
       """
 
     When I successfully run `reggae -b ninja leproj`

@@ -11,7 +11,7 @@ Feature: Correct dependencies
                              `dmd -c -J$project/src -of$out $in`,
                              [Target(`src/main.d`)],
                              [Target(`src/string.txt`)]);
-      const bld = build(Target(`leapp`, `dmd -of$out $in`, mainObj));
+      mixin build!(Target(`leapp`, `dmd -of$out $in`, mainObj));
       """
     And a file named "proj/src/main.d" with:
       """

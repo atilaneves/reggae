@@ -44,10 +44,17 @@ Target cCompile(in string srcFileName, in string flags = "",
 }
 
 
+mixin template dExe(App app, string flags = "",
+                    string[] includePaths = [], string[] stringImportPaths = [],
+                    Target[] linkWith = []) {
+    auto buildFunc() {
+        return Build(dExeImpl(app, flags, includePaths, stringImportPaths, linkWith));
+    }
+}
 //@trusted because of .array
-Target dExe(in App app, in string flags = "",
-            in string[] includePaths = [], in string[] stringImportPaths = [],
-            in Target[] linkWith = []) @trusted {
+Target dExeImpl(in App app, in string flags = "",
+                     in string[] includePaths = [], in string[] stringImportPaths = [],
+                     in Target[] linkWith = []) @trusted {
 
     const dependencies = dSources(buildPath(projectPath, app.srcFileName), flags,
                                   includePaths.map!(a => buildPath(projectPath, a)).array,

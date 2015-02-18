@@ -32,7 +32,7 @@ Feature: C++ compilation rule
       import reggae;
       const mainObj  = dCompile(`src/d/main.d`);
       const mathsObj = cppCompile(`src/cpp/maths.cpp`, ``, [`headers`]);
-      const Build bb = Build(Target(`calc`, `dmd -of$out $in`, [mainObj, mathsObj]));
+      const bb = build(Target(`calc`, `dmd -of$out $in`, [mainObj, mathsObj]));
       """
     When I successfully run `reggae -b ninja mixproj`
     And I successfully run `ninja`

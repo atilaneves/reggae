@@ -37,8 +37,8 @@ Feature: Error messages
     Given a file named "humpty/dumpty/reggaefile.d" with:
       """
       import reggae;
-      const build1 = Build(Target(`foo`));
-      const build2 = Build(Target(`bar`));
+      const build1 = build(Target(`foo`));
+      const build2 = build(Target(`bar`));
       """
     When I run `reggae humpty/dumpty/`
     Then it should fail with:

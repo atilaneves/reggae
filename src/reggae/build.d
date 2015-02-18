@@ -4,18 +4,28 @@ import reggae.rules: exeExt;
 import std.string: replace;
 import std.algorithm: map, join;
 import std.path: buildPath, baseName, stripExtension, defaultExtension;
-
+import std.typetuple: allSatisfy;
+import std.traits: Unqual;
 
 struct Build {
     const(Target)[] targets;
 
     this(in Target target) {
-        this([target]);
+        this.targets = [target];
     }
+}
 
-    this(in Target[] targets) {
-        this.targets = targets;
-    }
+private enum isTarget(T) = is(Unqual!T == Target);
+
+unittest {
+    auto  t1 = Target();
+    const t2 = Target();
+    static assert(isTarget!(typeof(t1)));
+    static assert(isTarget!(typeof(t2)));
+}
+
+Build build(T...)(T targets) if(T.length > 0 && allSatisfy!(isTarget, T)) {
+    return Build(targets);
 }
 
 struct App {

@@ -40,7 +40,7 @@ Feature: Linking a D executable
       const mathsObj = cppCompile(`cpp/maths.cpp`);
       Build bld;
       shared static this() {
-          bld = Build(dExe(App(`d/main.d`, `calc`), ``, [`d`], [], [mathsObj]));
+          bld = build(dExe(App(`d/main.d`, `calc`), ``, [`d`], [], [mathsObj]));
       }
       """
 

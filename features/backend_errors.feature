@@ -7,7 +7,7 @@ Feature: Backend errors
     Given a file named "lvl1/lvl2/reggaefile.d" with:
       """
       import reggae;
-      const build = Build(Target(`foo`));
+      const bld = build(Target(`foo`));
       """
 
   Scenario: No backend specified

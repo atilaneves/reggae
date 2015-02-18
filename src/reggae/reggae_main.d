@@ -27,7 +27,7 @@ int main(string[] args) {
                                      "package.d", "range.d", "reflect.d",
                                      "rules.d");
         writeSrcFiles!(fileNames)(options);
-        string[] reggaeSrcs;
+        string[] reggaeSrcs = [reggaeSrcFileName("config.d")];
         foreach(fileName; fileNames) {
             reggaeSrcs ~= reggaeSrcFileName(fileName);
         }
@@ -64,8 +64,15 @@ void writeSrcFiles(fileNames...)(in Options options) {
         auto file = File(reggaeSrcFileName(fileName), "w");
         file.write(import(fileName));
     }
-    auto file = File(reggaeSrcFileName("dcompile.d"), "w");
-    file.write(import("dcompile.d"));
+    {
+        auto file = File(reggaeSrcFileName("dcompile.d"), "w");
+        file.write(import("dcompile.d"));
+    }
+    {
+        auto file = File(reggaeSrcFileName("config.d"), "w");
+        file.writeln("module reggae.config;");
+        file.writeln("immutable projectPath = `", options.projectPath, "`;");
+    }
 }
 
 

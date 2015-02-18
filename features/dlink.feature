@@ -19,6 +19,7 @@ Feature: Linking a D executable
     And a file named "linkproj/d/logger.d" with:
       """
       import constants;
+      import std.stdio;
       void log(T...)(T args) {
           writeln(`Logger says... `, myconst, " ", args);
       }
@@ -37,12 +38,17 @@ Feature: Linking a D executable
       """
       import reggae;
       const mathsObj = cppCompile(`cpp/maths.cpp`);
-      const bld = Build(dExe(`d/main.d`, ``, [`d`], [], [mathsObj]));
+      Build bld;
+      shared static this() {
+          bld = Build(dExe(`d/main.d`, ``, [`d`], [], [mathsObj]));
+          import std.stdio;
+          writeln(`Build is `, bld);
+      }
       """
 
     When I successfully run `reggae -b ninja linkproj`
     And I successfully run `ninja`
-    And I successfully run `./calc 2 3`
+    And I successfully run `./main 2 3`
     Then the output should contain:
       """
       Logger says... woohoo The result of feeding 2 and 3 to C++ is 7
@@ -54,8 +60,8 @@ Feature: Linking a D executable
       immutable myconst = `ohnoes`;
       """
     When I successfully run `ninja`
-    And I successfully run `./calc 7 10`
+    And I successfully run `./main 7 10`
     Then the output should contain:
       """
-      Logger says... ohonoes The result of feeding 7 and 10 to C++ is 24
+      Logger says... ohnoes The result of feeding 7 and 10 to C++ is 24
       """

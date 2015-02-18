@@ -23,22 +23,3 @@ void testDCompileIncludePaths() {
                     ["includes = -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path",
                      "DEPFILE = foo.o.d"])]);
 }
-
-
-void testDExeOnlyName() {
-    const build = Build(dExe("my/src/foo.d"));
-    const ninja = Ninja(build, "/projs/lefoo");
-    ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build foo: _dlink /projs/lefoo/my/src/foo.d",
-                    ["DEPFILE = foo.d"])]);
-}
-
-
-void testDExeAllOptions() {
-    const build = Build(dExe("my/src/foo.d", "", ["my/src"], [], [Target("boo.o")]));
-    const ninja = Ninja(build, "/projs/lefoo");
-    ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build foo: _dlink /projs/lefoo/my/src/foo.d /projs/lefoo/boo.o",
-                    ["DEPFILE = foo.d"])]);
-
-}

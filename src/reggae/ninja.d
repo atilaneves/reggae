@@ -69,7 +69,7 @@ private:
 
         string[] paramLines;
 
-        if(cmd != "_dlink") {
+        if(cmd != "_dlink") { //i.e. one of the compile rules
 
             string includesLine;
 

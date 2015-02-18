@@ -7,7 +7,7 @@ import reggae.dependencies;
 import std.path : baseName, stripExtension, defaultExtension, dirSeparator;
 import std.algorithm: map, splitter;
 import std.array: array;
-
+import std.range: chain;
 
 version(Windows) {
     immutable objExt = ".obj";
@@ -60,34 +60,38 @@ Target dExe(in string srcFileName, in string flags = "",
 }
 
 
-//@trusted because of splitter
 private Target[] dSources(in string srcFileName, in string flags,
-                          in string[] includePaths, in string[] stringPaths) @trusted {
+                          in string[] includePaths, in string[] stringPaths) @safe {
+
+    const noProjectIncludes = includePaths.map!removeProjectPath.array;
+    auto mainObj = dCompile(srcFileName.removeProjectPath, flags, noProjectIncludes);
+
+    Target depCompile(in string dep) @safe nothrow {
+        return dCompile(dep.removeProjectPath, flags, noProjectIncludes);
+    }
+
+    const output = runCompiler(srcFileName, flags, includePaths, stringPaths);
+    return [mainObj] ~ dMainDependencies(output).map!depCompile.array;
+}
+
+
+//@trusted because of splitter
+private auto runCompiler(in string srcFileName, in string flags,
+                         in string[] includePaths, in string[] stringPaths) @trusted {
 
     import std.process: execute;
     import std.exception: enforce;
-    import std.conv: text;
-    import std.regex: ctRegex, matchFirst;
+    import std.conv:text;
 
     immutable compiler = "dmd";
     const compArgs = [compiler] ~ flags.splitter.array ~ includePaths.map!(a => "-I" ~ a).array ~
         stringPaths.map!(a => "-J" ~ a).array ~ ["-o-", "-v", "-c", srcFileName];
     const compRes = execute(compArgs);
     enforce(compRes.status == 0, text("dExe could not run ", compArgs.join(" "), ":\n", compRes.output));
-
-
-    Target[] dependencies = [dCompile(srcFileName.removeProjectPath,
-                                      flags,
-                                      includePaths.map!removeProjectPath.array)];
-    foreach(immutable dep; dMainDependencies(compRes.output)) {
-        dependencies ~= dCompile(dep.removeProjectPath, flags,
-                                 includePaths.map!removeProjectPath.array);
-    }
-
-    return dependencies;
+    return compRes.output;
 }
 
-
+//@trusted becaue of replace
 string removeProjectPath(in string path) @trusted pure nothrow {
     return path.replace(projectPath ~ dirSeparator, "");
 }

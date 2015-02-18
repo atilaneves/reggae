@@ -1,5 +1,8 @@
-Automatic dependency detection for a whole D script/app (a dlink default rule)
-A nice way to pass all compiler flags to the system
+Add the possibility of naming the app differently from the file with the main function
+Remove need for a module constructor
+Specify directories to recursively look for C/C++ files. It should be possible to add and exclude individual files.
+Check compiler flags are passed
+Check string import flags are passed
 Makefile backend for dcompile, cppcompile, etc.
 Tup backend
 Function for obtaining list of dub targets (all "source" files from all packages):
@@ -7,5 +10,4 @@ Function for obtaining list of dub targets (all "source" files from all packages
 Static libraries
 CMake-like rules for rerunning itself
 Fix errors when trying to write out source files, test rerunning reggae
-Compiler flags and the like for convenience functions such as dcompile, cppcompile, etc
 Make global configuration available

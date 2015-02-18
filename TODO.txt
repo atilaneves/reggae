@@ -1,4 +1,3 @@
-Add the possibility of naming the app differently from the file with the main function
 Remove need for a module constructor
 Specify directories to recursively look for C/C++ files. It should be possible to add and exclude individual files.
 Check compiler flags are passed

@@ -37,11 +37,10 @@ Feature: Error messages
     Given a file named "humpty/dumpty/reggaefile.d" with:
       """
       import reggae;
-      const build1 = Build(Target(`foo`));
-      const build2 = Build(Target(`bar`));
+      mixin build!(Target(`foo`));
+      mixin build!(Target(`bar`));
       """
     When I run `reggae humpty/dumpty/`
     Then it should fail with:
       """
-      Only one build object allowed per module, reggaefile has 2
       """

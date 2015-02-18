@@ -1,3 +1,4 @@
+import reggae.dependencies;
 import std.exception;
 import std.process;
 import std.stdio;
@@ -20,16 +21,8 @@ int main(string[] args) {
         auto file = File(depFile, "w");
         file.write(objFile, ": ");
 
-        auto importReg = ctRegex!`^import +([^\t]+)\t+\((.+)\)$`;
-        auto stdlibReg = ctRegex!`^(std\.|core\.|object$)`;
-        foreach(line; compRes.output.splitter("\n")) {
-            auto importMatch = line.matchFirst(importReg);
-            if(importMatch) {
-                auto stdlibMatch = importMatch.captures[1].match(stdlibReg);
-                if(!stdlibMatch) {
-                    file.write(importMatch.captures[2], " ");
-                }
-            }
+        foreach(immutable dep; dMainDependencies(compRes.output)) {
+            file.write(dep, " ");
         }
 
         file.writeln;

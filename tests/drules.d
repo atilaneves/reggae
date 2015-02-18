@@ -1,12 +1,12 @@
-module tests.dcompile;
+module tests.drules;
 
 
 import reggae;
 import unit_threaded;
 
 
-void testNoIncludePaths() {
-    const build = Build(dcompile("path/to/src/foo.d"));
+void testDCompileNoIncludePaths() {
+    const build = Build(dCompile("path/to/src/foo.d"));
     const ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build foo.o: _dcompile /tmp/myproject/path/to/src/foo.d",
@@ -15,8 +15,8 @@ void testNoIncludePaths() {
 }
 
 
-void testIncludePaths() {
-    const build = Build(dcompile("path/to/src/foo.d", "", ["path/to/src", "other/path"]));
+void testDCompileIncludePaths() {
+    const build = Build(dCompile("path/to/src/foo.d", "", ["path/to/src", "other/path"]));
     const ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build foo.o: _dcompile /tmp/myproject/path/to/src/foo.d",

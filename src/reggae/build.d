@@ -1,20 +1,88 @@
 module reggae.build;
 
+import reggae.rules: exeExt;
 import std.string: replace;
 import std.algorithm: map, join;
-import std.path: buildPath;
-
+import std.path: buildPath, baseName, stripExtension, defaultExtension;
+import std.typetuple: allSatisfy;
+import std.traits: Unqual, isSomeFunction, ReturnType, arity;
 
 struct Build {
     const(Target)[] targets;
 
     this(in Target target) {
-        this([target]);
+        this.targets = [target];
+    }
+}
+
+enum isTarget(alias T) = is(Unqual!(typeof(T)) == Target);
+
+unittest {
+    auto  t1 = Target();
+    const t2 = Target();
+    static assert(isTarget!t1);
+    static assert(isTarget!t2);
+}
+
+mixin template build(T...) if(allSatisfy!(isTarget, T)) {
+    auto buildFunc() {
+        return Build(T);
+    }
+}
+
+
+package template isBuildFunction(alias T) {
+    static if(!isSomeFunction!T) {
+        enum isBuildFunction = false;
+    } else {
+        enum isBuildFunction = is(ReturnType!T == Build) && arity!T == 0;
+    }
+}
+
+unittest {
+    Build myBuildFunction() { return Build(); }
+    static assert(isBuildFunction!myBuildFunction);
+    float foo;
+    static assert(!isBuildFunction!foo);
+}
+
+package enum isBuildObject(alias T) = is(typeof(T)) && is(Unqual!(typeof(T)) == Build);
+
+unittest {
+    Build bld;
+    static assert(isBuildObject!bld);
+    int i;
+    static assert(!isBuildObject!i);
+}
+
+struct App {
+    string srcFileName;
+    string exeFileName;
+
+    this(string srcFileName) @safe pure nothrow {
+        immutable stripped = srcFileName.baseName.stripExtension;
+        immutable exeFileName =  exeExt == "" ? stripped : stripped.defaultExtension(exeExt);
+
+        this(srcFileName, exeFileName);
     }
 
-    this(in Target[] targets) {
-        this.targets = targets;
+    this(string srcFileName, string exeFileName) @safe pure nothrow {
+        this.srcFileName = srcFileName;
+        this.exeFileName = exeFileName;
     }
+}
+
+
+struct Flags {
+    string flags;
+}
+
+struct ImportPaths {
+    string paths[];
+}
+
+struct StringImportPaths {
+    string paths[];
 }
 
 struct Target {
@@ -22,19 +90,22 @@ struct Target {
     const(Target)[] dependencies;
     const(Target)[] implicits;
 
-    this(string output) {
+    this(string output) @safe pure nothrow {
         this(output, null, null);
     }
 
-    this(string output, string command, in Target dependency, in Target[] implicits = []) {
+    this(string output, string command, in Target dependency,
+         in Target[] implicits = []) @safe pure nothrow {
         this([output], command, [dependency], implicits);
     }
 
-    this(string output, string command, in Target[] dependencies, in Target[] implicits = []) {
+    this(string output, string command,
+         in Target[] dependencies, in Target[] implicits = []) @safe pure nothrow {
         this([output], command, dependencies, implicits);
     }
 
-    this(string[] outputs, string command, in Target[] dependencies, in Target[] implicits = []) {
+    this(string[] outputs, string command,
+         in Target[] dependencies, in Target[] implicits = []) @safe pure nothrow {
         this.outputs = outputs;
         this.dependencies = dependencies;
         this.implicits = implicits;
@@ -86,5 +157,4 @@ private:
         }
         return files;
     }
-
 }

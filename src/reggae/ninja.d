@@ -30,6 +30,8 @@ NinjaEntry[] defaultRules() @safe pure nothrow {
                        ["command = ./dcompile " ~ dcompiler ~ " $includes $out $in $DEPFILE",
                         "deps = gcc",
                         "depfile = $DEPFILE"]),
+            NinjaEntry("rule _dlink",
+                       ["command = " ~ dcompiler ~ " -of$out $in"]),
             NinjaEntry("rule _cppcompile",
                        ["command = " ~ cppcompiler ~ " $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
                         "deps = gcc",
@@ -64,19 +66,27 @@ private:
         auto parts = rawCmdLine.splitter;
         immutable cmd = parts.front;
         parts.popFront;
-        string includesLine;
 
-        if(parts.empty) { //includes
-            includesLine = "includes = ";
-        } else {
-            auto includes = parts.front.splitter(",");
-            includesLine = "includes = " ~ includes.join(" ");
+        string[] paramLines;
+
+        if(cmd != "_dlink") { //i.e. one of the compile rules
+
+            string includesLine;
+
+            if(parts.empty) { //includes
+                includesLine = "includes = ";
+            } else {
+                auto includes = parts.front.splitter(",");
+                includesLine = "includes = " ~ includes.join(" ");
+            }
+            paramLines ~= includesLine;
         }
-
         immutable depFileLine = "DEPFILE = " ~ target.outputs[0] ~ ".d";
+        paramLines ~= depFileLine;
+
         buildEntries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~ cmd ~ " " ~
                                    target.dependencyFiles(_projectPath),
-                                   [includesLine, depFileLine]);
+                                   paramLines);
     }
 
     void customRule(in Target target, in string rawCmdLine) @safe {
@@ -111,57 +121,57 @@ private:
         }
     }
 
-//@trusted because of canFind
-string getRuleCommandLine(in Target target, in string before, in string first, in string between,
-                          in string last, in string after) @trusted pure nothrow const {
-    immutable rawCmdLine = target.inOutCommand(_projectPath);
-    auto cmdLine = "command = " ~ targetRawCommand(target);
-    if(!before.empty) cmdLine ~= " $before";
-    cmdLine ~= rawCmdLine.canFind(" " ~ first) ? " " ~ first : first;
-    if(!between.empty) cmdLine ~= " $between";
-    cmdLine ~= rawCmdLine.canFind(" " ~ last) ? " " ~ last : last;
-    if(!after.empty) cmdLine ~= " $after";
-    return cmdLine;
-}
-
-//Ninja operates on rules, not commands. Since this is supposed to work with
-//generic build systems, the same command can appear with different parameter
-//ordering. The first time we create a rule with the same name as the command.
-//The subsequent times, if any, we append a number to the command to create
-//a new rule
-//@trusted because of replace
-string getRuleName(in string cmd, in string ruleCmdLine, out bool haveToAdd) @trusted nothrow {
-    immutable ruleMainLine = "rule " ~ cmd;
-    //don't have a rule for this cmd yet, return just the cmd
-    if(!ruleEntries.canFind!(a => a.mainLine == ruleMainLine)) {
-        haveToAdd = true;
-        return cmd;
+    //@trusted because of canFind
+    string getRuleCommandLine(in Target target, in string before, in string first, in string between,
+                              in string last, in string after) @trusted pure nothrow const {
+        immutable rawCmdLine = target.inOutCommand(_projectPath);
+        auto cmdLine = "command = " ~ targetRawCommand(target);
+        if(!before.empty) cmdLine ~= " $before";
+        cmdLine ~= rawCmdLine.canFind(" " ~ first) ? " " ~ first : first;
+        if(!between.empty) cmdLine ~= " $between";
+        cmdLine ~= rawCmdLine.canFind(" " ~ last) ? " " ~ last : last;
+        if(!after.empty) cmdLine ~= " $after";
+        return cmdLine;
     }
 
-    //so we have a rule for this already. Need to check if the command line
-    //is the same
+    //Ninja operates on rules, not commands. Since this is supposed to work with
+    //generic build systems, the same command can appear with different parameter
+    //ordering. The first time we create a rule with the same name as the command.
+    //The subsequent times, if any, we append a number to the command to create
+    //a new rule
+    //@trusted because of replace
+    string getRuleName(in string cmd, in string ruleCmdLine, out bool haveToAdd) @trusted nothrow {
+        immutable ruleMainLine = "rule " ~ cmd;
+        //don't have a rule for this cmd yet, return just the cmd
+        if(!ruleEntries.canFind!(a => a.mainLine == ruleMainLine)) {
+            haveToAdd = true;
+            return cmd;
+        }
 
-    //same cmd: either matches exactly or is cmd_{number}
-    auto isSameCmd = (in NinjaEntry entry) {
-        bool sameMainLine = entry.mainLine.startsWith(ruleMainLine) &&
-        (entry.mainLine == ruleMainLine || entry.mainLine[ruleMainLine.length] == '_');
-        bool sameCmdLine = entry.paramLines == [ruleCmdLine];
-        return sameMainLine && sameCmdLine;
-    };
+        //so we have a rule for this already. Need to check if the command line
+        //is the same
 
-    auto rulesWithSameCmd = ruleEntries.filter!isSameCmd;
-    assert(rulesWithSameCmd.empty || rulesWithSameCmd.array.length == 1);
+        //same cmd: either matches exactly or is cmd_{number}
+        auto isSameCmd = (in NinjaEntry entry) {
+            bool sameMainLine = entry.mainLine.startsWith(ruleMainLine) &&
+            (entry.mainLine == ruleMainLine || entry.mainLine[ruleMainLine.length] == '_');
+            bool sameCmdLine = entry.paramLines == [ruleCmdLine];
+            return sameMainLine && sameCmdLine;
+        };
 
-    //found a sule with the same cmd and paramLines
-    if(!rulesWithSameCmd.empty) return rulesWithSameCmd.front.mainLine.replace("rule ", "");
+        auto rulesWithSameCmd = ruleEntries.filter!isSameCmd;
+        assert(rulesWithSameCmd.empty || rulesWithSameCmd.array.length == 1);
 
-    //if we got here then it's the first time we see "cmd" with a new
-    //ruleCmdLine, so we add it
-    haveToAdd = true;
-    import std.conv: to;
-    static int counter = 1;
-    return cmd ~ "_" ~ (++counter).to!string;
-}
+        //found a sule with the same cmd and paramLines
+        if(!rulesWithSameCmd.empty) return rulesWithSameCmd.front.mainLine.replace("rule ", "");
+
+        //if we got here then it's the first time we see "cmd" with a new
+        //ruleCmdLine, so we add it
+        haveToAdd = true;
+        import std.conv: to;
+        static int counter = 1;
+        return cmd ~ "_" ~ (++counter).to!string;
+    }
 }
 
 //@trusted because of splitter

@@ -25,7 +25,7 @@ int main(string[] args) {
                                      "build.d",
                                      "makefile.d", "ninja.d", "options.d",
                                      "package.d", "range.d", "reflect.d",
-                                     "rules.d");
+                                     "rules.d", "dependencies.d");
         writeSrcFiles!(fileNames)(options);
         string[] reggaeSrcs = [reggaeSrcFileName("config.d")];
         foreach(fileName; fileNames) {
@@ -45,7 +45,9 @@ int main(string[] args) {
         enforce(retRunBuildgen.status == 0,
                 text("Couldn't execute the produced ", binName, " binary:\n", retRunBuildgen.output));
 
-        immutable retCompDcompile = execute(["dmd", reggaeSrcFileName("dcompile.d")]);
+        immutable retCompDcompile = execute(["dmd",
+                                             reggaeSrcFileName("dcompile.d"),
+                                             reggaeSrcFileName("dependencies.d")]);
         enforce(retCompDcompile.status == 0, text("Couldn't compile dcompile.d:\n", retCompDcompile.output));
 
     } catch(Exception ex) {

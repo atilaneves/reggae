@@ -3,6 +3,7 @@ module reggae.rules;
 
 import reggae.build;
 import reggae.config;
+import reggae.dependencies;
 import std.path : baseName, stripExtension, defaultExtension, dirSeparator;
 import std.algorithm: map, splitter;
 import std.array: array;
@@ -78,18 +79,9 @@ private Target[] dSources(in string srcFileName, in string flags,
     Target[] dependencies = [dCompile(srcFileName.removeProjectPath,
                                       flags,
                                       includePaths.map!removeProjectPath.array)];
-    auto importReg = ctRegex!`^import +([^\t]+)\t+\((.+)\)$`;
-    auto stdlibReg = ctRegex!`^(std\.|core\.|object$)`;
-    foreach(line; compRes.output.splitter("\n")) {
-        auto importMatch = line.matchFirst(importReg);
-        if(importMatch) {
-            auto stdlibMatch = importMatch.captures[1].matchFirst(stdlibReg);
-            if(!stdlibMatch) {
-                immutable depSrcFileName = importMatch.captures[2].removeProjectPath;
-                dependencies ~= dCompile(depSrcFileName, flags,
-                                         includePaths.map!removeProjectPath.array);
-            }
-        }
+    foreach(immutable dep; dMainDependencies(compRes.output)) {
+        dependencies ~= dCompile(dep.removeProjectPath, flags,
+                                 includePaths.map!removeProjectPath.array);
     }
 
     return dependencies;

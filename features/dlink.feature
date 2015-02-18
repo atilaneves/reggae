@@ -41,8 +41,6 @@ Feature: Linking a D executable
       Build bld;
       shared static this() {
           bld = Build(dExe(`d/main.d`, ``, [`d`], [], [mathsObj]));
-          import std.stdio;
-          writeln(`Build is `, bld);
       }
       """
 

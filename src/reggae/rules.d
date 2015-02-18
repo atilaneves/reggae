@@ -30,32 +30,34 @@ Target dCompile(in string srcFileName, in string flags = "", in string[] include
 }
 
 
-Target cppCompile(in string srcFileName, in string flags = "", in string[] includePaths = []) @safe pure nothrow {
+Target cppCompile(in string srcFileName, in string flags = "",
+                  in string[] includePaths = []) @safe pure nothrow {
     immutable includes = includePaths.map!(a => "-I$project/" ~ a).join(",");
     return Target(srcFileName.objFileName, "_cppcompile " ~ includes,
                   [Target(srcFileName)]);
 }
 
 
-Target cCompile(in string srcFileName, in string flags = "", in string[] includePaths = []) @safe pure nothrow {
+Target cCompile(in string srcFileName, in string flags = "",
+                in string[] includePaths = []) @safe pure nothrow {
     return cppCompile(srcFileName, flags, includePaths);
 }
 
 
 //@trusted because of .array
 Target dExe(in App app, in string flags = "",
-            in string[] includePaths = [], in string[] stringPaths = [],
+            in string[] includePaths = [], in string[] stringImportPaths = [],
             in Target[] linkWith = []) @trusted {
 
     const dependencies = dSources(buildPath(projectPath, app.srcFileName), flags,
                                   includePaths.map!(a => buildPath(projectPath, a)).array,
-                                  stringPaths.map!(a => buildPath(projectPath, a)).array);
+                                  stringImportPaths.map!(a => buildPath(projectPath, a)).array);
     return Target(app.exeFileName, "_dlink", dependencies ~ linkWith);
 }
 
 
 private Target[] dSources(in string srcFileName, in string flags,
-                          in string[] includePaths, in string[] stringPaths) @safe {
+                          in string[] includePaths, in string[] stringImportPaths) @safe {
 
     const noProjectIncludes = includePaths.map!removeProjectPath.array;
     auto mainObj = dCompile(srcFileName.removeProjectPath, flags, noProjectIncludes);
@@ -64,14 +66,14 @@ private Target[] dSources(in string srcFileName, in string flags,
         return dCompile(dep.removeProjectPath, flags, noProjectIncludes);
     }
 
-    const output = runCompiler(srcFileName, flags, includePaths, stringPaths);
+    const output = runCompiler(srcFileName, flags, includePaths, stringImportPaths);
     return [mainObj] ~ dMainDependencies(output).map!depCompile.array;
 }
 
 
 //@trusted because of splitter
 private auto runCompiler(in string srcFileName, in string flags,
-                         in string[] includePaths, in string[] stringPaths) @trusted {
+                         in string[] includePaths, in string[] stringImportPaths) @trusted {
 
     import std.process: execute;
     import std.exception: enforce;
@@ -79,7 +81,7 @@ private auto runCompiler(in string srcFileName, in string flags,
 
     immutable compiler = "dmd";
     const compArgs = [compiler] ~ flags.splitter.array ~ includePaths.map!(a => "-I" ~ a).array ~
-        stringPaths.map!(a => "-J" ~ a).array ~ ["-o-", "-v", "-c", srcFileName];
+        stringImportPaths.map!(a => "-J" ~ a).array ~ ["-o-", "-v", "-c", srcFileName];
     const compRes = execute(compArgs);
     enforce(compRes.status == 0, text("dExe could not run ", compArgs.join(" "), ":\n", compRes.output));
     return compRes.output;

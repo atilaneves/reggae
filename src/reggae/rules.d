@@ -75,9 +75,9 @@ private Target[] dSources(in string srcFileName, in string flags,
     enforce(compRes.status == 0, text("dExe could not run ", compArgs.join(" "), ":\n", compRes.output));
 
 
-    Target[] dependencies = [dCompile(srcFileName.replace(projectPath ~ dirSeparator, ""),
+    Target[] dependencies = [dCompile(srcFileName.removeProjectPath,
                                       flags,
-                                      includePaths.map!(a => a.replace(projectPath ~ dirSeparator, "")).array)];
+                                      includePaths.map!removeProjectPath.array)];
     auto importReg = ctRegex!`^import +([^\t]+)\t+\((.+)\)$`;
     auto stdlibReg = ctRegex!`^(std\.|core\.|object$)`;
     foreach(line; compRes.output.splitter("\n")) {
@@ -85,12 +85,17 @@ private Target[] dSources(in string srcFileName, in string flags,
         if(importMatch) {
             auto stdlibMatch = importMatch.captures[1].matchFirst(stdlibReg);
             if(!stdlibMatch) {
-                immutable depSrcFileName = importMatch.captures[2].replace(projectPath ~ dirSeparator, "");
+                immutable depSrcFileName = importMatch.captures[2].removeProjectPath;
                 dependencies ~= dCompile(depSrcFileName, flags,
-                                         includePaths.map!(a => a.replace(projectPath ~ dirSeparator, "")).array);
+                                         includePaths.map!removeProjectPath.array);
             }
         }
     }
 
     return dependencies;
+}
+
+
+string removeProjectPath(in string path) @trusted pure nothrow {
+    return path.replace(projectPath ~ dirSeparator, "");
 }

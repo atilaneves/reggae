@@ -38,7 +38,11 @@ Feature: Linking a D executable
       """
       import reggae;
       const mathsObj = cppCompile(`cpp/maths.cpp`);
-      mixin dExe!(App(`d/main.d`, `calc`), ``, [`d`], [], [mathsObj]);
+      mixin dExe!(App(`d/main.d`, `calc`),
+                  Flags(``),
+                  ImportPaths([`d`]),
+                  StringImportPaths([]),
+                  [mathsObj]);
       """
 
     When I successfully run `reggae -b ninja linkproj`

@@ -72,6 +72,19 @@ struct App {
     }
 }
 
+
+struct Flags {
+    string flags;
+}
+
+struct ImportPaths {
+    string paths[];
+}
+
+struct StringImportPaths {
+    string paths[];
+}
+
 struct Target {
     string[] outputs;
     const(Target)[] dependencies;

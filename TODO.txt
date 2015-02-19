@@ -4,6 +4,7 @@ Function for obtaining list of dub targets (all "source" files from all packages
   should return an array of dCompile targets
   should have an explicit dependency on dub.json/package.json/sdl
 Make global configuration available
+Make it possible to choose which compiler to use for each language
 Static libraries
 CMake-like rules for rerunning itself
 Tup backend

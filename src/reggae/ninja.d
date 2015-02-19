@@ -64,22 +64,13 @@ private:
 
     //@trusted because of join
     void defaultRule(in Target target, in string rawCmdLine) @trusted {
-        auto parts = rawCmdLine.splitter;
         immutable rule = rawCmdLine.getDefaultRule;
-        parts.popFront;
 
         string[] paramLines;
 
         if(rule != "_dlink") { //i.e. one of the compile rules
-
-            string includesLine;
-
-            if(parts.empty) { //includes
-                includesLine = "includes = ";
-            } else {
-                auto includes = parts.front.splitter(",");
-                includesLine = "includes = " ~ includes.join(" ");
-            }
+            immutable includes = rawCmdLine.getDefaultRuleParams("includes", []).join(" ");
+            string includesLine = "includes = " ~ includes;
             paramLines ~= includesLine;
 
             immutable depFileLine = "DEPFILE = " ~ target.outputs[0] ~ ".d";

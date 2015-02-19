@@ -5,7 +5,7 @@ import reggae.build;
 import reggae.config;
 import reggae.dependencies;
 import reggae.types;
-import std.path : baseName, stripExtension, defaultExtension, dirSeparator;
+import std.path : baseName, absolutePath, dirSeparator;
 import std.algorithm: map, splitter, remove, canFind, startsWith, find;
 import std.array: array, replace;
 import std.range: chain;
@@ -20,14 +20,16 @@ version(Windows) {
 
 
 private string objFileName(in string srcFileName) @safe pure nothrow {
+    import std.path: stripExtension, defaultExtension;
     return srcFileName.baseName.stripExtension.defaultExtension(objExt);
 }
 
 
+//@trusted because of join
 Target dCompile(in string srcFileName, in string flags = "",
-                in string[] importPaths = [], in string[] stringImportPaths = []) @safe pure {
-    immutable importParams = importPaths.map!(a => "-I$project/" ~ a).join(",");
-    immutable stringParams = stringImportPaths.map!(a => "-J$project/" ~ a).join(",");
+                in string[] importPaths = [], in string[] stringImportPaths = []) @trusted pure {
+    immutable importParams = importPaths.map!(a => "-I$project" ~ dirSeparator ~ a).join(",");
+    immutable stringParams = stringImportPaths.map!(a => "-J$project"~ dirSeparator ~ a).join(",");
     immutable flagParams = flags.splitter.join(",");
     return Target(srcFileName.objFileName,
                   "_dcompile includes=" ~ importParams ~ " flags=" ~ flagParams ~ " stringImports=" ~ stringParams,
@@ -164,11 +166,10 @@ private auto runCompiler(in string srcFileName, in string flags,
     return compRes.output;
 }
 
-//@trusted becaue of replace
-string removeProjectPath(in string path) @trusted pure nothrow {
-    return path.replace(projectPath ~ dirSeparator, "");
+string removeProjectPath(in string path) @safe pure {
+    import std.path: relativePath;
+    return path.absolutePath.relativePath(projectPath.absolutePath);
 }
-
 
 private immutable defaultRules = ["_dcompile", "_ccompile", "_cppcompile", "_dlink"];
 

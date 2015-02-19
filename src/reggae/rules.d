@@ -144,18 +144,24 @@ string removeProjectPath(in string path) @trusted pure nothrow {
 
 private immutable defaultRules = ["_dcompile", "_ccompile", "_cppcompile", "_dlink"];
 
-bool isDefaultRule(in string command) @safe pure nothrow {
+private bool isDefaultRule(in string command) @safe pure nothrow {
     return defaultRules.canFind(command);
+}
+
+bool isDefaultCommand(in string command) @safe pure {
+    auto parts = command.splitter;
+    immutable rule = parts.front;
+    return isDefaultRule(rule);
 }
 
 string getDefaultRule(in string command) @safe pure {
     auto parts = command.splitter;
-    immutable cmd = parts.front;
-    if(!isDefaultRule(cmd)) {
+    immutable rule = parts.front;
+    if(!isDefaultRule(rule)) {
         throw new Exception("Cannot get defaultRule from " ~ command);
     }
 
-    return cmd;
+    return rule;
 }
 
 

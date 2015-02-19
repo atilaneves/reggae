@@ -3,6 +3,7 @@ module reggae.ninja;
 
 import reggae.build;
 import reggae.range;
+import reggae.rules;
 import std.array;
 import std.range;
 import std.algorithm;
@@ -49,7 +50,7 @@ struct Ninja {
 
         foreach(target; DepthFirst(_build.targets[0])) {
             auto rawCmdLine = target.inOutCommand(_projectPath);
-            rawCmdLine.startsWith("_") ? defaultRule(target, rawCmdLine) : customRule(target, rawCmdLine);
+            rawCmdLine.isDefaultCommand ? defaultRule(target, rawCmdLine) : customRule(target, rawCmdLine);
         }
     }
 
@@ -64,12 +65,12 @@ private:
     //@trusted because of join
     void defaultRule(in Target target, in string rawCmdLine) @trusted {
         auto parts = rawCmdLine.splitter;
-        immutable cmd = parts.front;
+        immutable rule = rawCmdLine.getDefaultRule;
         parts.popFront;
 
         string[] paramLines;
 
-        if(cmd != "_dlink") { //i.e. one of the compile rules
+        if(rule != "_dlink") { //i.e. one of the compile rules
 
             string includesLine;
 
@@ -80,11 +81,12 @@ private:
                 includesLine = "includes = " ~ includes.join(" ");
             }
             paramLines ~= includesLine;
-        }
-        immutable depFileLine = "DEPFILE = " ~ target.outputs[0] ~ ".d";
-        paramLines ~= depFileLine;
 
-        buildEntries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~ cmd ~ " " ~
+            immutable depFileLine = "DEPFILE = " ~ target.outputs[0] ~ ".d";
+            paramLines ~= depFileLine;
+        }
+
+        buildEntries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~ rule ~ " " ~
                                    target.dependencyFiles(_projectPath),
                                    paramLines);
     }

@@ -23,3 +23,9 @@ void testGetDefaultRuleParams() {
 
     "_madeup includes=boo,bar".getDefaultRuleParams("includes").shouldThrow!Exception;
 }
+
+void testValueWhenKeyNotFound() {
+    immutable command = "_dcompile foo=bar";
+    command.getDefaultRuleParams("foo", ["hahaha"]).shouldEqual(["bar"]);
+    command.getDefaultRuleParams("includes", ["hahaha"]).shouldEqual(["hahaha"]);
+}

@@ -148,15 +148,16 @@ private bool isDefaultRule(in string command) @safe pure nothrow {
     return defaultRules.canFind(command);
 }
 
+private string getRule(in string command) @safe pure {
+    return command.splitter.front;
+}
+
 bool isDefaultCommand(in string command) @safe pure {
-    auto parts = command.splitter;
-    immutable rule = parts.front;
-    return isDefaultRule(rule);
+    return isDefaultRule(command.getRule);
 }
 
 string getDefaultRule(in string command) @safe pure {
-    auto parts = command.splitter;
-    immutable rule = parts.front;
+    immutable rule = command.getRule;
     if(!isDefaultRule(rule)) {
         throw new Exception("Cannot get defaultRule from " ~ command);
     }
@@ -165,8 +166,19 @@ string getDefaultRule(in string command) @safe pure {
 }
 
 
+string[] getDefaultRuleParams(in string command, in string key) @safe pure {
+    return getDefaultRuleParams(command, key, false);
+}
+
+
+string[] getDefaultRuleParams(in string command, in string key, string[] ifNotFound) @safe pure {
+    return getDefaultRuleParams(command, key, true, ifNotFound);
+}
+
+
 //@trusted because of replace
-string[] getDefaultRuleParams(in string command, in string key) @trusted pure {
+private string[] getDefaultRuleParams(in string command, in string key,
+                                      bool useIfNotFound, string[] ifNotFound = []) @trusted pure {
     import std.conv: text;
 
     auto parts = command.splitter;
@@ -177,7 +189,11 @@ string[] getDefaultRuleParams(in string command, in string key) @trusted pure {
 
     auto fromParamPart = parts.find!(a => a.startsWith(key ~ "="));
     if(fromParamPart.empty) {
-        throw new Exception(text("Cannot find key ", key, " in ", command));
+        if(useIfNotFound) {
+            return ifNotFound;
+        } else {
+            throw new Exception ("Cannot get default rule from " ~ command);
+        }
     }
 
     auto paramPart = fromParamPart.front;

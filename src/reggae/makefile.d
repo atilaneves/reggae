@@ -51,8 +51,6 @@ struct Makefile {
 
     string command(in Target target, in string rawCmdLine) @safe const {
         immutable dCompiler = "dmd";
-        immutable cppCompiler = "g++";
-        immutable cCompiler = "gcc";
         immutable rule = rawCmdLine.getDefaultRule;
         immutable flags = rawCmdLine.getDefaultRuleParams("flags", []).join(" ");
         immutable includes = rawCmdLine.getDefaultRuleParams("includes", []).join(" ");
@@ -66,16 +64,15 @@ struct Makefile {
         }
 
         if(rule == "_dcompile") {
-
             immutable stringImports = rawCmdLine.getDefaultRuleParams("stringImports", []).join(" ");
             immutable command = ["./dcompile", dCompiler, flags, includes, stringImports, target.outputs[0],
                                  target.dependencyFiles(projectPath), depfile].join(" ");
             return command ~ makeAutoDeps(depfile);
 
         } else if(rule == "_cppcompile") {
-            return ccCommand(cppCompiler);
+            return ccCommand("g++");
         } else if(rule == "_ccompile") {
-            return ccCommand(cCompiler);
+            return ccCommand("gcc");
         } else if(rule == "_dlink") {
             return [dCompiler, "-of" ~ target.outputs[0], target.dependencyFiles(projectPath)].join(" ");
         } else {

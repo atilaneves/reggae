@@ -1,5 +1,4 @@
 Different directories for object files to avoid name clashing. See dlink.feature's cpp_constants.cpp
-Flags and include paths for cppObjects...
 Makefile backend for dcompile, cppcompile, etc.
 Function for obtaining list of dub targets (all "source" files from all packages):
   should return a simple Target[] with dependencies for each D file baked in

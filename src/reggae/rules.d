@@ -55,7 +55,7 @@ auto cppObjects(SrcDirs dirs = SrcDirs(),
     () {
 
     auto files = selectSrcFiles(srcFilesInDirs("cpp", dirs.paths), srcFiles.paths, excludeFiles.paths);
-    return files.map!(a => cppCompile(a)).array;
+    return files.map!(a => cppCompile(a, flags.flags, includes.paths)).array;
 }
 
 

@@ -34,7 +34,7 @@ NinjaEntry[] defaultRules() @safe pure nothrow {
             NinjaEntry("rule _dlink",
                        ["command = " ~ dcompiler ~ " -of$out $in"]),
             NinjaEntry("rule _cppcompile",
-                       ["command = " ~ cppcompiler ~ " $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
+                       ["command = " ~ cppcompiler ~ " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
                         "deps = gcc",
                         "depfile = $DEPFILE"])];
 }

@@ -60,8 +60,15 @@ struct Makefile {
             immutable includes = rawCmdLine.getDefaultRuleParams("includes", []).join(" ");
             immutable stringImports = rawCmdLine.getDefaultRuleParams("stringImports", []).join(" ");
             immutable depfile = target.outputs[0] ~ ".d";
-            return ["./dcompile", dCompiler, flags, includes, stringImports, target.outputs[0],
-                    target.dependencyFiles(projectPath), depfile].join(" ");
+            immutable first = ["./dcompile", dCompiler, flags, includes, stringImports, target.outputs[0],
+                               target.dependencyFiles(projectPath), depfile].join(" ");
+            immutable pFile = depfile ~ ".P";
+            immutable second = "\n\t@cp " ~ depfile ~ " " ~ pFile ~ "; \\\n" ~
+                "    sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \\\n" ~
+                "        -e '/^$$/ d' -e 's/$$/ :/' < " ~ depfile ~ " >> " ~ pFile ~"; \\\n" ~
+                "    rm -f " ~ depfile ~ "\n\n" ~
+                "-include " ~ pFile ~ "\n\n";
+            return first ~ second;
         } else if(rule == "_cppcompile") {
             immutable flags = rawCmdLine.getDefaultRuleParams("flags", []).join(" ");
             immutable includes = rawCmdLine.getDefaultRuleParams("includes", []).join(" ");

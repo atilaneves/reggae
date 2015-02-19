@@ -3,7 +3,7 @@ Feature: D compilation rule
   I want to have reggae determine the implicit dependencies when compiling a single D file
   So that I don't have to specify the dependencies myself
 
-  Scenario: Using dcompile for every object file
+  Background:
     Given a file named "leproj/source/main.d" with:
       """
       import maths;
@@ -42,6 +42,7 @@ Feature: D compilation rule
       mixin build!(Target(`calc`, `dmd -of$out $in`, [mainObj, mathsObj, ioObj]));
       """
 
+  Scenario: Using dcompile for every object file with Ninja
     When I successfully run `reggae -b ninja leproj`
     And I successfully run `ninja`
     And I run `./calc 5`
@@ -82,6 +83,53 @@ Feature: D compilation rule
       int constInt() { return 6; }
       """
     When I successfully run `ninja`
+    And I successfully run `./calc 7`
+    Then the output should contain:
+      """
+      output: The result of 7 is 42
+      """
+
+  Scenario: Using dcompile for every object file with Make
+    When I successfully run `reggae -b make leproj`
+    And I successfully run `make`
+    And I run `./calc 5`
+    Then the output should contain:
+      """
+      output: The result of 5 is 120
+      """
+    Given I successfully run `sleep 1` for up to 1 seconds
+    And I overwrite "leproj/source/constants.d" with:
+      """
+      immutable int leconst = 2;
+      """
+    When I successfully run `make`
+    And I successfully run `./calc 5`
+    Then the output should contain:
+      """
+      output: The result of 5 is 10
+      """
+    Given I successfully run `sleep 1` for up to 1 seconds
+    And I overwrite "leproj/source/constants.d" with:
+      """
+      import generator;
+      immutable int leconst = constInt();
+      """
+    And a file named "leproj/source/generator.d" with:
+      """
+      int constInt() { return  5; }
+      """
+    When I successfully run `make`
+    And I successfully run `./calc 5`
+    Then the output should contain:
+      """
+      output: The result of 5 is 25
+      """
+    Given I successfully run `sleep 1` for up to 1 seconds
+    And I overwrite "leproj/source/generator.d" with:
+      """
+      int constInt() { return 6; }
+      """
+    When I successfully run `make`
     And I successfully run `./calc 7`
     Then the output should contain:
       """

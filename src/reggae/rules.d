@@ -5,7 +5,7 @@ import reggae.build;
 import reggae.config;
 import reggae.dependencies;
 import reggae.types;
-import std.path : baseName, absolutePath;
+import std.path : baseName, absolutePath, dirSeparator;
 import std.algorithm: map, splitter, remove, canFind, startsWith, find;
 import std.array: array, replace;
 import std.range: chain;
@@ -28,12 +28,12 @@ private string objFileName(in string srcFileName) @safe pure nothrow {
 //@trusted because of join
 Target dCompile(in string srcFileName, in string flags = "",
                 in string[] importPaths = [], in string[] stringImportPaths = []) @trusted pure {
-    immutable importParams = importPaths.map!(a => "-I"~ buildPath(projectPath, a).absolutePath).join(",");
-    immutable stringParams = stringImportPaths.map!(a => "-J"~ buildPath(projectPath, a).absolutePath).join(",");
+    immutable importParams = importPaths.map!(a => "-I$project" ~ dirSeparator ~ a).join(",");
+    immutable stringParams = stringImportPaths.map!(a => "-J$project"~ dirSeparator ~ a).join(",");
     immutable flagParams = flags.splitter.join(",");
     return Target(srcFileName.objFileName,
                   "_dcompile includes=" ~ importParams ~ " flags=" ~ flagParams ~ " stringImports=" ~ stringParams,
-                  [Target(buildPath(projectPath, srcFileName).absolutePath)]);
+                  [Target(srcFileName)]);
 }
 
 

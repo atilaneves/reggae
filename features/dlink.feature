@@ -57,6 +57,10 @@ Feature: Linking a D executable
 
     When I successfully run `reggae -b ninja linkproj`
     And I successfully run `ninja`
+    Then the output should contain:
+      """
+      -debug
+      """
     And I successfully run `./calc 2 3`
     Then the output should contain:
       """

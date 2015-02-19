@@ -1,7 +1,8 @@
 Different directories for object files to avoid name clashing. See dlink.feature's cpp_constants.cpp
 Makefile backend for dcompile, cppcompile, etc.
 Function for obtaining list of dub targets (all "source" files from all packages):
-  should return a simple Target[] with dependencies for each D file baked in
+  should return an array of dCompile targets
+  should have an explicit dependency on dub.json/package.json/sdl
 Make global configuration available
 Static libraries
 CMake-like rules for rerunning itself

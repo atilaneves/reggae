@@ -26,7 +26,8 @@ struct NinjaEntry {
  */
 NinjaEntry[] defaultRules() @safe pure nothrow {
     immutable dcompiler = "dmd";
-    immutable cppcompiler = "gcc";
+    immutable cppcompiler = "g++";
+    immutable ccompiler = "gcc";
     return [NinjaEntry("rule _dcompile",
                        ["command = ./dcompile " ~ dcompiler ~ " $flags $includes $stringImports $out $in $DEPFILE",
                         "deps = gcc",
@@ -36,7 +37,12 @@ NinjaEntry[] defaultRules() @safe pure nothrow {
             NinjaEntry("rule _cppcompile",
                        ["command = " ~ cppcompiler ~ " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
                         "deps = gcc",
-                        "depfile = $DEPFILE"])];
+                        "depfile = $DEPFILE"]),
+            NinjaEntry("rule _ccompile",
+                       ["command = " ~ ccompiler ~ " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
+                        "deps = gcc",
+                        "depfile = $DEPFILE"])
+        ];
 }
 
 

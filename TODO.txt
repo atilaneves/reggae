@@ -1,4 +1,4 @@
-Specify directories to recursively look for C/C++ files. It should be possible to add and exclude individual files.
+Different directories for object files to avoid name clashing. See dlink.feature's cpp_constants.cpp
 Check compiler flags are passed
 Check string import flags are passed
 Makefile backend for dcompile, cppcompile, etc.

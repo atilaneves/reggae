@@ -9,7 +9,7 @@ import std.exception: enforce;
 import reggae.options;
 
 
-immutable reggaeSrcDirName = "reggae";
+immutable reggaeSrcDirName = buildPath(".reggae", "src", "reggae");
 
 
 int main(string[] args) {
@@ -33,7 +33,7 @@ int main(string[] args) {
         }
 
         immutable binName = "buildgen";
-        const compile = ["dmd", "-g", "-debug","-I" ~ options.projectPath, "-I.",
+        const compile = ["dmd", "-g", "-debug","-I" ~ options.projectPath,
                          "-of" ~ binName] ~ reggaeSrcs ~ buildFileName;
 
         immutable retCompBuildgen = execute(compile);
@@ -59,8 +59,9 @@ int main(string[] args) {
 
 
 void writeSrcFiles(fileNames...)(in Options options) {
-    import std.file: mkdir;
-    mkdir(reggaeSrcDirName);
+    import std.file: mkdirRecurse;
+    if(!reggaeSrcDirName.exists) mkdirRecurse(reggaeSrcDirName);
+
     foreach(fileName; fileNames) {
         auto file = File(reggaeSrcFileName(fileName), "w");
         file.write(import(fileName));

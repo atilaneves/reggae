@@ -2,9 +2,9 @@ Specify directories to recursively look for C/C++ files. It should be possible t
 Check compiler flags are passed
 Check string import flags are passed
 Makefile backend for dcompile, cppcompile, etc.
-Tup backend
 Function for obtaining list of dub targets (all "source" files from all packages):
   should return a simple Target[] with dependencies for each D file baked in
+Tup backend
 Static libraries
 CMake-like rules for rerunning itself
 Fix errors when trying to write out source files, test rerunning reggae

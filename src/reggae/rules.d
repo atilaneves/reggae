@@ -5,8 +5,8 @@ import reggae.build;
 import reggae.config;
 import reggae.dependencies;
 import std.path : baseName, stripExtension, defaultExtension, dirSeparator;
-import std.algorithm: map, splitter, remove, canFind;
-import std.array: array;
+import std.algorithm: map, splitter, remove, canFind, startsWith, find;
+import std.array: array, replace;
 import std.range: chain;
 
 version(Windows) {
@@ -139,4 +139,43 @@ private auto runCompiler(in string srcFileName, in string flags,
 //@trusted becaue of replace
 string removeProjectPath(in string path) @trusted pure nothrow {
     return path.replace(projectPath ~ dirSeparator, "");
+}
+
+
+private immutable defaultRules = ["_dcompile", "_ccompile", "_cppcompile", "_dlink"];
+
+bool isDefaultRule(in string command) @safe pure nothrow {
+    return defaultRules.canFind(command);
+}
+
+string getDefaultRule(in string command) @safe pure {
+    auto parts = command.splitter;
+    immutable cmd = parts.front;
+    if(!isDefaultRule(cmd)) {
+        throw new Exception("Cannot get defaultRule from " ~ command);
+    }
+
+    return cmd;
+}
+
+
+//@trusted because of replace
+string[] getDefaultRuleParams(in string command, in string key) @trusted pure {
+    import std.conv: text;
+
+    auto parts = command.splitter;
+    immutable cmd = parts.front;
+    if(!isDefaultRule(cmd)) {
+        throw new Exception("Cannot get defaultRule from " ~ command);
+    }
+
+    auto fromParamPart = parts.find!(a => a.startsWith(key ~ "="));
+    if(fromParamPart.empty) {
+        throw new Exception(text("Cannot find key ", key, " in ", command));
+    }
+
+    auto paramPart = fromParamPart.front;
+    auto removeKey = paramPart.replace(key ~ "=", "");
+
+    return removeKey.splitter(",").array;
 }

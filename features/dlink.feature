@@ -37,12 +37,12 @@ Feature: Linking a D executable
     And a file named "linkproj/reggaefile.d" with:
       """
       import reggae;
-      const mathsObj = cppCompile(`cpp/maths.cpp`);
       mixin dExe!(App(`d/main.d`, `calc`),
                   Flags(``),
                   ImportPaths([`d`]),
                   StringImportPaths([]),
-                  [mathsObj]);
+                  cppObjects!([`cpp`]),
+                  );
       """
 
     When I successfully run `reggae -b ninja linkproj`

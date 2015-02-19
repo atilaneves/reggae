@@ -38,6 +38,23 @@ Target cppCompile(in string srcFileName, in string flags = "",
 }
 
 
+auto cppObjects(string[] dirs)() {
+    import std.file;
+    import std.exception: enforce;
+    import std.path: buildNormalizedPath;
+    DirEntry[] modules;
+    foreach(dir; dirs) {
+            dir = buildPath(projectPath, dir);
+            enforce(isDir(dir), dir ~ " is not a directory name");
+            auto entries = dirEntries(dir, "*.cpp", SpanMode.depth);
+            auto normalised = entries.map!(a => DirEntry(buildNormalizedPath(a)));
+            modules ~= array(normalised);
+    }
+
+    return modules.map!(a => cppCompile(a.name.removeProjectPath)).array;
+}
+
+
 Target cCompile(in string srcFileName, in string flags = "",
                 in string[] includePaths = []) @safe pure nothrow {
     return cppCompile(srcFileName, flags, includePaths);
@@ -47,11 +64,13 @@ Target cCompile(in string srcFileName, in string flags = "",
 mixin template dExe(App app, Flags flags = Flags(),
                     ImportPaths importPaths = ImportPaths(),
                     StringImportPaths stringImportPaths = StringImportPaths(),
-                    Target[] linkWith = []) {
+                    alias linkWithFunction = () { return cast(Target[])[];}) {
     auto buildFunc() {
+        auto linkWith = linkWithFunction();
         return Build(dExeImpl(app, flags, importPaths, stringImportPaths, linkWith));
     }
 }
+
 //@trusted because of .array
 Target dExeImpl(in App app, in Flags flags,
                 in ImportPaths importPaths,

@@ -139,7 +139,7 @@ void testImplicitDependenciesMoreThanOne() {
 void testDefaultRules() {
     defaultRules().shouldEqual(
         [NinjaEntry("rule _dcompile",
-                    ["command = ./dcompile dmd $includes $out $in $DEPFILE",
+                    ["command = ./dcompile dmd $flags $includes $out $in $DEPFILE",
                      "deps = gcc",
                      "depfile = $DEPFILE"]),
          NinjaEntry("rule _dlink",

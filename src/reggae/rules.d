@@ -25,7 +25,7 @@ private string objFileName(in string srcFileName) @safe pure nothrow {
 
 Target dCompile(in string srcFileName, in string flags = "", in string[] includePaths = []) @safe pure nothrow {
     immutable includes = includePaths.map!(a => "-I$project/" ~ a).join(",");
-    return Target(srcFileName.objFileName, "_dcompile includes=" ~ includes,
+    return Target(srcFileName.objFileName, "_dcompile includes=" ~ includes ~ " flags=" ~ flags,
                   [Target(srcFileName)]);
 }
 
@@ -33,7 +33,7 @@ Target dCompile(in string srcFileName, in string flags = "", in string[] include
 Target cppCompile(in string srcFileName, in string flags = "",
                   in string[] includePaths = []) @safe pure nothrow {
     immutable includes = includePaths.map!(a => "-I$project/" ~ a).join(",");
-    return Target(srcFileName.objFileName, "_cppcompile includes=" ~ includes,
+    return Target(srcFileName.objFileName, "_cppcompile includes=" ~ includes ~ " flags=" ~ flags,
                   [Target(srcFileName)]);
 }
 

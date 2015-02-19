@@ -5,7 +5,7 @@ import reggae.build;
 import reggae.config;
 import reggae.dependencies;
 import std.path : baseName, stripExtension, defaultExtension, dirSeparator;
-import std.algorithm: map, splitter;
+import std.algorithm: map, splitter, remove, canFind;
 import std.array: array;
 import std.range: chain;
 
@@ -38,7 +38,7 @@ Target cppCompile(in string srcFileName, in string flags = "",
 }
 
 Target cCompile(in string srcFileName, in string flags = "",
-                                in string[] includePaths = []) @safe pure nothrow {
+                in string[] includePaths = []) @safe pure nothrow {
     return cppCompile(srcFileName, flags, includePaths);
 }
 
@@ -55,23 +55,30 @@ auto cObjects(string[] dirs, string[] srcFiles = [], string[] excludeFiles = [])
 
 auto srcObjects(string extension, alias func,
                 string[] dirs, string[] srcFiles = [], string[] excludeFiles = [])() {
-    import std.file;
+    return selectSrcFiles(srcFilesInDirs(extension, dirs), srcFiles, excludeFiles).map!(a => func(a)).array;
+}
+
+//The parameters would be "in" except that "remove" doesn't like that...
+string[] selectSrcFiles(string[] dirFiles,
+                        string[] srcFiles,
+                        string[] excludeFiles) @safe pure nothrow {
+    return (dirFiles ~ srcFiles).remove!(a => excludeFiles.canFind(a)).array;
+}
+
+private string[] srcFilesInDirs(in string extension, in string[] dirs) {
     import std.exception: enforce;
+    import std.file;
     import std.path: buildNormalizedPath;
 
-    string[] srcFilesInDirs(in string[] dirs) {
-        DirEntry[] modules;
-        foreach(dir; dirs.map!(a => buildPath(projectPath, a))) {
-            enforce(isDir(dir), dir ~ " is not a directory name");
-            auto entries = dirEntries(dir, "*." ~ extension, SpanMode.depth);
-            auto normalised = entries.map!(a => DirEntry(buildNormalizedPath(a)));
-            modules ~= array(normalised);
-        }
-
-        return modules.map!(a => a.name.removeProjectPath).array;
+    DirEntry[] modules;
+    foreach(dir; dirs.map!(a => buildPath(projectPath, a))) {
+        enforce(isDir(dir), dir ~ " is not a directory name");
+        auto entries = dirEntries(dir, "*." ~ extension, SpanMode.depth);
+        auto normalised = entries.map!(a => DirEntry(buildNormalizedPath(a)));
+        modules ~= array(normalised);
     }
 
-    return srcFilesInDirs(dirs).map!(a => func(a)).array;
+    return modules.map!(a => a.name.removeProjectPath).array;
 }
 
 

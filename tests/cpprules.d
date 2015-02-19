@@ -1,4 +1,4 @@
-module tests.cppcompile;
+module tests.cpprules;
 
 
 import reggae;
@@ -22,4 +22,20 @@ void testIncludePaths() {
         [NinjaEntry("build foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",
                     ["includes = -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path",
                      "DEPFILE = foo.o.d"])]);
+}
+
+
+
+void testNoSrcFileSelection() {
+    selectSrcFiles([], [], []).shouldEqual([]);
+}
+
+
+void testSrcFileSelection() {
+    auto dirFiles = ["src/foo.d", "src/bar.d", "weird/peculiar.d"];
+    auto extraSrcs = ["extra/toto.d", "extra/choochoo.d"];
+    auto excludeSrcs = ["weird/peculiar.d"];
+
+    selectSrcFiles(dirFiles, extraSrcs, excludeSrcs).shouldEqual(
+        ["src/foo.d", "src/bar.d", "extra/toto.d", "extra/choochoo.d"]);
 }

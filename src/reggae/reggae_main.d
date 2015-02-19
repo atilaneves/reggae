@@ -25,7 +25,7 @@ int main(string[] args) {
                                      "build.d",
                                      "makefile.d", "ninja.d", "options.d",
                                      "package.d", "range.d", "reflect.d",
-                                     "rules.d", "dependencies.d");
+                                     "rules.d", "dependencies.d", "types.d");
         writeSrcFiles!(fileNames)(options);
         string[] reggaeSrcs = [reggaeSrcFileName("config.d")];
         foreach(fileName; fileNames) {

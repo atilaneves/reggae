@@ -53,7 +53,7 @@ Feature: Linking a D executable
       """
       import reggae;
       mixin dExe!(App(`d/main.d`, `calc`),
-                  Flags(`-debug`),
+                  Flags(`-debug -O`),
                   ImportPaths([`d`]),
                   StringImportPaths([`resources/text`]),
                   cppObjects!([`cpp`], [`extra/cpp_constants.cpp`], [`cpp/extra_main.cpp`]),
@@ -64,7 +64,7 @@ Feature: Linking a D executable
     And I successfully run `ninja`
     Then the output should contain:
       """
-      -debug
+      -debug -O
       """
     And I successfully run `./calc 2 3`
     Then the output should contain:

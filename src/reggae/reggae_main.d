@@ -36,18 +36,19 @@ int main(string[] args) {
         const compile = ["dmd", "-g", "-debug","-I" ~ options.projectPath, "-I.",
                          "-of" ~ binName] ~ reggaeSrcs ~ buildFileName;
 
-    immutable retCompBuildgen = execute(compile);
-    enforce(retCompBuildgen.status == 0,
-            text("Couldn't execute ", compile.join(" "), ":\n", retCompBuildgen.output));
+        immutable retCompBuildgen = execute(compile);
+        enforce(retCompBuildgen.status == 0,
+                text("Couldn't execute ", compile.join(" "), ":\n", retCompBuildgen.output));
 
-    immutable retRunBuildgen = execute([buildPath(".",  binName), "-b", options.backend, options.projectPath]);
-    enforce(retRunBuildgen.status == 0,
-            text("Couldn't execute the produced ", binName, " binary:\n", retRunBuildgen.output));
+        immutable retRunBuildgen = execute([buildPath(".",  binName), "-b", options.backend, options.projectPath]);
+        enforce(retRunBuildgen.status == 0,
+                text("Couldn't execute the produced ", binName, " binary:\n", retRunBuildgen.output));
+        writeln("lebuildgen:\n", retRunBuildgen.output);
 
-    immutable retCompDcompile = execute(["dmd",
-                                         reggaeSrcFileName("dcompile.d"),
-                                         reggaeSrcFileName("dependencies.d")]);
-    enforce(retCompDcompile.status == 0, text("Couldn't compile dcompile.d:\n", retCompDcompile.output));
+        immutable retCompDcompile = execute(["dmd",
+                                             reggaeSrcFileName("dcompile.d"),
+                                             reggaeSrcFileName("dependencies.d")]);
+        enforce(retCompDcompile.status == 0, text("Couldn't compile dcompile.d:\n", retCompDcompile.output));
 
     } catch(Exception ex) {
         stderr.writeln(ex.msg);

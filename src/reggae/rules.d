@@ -24,11 +24,12 @@ private string objFileName(in string srcFileName) @safe pure nothrow {
 
 
 Target dCompile(in string srcFileName, in string flags = "",
-                in string[] importPaths = [], in string[] stringImportPaths = []) @safe pure nothrow {
-    immutable imports = importPaths.map!(a => "-I$project/" ~ a).join(",");
-    immutable stringImports = stringImportPaths.map!(a => "-J$project/" ~ a).join(",");
+                in string[] importPaths = [], in string[] stringImportPaths = []) @safe pure {
+    immutable importParams = importPaths.map!(a => "-I$project/" ~ a).join(",");
+    immutable stringParams = stringImportPaths.map!(a => "-J$project/" ~ a).join(",");
+    immutable flagParams = flags.splitter.join(",");
     return Target(srcFileName.objFileName,
-                  "_dcompile includes=" ~ imports ~ " flags=" ~ flags ~ " stringImports=" ~ stringImports,
+                  "_dcompile includes=" ~ importParams ~ " flags=" ~ flagParams ~ " stringImports=" ~ stringParams,
                   [Target(srcFileName)]);
 }
 
@@ -110,12 +111,11 @@ Target dExeImpl(in App app, in Flags flags,
 
 private Target[] dSources(in string srcFileName, in string flags,
                           in string[] importPaths, in string[] stringImportPaths) @safe {
-
     const noProjectIncludes = importPaths.map!removeProjectPath.array;
     const noProjectStringImports = stringImportPaths.map!removeProjectPath.array;
     auto mainObj = dCompile(srcFileName.removeProjectPath, flags, noProjectIncludes, noProjectStringImports);
 
-    Target depCompile(in string dep) @safe nothrow {
+    Target depCompile(in string dep) @safe {
         return dCompile(dep.removeProjectPath, flags, noProjectIncludes, noProjectStringImports);
     }
 

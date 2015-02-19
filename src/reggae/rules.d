@@ -25,15 +25,16 @@ private string objFileName(in string srcFileName) @safe pure nothrow {
 }
 
 
-//@trusted because of join
 Target dCompile(in string srcFileName, in string flags = "",
-                in string[] importPaths = [], in string[] stringImportPaths = []) @trusted pure {
+                in string[] importPaths = [], in string[] stringImportPaths = []) @safe pure {
+
     immutable importParams = importPaths.map!(a => "-I$project" ~ dirSeparator ~ a).join(",");
     immutable stringParams = stringImportPaths.map!(a => "-J$project"~ dirSeparator ~ a).join(",");
     immutable flagParams = flags.splitter.join(",");
-    return Target(srcFileName.objFileName,
-                  "_dcompile includes=" ~ importParams ~ " flags=" ~ flagParams ~ " stringImports=" ~ stringParams,
-                  [Target(srcFileName)]);
+    immutable command = ["_dcompile ", "includes=" ~ importParams, "flags=" ~ flagParams,
+                         "stringImports=" ~ stringParams].join(" ");
+
+    return Target(srcFileName.objFileName, command, [Target(srcFileName)]);
 }
 
 

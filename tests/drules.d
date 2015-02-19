@@ -12,6 +12,7 @@ void testDCompileNoIncludePaths() {
         [NinjaEntry("build foo.o: _dcompile /tmp/myproject/path/to/src/foo.d",
                     ["includes = ",
                      "flags = ",
+                     "stringImports = ",
                      "DEPFILE = foo.o.d"])]);
 }
 
@@ -23,5 +24,6 @@ void testDCompileIncludePaths() {
         [NinjaEntry("build foo.o: _dcompile /tmp/myproject/path/to/src/foo.d",
                     ["includes = -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path",
                      "flags = -O",
+                     "stringImports = ",
                      "DEPFILE = foo.o.d"])]);
 }

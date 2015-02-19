@@ -28,7 +28,7 @@ NinjaEntry[] defaultRules() @safe pure nothrow {
     immutable dcompiler = "dmd";
     immutable cppcompiler = "gcc";
     return [NinjaEntry("rule _dcompile",
-                       ["command = ./dcompile " ~ dcompiler ~ " $flags $includes $out $in $DEPFILE",
+                       ["command = ./dcompile " ~ dcompiler ~ " $flags $includes $stringImports $out $in $DEPFILE",
                         "deps = gcc",
                         "depfile = $DEPFILE"]),
             NinjaEntry("rule _dlink",
@@ -69,7 +69,9 @@ private:
         string[] paramLines;
 
         if(rule != "_dlink") { //i.e. one of the compile rules
-            foreach(immutable param; ["includes", "flags"]) {
+            auto params = ["includes", "flags"];
+            if(rule == "_dcompile") params ~= "stringImports";
+            foreach(immutable param; params) {
                 immutable value = rawCmdLine.getDefaultRuleParams(param, []).join(" ");
                 paramLines ~= param ~ " = " ~ value;
             }

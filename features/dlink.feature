@@ -13,6 +13,7 @@ Feature: Linking a D executable
       void main(string[] args) {
           immutable a = args[1].to!int;
           immutable b = args[2].to!int;
+          writeln(import(`banner.txt`));
           log(`The result of feeding `, a, ` and `, b, ` to C++ is `, calc(a, b));
       }
       """
@@ -44,13 +45,17 @@ Feature: Linking a D executable
       int main() {
       }
       """
+    And a file named "linkproj/resources/text/banner.txt" with:
+      """
+      Bannerarama!
+      """
     And a file named "linkproj/reggaefile.d" with:
       """
       import reggae;
       mixin dExe!(App(`d/main.d`, `calc`),
                   Flags(`-debug`),
                   ImportPaths([`d`]),
-                  StringImportPaths([]),
+                  StringImportPaths([`resources/text`]),
                   cppObjects!([`cpp`], [`extra/cpp_constants.cpp`], [`cpp/extra_main.cpp`]),
                   );
       """
@@ -64,6 +69,7 @@ Feature: Linking a D executable
     And I successfully run `./calc 2 3`
     Then the output should contain:
       """
+      Bannerarama!
       Logger says... woohoo The result of feeding 2 and 3 to C++ is 7
       """
 

@@ -57,7 +57,7 @@ Feature: Linking a D executable
                   ImportPaths([`d`]),
                   StringImportPaths([`resources/text`]),
                   cppObjects!(SrcDirs([`cpp`]),
-                              Flags(),
+                              Flags(`-pg`),
                               ImportPaths(),
                               SrcFiles([`extra/cpp_constants.cpp`]),
                               ExcludeFiles([`cpp/extra_main.cpp`]))
@@ -70,7 +70,11 @@ Feature: Linking a D executable
       """
       -debug -O
       """
-    And I successfully run `./calc 2 3`
+    And the output should contain:
+      """
+      -pg
+      """
+    When I successfully run `./calc 2 3`
     Then the output should contain:
       """
       Bannerarama!

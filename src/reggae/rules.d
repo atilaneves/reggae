@@ -47,25 +47,47 @@ Target cCompile(in string srcFileName, in string flags = "",
 }
 
 
-auto cppObjects(string[] dirs, string[] srcFiles = [], string[] excludeFiles = [])() {
-    return srcObjects!("cpp", cppCompile, dirs, srcFiles, excludeFiles);
+/**
+ * Compile-time function to that returns a list of Target objects
+ * corresponding to C++ source files from a particular directory
+ */
+auto cppObjects(SrcDirs dirs = SrcDirs(),
+                Flags flags = Flags(),
+                ImportPaths includes = ImportPaths(),
+                SrcFiles srcFiles = SrcFiles(),
+                ExcludeFiles excludeFiles = ExcludeFiles())
+    () {
+    return srcObjects!cppCompile("cpp", flags.flags, includes.paths,
+                                 dirs.paths, srcFiles.paths, excludeFiles.paths);
 }
 
 
-auto cObjects(string[] dirs, string[] srcFiles = [], string[] excludeFiles = [])() {
-    return srcObjects!("c", cCompile, dirs, srcFiles, excludeFiles);
+/**
+ * Compile-time function to that returns a list of Target objects
+ * corresponding to C source files from a particular directory
+ */
+auto cObjects(SrcDirs dirs = SrcDirs(),
+              Flags flags = Flags(),
+              ImportPaths includes = ImportPaths(),
+              SrcFiles srcFiles = SrcFiles(),
+              ExcludeFiles excludeFiles = ExcludeFiles())
+    () {
+    return srcObjects!cCompile("c", flags.flags, includes.paths,
+                               dirs.paths, srcFiles.paths, excludeFiles.paths);
 }
 
 
-auto srcObjects(string extension, alias func,
-                string[] dirs, string[] srcFiles = [], string[] excludeFiles = [])() {
-    return selectSrcFiles(srcFilesInDirs(extension, dirs), srcFiles, excludeFiles).map!(a => func(a)).array;
+auto srcObjects(alias func)(in string extension,
+                            in string flags, in string[] includes,
+                            string[] dirs, string[] srcFiles, in string[] excludeFiles) {
+    auto files = selectSrcFiles(srcFilesInDirs(extension, dirs), srcFiles, excludeFiles);
+    return files.map!(a => func(a, flags, includes)).array;
 }
 
 //The parameters would be "in" except that "remove" doesn't like that...
 string[] selectSrcFiles(string[] dirFiles,
                         string[] srcFiles,
-                        string[] excludeFiles) @safe pure nothrow {
+                        in string[] excludeFiles) @safe pure nothrow {
     return (dirFiles ~ srcFiles).remove!(a => excludeFiles.canFind(a)).array;
 }
 
@@ -86,7 +108,8 @@ private string[] srcFilesInDirs(in string extension, in string[] dirs) {
 }
 
 
-mixin template dExe(App app, Flags flags = Flags(),
+mixin template dExe(App app,
+                    Flags flags = Flags(),
                     ImportPaths importPaths = ImportPaths(),
                     StringImportPaths stringImportPaths = StringImportPaths(),
                     alias linkWithFunction = () { return cast(Target[])[];}) {

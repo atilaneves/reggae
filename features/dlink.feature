@@ -52,11 +52,16 @@ Feature: Linking a D executable
     And a file named "linkproj/reggaefile.d" with:
       """
       import reggae;
+      alias cppObjs = cppObjects!(SrcDirs([`cpp`]),
+                                  Flags(`-pg`),
+                                  ImportPaths(),
+                                  SrcFiles([`extra/cpp_constants.cpp`]),
+                                  ExcludeFiles([`cpp/extra_main.cpp`]));
       mixin dExe!(App(`d/main.d`, `calc`),
                   Flags(`-debug -O`),
                   ImportPaths([`d`]),
                   StringImportPaths([`resources/text`]),
-                  cppObjects!([`cpp`], [`extra/cpp_constants.cpp`], [`cpp/extra_main.cpp`]),
+                  cppObjs,
                   );
       """
 
@@ -66,7 +71,11 @@ Feature: Linking a D executable
       """
       -debug -O
       """
-    And I successfully run `./calc 2 3`
+    And the output should contain:
+      """
+      -pg
+      """
+    When I successfully run `./calc 2 3`
     Then the output should contain:
       """
       Bannerarama!

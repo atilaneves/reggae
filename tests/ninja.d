@@ -145,7 +145,7 @@ void testDefaultRules() {
          NinjaEntry("rule _dlink",
                     ["command = dmd -of$out $in"]),
          NinjaEntry("rule _cppcompile",
-                    ["command = gcc $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
+                    ["command = gcc $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
                      "deps = gcc",
                      "depfile = $DEPFILE"])]);
 }

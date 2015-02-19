@@ -5,8 +5,8 @@ import reggae.build;
 import reggae.config;
 import reggae.dependencies;
 import std.path : baseName, stripExtension, defaultExtension, dirSeparator;
-import std.algorithm: map, splitter, remove, canFind;
-import std.array: array;
+import std.algorithm: map, splitter, remove, canFind, startsWith, find;
+import std.array: array, replace;
 import std.range: chain;
 
 version(Windows) {
@@ -23,9 +23,12 @@ private string objFileName(in string srcFileName) @safe pure nothrow {
 }
 
 
-Target dCompile(in string srcFileName, in string flags = "", in string[] includePaths = []) @safe pure nothrow {
-    immutable includes = includePaths.map!(a => "-I$project/" ~ a).join(",");
-    return Target(srcFileName.objFileName, "_dcompile " ~ includes,
+Target dCompile(in string srcFileName, in string flags = "",
+                in string[] importPaths = [], in string[] stringImportPaths = []) @safe pure nothrow {
+    immutable imports = importPaths.map!(a => "-I$project/" ~ a).join(",");
+    immutable stringImports = stringImportPaths.map!(a => "-J$project/" ~ a).join(",");
+    return Target(srcFileName.objFileName,
+                  "_dcompile includes=" ~ imports ~ " flags=" ~ flags ~ " stringImports=" ~ stringImports,
                   [Target(srcFileName)]);
 }
 
@@ -33,7 +36,7 @@ Target dCompile(in string srcFileName, in string flags = "", in string[] include
 Target cppCompile(in string srcFileName, in string flags = "",
                   in string[] includePaths = []) @safe pure nothrow {
     immutable includes = includePaths.map!(a => "-I$project/" ~ a).join(",");
-    return Target(srcFileName.objFileName, "_cppcompile " ~ includes,
+    return Target(srcFileName.objFileName, "_cppcompile includes=" ~ includes ~ " flags=" ~ flags,
                   [Target(srcFileName)]);
 }
 
@@ -109,10 +112,11 @@ private Target[] dSources(in string srcFileName, in string flags,
                           in string[] importPaths, in string[] stringImportPaths) @safe {
 
     const noProjectIncludes = importPaths.map!removeProjectPath.array;
-    auto mainObj = dCompile(srcFileName.removeProjectPath, flags, noProjectIncludes);
+    const noProjectStringImports = stringImportPaths.map!removeProjectPath.array;
+    auto mainObj = dCompile(srcFileName.removeProjectPath, flags, noProjectIncludes, noProjectStringImports);
 
     Target depCompile(in string dep) @safe nothrow {
-        return dCompile(dep.removeProjectPath, flags, noProjectIncludes);
+        return dCompile(dep.removeProjectPath, flags, noProjectIncludes, noProjectStringImports);
     }
 
     const output = runCompiler(srcFileName, flags, importPaths, stringImportPaths);
@@ -139,4 +143,65 @@ private auto runCompiler(in string srcFileName, in string flags,
 //@trusted becaue of replace
 string removeProjectPath(in string path) @trusted pure nothrow {
     return path.replace(projectPath ~ dirSeparator, "");
+}
+
+
+private immutable defaultRules = ["_dcompile", "_ccompile", "_cppcompile", "_dlink"];
+
+private bool isDefaultRule(in string command) @safe pure nothrow {
+    return defaultRules.canFind(command);
+}
+
+private string getRule(in string command) @safe pure {
+    return command.splitter.front;
+}
+
+bool isDefaultCommand(in string command) @safe pure {
+    return isDefaultRule(command.getRule);
+}
+
+string getDefaultRule(in string command) @safe pure {
+    immutable rule = command.getRule;
+    if(!isDefaultRule(rule)) {
+        throw new Exception("Cannot get defaultRule from " ~ command);
+    }
+
+    return rule;
+}
+
+
+string[] getDefaultRuleParams(in string command, in string key) @safe pure {
+    return getDefaultRuleParams(command, key, false);
+}
+
+
+string[] getDefaultRuleParams(in string command, in string key, string[] ifNotFound) @safe pure {
+    return getDefaultRuleParams(command, key, true, ifNotFound);
+}
+
+
+//@trusted because of replace
+private string[] getDefaultRuleParams(in string command, in string key,
+                                      bool useIfNotFound, string[] ifNotFound = []) @trusted pure {
+    import std.conv: text;
+
+    auto parts = command.splitter;
+    immutable cmd = parts.front;
+    if(!isDefaultRule(cmd)) {
+        throw new Exception("Cannot get defaultRule from " ~ command);
+    }
+
+    auto fromParamPart = parts.find!(a => a.startsWith(key ~ "="));
+    if(fromParamPart.empty) {
+        if(useIfNotFound) {
+            return ifNotFound;
+        } else {
+            throw new Exception ("Cannot get default rule from " ~ command);
+        }
+    }
+
+    auto paramPart = fromParamPart.front;
+    auto removeKey = paramPart.replace(key ~ "=", "");
+
+    return removeKey.splitter(",").array;
 }

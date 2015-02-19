@@ -11,6 +11,7 @@ void testNoIncludePaths() {
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",
                     ["includes = ",
+                     "flags = ",
                      "DEPFILE = foo.o.d"])]);
 }
 
@@ -21,6 +22,7 @@ void testIncludePaths() {
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",
                     ["includes = -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path",
+                     "flags = ",
                      "DEPFILE = foo.o.d"])]);
 }
 

@@ -37,8 +37,24 @@ Target cppCompile(in string srcFileName, in string flags = "",
                   [Target(srcFileName)]);
 }
 
+Target cCompile(in string srcFileName, in string flags = "",
+                                in string[] includePaths = []) @safe pure nothrow {
+    return cppCompile(srcFileName, flags, includePaths);
+}
 
-auto cppObjects(string[] dirs)() {
+
+auto cppObjects(string[] dirs, string[] srcFiles = [], string[] excludeFiles = [])() {
+    return srcObjects!("cpp", cppCompile, dirs, srcFiles, excludeFiles);
+}
+
+
+auto cObjects(string[] dirs, string[] srcFiles = [], string[] excludeFiles = [])() {
+    return srcObjects!("c", cCompile, dirs, srcFiles, excludeFiles);
+}
+
+
+auto srcObjects(string extension, alias func,
+                string[] dirs, string[] srcFiles = [], string[] excludeFiles = [])() {
     import std.file;
     import std.exception: enforce;
     import std.path: buildNormalizedPath;
@@ -46,18 +62,12 @@ auto cppObjects(string[] dirs)() {
     foreach(dir; dirs) {
             dir = buildPath(projectPath, dir);
             enforce(isDir(dir), dir ~ " is not a directory name");
-            auto entries = dirEntries(dir, "*.cpp", SpanMode.depth);
+            auto entries = dirEntries(dir, "*." ~ extension, SpanMode.depth);
             auto normalised = entries.map!(a => DirEntry(buildNormalizedPath(a)));
             modules ~= array(normalised);
     }
 
-    return modules.map!(a => cppCompile(a.name.removeProjectPath)).array;
-}
-
-
-Target cCompile(in string srcFileName, in string flags = "",
-                in string[] includePaths = []) @safe pure nothrow {
-    return cppCompile(srcFileName, flags, includePaths);
+    return modules.map!(a => func(a.name.removeProjectPath)).array;
 }
 
 

@@ -52,7 +52,7 @@ struct Ninja {
 
     this(Build build, in string projectPath = "") @safe {
         _build = build;
-        _projectPath = projectPath;
+        _projectPath = projectPath.absolutePath;
 
         foreach(target; DepthFirst(_build.targets[0])) {
             auto rawCmdLine = target.inOutCommand(_projectPath);

@@ -45,14 +45,6 @@ unittest {
     static assert(!isBuildFunction!foo);
 }
 
-package enum isBuildObject(alias T) = is(typeof(T)) && is(Unqual!(typeof(T)) == Build);
-
-unittest {
-    Build bld;
-    static assert(isBuildObject!bld);
-    int i;
-    static assert(!isBuildObject!i);
-}
 
 struct Target {
     string[] outputs;

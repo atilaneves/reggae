@@ -30,18 +30,28 @@ Feature: Linking a D executable
       """
     And a file named "linkproj/cpp/maths.cpp" with:
       """
+      extern int factor();
       int calc(int i, int j) {
-          return i * 2 + j;
+          return i * factor() + j;
+      }
+      """
+    And a file named "linkproj/extra/cpp_constants.cpp" with:
+      """
+      int factor() { return 2; }
+      """
+    And a file named "linkproj/cpp/extra_main.cpp" with:
+      """
+      int main() {
       }
       """
     And a file named "linkproj/reggaefile.d" with:
       """
       import reggae;
       mixin dExe!(App(`d/main.d`, `calc`),
-                  Flags(``),
+                  Flags(`-debug`),
                   ImportPaths([`d`]),
                   StringImportPaths([]),
-                  cppObjects!([`cpp`]),
+                  cppObjects!([`cpp`], [`extra/cpp_constants.cpp`], [`cpp/extra_main.cpp`]),
                   );
       """
 

@@ -3,7 +3,7 @@ Feature: Linking a D executable
   I want reggae to determine all dependencies to build a D executable
   So that I can easily build one
 
-  Scenario: Mixed C++/D build
+  Background:
     Given a file named "linkproj/d/main.d" with:
       """
       extern(C++) int calc(int i, int j);
@@ -65,6 +65,7 @@ Feature: Linking a D executable
                   );
       """
 
+  Scenario: Ninja backend
     When I successfully run `reggae -b ninja linkproj`
     And I successfully run `ninja`
     Then the output should contain:
@@ -88,6 +89,36 @@ Feature: Linking a D executable
       immutable myconst = `ohnoes`;
       """
     When I successfully run `ninja`
+    And I successfully run `./calc 7 10`
+    Then the output should contain:
+      """
+      Logger says... ohnoes The result of feeding 7 and 10 to C++ is 24
+      """
+
+  Scenario: Make backend
+    When I successfully run `reggae -b make linkproj`
+    And I successfully run `make`
+    Then the output should contain:
+      """
+      -debug -O
+      """
+    And the output should contain:
+      """
+      -pg
+      """
+    When I successfully run `./calc 2 3`
+    Then the output should contain:
+      """
+      Bannerarama!
+      Logger says... woohoo The result of feeding 2 and 3 to C++ is 7
+      """
+
+    Given I successfully run `sleep 1` for up to 1 seconds
+    And I overwrite "linkproj/d/constants.d" with:
+      """
+      immutable myconst = `ohnoes`;
+      """
+    When I successfully run `make`
     And I successfully run `./calc 7 10`
     Then the output should contain:
       """

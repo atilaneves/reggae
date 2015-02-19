@@ -56,7 +56,11 @@ Feature: Linking a D executable
                   Flags(`-debug -O`),
                   ImportPaths([`d`]),
                   StringImportPaths([`resources/text`]),
-                  cppObjects!([`cpp`], [`extra/cpp_constants.cpp`], [`cpp/extra_main.cpp`]),
+                  cppObjects!(SrcDirs([`cpp`]),
+                              Flags(),
+                              ImportPaths(),
+                              SrcFiles([`extra/cpp_constants.cpp`]),
+                              ExcludeFiles([`cpp/extra_main.cpp`]))
                   );
       """
 

@@ -47,8 +47,15 @@ Target cCompile(in string srcFileName, in string flags = "",
 }
 
 
-auto cppObjects(string[] dirs, string[] srcFiles = [], string[] excludeFiles = [])() {
-    return srcObjects!("cpp", cppCompile, dirs, srcFiles, excludeFiles);
+auto cppObjects(SrcDirs dirs = SrcDirs(),
+                Flags flags = Flags(),
+                ImportPaths includes = ImportPaths(),
+                SrcFiles srcFiles = SrcFiles(),
+                ExcludeFiles excludeFiles = ExcludeFiles())
+    () {
+
+    auto files = selectSrcFiles(srcFilesInDirs("cpp", dirs.paths), srcFiles.paths, excludeFiles.paths);
+    return files.map!(a => cppCompile(a)).array;
 }
 
 
@@ -86,7 +93,8 @@ private string[] srcFilesInDirs(in string extension, in string[] dirs) {
 }
 
 
-mixin template dExe(App app, Flags flags = Flags(),
+mixin template dExe(App app,
+                    Flags flags = Flags(),
                     ImportPaths importPaths = ImportPaths(),
                     StringImportPaths stringImportPaths = StringImportPaths(),
                     alias linkWithFunction = () { return cast(Target[])[];}) {

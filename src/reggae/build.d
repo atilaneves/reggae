@@ -78,11 +78,23 @@ struct Flags {
 }
 
 struct ImportPaths {
-    string paths[];
+    string[] paths;
 }
 
 struct StringImportPaths {
-    string paths[];
+    string[] paths;
+}
+
+struct SrcDirs {
+    string[] paths;
+}
+
+struct SrcFiles {
+    string[] paths;
+}
+
+struct ExcludeFiles {
+    string[] paths;
 }
 
 struct Target {

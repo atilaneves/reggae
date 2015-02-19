@@ -3,8 +3,8 @@ Flags and include paths for cppObjects...
 Makefile backend for dcompile, cppcompile, etc.
 Function for obtaining list of dub targets (all "source" files from all packages):
   should return a simple Target[] with dependencies for each D file baked in
-Tup backend
+Make global configuration available
 Static libraries
 CMake-like rules for rerunning itself
+Tup backend
 Fix errors when trying to write out source files, test rerunning reggae
-Make global configuration available

@@ -58,6 +58,13 @@ struct Makefile {
         immutable includes = rawCmdLine.getDefaultRuleParams("includes", []).join(" ");
         immutable depfile = target.outputs[0] ~ ".d";
 
+        string ccCommand(in string compiler) {
+            immutable command = [compiler, flags, includes, "-MMD", "-MT", target.outputs[0],
+                                 "-MF", depfile, "-o", target.outputs[0], "-c",
+                                 target.dependencyFiles(projectPath)].join(" ");
+            return command ~ makeAutoDeps(depfile);
+        }
+
         if(rule == "_dcompile") {
 
             immutable stringImports = rawCmdLine.getDefaultRuleParams("stringImports", []).join(" ");
@@ -66,28 +73,17 @@ struct Makefile {
             return command ~ makeAutoDeps(depfile);
 
         } else if(rule == "_cppcompile") {
-
-            immutable command = [cppCompiler, flags, includes, "-MMD", "-MT", target.outputs[0],
-                                 "-MF", depfile, "-o", target.outputs[0], "-c",
-                                 target.dependencyFiles(projectPath)].join(" ");
-            return command ~ makeAutoDeps(depfile);
-
+            return ccCommand(cppCompiler);
         } else if(rule == "_ccompile") {
-
-            immutable command =  [cCompiler, flags, includes, "-MMD", "-MT", target.outputs[0],
-                                  "-MF", depfile, "-o", target.outputs[0], "-c",
-                                  target.dependencyFiles(projectPath)].join(" ");
-            return command ~ makeAutoDeps(depfile);
-
+            return ccCommand(cCompiler);
         } else if(rule == "_dlink") {
-
             return [dCompiler, "-of" ~ target.outputs[0], target.dependencyFiles(projectPath)].join(" ");
-
         } else {
             throw new Exception("Unknown Makefile default rule " ~ rule);
         }
     }
 }
+
 
 //For explanation of the crazy Makefile commands, see:
 //http://stackoverflow.com/questions/8025766/makefile-auto-dependency-generation

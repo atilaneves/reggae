@@ -73,9 +73,10 @@ struct Makefile {
             immutable flags = rawCmdLine.getDefaultRuleParams("flags", []).join(" ");
             immutable includes = rawCmdLine.getDefaultRuleParams("includes", []).join(" ");
             immutable depfile = target.outputs[0] ~ ".d";
-            return [cppCompiler, flags, includes, "-MMD", "-MT", target.outputs[0],
-                    "-MF", depfile, "-o", target.outputs[0], "-c",
-                    target.dependencyFiles(projectPath)].join(" ");
+            immutable command = [cppCompiler, flags, includes, "-MMD", "-MT", target.outputs[0],
+                                 "-MF", depfile, "-o", target.outputs[0], "-c",
+                                 target.dependencyFiles(projectPath)].join(" ");
+            return command ~ makeAutoDeps(depfile);
         } else if(rule == "_ccompile") {
             immutable flags = rawCmdLine.getDefaultRuleParams("flags", []).join(" ");
             immutable includes = rawCmdLine.getDefaultRuleParams("includes", []).join(" ");
@@ -89,4 +90,13 @@ struct Makefile {
             throw new Exception("Unknown Makefile default rule " ~ rule);
         }
     }
+}
+
+private string makeAutoDeps(in string depfile) @safe pure nothrow {
+    immutable pFile = depfile ~ ".P";
+    return "\n\t@cp " ~ depfile ~ " " ~ pFile ~ "; \\\n" ~
+        "    sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \\\n" ~
+        "        -e '/^$$/ d' -e 's/$$/ :/' < " ~ depfile ~ " >> " ~ pFile ~"; \\\n" ~
+        "    rm -f " ~ depfile ~ "\n\n" ~
+        "-include " ~ pFile ~ "\n\n";
 }

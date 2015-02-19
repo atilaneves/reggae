@@ -58,16 +58,20 @@ auto srcObjects(string extension, alias func,
     import std.file;
     import std.exception: enforce;
     import std.path: buildNormalizedPath;
-    DirEntry[] modules;
-    foreach(dir; dirs) {
-            dir = buildPath(projectPath, dir);
+
+    string[] srcFilesInDirs(in string[] dirs) {
+        DirEntry[] modules;
+        foreach(dir; dirs.map!(a => buildPath(projectPath, a))) {
             enforce(isDir(dir), dir ~ " is not a directory name");
             auto entries = dirEntries(dir, "*." ~ extension, SpanMode.depth);
             auto normalised = entries.map!(a => DirEntry(buildNormalizedPath(a)));
             modules ~= array(normalised);
+        }
+
+        return modules.map!(a => a.name.removeProjectPath).array;
     }
 
-    return modules.map!(a => func(a.name.removeProjectPath)).array;
+    return srcFilesInDirs(dirs).map!(a => func(a)).array;
 }
 
 

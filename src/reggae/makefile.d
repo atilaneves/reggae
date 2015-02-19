@@ -54,44 +54,44 @@ struct Makefile {
         immutable cppCompiler = "g++";
         immutable cCompiler = "gcc";
         immutable rule = rawCmdLine.getDefaultRule;
+        immutable flags = rawCmdLine.getDefaultRuleParams("flags", []).join(" ");
+        immutable includes = rawCmdLine.getDefaultRuleParams("includes", []).join(" ");
+        immutable depfile = target.outputs[0] ~ ".d";
 
         if(rule == "_dcompile") {
-            immutable flags = rawCmdLine.getDefaultRuleParams("flags", []).join(" ");
-            immutable includes = rawCmdLine.getDefaultRuleParams("includes", []).join(" ");
+
             immutable stringImports = rawCmdLine.getDefaultRuleParams("stringImports", []).join(" ");
-            immutable depfile = target.outputs[0] ~ ".d";
-            immutable first = ["./dcompile", dCompiler, flags, includes, stringImports, target.outputs[0],
-                               target.dependencyFiles(projectPath), depfile].join(" ");
-            immutable pFile = depfile ~ ".P";
-            immutable second = "\n\t@cp " ~ depfile ~ " " ~ pFile ~ "; \\\n" ~
-                "    sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \\\n" ~
-                "        -e '/^$$/ d' -e 's/$$/ :/' < " ~ depfile ~ " >> " ~ pFile ~"; \\\n" ~
-                "    rm -f " ~ depfile ~ "\n\n" ~
-                "-include " ~ pFile ~ "\n\n";
-            return first ~ second;
+            immutable command = ["./dcompile", dCompiler, flags, includes, stringImports, target.outputs[0],
+                                 target.dependencyFiles(projectPath), depfile].join(" ");
+            return command ~ makeAutoDeps(depfile);
+
         } else if(rule == "_cppcompile") {
-            immutable flags = rawCmdLine.getDefaultRuleParams("flags", []).join(" ");
-            immutable includes = rawCmdLine.getDefaultRuleParams("includes", []).join(" ");
-            immutable depfile = target.outputs[0] ~ ".d";
+
             immutable command = [cppCompiler, flags, includes, "-MMD", "-MT", target.outputs[0],
                                  "-MF", depfile, "-o", target.outputs[0], "-c",
                                  target.dependencyFiles(projectPath)].join(" ");
             return command ~ makeAutoDeps(depfile);
+
         } else if(rule == "_ccompile") {
-            immutable flags = rawCmdLine.getDefaultRuleParams("flags", []).join(" ");
-            immutable includes = rawCmdLine.getDefaultRuleParams("includes", []).join(" ");
-            immutable depfile = target.outputs[0] ~ ".d";
-            return [cCompiler, flags, includes, "-MMD", "-MT", target.outputs[0],
-                    "-MF", depfile, "-o", target.outputs[0], "-c",
-                    target.dependencyFiles(projectPath)].join(" ");
+
+            immutable command =  [cCompiler, flags, includes, "-MMD", "-MT", target.outputs[0],
+                                  "-MF", depfile, "-o", target.outputs[0], "-c",
+                                  target.dependencyFiles(projectPath)].join(" ");
+            return command ~ makeAutoDeps(depfile);
+
         } else if(rule == "_dlink") {
+
             return [dCompiler, "-of" ~ target.outputs[0], target.dependencyFiles(projectPath)].join(" ");
+
         } else {
             throw new Exception("Unknown Makefile default rule " ~ rule);
         }
     }
 }
 
+//For explanation of the crazy Makefile commands, see:
+//http://stackoverflow.com/questions/8025766/makefile-auto-dependency-generation
+//http://make.mad-scientist.net/papers/advanced-auto-dependency-generation/
 private string makeAutoDeps(in string depfile) @safe pure nothrow {
     immutable pFile = depfile ~ ".P";
     return "\n\t@cp " ~ depfile ~ " " ~ pFile ~ "; \\\n" ~

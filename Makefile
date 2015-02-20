@@ -3,7 +3,7 @@ all: reggae
 reggae:
 	dub build --compiler=dmd
 
-test: reggae ut
+test: ut reggae
 	cucumber
 
 .PHONY: ut

@@ -3,6 +3,7 @@ module tests.dub_describe;
 
 import unit_threaded;
 import reggae;
+import reggae.dub_json;
 
 
 auto jsonString =

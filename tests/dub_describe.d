@@ -3,7 +3,6 @@ module tests.dub_describe;
 
 import unit_threaded;
 import reggae;
-import stdx.data.json;
 
 
 auto jsonString =
@@ -41,10 +40,10 @@ auto jsonString =
     `}`;
 
 void testJsonToDubDescribe() {
-    immutable info = dubInfo(jsonString);
+    const info = dubInfo(jsonString);
     info.shouldEqual(
         DubInfo([DubPackage("pkg1", "/path/to/pkg1",
                             ["src/foo.d", "src/bar.d"]),
                  DubPackage("pkg_other", "/weird/path/pkg_other",
-                            ["source/todo.d", "source/africa.d"])]));
+                            ["source/toto.d", "source/africa.d"])]));
 }

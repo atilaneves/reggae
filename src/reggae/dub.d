@@ -1,9 +1,12 @@
 module reggae.dub;
 
 import reggae.build;
+import reggae.rules;
 import stdx.data.json;
 import std.algorithm: map;
 import std.array: array;
+import std.path: buildPath;
+
 
 struct DubInfo {
     DubPackage[] packages;
@@ -37,5 +40,13 @@ auto byKey(JSONValue json, in string key) @safe {
 
 
 Target[] dubInfoToTargets(in DubInfo info) {
-    return [];
+    Target[] targets;
+
+    foreach(const pack; info.packages) {
+        foreach(const file; pack.files) {
+            targets ~= dCompile(buildPath(pack.path, file));
+        }
+    }
+
+    return targets;
 }

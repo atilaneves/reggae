@@ -52,10 +52,11 @@ void testJsonToDubDescribe() {
 void testDubInfoToTargets() {
     const info = dubInfo(jsonString.dup);
     const targets = dubInfoToTargets(info);
+    immutable cmd = "_dcompile  includes= flags= stringImports=";
     targets.shouldEqual(
-        [Target("foo.d.o", "_dcompile ", [Target("/path/to/pkg1/src/foo.d")]),
-         Target("bar.d.o", "_dcompile ", [Target("/path/to/pkg1/src/bar.d")]),
-         Target("toto.d.o", "_dcompile ", [Target("/weird/path/pkg_other/source/todo.d")]),
-         Target("africa.d.o", "_dcompile ", [Target("/weird/path/pkg_other/source/africa.d")]),
+        [Target("foo.o",    cmd, [Target("/path/to/pkg1/src/foo.d")]),
+         Target("bar.o",    cmd, [Target("/path/to/pkg1/src/bar.d")]),
+         Target("toto.o",   cmd, [Target("/weird/path/pkg_other/source/toto.d")]),
+         Target("africa.o", cmd, [Target("/weird/path/pkg_other/source/africa.d")]),
             ]);
 }

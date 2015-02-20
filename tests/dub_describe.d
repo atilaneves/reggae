@@ -48,6 +48,10 @@ auto jsonString =
     `        {`
     `          "path": "source/africa.d",`
     `          "type": "source"`
+    `        },`
+    `        {`
+    `          "path": "source/africa.d",`
+    `          "type": "weirdo"`
     `        }`
     `      ]`
     `    }`

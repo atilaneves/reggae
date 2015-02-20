@@ -146,14 +146,14 @@ private Target[] dSources(in string srcFileName, in string flags,
         return dCompile(dep.removeProjectPath, flags, noProjectIncludes, noProjectStringImports);
     }
 
-    const output = runCompiler(srcFileName, flags, importPaths, stringImportPaths);
+    const output = runDCompiler(srcFileName, flags, importPaths, stringImportPaths);
     return [mainObj] ~ dMainDependencies(output).map!depCompile.array;
 }
 
 
 //@trusted because of splitter
-private auto runCompiler(in string srcFileName, in string flags,
-                         in string[] importPaths, in string[] stringImportPaths) @trusted {
+private auto runDCompiler(in string srcFileName, in string flags,
+                          in string[] importPaths, in string[] stringImportPaths) @trusted {
 
     import std.process: execute;
     import std.exception: enforce;

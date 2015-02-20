@@ -43,11 +43,7 @@ Feature: Dub integration
 
     Scenario: Dub/Reggae build with Ninja
       Given I successfully run `reggae -b ninja dub_proj`
-      When I successfully run `ninja -v`
-      Then the output should contain:
-        """
-        -g -debug
-        """
+      And I successfully run `ninja -v`
       When I successfully run `./atest`
       Then the output should contain:
         """

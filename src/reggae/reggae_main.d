@@ -45,7 +45,7 @@ int main(string[] args) {
             file.writeln("  return Build(dExeRuntime(App(`", dubInfo.packages[0].mainSourceFile, "`), ",
                          "Flags(", getFlags(dubInfo.packages[0].flags), "),",
                          "ImportPaths(", dubInfo.importPaths, "), ",
-                         "StringImportPaths(", dubInfo.stringImportPaths, "), objs));");
+                         "StringImportPaths(", dubInfo.stringImportPaths, "), []));");
             file.writeln("}");
         }
 

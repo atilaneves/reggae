@@ -13,6 +13,7 @@ auto jsonString =
     `      "path": "/path/to/pkg1",`
     `      "name": "pkg1",`
     `      "mainSourceFile": "boooo.d",`
+    `      "targetFileName": "super_app",`
     `      "dflags": [],`
     `      "importPaths": [],`
     `      "stringImportPaths": [`
@@ -62,12 +63,12 @@ auto jsonString =
 void testJsonToDubDescribe() {
     const info = dubInfo(jsonString.dup);
     info.shouldEqual(
-        DubInfo([DubPackage("pkg1", "/path/to/pkg1", "boooo.d",
+        DubInfo([DubPackage("pkg1", "/path/to/pkg1", "boooo.d", "super_app",
                             [],
                             [],
                             ["src/string_imports", "src/moar_stringies"],
                             ["src/foo.d", "src/bar.d"]),
-                 DubPackage("pkg_other", "/weird/path/pkg_other", "",
+                 DubPackage("pkg_other", "/weird/path/pkg_other", "", "",
                             ["-g", "-debug"],
                             ["my_imports", "moar_imports"],
                             [],

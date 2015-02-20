@@ -11,6 +11,7 @@ struct DubPackage {
     string name;
     string path;
     string mainSourceFile;
+    string targetFileName;
     string[] flags;
     string[] importPaths;
     string[] stringImportPaths;

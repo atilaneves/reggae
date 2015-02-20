@@ -42,7 +42,9 @@ int main(string[] args) {
                 return flags.empty ? `""` : flags.join(" ");
             }
 
-            file.writeln("  return Build(dExeRuntime(App(`", dubInfo.packages[0].mainSourceFile, "`), ",
+            file.writeln("  return Build(dExeRuntime(App(`",
+                         dubInfo.packages[0].mainSourceFile, "`, `",
+                         dubInfo.packages[0].targetFileName, "`), ",
                          "Flags(", getFlags(dubInfo.packages[0].flags), "),",
                          "ImportPaths(", dubInfo.importPaths, "), ",
                          "StringImportPaths(", dubInfo.stringImportPaths, "), []));");

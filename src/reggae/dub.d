@@ -1,4 +1,6 @@
 module reggae.dub;
+
+import reggae.build;
 import stdx.data.json;
 import std.algorithm: map;
 import std.array: array;
@@ -31,4 +33,9 @@ private string[] jsonValueToFiles(JSONValue[] files) @safe {
 
 auto byKey(JSONValue json, in string key) @safe {
     return json.get!(JSONValue[string])[key];
+}
+
+
+Target[] dubInfoToTargets(in DubInfo info) {
+    return [];
 }

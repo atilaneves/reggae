@@ -11,18 +11,19 @@ Feature: Dub integration
         "targetType": "executable",
         "dflags": ["-g", "-debug"],
         "importPaths": ["imps"],
-        "stringImportPaths": "stringies",
+        "stringImportPaths": ["stringies"],
         "dependencies": {"cerealed": ">=0.5.2"}
       }
+
       """
 
-    And a file named "source/main.d" with:
+    And a file named "dub_proj/source/main.d" with:
       """
       import strings;
       import cerealed;
       import std.stdio;
       void main(string[] args) {
-          writeln(import(`banner.txt``));
+          writeln(import(`banner.txt`));
           auto enc = Cereal();
           enc ~= 4;
           writeln(enc.bytes);
@@ -30,12 +31,12 @@ Feature: Dub integration
       }
       """
 
-    And a file named "stringies/banner.txt" with:
+    And a file named "dub_proj/stringies/banner.txt" with:
       """
       Why hello!
       """
 
-    And a file named "imps/strings.d" with:
+    And a file named "dub_proj/imps/strings.d" with:
       """
       immutable string1 = `I'm immortal!`;
       """

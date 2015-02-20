@@ -7,6 +7,7 @@ import std.file: exists;
 import std.conv: text;
 import std.exception: enforce;
 import reggae.options;
+import reggae.dub_json;
 
 
 immutable reggaeSrcDirName = buildPath(".reggae", "src", "reggae");
@@ -16,6 +17,29 @@ int main(string[] args) {
     try {
         immutable options = getOptions(args);
         enforce(options.projectPath != "", "A project path must be specified");
+
+        if(isDubProject(options.projectPath)) {
+            import std.process;
+            const string[string] env = null;
+            Config config = Config.none;
+            size_t maxOutput = size_t.max;
+            immutable workDir = options.projectPath;
+
+            immutable dubArgs = ["dub", "describe"];
+            immutable ret = execute(dubArgs, env, config, maxOutput, workDir);
+            enforce(ret.status == 0, text("Could not get description from dub with ", dubArgs, ":\n",
+                                          ret.output));
+            auto dubInfo = dubInfo(ret.output);
+
+            auto file = File(buildPath(options.projectPath, "reggaefile.d"), "w");
+            file.writeln("import reggae;");
+            file.writeln("auto bld() {");
+            file.writeln("  auto info = ", dubInfo, ";");
+            file.writeln("  auto objs = dubInfoToTargets(info);");
+            file.writeln("  return Build(Target(`leapp`, `_dlink`, objs));");
+            file.writeln("}");
+        }
+
         createBuild(options);
     } catch(Exception ex) {
         stderr.writeln(ex.msg);
@@ -59,6 +83,11 @@ void createBuild(in Options options) {
                                          reggaeSrcFileName("dependencies.d")]);
     enforce(retCompDcompile.status == 0, text("Couldn't compile dcompile.d:\n", retCompDcompile.output));
 
+}
+
+private bool isDubProject(in string projectPath) @safe {
+    return buildPath(projectPath, "dub.json").exists ||
+        buildPath(projectPath, "package.json").exists;
 }
 
 

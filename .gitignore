@@ -1,2 +1,4 @@
 bin
 tmp
+.dub
+dub.selections.json

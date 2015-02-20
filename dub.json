@@ -1,0 +1,26 @@
+{
+    "name": "reggae",
+    "description": "A build system in D",
+    "copyright": "Copyright © 2015, Atila Neves",
+    "targetType": "executable",
+    "targetPath": "bin",
+    "stringImportPaths": ["src/reggae"],
+    "excludedSourceFiles": ["src/reggae/buildgen_main.d", "src/reggae/dcompile.d"],
+    "dependencies": {
+        "std_data_json": ">=0.11.0"
+    },
+    "configurations": [
+        { "name": "executable" },
+        { "name": "unittest",
+          "targetType": "executable",
+          "sourcePaths": ["tests"],
+          "mainSourceFile": "tests/ut.d",
+          "excludedSourceFiles": ["src/reggae/buildgen_main.d",
+                                  "src/reggae/dcompile.d",
+                                  "src/reggae/reggae_main.d"],
+          "dependencies": {
+              "unit-threaded": "~master"
+          }
+        }
+    ]
+}

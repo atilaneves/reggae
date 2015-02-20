@@ -1,12 +1,12 @@
 all: reggae
 
-reggae: src/reggae/reggae_main.d
-	rdmd -debug -g --compiler=dmd -Isrc -Jsrc/reggae --build-only -ofbin/reggae $<
+reggae:
+	dub build --compiler=dmd
 
-test: reggae
-	dtest --nodub -Isrc && cucumber
+test: ut reggae
+	cucumber
 
 .PHONY: ut
 
-ut: reggae
-	dtest --nodub -Isrc
+ut:
+	dub test --compiler=dmd

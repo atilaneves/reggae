@@ -1,12 +1,13 @@
 import std.stdio;
 import std.process: execute;
-import std.array: array, join;
+import std.array: array, join, empty;
 import std.path: absolutePath, buildPath;
 import std.typetuple;
 import std.file: exists;
 import std.conv: text;
 import std.exception: enforce;
 import reggae.options;
+import reggae.dub_json;
 
 
 immutable reggaeSrcDirName = buildPath(".reggae", "src", "reggae");
@@ -14,47 +15,90 @@ immutable reggaeSrcDirName = buildPath(".reggae", "src", "reggae");
 
 int main(string[] args) {
     try {
-
         immutable options = getOptions(args);
         enforce(options.projectPath != "", "A project path must be specified");
 
-        immutable buildFileName = buildPath(options.projectPath, "reggaefile.d");
-        enforce(buildFileName.exists, text("Could not find ", buildFileName));
+        if(isDubProject(options.projectPath)) {
+            import std.process;
+            const string[string] env = null;
+            Config config = Config.none;
+            size_t maxOutput = size_t.max;
+            immutable workDir = options.projectPath;
 
-        alias fileNames = TypeTuple!("buildgen_main.d",
-                                     "build.d",
-                                     "makefile.d", "ninja.d", "options.d",
-                                     "package.d", "range.d", "reflect.d",
-                                     "rules.d", "dependencies.d", "types.d");
-        writeSrcFiles!(fileNames)(options);
-        string[] reggaeSrcs = [reggaeSrcFileName("config.d")];
-        foreach(fileName; fileNames) {
-            reggaeSrcs ~= reggaeSrcFileName(fileName);
+            immutable dubArgs = ["dub", "describe"];
+            immutable ret = execute(dubArgs, env, config, maxOutput, workDir);
+            enforce(ret.status == 0, text("Could not get description from dub with ", dubArgs, ":\n",
+                                          ret.output));
+
+            auto dubInfo = dubInfo(ret.output);
+
+            auto file = File(buildPath(options.projectPath, "reggaefile.d"), "w");
+            file.writeln("import reggae;");
+            file.writeln("Build bld() {");
+            file.writeln("  auto info = ", dubInfo, ";");
+            file.writeln("  auto objs = info.toTargets;");
+
+            string getFlags(in string[] flags) {
+                return flags.empty ? `""` : flags.join(" ");
+            }
+
+            file.writeln("  return Build(dExeRuntime(App(`",
+                         dubInfo.packages[0].mainSourceFile, "`, `",
+                         dubInfo.packages[0].targetFileName, "`), ",
+                         "Flags(", getFlags(dubInfo.packages[0].flags), "),",
+                         "ImportPaths(", dubInfo.importPaths, "), ",
+                         "StringImportPaths(", dubInfo.stringImportPaths, "), []));");
+            file.writeln("}");
         }
 
-        immutable binName = "buildgen";
-        const compile = ["dmd", "-g", "-debug","-I" ~ options.projectPath,
-                         "-of" ~ binName] ~ reggaeSrcs ~ buildFileName;
-
-        immutable retCompBuildgen = execute(compile);
-        enforce(retCompBuildgen.status == 0,
-                text("Couldn't execute ", compile.join(" "), ":\n", retCompBuildgen.output));
-
-        immutable retRunBuildgen = execute([buildPath(".",  binName), "-b", options.backend, options.projectPath]);
-        enforce(retRunBuildgen.status == 0,
-                text("Couldn't execute the produced ", binName, " binary:\n", retRunBuildgen.output));
-
-        immutable retCompDcompile = execute(["dmd",
-                                             reggaeSrcFileName("dcompile.d"),
-                                             reggaeSrcFileName("dependencies.d")]);
-        enforce(retCompDcompile.status == 0, text("Couldn't compile dcompile.d:\n", retCompDcompile.output));
-
+        createBuild(options);
     } catch(Exception ex) {
         stderr.writeln(ex.msg);
         return 1;
     }
 
     return 0;
+}
+
+void createBuild(in Options options) {
+
+    immutable buildFileName = buildPath(options.projectPath, "reggaefile.d");
+    enforce(buildFileName.exists, text("Could not find ", buildFileName));
+
+    alias fileNames = TypeTuple!("buildgen_main.d",
+                                 "build.d",
+                                 "makefile.d", "ninja.d", "options.d",
+                                 "package.d", "range.d", "reflect.d",
+                                 "rules.d", "dependencies.d", "types.d",
+                                 "dub.d");
+    writeSrcFiles!(fileNames)(options);
+    string[] reggaeSrcs = [reggaeSrcFileName("config.d")];
+    foreach(fileName; fileNames) {
+        reggaeSrcs ~= reggaeSrcFileName(fileName);
+    }
+
+    immutable binName = "buildgen";
+    const compile = ["dmd", "-g", "-debug","-I" ~ options.projectPath,
+                     "-of" ~ binName] ~ reggaeSrcs ~ buildFileName;
+
+    immutable retCompBuildgen = execute(compile);
+    enforce(retCompBuildgen.status == 0,
+            text("Couldn't execute ", compile.join(" "), ":\n", retCompBuildgen.output));
+
+    immutable retRunBuildgen = execute([buildPath(".",  binName), "-b", options.backend, options.projectPath]);
+    enforce(retRunBuildgen.status == 0,
+            text("Couldn't execute the produced ", binName, " binary:\n", retRunBuildgen.output));
+
+    immutable retCompDcompile = execute(["dmd",
+                                         reggaeSrcFileName("dcompile.d"),
+                                         reggaeSrcFileName("dependencies.d")]);
+    enforce(retCompDcompile.status == 0, text("Couldn't compile dcompile.d:\n", retCompDcompile.output));
+
+}
+
+private bool isDubProject(in string projectPath) @safe {
+    return buildPath(projectPath, "dub.json").exists ||
+        buildPath(projectPath, "package.json").exists;
 }
 
 

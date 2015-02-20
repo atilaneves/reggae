@@ -8,3 +8,4 @@ public import reggae.ninja;
 public import reggae.options;
 public import reggae.rules;
 public import reggae.types;
+public import reggae.dub;

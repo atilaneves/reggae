@@ -3,7 +3,7 @@ module reggae.dub_json;
 import reggae.dub;
 import reggae.build;
 import stdx.data.json;
-import std.algorithm: map;
+import std.algorithm: map, filter;
 
 
 Target[] dubTargets(in string jsonString) @safe {
@@ -23,7 +23,10 @@ DubInfo dubInfo(string jsonString) @safe {
 
 
 private string[] jsonValueToFiles(JSONValue files) @safe {
-    return files.get!(JSONValue[]).map!(a => a.byKey("path").get!string).array;
+    return files.get!(JSONValue[]).
+        filter!(a => a.byKey("type") == "source").
+        map!(a => a.byKey("path").get!string).
+        array;
 }
 
 private string[] jsonValueToStrings(JSONValue json) @safe {

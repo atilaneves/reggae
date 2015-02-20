@@ -38,7 +38,7 @@ Feature: Dub integration
 
     And a file named "dub_proj/imps/strings.d" with:
       """
-      immutable string1 = `I'm immortal!`;
+      enum string1 = `I'm immortal!`;
       """
 
     Scenario: Dub/Reggae build with Ninja

@@ -1,6 +1,6 @@
 import std.stdio;
 import std.process: execute;
-import std.array: array, join;
+import std.array: array, join, empty;
 import std.path: absolutePath, buildPath;
 import std.typetuple;
 import std.file: exists;
@@ -29,14 +29,23 @@ int main(string[] args) {
             immutable ret = execute(dubArgs, env, config, maxOutput, workDir);
             enforce(ret.status == 0, text("Could not get description from dub with ", dubArgs, ":\n",
                                           ret.output));
+
             auto dubInfo = dubInfo(ret.output);
 
             auto file = File(buildPath(options.projectPath, "reggaefile.d"), "w");
             file.writeln("import reggae;");
-            file.writeln("auto bld() {");
+            file.writeln("Build bld() {");
             file.writeln("  auto info = ", dubInfo, ";");
             file.writeln("  auto objs = dubInfoToTargets(info);");
-            file.writeln("  return Build(Target(`leapp`, `_dlink`, objs));");
+
+            string getFlags(in string[] flags) {
+                return flags.empty ? `""` : flags.join(" ");
+            }
+
+            file.writeln("  return Build(dExeRuntime(App(`", dubInfo.packages[0].mainSourceFile, "`), ",
+                         "Flags(", getFlags(dubInfo.packages[0].flags), "),",
+                         "ImportPaths(", dubInfo.packages[0].importPaths, "), ",
+                         "StringImportPaths(", dubInfo.packages[0].stringImportPaths, "), objs));");
             file.writeln("}");
         }
 

@@ -15,6 +15,7 @@ DubInfo dubInfo(string jsonString) @safe {
     auto packages = json.byKey("packages").get!(JSONValue[]);
     return DubInfo(packages.map!(a => DubPackage(a.byKey("name").get!string,
                                                  a.byKey("path").get!string,
+                                                 a.getMainSourceFile,
                                                  a.byKey("dflags").jsonValueToStrings,
                                                  a.byKey("importPaths").jsonValueToStrings,
                                                  a.byKey("stringImportPaths").jsonValueToStrings,
@@ -36,4 +37,11 @@ private string[] jsonValueToStrings(JSONValue json) @safe {
 
 private auto byKey(JSONValue json, in string key) @safe {
     return json.get!(JSONValue[string])[key];
+}
+
+
+private string getMainSourceFile(JSONValue json) @safe {
+    auto aa = json.get!(JSONValue[string]);
+    immutable key = "mainSourceFile";
+    return key in aa ? aa[key].get!string : "";
 }

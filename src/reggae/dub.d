@@ -28,19 +28,23 @@ DubInfo dubInfo(string jsonString) @safe {
     auto packages = json.byKey("packages").get!(JSONValue[]);
     return DubInfo(packages.map!(a => DubPackage(a.byKey("name").get!string,
                                                  a.byKey("path").get!string,
-                                                 a.byKey("dflags").get!(JSONValue[]).map!(a => a.get!string).array,
-                                                 a.byKey("importPaths").get!(JSONValue[]).map!(a => a.get!string).array,
-                                                 a.byKey("stringImportPaths").get!(JSONValue[]).map!(a => a.get!string).array,
-                                                 a.byKey("files").get!(JSONValue[]).jsonValueToFiles)).array);
+                                                 a.byKey("dflags").jsonValueToStrings,
+                                                 a.byKey("importPaths").jsonValueToStrings,
+                                                 a.byKey("stringImportPaths").jsonValueToStrings,
+                                                 a.byKey("files").jsonValueToFiles)).array);
 }
 
 
-private string[] jsonValueToFiles(JSONValue[] files) @safe {
-    return files.map!(a => a.byKey("path").get!string).array;
+private string[] jsonValueToFiles(JSONValue files) @safe {
+    return files.get!(JSONValue[]).map!(a => a.byKey("path").get!string).array;
+}
+
+private string[] jsonValueToStrings(JSONValue json) @safe {
+    return json.get!(JSONValue[]).map!(a => a.get!string).array;
 }
 
 
-auto byKey(JSONValue json, in string key) @safe {
+private auto byKey(JSONValue json, in string key) @safe {
     return json.get!(JSONValue[string])[key];
 }
 

@@ -7,11 +7,6 @@ import std.array: array;
 import std.path: buildPath;
 
 
-struct DubInfo {
-    DubPackage[] packages;
-}
-
-
 struct DubPackage {
     string name;
     string path;
@@ -22,18 +17,42 @@ struct DubPackage {
     string[] files;
 }
 
-Target[] dubInfoToTargets(in DubInfo info) @safe pure {
-    Target[] targets;
 
-    foreach(const pack; info.packages) {
-        foreach(const file; pack.files) {
-            targets ~= dCompile(buildPath(pack.path, file),
-                                pack.flags.join(" "),
-                                pack.importPaths,
-                                pack.stringImportPaths,
-                                pack.path);
+struct DubInfo {
+    DubPackage[] packages;
+
+    Target[] toTargets() @safe pure const {
+        Target[] targets;
+
+        foreach(const pack; packages) {
+            foreach(const file; pack.files) {
+                targets ~= dCompile(buildPath(pack.path, file),
+                                    pack.flags.join(" "),
+                                    pack.importPaths,
+                                    pack.stringImportPaths,
+                                    pack.path);
+            }
         }
+
+        return targets;
     }
 
-    return targets;
+    //@trusted because of map.array
+    string[] importPaths() @trusted const {
+        string[] paths;
+        foreach(const pack; packages) {
+            paths ~= pack.importPaths.map!(a => buildPath(pack.path, a)).array;
+        }
+        return paths;
+    }
+
+
+    //@trusted because of map.array
+    string[] stringImportPaths() @trusted const {
+        string[] paths;
+        foreach(const pack; packages) {
+            paths ~= pack.stringImportPaths.map!(a => buildPath(pack.path, a)).array;
+        }
+        return paths;
+    }
 }

@@ -77,8 +77,7 @@ void testJsonToDubDescribe() {
 
 void testDubInfoToTargets() {
     const info = dubInfo(jsonString.dup);
-    const targets = dubInfoToTargets(info);
-    targets.shouldEqual(
+    info.toTargets.shouldEqual(
         [Target("foo.o",
                 "_dcompile  includes= flags= "
                 "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
@@ -98,4 +97,13 @@ void testDubInfoToTargets() {
                 "flags=-g,-debug stringImports=",
                 [Target("/weird/path/pkg_other/source/africa.d")]),
             ]);
+}
+
+
+void testDubInfoToBuildParams() {
+    const info = dubInfo(jsonString.dup);
+    info.importPaths.shouldEqual(
+        ["/weird/path/pkg_other/my_imports", "/weird/path/pkg_other/moar_imports"]);
+    info.stringImportPaths.shouldEqual(
+        ["/path/to/pkg1/src/string_imports", "/path/to/pkg1/src/moar_stringies"]);
 }

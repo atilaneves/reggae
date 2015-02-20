@@ -39,7 +39,7 @@ auto byKey(JSONValue json, in string key) @safe {
 }
 
 
-Target[] dubInfoToTargets(in DubInfo info) {
+Target[] dubInfoToTargets(in DubInfo info) @safe pure {
     Target[] targets;
 
     foreach(const pack; info.packages) {
@@ -49,4 +49,8 @@ Target[] dubInfoToTargets(in DubInfo info) {
     }
 
     return targets;
+}
+
+Target[] dubTargets(in string jsonString) @safe {
+    return dubInfoToTargets(dubInfo(jsonString));
 }

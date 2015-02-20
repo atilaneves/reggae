@@ -36,7 +36,7 @@ int main(string[] args) {
             file.writeln("import reggae;");
             file.writeln("Build bld() {");
             file.writeln("  auto info = ", dubInfo, ";");
-            file.writeln("  auto objs = dubInfoToTargets(info);");
+            file.writeln("  auto objs = info.toTargets;");
 
             string getFlags(in string[] flags) {
                 return flags.empty ? `""` : flags.join(" ");
@@ -44,8 +44,8 @@ int main(string[] args) {
 
             file.writeln("  return Build(dExeRuntime(App(`", dubInfo.packages[0].mainSourceFile, "`), ",
                          "Flags(", getFlags(dubInfo.packages[0].flags), "),",
-                         "ImportPaths(", dubInfo.packages[0].importPaths, "), ",
-                         "StringImportPaths(", dubInfo.packages[0].stringImportPaths, "), objs));");
+                         "ImportPaths(", dubInfo.importPaths, "), ",
+                         "StringImportPaths(", dubInfo.stringImportPaths, "), objs));");
             file.writeln("}");
         }
 

@@ -24,7 +24,7 @@ Feature: Dub integration
       import std.stdio;
       void main(string[] args) {
           writeln(import(`banner.txt`));
-          auto enc = Cereal();
+          auto enc = Cerealiser();
           enc ~= 4;
           writeln(enc.bytes);
           writeln(string1);

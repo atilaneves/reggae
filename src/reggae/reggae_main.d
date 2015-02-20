@@ -38,14 +38,10 @@ int main(string[] args) {
             file.writeln("  auto info = ", dubInfo, ";");
             file.writeln("  auto objs = info.toTargets;");
 
-            string getFlags(in string[] flags) {
-                return flags.empty ? `""` : flags.join(" ");
-            }
-
             file.writeln("  return Build(dExeRuntime(App(`",
                          dubInfo.packages[0].mainSourceFile, "`, `",
                          dubInfo.packages[0].targetFileName, "`), ",
-                         "Flags(", getFlags(dubInfo.packages[0].flags), "),",
+                         "Flags(`", dubInfo.packages[0].flags.join(" "), "`),",
                          "ImportPaths(", dubInfo.importPaths, "), ",
                          "StringImportPaths(", dubInfo.stringImportPaths, "), []));");
             file.writeln("}");

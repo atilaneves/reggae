@@ -1,7 +1,7 @@
 import std.stdio;
 import std.process: execute;
 import std.array: array, join, empty;
-import std.path: absolutePath, buildPath;
+import std.path: absolutePath, buildPath, relativePath;
 import std.typetuple;
 import std.file: exists;
 import std.conv: text;
@@ -38,12 +38,18 @@ int main(string[] args) {
             file.writeln("  auto info = ", dubInfo, ";");
             file.writeln("  auto objs = info.toTargets;");
 
+
+            string makeRelative(in string path) @safe pure {
+                return buildPath(options.projectPath, path).absolutePath.relativePath(
+                    options.projectPath.absolutePath);
+            }
+
             file.writeln("  return Build(dExeRuntime(App(`",
                          dubInfo.packages[0].mainSourceFile, "`, `",
                          dubInfo.packages[0].targetFileName, "`), ",
                          "Flags(`", dubInfo.packages[0].flags.join(" "), "`),",
-                         "ImportPaths(", dubInfo.importPaths, "), ",
-                         "StringImportPaths(", dubInfo.stringImportPaths, "), []));");
+                         "ImportPaths(", dubInfo.importPaths.map!makeRelative, "), ",
+                         "StringImportPaths(", dubInfo.stringImportPaths.map!makeRelative, "), []));");
             file.writeln("}");
         }
 
@@ -55,6 +61,7 @@ int main(string[] args) {
 
     return 0;
 }
+
 
 void createBuild(in Options options) {
 

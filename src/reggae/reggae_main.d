@@ -19,38 +19,7 @@ int main(string[] args) {
         enforce(options.projectPath != "", "A project path must be specified");
 
         if(isDubProject(options.projectPath)) {
-            import std.process;
-            const string[string] env = null;
-            Config config = Config.none;
-            size_t maxOutput = size_t.max;
-            immutable workDir = options.projectPath;
-
-            immutable dubArgs = ["dub", "describe"];
-            immutable ret = execute(dubArgs, env, config, maxOutput, workDir);
-            enforce(ret.status == 0, text("Could not get description from dub with ", dubArgs, ":\n",
-                                          ret.output));
-
-            auto dubInfo = dubInfo(ret.output);
-
-            auto file = File(buildPath(options.projectPath, "reggaefile.d"), "w");
-            file.writeln("import reggae;");
-            file.writeln("Build bld() {");
-            file.writeln("  auto info = ", dubInfo, ";");
-            file.writeln("  auto objs = info.toTargets;");
-
-
-            string makeRelative(in string path) @safe pure {
-                return buildPath(options.projectPath, path).absolutePath.relativePath(
-                    options.projectPath.absolutePath);
-            }
-
-            file.writeln("  return Build(dExeRuntime(App(`",
-                         dubInfo.packages[0].mainSourceFile, "`, `",
-                         dubInfo.packages[0].targetFileName, "`), ",
-                         "Flags(`", dubInfo.packages[0].flags.join(" "), "`),",
-                         "ImportPaths(", dubInfo.importPaths.map!makeRelative, "), ",
-                         "StringImportPaths(", dubInfo.stringImportPaths.map!makeRelative, "), []));");
-            file.writeln("}");
+            createReggaefile(options);
         }
 
         createBuild(options);
@@ -62,6 +31,41 @@ int main(string[] args) {
     return 0;
 }
 
+void createReggaefile(in Options options) {
+    import std.process;
+    const string[string] env = null;
+    Config config = Config.none;
+    size_t maxOutput = size_t.max;
+    immutable workDir = options.projectPath;
+
+    immutable dubArgs = ["dub", "describe"];
+    immutable ret = execute(dubArgs, env, config, maxOutput, workDir);
+    enforce(ret.status == 0, text("Could not get description from dub with ", dubArgs, ":\n",
+                                  ret.output));
+
+    auto dubInfo = dubInfo(ret.output);
+
+    auto file = File(buildPath(options.projectPath, "reggaefile.d"), "w");
+    file.writeln("import reggae;");
+    file.writeln("Build bld() {");
+    file.writeln("  auto info = ", dubInfo, ";");
+    file.writeln("  auto objs = info.toTargets;");
+
+
+    string makeRelative(in string path) @safe pure {
+        return buildPath(options.projectPath, path).absolutePath.relativePath(
+            options.projectPath.absolutePath);
+    }
+
+    file.writeln("  return Build(dExeRuntime(App(`",
+                 dubInfo.packages[0].mainSourceFile, "`, `",
+                 dubInfo.packages[0].targetFileName, "`), ",
+                 "Flags(`", dubInfo.packages[0].flags.join(" "), "`),",
+                 "ImportPaths(", dubInfo.importPaths.map!makeRelative, "), ",
+                 "StringImportPaths(", dubInfo.stringImportPaths.map!makeRelative, "), []));");
+    file.writeln("}");
+
+}
 
 void createBuild(in Options options) {
 

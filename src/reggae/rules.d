@@ -25,12 +25,13 @@ private string objFileName(in string srcFileName) @safe pure nothrow {
 }
 
 
+//@trusted because of join
 Target dCompile(in string srcFileName, in string flags = "",
                 in string[] importPaths = [], in string[] stringImportPaths = [],
-                in string projString = "$project") @safe pure {
+                in string projDir = "$project") @trusted pure {
 
-    immutable importParams = importPaths.map!(a => "-I" ~ projString ~ dirSeparator ~ a).join(",");
-    immutable stringParams = stringImportPaths.map!(a => "-J" ~ projString ~ dirSeparator ~ a).join(",");
+    immutable importParams = importPaths.map!(a => "-I" ~ buildPath(projDir, a)).join(",");
+    immutable stringParams = stringImportPaths.map!(a => "-J" ~ buildPath(projDir, a)).join(",");
     immutable flagParams = flags.splitter.join(",");
     immutable command = ["_dcompile ", "includes=" ~ importParams, "flags=" ~ flagParams,
                          "stringImports=" ~ stringParams].join(" ");
@@ -141,7 +142,12 @@ Target dExeRuntime(in App app, in Flags flags,
 
     const dependencies = [mainObj] ~ dMainDependencies(output).map!depCompile.array;
 
-    return Target(app.exeFileName, "_dlink", dependencies ~ linkWith);
+    return dLink(app.exeFileName, dependencies ~ linkWith);
+}
+
+
+Target dLink(in string exeName, in Target[] dependencies) @safe pure nothrow {
+    return Target(exeName, "_dlink", dependencies);
 }
 
 

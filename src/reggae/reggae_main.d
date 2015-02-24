@@ -48,21 +48,9 @@ void createReggaefile(in Options options) {
     auto file = File(buildPath(options.projectPath, "reggaefile.d"), "w");
     file.writeln("import reggae;");
     file.writeln("Build bld() {");
-    file.writeln("  auto info = ", dubInfo, ";");
-    file.writeln("  auto objs = info.toTargets;");
-
-
-    string makeRelative(in string path) @safe pure {
-        return buildPath(options.projectPath, path).absolutePath.relativePath(
-            options.projectPath.absolutePath);
-    }
-
-    file.writeln("  return Build(dExeRuntime(App(`",
-                 dubInfo.packages[0].mainSourceFile, "`, `",
-                 dubInfo.packages[0].targetFileName, "`), ",
-                 "Flags(`", dubInfo.packages[0].flags.join(" "), "`),",
-                 "ImportPaths(", dubInfo.importPaths.map!makeRelative, "), ",
-                 "StringImportPaths(", dubInfo.stringImportPaths.map!makeRelative, "), []));");
+    file.writeln("    auto info = ", dubInfo, ";");
+    file.writeln("    auto objs = info.toTargets;");
+    file.writeln("  return Build(dLink(`", dubInfo.packages[0].targetFileName, "`, objs));");
     file.writeln("}");
 
 }

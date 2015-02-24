@@ -15,7 +15,7 @@ auto jsonString =
     `      "mainSourceFile": "boooo.d",`
     `      "targetFileName": "super_app",`
     `      "dflags": [],`
-    `      "importPaths": [],`
+    `      "importPaths": ["leimports"],`
     `      "stringImportPaths": [`
     `        "src/string_imports",`
     `        "src/moar_stringies"`
@@ -60,12 +60,13 @@ auto jsonString =
     `  ]`
     `}`;
 
+
 void testJsonToDubDescribe() {
     const info = dubInfo(jsonString.dup);
     info.shouldEqual(
         DubInfo([DubPackage("pkg1", "/path/to/pkg1", "boooo.d", "super_app",
                             [],
-                            [],
+                            ["leimports"],
                             ["src/string_imports", "src/moar_stringies"],
                             ["src/foo.d", "src/bar.d"]),
                  DubPackage("pkg_other", "/weird/path/pkg_other", "", "",
@@ -80,11 +81,17 @@ void testDubInfoToTargets() {
     const info = dubInfo(jsonString.dup);
     info.toTargets.shouldEqual(
         [Target("foo.o",
-                "_dcompile  includes= flags= "
+                "_dcompile  "
+                "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
+                "-I/weird/path/pkg_other/moar_imports "
+                "flags= "
                 "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
                 [Target("/path/to/pkg1/src/foo.d")]),
          Target("bar.o",
-                "_dcompile  includes= flags= "
+                "_dcompile  "
+                "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
+                "-I/weird/path/pkg_other/moar_imports "
+                "flags= "
                 "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
                 [Target("/path/to/pkg1/src/bar.d")]),
          Target("toto.o",
@@ -103,8 +110,8 @@ void testDubInfoToTargets() {
 
 void testDubInfoToBuildParams() {
     const info = dubInfo(jsonString.dup);
-    info.importPaths.shouldEqual(
-        ["/weird/path/pkg_other/my_imports", "/weird/path/pkg_other/moar_imports"]);
-    info.stringImportPaths.shouldEqual(
+    info.allImportPaths.shouldEqual(
+        ["/path/to/pkg1/leimports", "/weird/path/pkg_other/my_imports", "/weird/path/pkg_other/moar_imports"]);
+    info.allStringImportPaths.shouldEqual(
         ["/path/to/pkg1/src/string_imports", "/path/to/pkg1/src/moar_stringies"]);
 }

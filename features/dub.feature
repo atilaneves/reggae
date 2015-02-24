@@ -42,8 +42,10 @@ Feature: Dub integration
       """
 
     Scenario: Dub/Reggae build with Ninja
-      Given I successfully run `reggae -b ninja dub_proj`
-      And I successfully run `ninja`
+      When I successfully run `reggae -b ninja dub_proj`
+      Then the file "dub_proj/reggaefile.d" should not exist
+      And a file named "reggaefile.d" should exist
+      Given I successfully run `ninja`
       When I successfully run `./atest`
       Then the output should contain:
         """
@@ -53,8 +55,10 @@ Feature: Dub integration
         """
 
     Scenario: Dub/Reggae build with Make
-      Given I successfully run `reggae -b make dub_proj`
-      And I successfully run `make`
+      When I successfully run `reggae -b make dub_proj`
+      Then the file "dub_proj/reggaefile.d" should not exist
+      And a file named "reggaefile.d" should exist
+      Given I successfully run `make`
       When I successfully run `./atest`
       Then the output should contain:
         """

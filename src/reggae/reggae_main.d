@@ -45,7 +45,7 @@ void createReggaefile(in Options options) {
 
     auto dubInfo = dubInfo(ret.output);
 
-    auto file = File(buildPath(options.projectPath, "reggaefile.d"), "w");
+    auto file = File("reggaefile.d", "w");
     file.writeln("import reggae;");
     file.writeln("Build bld() {");
     file.writeln("    auto info = ", dubInfo, ";");
@@ -57,7 +57,7 @@ void createReggaefile(in Options options) {
 
 void createBuild(in Options options) {
 
-    immutable buildFileName = buildPath(options.projectPath, "reggaefile.d");
+    immutable buildFileName = getBuildFileName(options);
     enforce(buildFileName.exists, text("Could not find ", buildFileName));
 
     alias fileNames = TypeTuple!("buildgen_main.d",
@@ -119,4 +119,9 @@ void writeSrcFiles(fileNames...)(in Options options) {
 
 string reggaeSrcFileName(in string fileName) @safe pure nothrow {
     return buildPath(reggaeSrcDirName, fileName);
+}
+
+string getBuildFileName(in Options options) {
+    immutable path = isDubProject(options.projectPath) ? "" : options.projectPath;
+    return buildPath(path, "reggaefile.d");
 }

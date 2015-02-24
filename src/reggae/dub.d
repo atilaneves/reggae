@@ -38,22 +38,22 @@ struct DubInfo {
         return targets;
     }
 
-    //@trusted because of map.array
-    string[] importPaths() @trusted const {
-        string[] paths;
-        foreach(const pack; packages) {
-            paths ~= pack.importPaths.map!(a => buildPath(pack.path, a)).array;
-        }
-        return paths;
+    string[] importPaths() @safe const {
+        return packages.allPaths!(a => a.importPaths);
     }
 
 
-    //@trusted because of map.array
-    string[] stringImportPaths() @trusted const {
-        string[] paths;
-        foreach(const pack; packages) {
-            paths ~= pack.stringImportPaths.map!(a => buildPath(pack.path, a)).array;
-        }
-        return paths;
+    string[] stringImportPaths() @safe const {
+        return packages.allPaths!(a => a.stringImportPaths);
     }
+}
+
+
+//@trusted because of map.array
+private string[] allPaths(alias F)(in DubPackage[] packages) @trusted const {
+    string[] paths;
+    foreach(const pack; packages) {
+        paths ~= F(pack).map!(a => buildPath(pack.path, a)).array;
+    }
+    return paths;
 }

@@ -2,6 +2,8 @@ module reggae.dub;
 
 import reggae.build;
 import reggae.rules;
+public import std.typecons: Yes, No;
+import std.typecons: Flag;
 import std.algorithm: map;
 import std.array: array;
 import std.path: buildPath;
@@ -22,7 +24,7 @@ struct DubPackage {
 struct DubInfo {
     DubPackage[] packages;
 
-    Target[] toTargets() @safe const {
+    Target[] toTargets(Flag!"main" = Yes.main) @safe const {
         Target[] targets;
 
         foreach(const i, const pack; packages) {

@@ -72,7 +72,7 @@ Feature: Augmenting dub projects with reggae builds
 
       Build getBuild() {
           auto ut = dCompile(`tests/ut_maths.d`, ``, [`source`]);
-          return Build(dLink(`ut`, dubInfo.toTargets() ~ ut));
+          return Build(dLink(`ut`, dubInfo.toTargets(No.main) ~ ut));
       }
       """
 

@@ -38,7 +38,7 @@ Feature: Augmenting dub projects with reggae builds
           writeln(`Sum:  `, adder(i, j));
           writeln(`Prod: `, muler(i, j));
           auto enc = Cerealiser();
-          enc ~= cast(ubyte)3;
+          enc ~= cast(ubyte)adder(i, j);
           writeln(enc.bytes);
       }
       """
@@ -98,25 +98,33 @@ Feature: Augmenting dub projects with reggae builds
       """
 
     Scenario: Dub/Reggae build with Ninja
-      When I successfully run `reggae -b ninja dub_reggae_proj`
-      Given I successfully run `ninja`
+      Given I successfully run `reggae -b ninja dub_reggae_proj`
+      When I successfully run `ninja`
+      Then the output should not contain:
+        """
+        warning: multiple rules generate
+        """
       When I successfully run `./ut`
       And I successfully run `./dub_reggae 2 3`
       Then the output should contain:
         """
         Sum:  5
         Prod: 6
-        [3]
+        [5]
         """
 
     Scenario: Dub/Reggae build with Make
-      When I successfully run `reggae -b make dub_reggae_proj`
-      Given I successfully run `make`
+      Given I successfully run `reggae -b make dub_reggae_proj`
+      When I successfully run `make`
+      Then the output should not contain:
+        """
+        warning: ignoring old recipe for target
+        """
       When I successfully run `./ut`
-      And I successfully run `./dub_reggae 2 3`
+      And I successfully run `./dub_reggae 3 4`
       Then the output should contain:
         """
-        Sum:  5
-        Prod: 6
-        [3]
+        Sum:  7
+        Prod: 12
+        [7]
         """

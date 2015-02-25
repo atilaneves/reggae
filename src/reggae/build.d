@@ -9,8 +9,8 @@ import std.traits: Unqual, isSomeFunction, ReturnType, arity;
 struct Build {
     const(Target)[] targets;
 
-    this(in Target target) {
-        this.targets = [target];
+    this(T...)(in T targets) {
+        foreach(target; targets) this.targets ~= target;
     }
 }
 

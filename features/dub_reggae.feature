@@ -66,24 +66,13 @@ Feature: Augmenting dub projects with reggae builds
     And a file named "dub_reggae_proj/reggaefile.d" with:
       """
       import reggae;
-      import reggae.dub_json;
       import std.process;
       import std.exception;
       import std.conv;
 
       Build getBuild() {
-          const string[string] env = null;
-          Config config = Config.none;
-          size_t maxOutput = size_t.max;
-          immutable workDir = projectPath;
-          immutable dubArgs = [`dub`, `describe`];
-
-          auto ret = execute(dubArgs);
-          enforce(ret.status == 0, text(`Could not execute `, dubArgs, `\n`, ret.output));
-
-          auto info = dubInfo(ret.output);
-          auto ut = dCompile(`tests/ut_maths.d`);
-          return Build(dLink(`ut`, info.toTargets ~ ut));
+          auto ut = dCompile(`tests/ut_maths.d`, ``, [`source`]);
+          return Build(dLink(`ut`, dubInfo.toTargets() ~ ut));
       }
       """
 

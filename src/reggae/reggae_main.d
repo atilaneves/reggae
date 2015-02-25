@@ -111,7 +111,22 @@ void writeSrcFiles(fileNames...)(in Options options) {
     {
         auto file = File(reggaeSrcFileName("config.d"), "w");
         file.writeln("module reggae.config;");
+        file.writeln("import reggae.dub;");
         file.writeln("immutable projectPath = `", options.projectPath, "`;");
+
+        import std.process;
+        const string[string] env = null;
+        Config config = Config.none;
+        size_t maxOutput = size_t.max;
+        immutable workDir = options.projectPath;
+
+        immutable dubArgs = ["dub", "describe"];
+        immutable ret = execute(dubArgs, env, config, maxOutput, workDir);
+        enforce(ret.status == 0, text("Could not get description from dub with ", dubArgs, ":\n",
+                                      ret.output));
+
+        auto dubInfo = dubInfo(ret.output);
+        file.writeln("const dubInfo = ", dubInfo, ";");
     }
 }
 

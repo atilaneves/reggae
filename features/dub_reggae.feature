@@ -90,10 +90,8 @@ Feature: Augmenting dub projects with reggae builds
       import std.conv;
 
       Build getBuild() {
-          auto utMain = dCompile(`tests/ut.d`, `-unittest`, [`.`, `source`]);
-          auto uts = [dCompile(`tests/util/ut_maths.d`, `-unittest`, [`source`]),
-                      dCompile(`tests/util/more_maths.d`, `-unittest`, [`source`])];
-          return Build(dLink(`ut`, dubInfo.toTargets(No.main) ~ utMain ~ uts));
+          const uts = dObjects!(SrcDirs([`tests`]), Flags(`-unittest`), ImportPaths([`source`]));
+          return Build(dLink(`ut`, dubInfo.toTargets(No.main) ~ uts));
       }
       """
 

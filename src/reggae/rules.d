@@ -52,6 +52,25 @@ Target cCompile(in string srcFileName, in string flags = "",
     return cppCompile(srcFileName, flags, includePaths);
 }
 
+/**
+ * Compile-time function to that returns a list of Target objects
+ * corresponding to C++ source files from a particular directory
+ */
+auto dObjects(SrcDirs dirs = SrcDirs(),
+              Flags flags = Flags(),
+              ImportPaths includes = ImportPaths(),
+              StringImportPaths stringImports = StringImportPaths(),
+              SrcFiles srcFiles = SrcFiles(),
+              ExcludeFiles excludeFiles = ExcludeFiles())
+    () {
+
+    auto dCompileInner(in string srcFileName) {
+        return dCompile(srcFileName, flags.flags, ["."] ~ includes.paths,
+                        stringImports.paths);
+    }
+
+    return srcObjects!dCompileInner("d", dirs.paths, srcFiles.paths, excludeFiles.paths);
+}
 
 /**
  * Compile-time function to that returns a list of Target objects
@@ -63,8 +82,12 @@ auto cppObjects(SrcDirs dirs = SrcDirs(),
                 SrcFiles srcFiles = SrcFiles(),
                 ExcludeFiles excludeFiles = ExcludeFiles())
     () {
-    return srcObjects!cppCompile("cpp", flags.flags, includes.paths,
-                                 dirs.paths, srcFiles.paths, excludeFiles.paths);
+
+    auto cppCompileInner(in string srcFileName) {
+        return cppCompile(srcFileName, flags.flags, includes.paths);
+    }
+
+    return srcObjects!cppCompileInner("cpp", dirs.paths, srcFiles.paths, excludeFiles.paths);
 }
 
 
@@ -78,16 +101,20 @@ auto cObjects(SrcDirs dirs = SrcDirs(),
               SrcFiles srcFiles = SrcFiles(),
               ExcludeFiles excludeFiles = ExcludeFiles())
     () {
-    return srcObjects!cCompile("c", flags.flags, includes.paths,
-                               dirs.paths, srcFiles.paths, excludeFiles.paths);
+
+    auto cCompileInner(in string srcFileName) {
+        return cCompile(srcFileName, flags.flags, includes.paths);
+    }
+
+
+    return srcObjects!cCompileInner("c", dirs.paths, srcFiles.paths, excludeFiles.paths);
 }
 
 
 auto srcObjects(alias func)(in string extension,
-                            in string flags, in string[] includes,
                             string[] dirs, string[] srcFiles, in string[] excludeFiles) {
     auto files = selectSrcFiles(srcFilesInDirs(extension, dirs), srcFiles, excludeFiles);
-    return files.map!(a => func(a, flags, includes)).array;
+    return files.map!func.array;
 }
 
 //The parameters would be "in" except that "remove" doesn't like that...

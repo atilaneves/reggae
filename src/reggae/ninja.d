@@ -54,9 +54,11 @@ struct Ninja {
         _build = build;
         _projectPath = projectPath.absolutePath;
 
-        foreach(target; DepthFirst(_build.targets[0])) {
-            auto rawCmdLine = target.inOutCommand(_projectPath);
-            rawCmdLine.isDefaultCommand ? defaultRule(target, rawCmdLine) : customRule(target, rawCmdLine);
+        foreach(topTarget; _build.targets) {
+            foreach(target; DepthFirst(topTarget)) {
+                auto rawCmdLine = target.inOutCommand(_projectPath);
+                rawCmdLine.isDefaultCommand ? defaultRule(target, rawCmdLine) : customRule(target, rawCmdLine);
+            }
         }
     }
 

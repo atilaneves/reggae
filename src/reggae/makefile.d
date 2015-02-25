@@ -28,22 +28,25 @@ struct Makefile {
     }
 
     string output() @safe const {
-        auto ret = text("all: ", build.targets[0].outputs[0], "\n");
+        const outputs = build.targets.map!(a => a.outputs[0]).join(" ");
+        auto ret = text("all: ", outputs, "\n");
 
-        foreach(t; DepthFirst(build.targets[0])) {
-            ret ~= text(t.outputs[0], ": ");
-            ret ~= t.dependencyFiles(projectPath);
-            immutable implicitFiles = t.implicitFiles(projectPath);
-            if(!implicitFiles.empty) ret ~= " " ~ t.implicitFiles(projectPath);
-            ret ~= "\n";
-            ret ~= "\t";
-            immutable rawCmdLine = t.inOutCommand(projectPath);
-            if(rawCmdLine.isDefaultCommand) {
-                ret ~= command(t, rawCmdLine);
-            } else {
-                ret ~= t.command(projectPath);
+        foreach(topTarget; build.targets) {
+            foreach(t; DepthFirst(topTarget)) {
+                ret ~= text(t.outputs[0], ": ");
+                ret ~= t.dependencyFiles(projectPath);
+                immutable implicitFiles = t.implicitFiles(projectPath);
+                if(!implicitFiles.empty) ret ~= " " ~ t.implicitFiles(projectPath);
+                ret ~= "\n";
+                ret ~= "\t";
+                immutable rawCmdLine = t.inOutCommand(projectPath);
+                if(rawCmdLine.isDefaultCommand) {
+                    ret ~= command(t, rawCmdLine);
+                } else {
+                    ret ~= t.command(projectPath);
+                }
+                ret ~= "\n";
             }
-            ret ~= "\n";
         }
 
         return ret;

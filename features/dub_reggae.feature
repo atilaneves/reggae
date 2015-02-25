@@ -90,8 +90,10 @@ Feature: Augmenting dub projects with reggae builds
       import std.conv;
 
       Build getBuild() {
-          const uts = dObjects!(SrcDirs([`tests`]), Flags(`-unittest`), ImportPaths([`source`]));
-          return Build(dLink(`ut`, dubInfo.toTargets(No.main) ~ uts));
+          const utObjs = dObjects!(SrcDirs([`tests`]), Flags(`-unittest`), ImportPaths([`source`]));
+          const ut = dLink(`ut`, utObjs ~ dubInfo.toTargets(No.main));
+          const app = dLink(dubInfo.packages[0].targetFileName, dubInfo.toTargets);
+          return Build(app, ut);
       }
       """
 
@@ -99,3 +101,22 @@ Feature: Augmenting dub projects with reggae builds
       When I successfully run `reggae -b ninja dub_reggae_proj`
       Given I successfully run `ninja`
       When I successfully run `./ut`
+      And I successfully run `./dub_reggae 2 3`
+      Then the output should contain:
+        """
+        Sum:  5
+        Prod: 6
+        [3]
+        """
+
+    Scenario: Dub/Reggae build with Make
+      When I successfully run `reggae -b make dub_reggae_proj`
+      Given I successfully run `make`
+      When I successfully run `./ut`
+      And I successfully run `./dub_reggae 2 3`
+      Then the output should contain:
+        """
+        Sum:  5
+        Prod: 6
+        [3]
+        """

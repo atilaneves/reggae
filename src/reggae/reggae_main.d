@@ -10,15 +10,12 @@ import reggae.options;
 import reggae.dub_json;
 
 
-immutable reggaeSrcDirName = buildPath(".reggae", "src", "reggae");
-
-
 int main(string[] args) {
     try {
         immutable options = getOptions(args);
         enforce(options.projectPath != "", "A project path must be specified");
 
-        if(isDubProject(options.projectPath)) {
+        if(isDubProject(options.projectPath) && !projectBuildFile(options).exists) {
             createReggaefile(options);
         }
 
@@ -96,6 +93,9 @@ private bool isDubProject(in string projectPath) @safe {
 }
 
 
+immutable reggaeSrcDirName = buildPath(".reggae", "src", "reggae");
+
+
 void writeSrcFiles(fileNames...)(in Options options) {
     import std.file: mkdirRecurse;
     if(!reggaeSrcDirName.exists) mkdirRecurse(reggaeSrcDirName);
@@ -120,7 +120,13 @@ string reggaeSrcFileName(in string fileName) @safe pure nothrow {
     return buildPath(reggaeSrcDirName, fileName);
 }
 
+string projectBuildFile(in Options options) @safe pure nothrow {
+    return buildPath(options.projectPath, "reggaefile.d");
+}
+
 string getBuildFileName(in Options options) {
+    immutable regular = projectBuildFile(options);
+    if(regular.exists) return regular;
     immutable path = isDubProject(options.projectPath) ? "" : options.projectPath;
     return buildPath(path, "reggaefile.d");
 }

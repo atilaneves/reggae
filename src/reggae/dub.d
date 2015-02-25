@@ -24,7 +24,7 @@ struct DubPackage {
 struct DubInfo {
     DubPackage[] packages;
 
-    Target[] toTargets(Flag!"main" = Yes.main) @safe const {
+    Target[] toTargets(Flag!"main" includeMain = Yes.main) @safe const {
         Target[] targets;
 
         foreach(const i, const pack; packages) {
@@ -37,6 +37,7 @@ struct DubInfo {
             const projDir = i == 0 ? "" : pack.path;
 
             foreach(const file; pack.files) {
+                if(file == pack.mainSourceFile && !includeMain) continue;
                 targets ~= dCompile(buildPath(pack.path, file),
                                     pack.flags.join(" "),
                                     importPaths, stringImportPaths, projDir);

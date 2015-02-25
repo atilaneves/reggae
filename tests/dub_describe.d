@@ -12,7 +12,7 @@ auto jsonString =
     `    {`
     `      "path": "/path/to/pkg1",`
     `      "name": "pkg1",`
-    `      "mainSourceFile": "boooo.d",`
+    `      "mainSourceFile": "src/boooo.d",`
     `      "targetFileName": "super_app",`
     `      "dflags": [],`
     `      "importPaths": ["leimports"],`
@@ -69,7 +69,7 @@ void testJsonToDubDescribe() {
     const info = dubInfo(jsonString.dup);
     info.shouldEqual(
         DubInfo(
-            [DubPackage("pkg1", "/path/to/pkg1", "boooo.d", "super_app",
+            [DubPackage("pkg1", "/path/to/pkg1", "src/boooo.d", "super_app",
                             [],
                             ["leimports"],
                             ["src/string_imports", "src/moar_stringies"],
@@ -116,6 +116,33 @@ void testDubInfoToTargets() {
                 "_dcompile  "
                   "includes=-I/weird/path/pkg_other/my_imports,-I/weird/path/pkg_other/moar_imports "
                   "flags=-g,-debug stringImports=",
+                [Target("/weird/path/pkg_other/source/africa.d")]),
+            ]);
+
+    info.toTargets(No.main).shouldEqual(
+        [Target("foo.o",
+                "_dcompile  "
+                "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
+                "-I/weird/path/pkg_other/moar_imports "
+                "flags= "
+                "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
+                [Target("/path/to/pkg1/src/foo.d")]),
+         Target("bar.o",
+                "_dcompile  "
+                "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
+                "-I/weird/path/pkg_other/moar_imports "
+                "flags= "
+                "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
+                [Target("/path/to/pkg1/src/bar.d")]),
+         Target("toto.o",
+                "_dcompile  "
+                "includes=-I/weird/path/pkg_other/my_imports,-I/weird/path/pkg_other/moar_imports "
+                "flags=-g,-debug stringImports=",
+                [Target("/weird/path/pkg_other/source/toto.d")]),
+         Target("africa.o",
+                "_dcompile  "
+                "includes=-I/weird/path/pkg_other/my_imports,-I/weird/path/pkg_other/moar_imports "
+                "flags=-g,-debug stringImports=",
                 [Target("/weird/path/pkg_other/source/africa.d")]),
             ]);
 }

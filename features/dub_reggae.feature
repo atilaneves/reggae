@@ -43,8 +43,9 @@ Feature: Augmenting dub projects with reggae builds
       }
       """
 
-    And a file named "dub_reggae_proj/tests/ut_maths.d" with:
+    And a file named "dub_reggae_proj/tests/util/ut_maths.d" with:
       """
+      module tests.util.ut_maths;
       import util.maths;
       void testAdd() {
           assert(adder(3, 0) == 3);
@@ -56,10 +57,28 @@ Feature: Augmenting dub projects with reggae builds
           assert(muler(3, 1) == 3);
           assert(muler(3, 4) == 12);
       }
+      """
 
+    And a file named "dub_reggae_proj/tests/util/more_maths.d" with:
+      """
+      module tests.util.more_maths;
+      import util.maths;
+      unittest {
+          assert(adder(3, 4) == 7);
+      }
+      void testMoreAdder() {
+          assert(adder(4, 9) == 13);
+      }
+      """
+
+    And a file named "dub_reggae_proj/tests/ut.d" with:
+      """
+      import tests.util.ut_maths;
+      import tests.util.more_maths;
       void main() {
           testAdd();
           testMul();
+          testMoreAdder();
       }
       """
 
@@ -71,8 +90,10 @@ Feature: Augmenting dub projects with reggae builds
       import std.conv;
 
       Build getBuild() {
-          auto ut = dCompile(`tests/ut_maths.d`, ``, [`source`]);
-          return Build(dLink(`ut`, dubInfo.toTargets(No.main) ~ ut));
+          auto utMain = dCompile(`tests/ut.d`, `-unittest`, [`.`, `source`]);
+          auto uts = [dCompile(`tests/util/ut_maths.d`, `-unittest`, [`source`]),
+                      dCompile(`tests/util/more_maths.d`, `-unittest`, [`source`])];
+          return Build(dLink(`ut`, dubInfo.toTargets(No.main) ~ utMain ~ uts));
       }
       """
 

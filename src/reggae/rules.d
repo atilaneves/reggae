@@ -121,16 +121,16 @@ mixin template dExe(App app,
                     alias linkWithFunction = () { return cast(Target[])[];}) {
     auto buildFunc() {
         auto linkWith = linkWithFunction();
-        return Build(dExeRuntime(app, flags, importPaths, stringImportPaths, linkWith));
+        return Build(dExe(app, flags, importPaths, stringImportPaths, linkWith));
     }
 }
 
 //all paths relative to projectPath
 //@trusted because of .array
-Target dExeRuntime(in App app, in Flags flags,
-                   in ImportPaths importPaths,
-                   in StringImportPaths stringImportPaths,
-                   in Target[] linkWith) @trusted {
+Target dExe(in App app, in Flags flags,
+            in ImportPaths importPaths,
+            in StringImportPaths stringImportPaths,
+            in Target[] linkWith) @trusted {
 
     auto mainObj = dCompile(app.srcFileName, flags.flags, importPaths.paths, stringImportPaths.paths);
     const output = runDCompiler(buildPath(projectPath, app.srcFileName), flags.flags,

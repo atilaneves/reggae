@@ -28,6 +28,10 @@ auto jsonString =
     `        {`
     `          "path": "src/bar.d",`
     `          "type": "source"`
+    `        },`
+    `        {`
+    `          "path": "src/boooo.d",`
+    `          "type": "source"`
     `        }`
     `      ]`
     `    },`
@@ -68,7 +72,7 @@ void testJsonToDubDescribe() {
                             [],
                             ["leimports"],
                             ["src/string_imports", "src/moar_stringies"],
-                            ["src/foo.d", "src/bar.d"]),
+                            ["src/foo.d", "src/bar.d", "src/boooo.d"]),
                  DubPackage("pkg_other", "/weird/path/pkg_other", "", "",
                             ["-g", "-debug"],
                             ["my_imports", "moar_imports"],
@@ -94,6 +98,13 @@ void testDubInfoToTargets() {
                 "flags= "
                 "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
                 [Target("/path/to/pkg1/src/bar.d")]),
+         Target("boooo.o",
+                "_dcompile  "
+                "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
+                "-I/weird/path/pkg_other/moar_imports "
+                "flags= "
+                "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
+                [Target("/path/to/pkg1/src/boooo.d")]),
          Target("toto.o",
                 "_dcompile  "
                 "includes=-I/weird/path/pkg_other/my_imports,-I/weird/path/pkg_other/moar_imports "

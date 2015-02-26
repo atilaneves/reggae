@@ -85,14 +85,12 @@ Feature: Augmenting dub projects with reggae builds
     And a file named "dub_reggae_proj/reggaefile.d" with:
       """
       import reggae;
-      import std.process;
-      import std.exception;
-      import std.conv;
 
       Build getBuild() {
+          const app = dLink(dubInfo.packages[0].targetFileName, dubInfo.toTargets);
           const utObjs = dObjects!(SrcDirs([`tests`]), Flags(`-unittest`), ImportPaths([`source`]));
           const ut = dLink(`ut`, utObjs ~ dubInfo.toTargets(No.main));
-          const app = dLink(dubInfo.packages[0].targetFileName, dubInfo.toTargets);
+
           return Build(app, ut);
       }
       """
@@ -115,7 +113,7 @@ Feature: Augmenting dub projects with reggae builds
 
     Scenario: Dub/Reggae build with Make
       Given I successfully run `reggae -b make dub_reggae_proj`
-      When I successfully run `make`
+      When I successfully run `make -j8`
       Then the output should not contain:
         """
         warning: ignoring old recipe for target

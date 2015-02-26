@@ -5,14 +5,34 @@ import std.algorithm: map, join;
 import std.path: buildPath;
 import std.typetuple: allSatisfy;
 import std.traits: Unqual, isSomeFunction, ReturnType, arity;
+import std.array: array;
 
 struct Build {
     const(Target)[] targets;
 
     this(T...)(in T targets) {
-        foreach(target; targets) this.targets ~= target;
+        foreach(t; targets) {
+            immutable dirName = buildPath("objs", t.outputs[0] ~ ".objs");
+
+            this.targets ~= Target(t.outputs[0],
+                                   t._command,
+                                   t.dependencies.map!(a => a.enclose(dirName)).array,
+                                   t.implicits);
+        }
     }
 }
+
+//a directory for each top-level target no avoid name clashes
+private Target enclose(in Target target, in string dirName) @safe pure nothrow {
+    if(target.isLeaf) return Target(target.outputs[0], target._command, target.dependencies,
+                                    target.implicits);
+
+    return Target(buildPath(dirName, target.outputs[0]),
+                  target._command,
+                  target.dependencies.map!(a => a.enclose(dirName)).array,
+                  target.implicits);
+}
+
 
 enum isTarget(alias T) = is(Unqual!(typeof(T)) == Target);
 
@@ -24,7 +44,7 @@ unittest {
 }
 
 mixin template build(T...) if(allSatisfy!(isTarget, T)) {
-    auto buildFunc() {
+    Build buildFunc() {
         return Build(T);
     }
 }

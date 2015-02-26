@@ -6,20 +6,20 @@ import reggae;
 
 void testMakefileNoPath() {
     const build = Build(Target("leapp",
-                               "dmd -ofleapp foo.o bar.o",
-                               [Target("foo.o", "dmd -c -offoo.o foo.d", [Target("foo.d")]),
-                                Target("bar.o", "dmd -c -ofbar.o bar.d", [Target("bar.d")])],
+                               "dmd -ofleapp objs/leapp.objs/foo.o objs/leapp.objs/bar.o",
+                               [Target("foo.o", "dmd -c -ofobjs/leapp.objs/foo.o foo.d", [Target("foo.d")]),
+                                Target("bar.o", "dmd -c -ofobjs/leapp.objs/bar.o bar.d", [Target("bar.d")])],
                             ));
     auto backend = Makefile(build);
     backend.fileName.shouldEqual("Makefile");
     backend.output.shouldEqual(
         "all: leapp\n"
-        "foo.o: foo.d\n"
-        "\tdmd -c -offoo.o foo.d\n"
-        "bar.o: bar.d\n"
-        "\tdmd -c -ofbar.o bar.d\n"
-        "leapp: foo.o bar.o\n"
-        "\tdmd -ofleapp foo.o bar.o\n"
+        "objs/leapp.objs/foo.o: foo.d\n"
+        "\tdmd -c -ofobjs/leapp.objs/foo.o foo.d\n"
+        "objs/leapp.objs/bar.o: bar.d\n"
+        "\tdmd -c -ofobjs/leapp.objs/bar.o bar.d\n"
+        "leapp: objs/leapp.objs/foo.o objs/leapp.objs/bar.o\n"
+        "\tdmd -ofleapp objs/leapp.objs/foo.o objs/leapp.objs/bar.o\n"
         );
 }
 
@@ -34,12 +34,12 @@ void testMakefilePath() {
     backend.fileName.shouldEqual("Makefile");
     backend.output.shouldEqual(
         "all: otherapp\n"
-        "boo.o: /global/path/to/boo.c\n"
-        "\tgcc -c -o boo.o /global/path/to/boo.c\n"
-        "baz.o: /global/path/to/baz.c\n"
-        "\tgcc -c -o baz.o /global/path/to/baz.c\n"
-        "otherapp: boo.o baz.o\n"
-        "\tgcc -o otherapp boo.o baz.o\n"
+        "objs/otherapp.objs/boo.o: /global/path/to/boo.c\n"
+        "\tgcc -c -o objs/otherapp.objs/boo.o /global/path/to/boo.c\n"
+        "objs/otherapp.objs/baz.o: /global/path/to/baz.c\n"
+        "\tgcc -c -o objs/otherapp.objs/baz.o /global/path/to/baz.c\n"
+        "otherapp: objs/otherapp.objs/boo.o objs/otherapp.objs/baz.o\n"
+        "\tgcc -o otherapp objs/otherapp.objs/boo.o objs/otherapp.objs/baz.o\n"
         );
 }
 

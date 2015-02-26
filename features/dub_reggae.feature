@@ -87,11 +87,9 @@ Feature: Augmenting dub projects with reggae builds
       import reggae;
 
       Build getBuild() {
-          const app = dLink(dubInfo.packages[0].targetFileName, dubInfo.toTargets);
           const utObjs = dObjects!(SrcDirs([`tests`]), Flags(`-unittest`), ImportPaths([`source`]));
           const ut = dLink(`ut`, utObjs ~ dubInfo.toTargets(No.main));
-
-          return Build(app, ut);
+          return Build(dubInfo.target, ut);
       }
       """
 

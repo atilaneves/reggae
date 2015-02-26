@@ -55,6 +55,10 @@ struct DubInfo {
     string[] allStringImportPaths() @safe const {
         return packages.allPaths!(a => a.stringImportPaths);
     }
+
+    Target target() @safe const {
+        return dLink(packages[0].targetFileName, toTargets());
+    }
 }
 
 //@trusted because of map.array

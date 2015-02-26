@@ -64,7 +64,7 @@ Feature: Augmenting dub projects with reggae builds
       module tests.util.more_maths;
       import util.maths;
       unittest {
-          assert(adder(3, 4) == 7);
+          assert(adder(3, 4) == 42);
       }
       void testMoreAdder() {
           assert(adder(4, 9) == 13);
@@ -100,8 +100,12 @@ Feature: Augmenting dub projects with reggae builds
         """
         warning: multiple rules generate
         """
-      When I successfully run `./ut`
-      And I successfully run `./dub_reggae 2 3`
+      When I run `./ut`
+      Then it should fail with:
+        """
+        unittest failure
+        """
+      When I successfully run `./dub_reggae 2 3`
       Then the output should contain:
         """
         Sum:  5
@@ -116,8 +120,12 @@ Feature: Augmenting dub projects with reggae builds
         """
         warning: ignoring old recipe for target
         """
-      When I successfully run `./ut`
-      And I successfully run `./dub_reggae 3 4`
+      When I run `./ut`
+      Then it should fail with:
+        """
+        unittest failure
+        """
+      When I successfully run `./dub_reggae 3 4`
       Then the output should contain:
         """
         Sum:  7

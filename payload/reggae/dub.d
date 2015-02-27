@@ -35,14 +35,15 @@ struct DubInfo {
             //flags from all the others
             const importPaths = i == 0 ? allImportPaths : pack.importPaths;
             const stringImportPaths = i == 0 ? allStringImportPaths : pack.stringImportPaths;
+            const versions = i == 0 ? allVersions : pack.versions;
             //the path must be explicit for the other packages, implicit for the "main"
             //package
             const projDir = i == 0 ? "" : pack.path;
 
             foreach(const file; pack.files) {
                 if(file == pack.mainSourceFile && !includeMain) continue;
-                immutable flags = pack.flags.join(" ") ~ dflags ~
-                    pack.versions.map!(a => "-version=" ~ a).join(" ");
+                immutable flags = pack.flags.join(" ") ~ dflags ~ " " ~
+                    versions.map!(a => "-version=" ~ a).join(" ");
 
                 targets ~= dCompile(buildPath(pack.path, file),
                                     flags,
@@ -60,6 +61,15 @@ struct DubInfo {
 
     string[] allStringImportPaths() @safe const {
         return packages.allPaths!(a => a.stringImportPaths);
+    }
+
+    string[] allVersions() @safe const {
+        string[] versions;
+        foreach(const pack; packages) {
+            versions ~= pack.versions;
+        }
+
+        return versions;
     }
 
     Target target() @safe const {

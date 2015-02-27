@@ -1,7 +1,6 @@
 Re-generate the build when the dub information changes
 dub fetch
 Don't include dub packages that are only used for a specific configuration (unittest)
-Dog-food it for reggae unit tests
 Semi-realistic example with multiple outputs
 Make global configuration available
 Use ranges instead of arrays where possible

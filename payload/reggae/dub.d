@@ -22,6 +22,7 @@ struct DubPackage {
     string targetType;
     string[] versions;
     string[] dependencies;
+    string[] libs;
 }
 
 
@@ -32,9 +33,9 @@ struct DubInfo {
         Target[] targets;
 
         foreach(const i, const pack; packages) {
-            const importPaths = pack.allPaths!(a => a.packagePaths(a.importPaths))(packages);
-            const stringImportPaths = pack.allPaths!(a => a.packagePaths(a.stringImportPaths))(packages);
-            const versions = pack.allPaths!(a => a.versions)(packages);
+            const importPaths = pack.allOf!(a => a.packagePaths(a.importPaths))(packages);
+            const stringImportPaths = pack.allOf!(a => a.packagePaths(a.stringImportPaths))(packages);
+            const versions = pack.allOf!(a => a.versions)(packages);
             //the path must be explicit for the other packages, implicit for the "main"
             //package
             const projDir = i == 0 ? "" : pack.path;
@@ -43,7 +44,6 @@ struct DubInfo {
                 if(file == pack.mainSourceFile && !includeMain) continue;
                 immutable flags = pack.flags.join(" ") ~ dflags ~ " " ~
                     versions.map!(a => "-version=" ~ a).join(" ");
-
                 targets ~= dCompile(buildPath(pack.path, file),
                                     flags,
                                     importPaths, stringImportPaths, projDir);
@@ -54,8 +54,15 @@ struct DubInfo {
     }
 
     Target target() @safe const {
-        immutable flags = packages[0].targetType == "library" ? "-lib" : "";
-        return dLink(packages[0].targetFileName, toTargets(), flags);
+        const pack = packages[0];
+        string[] libs;
+        foreach(p; packages) {
+            libs ~= p.libs;
+        }
+
+        auto flags = pack.targetType == "library" ? ["-lib"] : [];
+        flags ~= libs.map!(a => "-L-l" ~ a).array;
+        return dLink(packages[0].targetFileName, toTargets(), flags.join(","));
     }
 }
 
@@ -64,7 +71,7 @@ private auto packagePaths(in DubPackage pack, in string[] paths) @safe pure noth
 }
 
 //@trusted because of map.array
-private string[] allPaths(alias F)(in DubPackage pack, in DubPackage[] packages) @trusted nothrow {
+private string[] allOf(alias F)(in DubPackage pack, in DubPackage[] packages) @trusted nothrow {
     string[] paths;
     foreach(dependency; [pack.name] ~ pack.dependencies) {
         import std.range;

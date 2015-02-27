@@ -48,6 +48,7 @@ auto jsonString =
     `      "dflags": [`
     `        "-g", "-debug"`
     `      ],`
+    `      "libs": ["liblib", "otherlib"],`
     `      "versions": ["v3", "v4"],`
     `      "stringImportPaths": [],`
     `      "files": [`
@@ -85,7 +86,7 @@ void testJsonToDubDescribe() {
                         ["my_imports", "moar_imports"],
                         [],
                         ["source/toto.d", "source/africa.d"],
-                        "", ["v3", "v4"])]));
+                        "", ["v3", "v4"], [], ["liblib", "otherlib"])]));
 }
 
 
@@ -157,7 +158,46 @@ void testDubInfoToTargets() {
 void testDubInfoToTargetsLib() {
     const info = dubInfo(jsonString.replace("executable", "library"));
     info.target.shouldEqual(
-        Target("super_app", "_dlink flags=-lib",
+        Target("super_app", "_dlink flags=-lib,-L-lliblib,-L-lotherlib",
+               [Target("path/to/pkg1/src/foo.o",
+                       "_dcompile  "
+                       "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
+                       "-I/weird/path/pkg_other/moar_imports "
+                       "flags=-version=v1,-version=v2,-version=v3,-version=v4 "
+                       "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
+                       [Target("/path/to/pkg1/src/foo.d")]),
+                Target("path/to/pkg1/src/bar.o",
+                       "_dcompile  "
+                       "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
+                       "-I/weird/path/pkg_other/moar_imports "
+                       "flags=-version=v1,-version=v2,-version=v3,-version=v4 "
+                       "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
+                       [Target("/path/to/pkg1/src/bar.d")]),
+                Target("path/to/pkg1/src/boooo.o",
+                       "_dcompile  "
+                       "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
+                       "-I/weird/path/pkg_other/moar_imports "
+                       "flags=-version=v1,-version=v2,-version=v3,-version=v4 "
+                       "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
+                       [Target("/path/to/pkg1/src/boooo.d")]),
+                Target("weird/path/pkg_other/source/toto.o",
+                       "_dcompile  "
+                       "includes=-I/weird/path/pkg_other/my_imports,-I/weird/path/pkg_other/moar_imports "
+                       "flags=-g,-debug,-version=v3,-version=v4 stringImports=",
+                       [Target("/weird/path/pkg_other/source/toto.d")]),
+                Target("weird/path/pkg_other/source/africa.o",
+                       "_dcompile  "
+                       "includes=-I/weird/path/pkg_other/my_imports,-I/weird/path/pkg_other/moar_imports "
+                       "flags=-g,-debug,-version=v3,-version=v4 stringImports=",
+                       [Target("/weird/path/pkg_other/source/africa.d")]),
+                   ]));
+}
+
+
+void testDubInfoWithLibs() {
+    const info = dubInfo(jsonString.dup);
+    info.target.shouldEqual(
+        Target("super_app", "_dlink flags=-L-lliblib,-L-lotherlib",
                [Target("path/to/pkg1/src/foo.o",
                        "_dcompile  "
                        "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"

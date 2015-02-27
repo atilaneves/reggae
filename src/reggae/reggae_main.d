@@ -47,7 +47,7 @@ private void createBuild(in Options options) {
 
     alias fileNames = TypeTuple!("buildgen_main.d",
                                  "build.d",
-                                 "makefile.d", "ninja.d", "options.d",
+                                 "makefile.d", "ninja.d",
                                  "package.d", "range.d", "reflect.d",
                                  "rules.d", "dependencies.d", "types.d",
                                  "dub.d");
@@ -107,6 +107,7 @@ private void writeConfig(in Options options) {
     file.writeln("module reggae.config;");
     file.writeln("import reggae.dub;");
     file.writeln("enum projectPath = `", options.projectPath, "`;");
+    file.writeln("enum backend = `", options.backend, "`;");
     file.writeln("enum dflags = `", options.dflags, "`;");
 
     if(isDubProject(options.projectPath)) {

@@ -18,7 +18,8 @@ DubInfo dubInfo(string jsonString) @safe {
                                                  a.byKey("stringImportPaths").jsonValueToStrings,
                                                  a.byKey("files").jsonValueToFiles,
                                                  a.getOptional("targetType"),
-                                                 a.getOptionalList("versions"))).array);
+                                                 a.getOptionalList("versions"),
+                                                 a.getOptionalList("dependencies"))).array);
 }
 
 

@@ -21,6 +21,7 @@ struct DubPackage {
     string[] files;
     string targetType;
     string[] versions;
+    string[] dependencies;
 }
 
 
@@ -31,11 +32,9 @@ struct DubInfo {
         Target[] targets;
 
         foreach(const i, const pack; packages) {
-            //the first package is special; it inherits imports
-            //flags from all the others
-            const importPaths = i == 0 ? allImportPaths : pack.importPaths;
-            const stringImportPaths = i == 0 ? allStringImportPaths : pack.stringImportPaths;
-            const versions = i == 0 ? allVersions : pack.versions;
+            const importPaths = pack.allPaths!(a => a.packagePaths(a.importPaths))(packages);
+            const stringImportPaths = pack.allPaths!(a => a.packagePaths(a.stringImportPaths))(packages);
+            const versions = pack.allPaths!(a => a.versions)(packages);
             //the path must be explicit for the other packages, implicit for the "main"
             //package
             const projDir = i == 0 ? "" : pack.path;
@@ -54,35 +53,23 @@ struct DubInfo {
         return targets;
     }
 
-    string[] allImportPaths() @safe const {
-        return packages.allPaths!(a => a.importPaths);
-    }
-
-
-    string[] allStringImportPaths() @safe const {
-        return packages.allPaths!(a => a.stringImportPaths);
-    }
-
-    string[] allVersions() @safe const {
-        string[] versions;
-        foreach(const pack; packages) {
-            versions ~= pack.versions;
-        }
-
-        return versions;
-    }
-
     Target target() @safe const {
         immutable flags = packages[0].targetType == "library" ? "-lib" : "";
         return dLink(packages[0].targetFileName, toTargets(), flags);
     }
 }
 
+private auto packagePaths(in DubPackage pack, in string[] paths) @safe pure nothrow {
+    return paths.map!(a => buildPath(pack.path, a));
+}
+
 //@trusted because of map.array
-private string[] allPaths(alias F)(in DubPackage[] packages) @trusted {
+private string[] allPaths(alias F)(in DubPackage pack, in DubPackage[] packages) @trusted nothrow {
     string[] paths;
-    foreach(const pack; packages) {
-        paths ~= F(pack).map!(a => buildPath(pack.path, a)).array;
+    foreach(dependency; [pack.name] ~ pack.dependencies) {
+        import std.range;
+        const depPack = packages.find!(a => a.name == dependency).front;
+        paths ~= F(depPack).array;
     }
     return paths;
 }

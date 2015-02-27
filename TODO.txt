@@ -1,6 +1,5 @@
-Function for obtaining list of dub targets (all "source" files from all packages):
-  should have an explicit dependency on dub.json/package.json/sdl
-  dub fetch
+Re-generate the build when the dub information changes
+dub fetch
 Separate modules into what's needed for run-time and what's needed for "2nd compile-time"
 Dog-food it for reggae unit tests
 Semi-realistic example with multiple outputs

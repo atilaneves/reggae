@@ -20,6 +20,7 @@ struct DubPackage {
     string[] stringImportPaths;
     string[] files;
     string targetType;
+    string[] versions;
 }
 
 
@@ -40,8 +41,11 @@ struct DubInfo {
 
             foreach(const file; pack.files) {
                 if(file == pack.mainSourceFile && !includeMain) continue;
+                immutable flags = pack.flags.join(" ") ~ dflags ~
+                    pack.versions.map!(a => "-version=" ~ a).join(" ");
+
                 targets ~= dCompile(buildPath(pack.path, file),
-                                    pack.flags.join(" ") ~ dflags,
+                                    flags,
                                     importPaths, stringImportPaths, projDir);
             }
         }

@@ -16,6 +16,7 @@ auto jsonString =
     `      "mainSourceFile": "src/boooo.d",`
     `      "targetFileName": "super_app",`
     `      "dflags": [],`
+    `      "versions": ["v1", "v2"],`
     `      "importPaths": ["leimports"],`
     `      "stringImportPaths": [`
     `        "src/string_imports",`
@@ -75,7 +76,7 @@ void testJsonToDubDescribe() {
                         ["leimports"],
                         ["src/string_imports", "src/moar_stringies"],
                         ["src/foo.d", "src/bar.d", "src/boooo.d"],
-                        "executable"),
+                        "executable", ["v1", "v2"]),
 
              DubPackage("pkg_other", "/weird/path/pkg_other", "", "",
                         ["-g", "-debug"],
@@ -92,21 +93,21 @@ void testDubInfoToTargets() {
                 "_dcompile  "
                   "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
                   "-I/weird/path/pkg_other/moar_imports "
-                  "flags= "
+                  "flags=-version=v1,-version=v2 "
                   "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
                 [Target("/path/to/pkg1/src/foo.d")]),
          Target("path/to/pkg1/src/bar.o",
                 "_dcompile  "
                   "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
                   "-I/weird/path/pkg_other/moar_imports "
-                  "flags= "
+                  "flags=-version=v1,-version=v2 "
                   "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
                 [Target("/path/to/pkg1/src/bar.d")]),
          Target("path/to/pkg1/src/boooo.o",
                 "_dcompile  "
                   "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
                   "-I/weird/path/pkg_other/moar_imports "
-                  "flags= "
+                  "flags=-version=v1,-version=v2 "
                   "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
                 [Target("/path/to/pkg1/src/boooo.d")]),
          Target("weird/path/pkg_other/source/toto.o",
@@ -126,14 +127,14 @@ void testDubInfoToTargets() {
                 "_dcompile  "
                 "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
                 "-I/weird/path/pkg_other/moar_imports "
-                "flags= "
+                "flags=-version=v1,-version=v2 "
                 "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
                 [Target("/path/to/pkg1/src/foo.d")]),
          Target("path/to/pkg1/src/bar.o",
                 "_dcompile  "
                 "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
                 "-I/weird/path/pkg_other/moar_imports "
-                "flags= "
+                "flags=-version=v1,-version=v2 "
                 "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
                 [Target("/path/to/pkg1/src/bar.d")]),
          Target("weird/path/pkg_other/source/toto.o",
@@ -158,21 +159,21 @@ void testDubInfoToTargetsLib() {
                        "_dcompile  "
                        "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
                        "-I/weird/path/pkg_other/moar_imports "
-                       "flags= "
+                       "flags=-version=v1,-version=v2 "
                        "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
                        [Target("/path/to/pkg1/src/foo.d")]),
                 Target("path/to/pkg1/src/bar.o",
                        "_dcompile  "
                        "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
                        "-I/weird/path/pkg_other/moar_imports "
-                       "flags= "
+                       "flags=-version=v1,-version=v2 "
                        "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
                        [Target("/path/to/pkg1/src/bar.d")]),
                 Target("path/to/pkg1/src/boooo.o",
                        "_dcompile  "
                        "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
                        "-I/weird/path/pkg_other/moar_imports "
-                       "flags= "
+                       "flags=-version=v1,-version=v2 "
                        "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
                        [Target("/path/to/pkg1/src/boooo.d")]),
                 Target("weird/path/pkg_other/source/toto.o",

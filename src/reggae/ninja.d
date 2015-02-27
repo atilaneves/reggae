@@ -79,13 +79,13 @@ private:
         if(rule != "_dlink") { //i.e. one of the compile rules
             auto params = ["includes", "flags"];
             if(rule == "_dcompile") params ~= "stringImports";
+
             foreach(immutable param; params) {
                 immutable value = rawCmdLine.getDefaultRuleParams(param, []).join(" ");
                 paramLines ~= param ~ " = " ~ value;
             }
 
-            immutable depFileLine = "DEPFILE = " ~ target.outputs[0] ~ ".d";
-            paramLines ~= depFileLine;
+            paramLines ~= "DEPFILE = " ~ target.outputs[0] ~ ".d";
         }
 
         buildEntries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~ rule ~ " " ~
@@ -120,8 +120,7 @@ private:
         buildEntries ~= NinjaEntry(buildLine, buildParamLines);
 
         if(haveToAdd) {
-            ruleEntries ~= NinjaEntry("rule " ~ ruleName,
-                                      [ruleCmdLine]);
+            ruleEntries ~= NinjaEntry("rule " ~ ruleName, [ruleCmdLine]);
         }
     }
 

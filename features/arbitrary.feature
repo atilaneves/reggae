@@ -62,8 +62,8 @@ Feature: Arbritrary rules
     And a file named "Makefile" should exist
     When I successfully run `make`
     And the following files should exist:
-      |main.o|
-      |maths.o|
+      |objs/myapp.objs/main.o|
+      |objs/myapp.objs/maths.o|
       |myapp|
     When I run `./myapp 2 3`
     Then the output should contain:
@@ -85,8 +85,8 @@ Feature: Arbritrary rules
       |rules.ninja|
     When I successfully run `ninja`
     And the following files should exist:
-      |main.o|
-      |maths.o|
+      |objs/myapp.objs/main.o|
+      |objs/myapp.objs/maths.o|
       |myapp|
     When I run `./myapp 2 3`
     Then the output should contain:
@@ -106,8 +106,8 @@ Feature: Arbritrary rules
     And a file named "Makefile" should exist
     When I successfully run `make`
     And the following files should exist:
-      |main.o|
-      |foo.o|
+      |objs/appp.objs/main.o |
+      |objs/appp.objs/foo.o|
       |appp|
     When I run `./appp hello`
     Then the output should contain:
@@ -127,8 +127,8 @@ Feature: Arbritrary rules
       |build.ninja|
       |rules.ninja|
     And the following files should exist:
-      |main.o|
-      |foo.o|
+      |objs/appp.objs/main.o|
+      |objs/appp.objs/foo.o|
       |appp|
     When I run `./appp hello`
     Then the output should contain:

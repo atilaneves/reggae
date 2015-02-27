@@ -10,15 +10,12 @@ import reggae.options;
 import reggae.dub_json;
 
 
-immutable reggaeSrcDirName = buildPath(".reggae", "src", "reggae");
-
-
 int main(string[] args) {
     try {
         immutable options = getOptions(args);
         enforce(options.projectPath != "", "A project path must be specified");
 
-        if(isDubProject(options.projectPath)) {
+        if(isDubProject(options.projectPath) && !projectBuildFile(options).exists) {
             createReggaefile(options);
         }
 
@@ -96,6 +93,9 @@ private bool isDubProject(in string projectPath) @safe {
 }
 
 
+immutable reggaeSrcDirName = buildPath(".reggae", "src", "reggae");
+
+
 void writeSrcFiles(fileNames...)(in Options options) {
     import std.file: mkdirRecurse;
     if(!reggaeSrcDirName.exists) mkdirRecurse(reggaeSrcDirName);
@@ -111,7 +111,24 @@ void writeSrcFiles(fileNames...)(in Options options) {
     {
         auto file = File(reggaeSrcFileName("config.d"), "w");
         file.writeln("module reggae.config;");
+        file.writeln("import reggae.dub;");
         file.writeln("immutable projectPath = `", options.projectPath, "`;");
+
+        if(isDubProject(options.projectPath)) {
+            import std.process;
+            const string[string] env = null;
+            Config config = Config.none;
+            size_t maxOutput = size_t.max;
+            immutable workDir = options.projectPath;
+
+            immutable dubArgs = ["dub", "describe"];
+            immutable ret = execute(dubArgs, env, config, maxOutput, workDir);
+            enforce(ret.status == 0, text("Could not get description from dub with ", dubArgs, ":\n",
+                                          ret.output));
+
+            auto dubInfo = dubInfo(ret.output);
+            file.writeln("const dubInfo = ", dubInfo, ";");
+        }
     }
 }
 
@@ -120,7 +137,13 @@ string reggaeSrcFileName(in string fileName) @safe pure nothrow {
     return buildPath(reggaeSrcDirName, fileName);
 }
 
+string projectBuildFile(in Options options) @safe pure nothrow {
+    return buildPath(options.projectPath, "reggaefile.d");
+}
+
 string getBuildFileName(in Options options) {
+    immutable regular = projectBuildFile(options);
+    if(regular.exists) return regular;
     immutable path = isDubProject(options.projectPath) ? "" : options.projectPath;
     return buildPath(path, "reggaefile.d");
 }

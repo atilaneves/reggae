@@ -2,6 +2,8 @@ module reggae.dub;
 
 import reggae.build;
 import reggae.rules;
+public import std.typecons: Yes, No;
+import std.typecons: Flag;
 import std.algorithm: map;
 import std.array: array;
 import std.path: buildPath;
@@ -22,7 +24,7 @@ struct DubPackage {
 struct DubInfo {
     DubPackage[] packages;
 
-    Target[] toTargets() @safe const {
+    Target[] toTargets(Flag!"main" includeMain = Yes.main) @safe const {
         Target[] targets;
 
         foreach(const i, const pack; packages) {
@@ -35,6 +37,7 @@ struct DubInfo {
             const projDir = i == 0 ? "" : pack.path;
 
             foreach(const file; pack.files) {
+                if(file == pack.mainSourceFile && !includeMain) continue;
                 targets ~= dCompile(buildPath(pack.path, file),
                                     pack.flags.join(" "),
                                     importPaths, stringImportPaths, projDir);
@@ -51,6 +54,10 @@ struct DubInfo {
 
     string[] allStringImportPaths() @safe const {
         return packages.allPaths!(a => a.stringImportPaths);
+    }
+
+    Target target() @safe const {
+        return dLink(packages[0].targetFileName, toTargets());
     }
 }
 

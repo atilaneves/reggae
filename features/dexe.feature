@@ -36,7 +36,7 @@ Feature: Linking a D executable
           return i * factor() + j;
       }
       """
-    And a file named "linkproj/extra/cpp_constants.cpp" with:
+    And a file named "linkproj/extra/constants.cpp" with:
       """
       int factor() { return 2; }
       """
@@ -55,7 +55,7 @@ Feature: Linking a D executable
       alias cppObjs = cppObjects!(SrcDirs([`cpp`]),
                                   Flags(`-pg`),
                                   ImportPaths(),
-                                  SrcFiles([`extra/cpp_constants.cpp`]),
+                                  SrcFiles([`extra/constants.cpp`]),
                                   ExcludeFiles([`cpp/extra_main.cpp`]));
       mixin dExe!(App(`d/main.d`, `calc`),
                   Flags(`-debug -O`),

@@ -9,10 +9,10 @@ void testNoIncludePaths() {
     const build = Build(cppCompile("path/to/src/foo.cpp"));
     const ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",
+        [NinjaEntry("build path/to/src/foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",
                     ["includes = ",
                      "flags = ",
-                     "DEPFILE = foo.o.d"])]);
+                     "DEPFILE = path/to/src/foo.o.d"])]);
 }
 
 
@@ -20,10 +20,10 @@ void testIncludePaths() {
     const build = Build(cppCompile("path/to/src/foo.cpp", "", ["path/to/src", "other/path"]));
     const ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",
+        [NinjaEntry("build path/to/src/foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",
                     ["includes = -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path",
                      "flags = ",
-                     "DEPFILE = foo.o.d"])]);
+                     "DEPFILE = path/to/src/foo.o.d"])]);
 }
 
 

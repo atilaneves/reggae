@@ -88,13 +88,13 @@ void testSimpleDBuild() {
     const ninja = Ninja(build, "/path/to/project");
 
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build main.o: dmd /path/to/project/src/main.d",
+        [NinjaEntry("build objs/myapp.objs/main.o: dmd /path/to/project/src/main.d",
                     ["before = -I/path/to/project/src -c",
                      "between = -of"]),
-         NinjaEntry("build maths.o: dmd /path/to/project/src/maths.d",
+         NinjaEntry("build objs/myapp.objs/maths.o: dmd /path/to/project/src/maths.d",
                     ["before = -c",
                      "between = -of"]),
-         NinjaEntry("build myapp: dmd_2 main.o maths.o",
+         NinjaEntry("build myapp: dmd_2 objs/myapp.objs/main.o objs/myapp.objs/maths.o",
                     ["before = -of"])
             ]);
 

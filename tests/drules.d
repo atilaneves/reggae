@@ -9,11 +9,11 @@ void testDCompileNoIncludePaths() {
     const build = Build(dCompile("path/to/src/foo.d"));
     const ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build foo.o: _dcompile /tmp/myproject/path/to/src/foo.d",
+        [NinjaEntry("build path/to/src/foo.o: _dcompile /tmp/myproject/path/to/src/foo.d",
                     ["includes = ",
                      "flags = ",
                      "stringImports = ",
-                     "DEPFILE = foo.o.d"])]);
+                     "DEPFILE = path/to/src/foo.o.d"])]);
 }
 
 
@@ -21,9 +21,9 @@ void testDCompileIncludePaths() {
     const build = Build(dCompile("path/to/src/foo.d", "-O", ["path/to/src", "other/path"]));
     const ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build foo.o: _dcompile /tmp/myproject/path/to/src/foo.d",
+        [NinjaEntry("build path/to/src/foo.o: _dcompile /tmp/myproject/path/to/src/foo.d",
                     ["includes = -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path",
                      "flags = -O",
                      "stringImports = ",
-                     "DEPFILE = foo.o.d"])]);
+                     "DEPFILE = path/to/src/foo.o.d"])]);
 }

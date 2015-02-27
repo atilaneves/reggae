@@ -20,8 +20,11 @@ version(Windows) {
 
 
 private string objFileName(in string srcFileName) @safe pure nothrow {
-    import std.path: stripExtension, defaultExtension;
-    return srcFileName.baseName.stripExtension.defaultExtension(objExt);
+    import std.path: stripExtension, defaultExtension, isRooted, stripDrive;
+    immutable localFileName = srcFileName.isRooted
+        ? srcFileName.stripDrive[1..$]
+        : srcFileName;
+    return localFileName.stripExtension.defaultExtension(objExt);
 }
 
 

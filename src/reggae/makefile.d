@@ -33,6 +33,9 @@ struct Makefile {
 
         foreach(topTarget; build.targets) {
             foreach(t; DepthFirst(topTarget)) {
+
+                mkDir(t);
+
                 ret ~= text(t.outputs[0], ": ");
                 ret ~= t.dependencyFiles(projectPath);
                 immutable implicitFiles = t.implicitFiles(projectPath);
@@ -50,6 +53,13 @@ struct Makefile {
         }
 
         return ret;
+    }
+
+    private void mkDir(in Target target) @trusted const {
+        foreach(output; target.outputs) {
+            import std.file;
+            if(!output.dirName.exists) mkdirRecurse(output.dirName);
+        }
     }
 
     string command(in Target target, in string rawCmdLine) @safe const {

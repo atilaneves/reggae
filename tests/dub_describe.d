@@ -86,33 +86,33 @@ void testJsonToDubDescribe() {
 void testDubInfoToTargets() {
     const info = dubInfo(jsonString.dup);
     info.toTargets.shouldEqual(
-        [Target("foo.o",
+        [Target("path/to/pkg1/src/foo.o",
                 "_dcompile  "
                   "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
                   "-I/weird/path/pkg_other/moar_imports "
                   "flags= "
                   "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
                 [Target("/path/to/pkg1/src/foo.d")]),
-         Target("bar.o",
+         Target("path/to/pkg1/src/bar.o",
                 "_dcompile  "
                   "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
                   "-I/weird/path/pkg_other/moar_imports "
                   "flags= "
                   "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
                 [Target("/path/to/pkg1/src/bar.d")]),
-         Target("boooo.o",
+         Target("path/to/pkg1/src/boooo.o",
                 "_dcompile  "
                   "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
                   "-I/weird/path/pkg_other/moar_imports "
                   "flags= "
                   "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
                 [Target("/path/to/pkg1/src/boooo.d")]),
-         Target("toto.o",
+         Target("weird/path/pkg_other/source/toto.o",
                 "_dcompile  "
                   "includes=-I/weird/path/pkg_other/my_imports,-I/weird/path/pkg_other/moar_imports "
                   "flags=-g,-debug stringImports=",
                 [Target("/weird/path/pkg_other/source/toto.d")]),
-         Target("africa.o",
+         Target("weird/path/pkg_other/source/africa.o",
                 "_dcompile  "
                   "includes=-I/weird/path/pkg_other/my_imports,-I/weird/path/pkg_other/moar_imports "
                   "flags=-g,-debug stringImports=",
@@ -120,26 +120,26 @@ void testDubInfoToTargets() {
             ]);
 
     info.toTargets(No.main).shouldEqual(
-        [Target("foo.o",
+        [Target("path/to/pkg1/src/foo.o",
                 "_dcompile  "
                 "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
                 "-I/weird/path/pkg_other/moar_imports "
                 "flags= "
                 "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
                 [Target("/path/to/pkg1/src/foo.d")]),
-         Target("bar.o",
+         Target("path/to/pkg1/src/bar.o",
                 "_dcompile  "
                 "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
                 "-I/weird/path/pkg_other/moar_imports "
                 "flags= "
                 "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
                 [Target("/path/to/pkg1/src/bar.d")]),
-         Target("toto.o",
+         Target("weird/path/pkg_other/source/toto.o",
                 "_dcompile  "
                 "includes=-I/weird/path/pkg_other/my_imports,-I/weird/path/pkg_other/moar_imports "
                 "flags=-g,-debug stringImports=",
                 [Target("/weird/path/pkg_other/source/toto.d")]),
-         Target("africa.o",
+         Target("weird/path/pkg_other/source/africa.o",
                 "_dcompile  "
                 "includes=-I/weird/path/pkg_other/my_imports,-I/weird/path/pkg_other/moar_imports "
                 "flags=-g,-debug stringImports=",

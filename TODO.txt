@@ -1,13 +1,19 @@
-Different directories for object files to avoid name clashing. See dlink.feature's cpp_constants.cpp
 Function for obtaining list of dub targets (all "source" files from all packages):
-  should return an array of dCompile targets
   should have an explicit dependency on dub.json/package.json/sdl
   dub fetch
+Separate modules into what's needed for run-time and what's needed for "2nd compile-time"
+Dog-food it for reggae unit tests
+Semi-realistic example with multiple outputs
 Make global configuration available
-Multiple top-level targets per build, dog-food it for reggae unit tests
-Semi-realistic example
+Command-line option for specifying D compilation flags: imagine just trying to use a dub project
+Use ranges instead of arrays where possible
+Type-safe dCompile, etc.
+Review all uses of @trusted
+travis
 Make it possible to choose which compiler to use for each language
 Static libraries
+Optimise run-time
+  Write source files once and create static library to link buildgen
 CMake-like rules for rerunning itself
 Tup backend
-Fix errors when trying to write out source files, test rerunning reggae
+Binary backend

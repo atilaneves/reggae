@@ -1,6 +1,7 @@
 Re-generate the build when the dub information changes
 dub fetch
 Separate modules into what's needed for run-time and what's needed for "2nd compile-time"
+Don't include dub packages that only for a specific configuration
 Dog-food it for reggae unit tests
 Semi-realistic example with multiple outputs
 Make global configuration available
@@ -15,3 +16,4 @@ Optimise run-time
 CMake-like rules for rerunning itself
 Tup backend
 Binary backend
+Automatic selection of files based on OS/arch/etc.

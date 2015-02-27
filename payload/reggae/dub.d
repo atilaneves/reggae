@@ -64,7 +64,16 @@ struct DubInfo {
         flags ~= libs.map!(a => "-L-l" ~ a).array;
         return dLink(packages[0].targetFileName, toTargets(), flags.join(","));
     }
+
+    string[] allImportPaths() @trusted nothrow const {
+        string[] paths;
+        foreach(pack; packages) {
+            paths ~= pack.importPaths.map!(a => buildPath(pack.path, a)).array;
+        }
+        return paths;
+    }
 }
+
 
 private auto packagePaths(in DubPackage pack, in string[] paths) @safe pure nothrow {
     return paths.map!(a => buildPath(pack.path, a));

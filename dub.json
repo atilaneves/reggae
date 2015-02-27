@@ -4,8 +4,11 @@
     "copyright": "Copyright © 2015, Atila Neves",
     "targetType": "executable",
     "targetPath": "bin",
-    "stringImportPaths": ["src/reggae"],
-    "excludedSourceFiles": ["src/reggae/buildgen_main.d", "src/reggae/dcompile.d"],
+    "importPaths": ["src", "payload"],
+    "stringImportPaths": ["payload/reggae"],
+    "sourcePaths": ["src", "payload"],
+    "excludedSourceFiles": ["payload/reggae/buildgen_main.d", "payload/reggae/dcompile.d"],
+    "mainSourceFile": "src/reggae/reggae_main.d",
     "dependencies": {
         "std_data_json": ">=0.11.0"
     },
@@ -13,10 +16,10 @@
         { "name": "executable" },
         { "name": "unittest",
           "targetType": "executable",
-          "sourcePaths": ["tests"],
+          "sourcePaths": ["tests", "payload"],
           "mainSourceFile": "tests/ut.d",
-          "excludedSourceFiles": ["src/reggae/buildgen_main.d",
-                                  "src/reggae/dcompile.d",
+          "excludedSourceFiles": ["payload/reggae/buildgen_main.d",
+                                  "payload/reggae/dcompile.d",
                                   "src/reggae/reggae_main.d"],
           "dependencies": {
               "unit-threaded": "~master"

@@ -1,8 +1,6 @@
 Re-generate the build when the dub information changes
 dub fetch
-Separate modules into what's needed for run-time and what's needed for "2nd compile-time"
-Don't include dub packages that only for a specific configuration
-Dog-food it for reggae unit tests
+Don't include dub packages that are only used for a specific configuration (unittest)
 Semi-realistic example with multiple outputs
 Make global configuration available
 Use ranges instead of arrays where possible

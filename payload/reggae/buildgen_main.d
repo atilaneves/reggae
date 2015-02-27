@@ -3,22 +3,21 @@ import reggae;
 import std.stdio;
 
 
-int main(string[] args) {
+int main() {
     try {
-        immutable options = getOptions(args);
         const buildFunc = getBuild!(reggaefile);
         const build = buildFunc();
 
-        switch(options.backend) {
+        switch(backend) {
 
         case "make":
-            const makefile = Makefile(build, options.projectPath);
+            const makefile = Makefile(build, projectPath);
             auto file = File(makefile.fileName, "w");
             file.write(makefile.output);
             break;
 
         case "ninja":
-            const ninja = Ninja(build, options.projectPath);
+            const ninja = Ninja(build, projectPath);
 
             auto buildNinja = File("build.ninja", "w");
             buildNinja.writeln("include rules.ninja\n");
@@ -38,7 +37,7 @@ int main(string[] args) {
             throw new Exception("A backend must be specified with -b/--backend");
 
         default:
-            throw new Exception("Unsupported backend " ~ options.backend);
+            throw new Exception("Unsupported backend " ~ backend);
         }
     } catch(Exception ex) {
         stderr.writeln(ex.msg);

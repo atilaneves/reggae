@@ -34,7 +34,7 @@ NinjaEntry[] defaultRules() @safe pure nothrow {
                         "deps = gcc",
                         "depfile = $DEPFILE"]),
             NinjaEntry("rule _dlink",
-                       ["command = " ~ dcompiler ~ " -of$out $in"]),
+                       ["command = " ~ dcompiler ~ " $flags -of$out $in"]),
             NinjaEntry("rule _cppcompile",
                        ["command = " ~ cppcompiler ~ " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
                         "deps = gcc",
@@ -87,6 +87,14 @@ private:
             }
 
             paramLines ~= "DEPFILE = " ~ target.outputs[0] ~ ".d";
+        } else {
+            auto params = ["flags"];
+
+            foreach(immutable param; params) {
+                immutable value = rawCmdLine.getDefaultRuleParams(param, []).join(" ");
+                paramLines ~= param ~ " = " ~ value;
+            }
+
         }
 
         buildEntries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~ rule ~ " " ~

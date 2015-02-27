@@ -35,7 +35,7 @@ private void createReggaefile(in Options options) {
     file.writeln("import reggae;");
     file.writeln("Build bld() {");
     file.writeln("    auto info = ", dubInfo, ";");
-    file.writeln("    return Build(dLink(`", dubInfo.packages[0].targetFileName, "`, info.toTargets));");
+    file.writeln("    return Build(info.target);");
     file.writeln("}");
 
 }

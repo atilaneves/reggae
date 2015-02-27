@@ -19,6 +19,7 @@ struct DubPackage {
     string[] importPaths;
     string[] stringImportPaths;
     string[] files;
+    string targetType;
 }
 
 
@@ -58,7 +59,8 @@ struct DubInfo {
     }
 
     Target target() @safe const {
-        return dLink(packages[0].targetFileName, toTargets());
+        immutable flags = packages[0].targetType == "library" ? "-lib" : "";
+        return dLink(packages[0].targetFileName, toTargets(), flags);
     }
 }
 

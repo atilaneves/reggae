@@ -59,12 +59,12 @@ Target cCompile(in string srcFileName, in string flags = "",
  * Compile-time function to that returns a list of Target objects
  * corresponding to C++ source files from a particular directory
  */
-auto dObjects(SrcDirs dirs = SrcDirs(),
-              Flags flags = Flags(),
-              ImportPaths includes = ImportPaths(),
-              StringImportPaths stringImports = StringImportPaths(),
-              SrcFiles srcFiles = SrcFiles(),
-              ExcludeFiles excludeFiles = ExcludeFiles())
+Target[] dObjects(SrcDirs dirs = SrcDirs(),
+                  Flags flags = Flags(),
+                  ImportPaths includes = ImportPaths(),
+                  StringImportPaths stringImports = StringImportPaths(),
+                  SrcFiles srcFiles = SrcFiles(),
+                  ExcludeFiles excludeFiles = ExcludeFiles())
     () {
 
     auto dCompileInner(in string srcFileName) {
@@ -176,8 +176,10 @@ Target dExe(in App app, in Flags flags,
 }
 
 
-Target dLink(in string exeName, in Target[] dependencies) @safe pure nothrow {
-    return Target(exeName, "_dlink", dependencies);
+Target dLink(in string exeName, in Target[] dependencies, in string flags = "") @safe pure nothrow {
+    auto cmd = "_dlink";
+    if(flags != "") cmd ~= " flags=" ~ flags;
+    return Target(exeName, cmd, dependencies);
 }
 
 

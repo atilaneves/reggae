@@ -16,7 +16,8 @@ DubInfo dubInfo(string jsonString) @safe {
                                                  a.byKey("dflags").jsonValueToStrings,
                                                  a.byKey("importPaths").jsonValueToStrings,
                                                  a.byKey("stringImportPaths").jsonValueToStrings,
-                                                 a.byKey("files").jsonValueToFiles)).array);
+                                                 a.byKey("files").jsonValueToFiles,
+                                                 a.getOptionalKey("targetType"))).array);
 }
 
 

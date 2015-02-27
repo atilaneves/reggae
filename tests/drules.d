@@ -27,3 +27,12 @@ void testDCompileIncludePaths() {
                      "stringImports = ",
                      "DEPFILE = path/to/src/foo.o.d"])]);
 }
+
+
+void testDLink() {
+    const build = Build(dLink("bin/lefoo", [Target("leobj.o")], "-lib"));
+    const ninja = Ninja(build, "/dir/stuff");
+    ninja.buildEntries.shouldEqual(
+        [NinjaEntry("build bin/lefoo: _dlink /dir/stuff/leobj.o",
+                    ["flags = -lib"])]);
+}

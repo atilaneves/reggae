@@ -78,7 +78,7 @@ struct Makefile {
 
         if(rule == "_dcompile") {
             immutable stringImports = rawCmdLine.getDefaultRuleParams("stringImports", []).join(" ");
-            immutable command = ["./dcompile", dCompiler, flags, includes, stringImports, target.outputs[0],
+            immutable command = [".reggae/dcompile", dCompiler, flags, includes, stringImports, target.outputs[0],
                                  target.dependencyFiles(projectPath), depfile].join(" ");
             return command ~ makeAutoDeps(depfile);
 

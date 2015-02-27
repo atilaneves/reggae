@@ -57,7 +57,8 @@ private void createBuild(in Options options) {
         reggaeSrcs ~= reggaeSrcFileName(fileName);
     }
 
-    immutable binName = "buildgen";
+    immutable reggaeDir = ".reggae";
+    immutable binName = buildPath(reggaeDir, "buildgen");
     const compile = ["dmd", "-g", "-debug","-I" ~ options.projectPath,
                      "-of" ~ binName] ~ reggaeSrcs ~ buildFileName;
 
@@ -70,6 +71,7 @@ private void createBuild(in Options options) {
             text("Couldn't execute the produced ", binName, " binary:\n", retRunBuildgen.output));
 
     immutable retCompDcompile = execute(["dmd",
+                                         "-of" ~ buildPath(reggaeDir, "dcompile"),
                                          reggaeSrcFileName("dcompile.d"),
                                          reggaeSrcFileName("dependencies.d")]);
     enforce(retCompDcompile.status == 0, text("Couldn't compile dcompile.d:\n", retCompDcompile.output));

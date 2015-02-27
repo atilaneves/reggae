@@ -29,7 +29,8 @@ NinjaEntry[] defaultRules() @safe pure nothrow {
     immutable cppcompiler = "g++";
     immutable ccompiler = "gcc";
     return [NinjaEntry("rule _dcompile",
-                       ["command = ./dcompile " ~ dcompiler ~ " $flags $includes $stringImports $out $in $DEPFILE",
+                       ["command = .reggae/dcompile " ~ dcompiler ~
+                        " $flags $includes $stringImports $out $in $DEPFILE",
                         "deps = gcc",
                         "depfile = $DEPFILE"]),
             NinjaEntry("rule _dlink",

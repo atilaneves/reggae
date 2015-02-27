@@ -1,4 +1,4 @@
-More complicated builds (e.g. vibe.d)
+Investigate why vibe says it needs libev
 Re-generate the build when the dub information changes
 dub fetch
 Don't include dub packages that are only used for a specific configuration (unittest)

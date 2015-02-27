@@ -2,6 +2,7 @@ module reggae.dub;
 
 import reggae.build;
 import reggae.rules;
+import reggae.config: dflags;
 public import std.typecons: Yes, No;
 import std.typecons: Flag;
 import std.algorithm: map;
@@ -39,7 +40,7 @@ struct DubInfo {
             foreach(const file; pack.files) {
                 if(file == pack.mainSourceFile && !includeMain) continue;
                 targets ~= dCompile(buildPath(pack.path, file),
-                                    pack.flags.join(" "),
+                                    pack.flags.join(" ") ~ dflags,
                                     importPaths, stringImportPaths, projDir);
             }
         }

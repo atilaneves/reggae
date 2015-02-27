@@ -4,6 +4,7 @@ module reggae.options;
 struct Options {
     string backend;
     string projectPath;
+    string dflags;
 }
 
 
@@ -14,6 +15,7 @@ Options getOptions(string[] args) {
 
     getopt(args,
            "backend|b", &options.backend,
+           "dflags", &options.dflags,
         );
 
     if(args.length > 1) options.projectPath = args[1];

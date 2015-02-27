@@ -5,7 +5,6 @@ Separate modules into what's needed for run-time and what's needed for "2nd comp
 Dog-food it for reggae unit tests
 Semi-realistic example with multiple outputs
 Make global configuration available
-Command-line option for specifying D compilation flags: imagine just trying to use a dub project
 Use ranges instead of arrays where possible
 Type-safe dCompile, etc.
 Review all uses of @trusted

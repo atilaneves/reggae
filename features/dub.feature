@@ -9,7 +9,6 @@ Feature: Dub integration
       {
         "name": "atest",
         "targetType": "executable",
-        "dflags": ["-g", "-debug"],
         "importPaths": ["imps"],
         "stringImportPaths": ["stringies"],
         "dependencies": {"cerealed": ">=0.5.2"}
@@ -42,10 +41,14 @@ Feature: Dub integration
       """
 
     Scenario: Dub/Reggae build with Ninja
-      When I successfully run `reggae -b ninja dub_proj`
+      When I successfully run `reggae -b ninja --dflags="-g -debug" dub_proj`
       Then the file "dub_proj/reggaefile.d" should not exist
       And a file named "reggaefile.d" should exist
-      Given I successfully run `ninja`
+      When I successfully run `ninja`
+      Then the output should contain:
+        """
+        -g -debug
+        """
       When I successfully run `./atest`
       Then the output should contain:
         """
@@ -55,10 +58,14 @@ Feature: Dub integration
         """
 
     Scenario: Dub/Reggae build with Make
-      When I successfully run `reggae -b make dub_proj`
+      When I successfully run `reggae -b make dub_proj --dflags="-g -debug"`
       Then the file "dub_proj/reggaefile.d" should not exist
       And a file named "reggaefile.d" should exist
-      Given I successfully run `make`
+      When I successfully run `make -j8`
+      Then the output should contain:
+        """
+        -g -debug
+        """
       When I successfully run `./atest`
       Then the output should contain:
         """

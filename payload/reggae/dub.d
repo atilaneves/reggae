@@ -66,23 +66,19 @@ struct DubInfo {
     }
 
     string[] allImportPaths() @trusted nothrow const {
-        string[] paths;
-        foreach(pack; packages) {
-            paths ~= pack.importPaths.map!(a => buildPath(pack.path, a)).array;
-        }
-        return paths;
+        return packages[0].allOf!(a => a.packagePaths(a.importPaths))(packages);
     }
 }
 
 
-private auto packagePaths(in DubPackage pack, in string[] paths) @safe pure nothrow {
-    return paths.map!(a => buildPath(pack.path, a));
+private auto packagePaths(in DubPackage pack, in string[] paths) @trusted nothrow {
+    return paths.map!(a => buildPath(pack.path, a)).array;
 }
 
 //@trusted because of map.array
 private string[] allOf(alias F)(in DubPackage pack, in DubPackage[] packages) @trusted nothrow {
     string[] paths;
-    foreach(dependency; [pack.name] ~ pack.dependencies) {
+    foreach(dependency; pack.dependencies) {
         import std.range;
         const depPack = packages.find!(a => a.name == dependency).front;
         paths ~= F(depPack).array;

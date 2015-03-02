@@ -65,9 +65,7 @@ struct Ninja {
             }
         }
 
-        import reggae.config;
-        buildEntries ~= NinjaEntry("build build.ninja: _rerun | " ~ buildPath(projectPath, "reggaefile.d"),
-                                   ["pool = console"]);
+        addRerunBuild();
     }
 
     const(NinjaEntry)[] allRuleEntries() @safe pure const {
@@ -190,6 +188,14 @@ private:
         import std.conv: to;
         static int counter = 1;
         return cmd ~ "_" ~ (++counter).to!string;
+    }
+
+    void addRerunBuild() @safe pure nothrow {
+        import reggae.config;
+        buildEntries ~= NinjaEntry("build build.ninja: _rerun | " ~
+                                   buildPath(projectPath, "reggaefile.d") ~ " " ~
+                                   reggaePath,
+                                   ["pool = console"]);
     }
 }
 

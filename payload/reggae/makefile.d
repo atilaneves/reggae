@@ -40,7 +40,7 @@ struct Makefile {
                 ret ~= t.dependencyFiles(projectPath);
                 immutable implicitFiles = t.implicitFiles(projectPath);
                 if(!implicitFiles.empty) ret ~= " " ~ t.implicitFiles(projectPath);
-                ret ~= "\n";
+                ret ~= " Makefile\n";
                 ret ~= "\t";
                 immutable rawCmdLine = t.inOutCommand(projectPath);
                 if(rawCmdLine.isDefaultCommand) {
@@ -52,6 +52,7 @@ struct Makefile {
             }
         }
 
+        addRerunBuild(ret);
         return ret;
     }
 
@@ -91,6 +92,14 @@ struct Makefile {
         } else {
             throw new Exception("Unknown Makefile default rule " ~ rule);
         }
+    }
+
+private:
+
+    void addRerunBuild(ref string ret) @safe pure nothrow const {
+        import reggae.config;
+        ret ~= "Makefile: " ~ buildPath(projectPath, "reggaefile.d") ~ " " ~ reggaePath ~ "\n";
+        ret ~= "\t" ~ reggaePath ~ " -b make " ~ projectPath;
     }
 }
 

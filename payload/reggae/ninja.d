@@ -25,6 +25,7 @@ struct NinjaEntry {
  * Pre-built rules
  */
 NinjaEntry[] defaultRules() @safe pure nothrow {
+    import reggae.config;
     immutable dcompiler = "dmd";
     immutable cppcompiler = "g++";
     immutable ccompiler = "gcc";
@@ -42,7 +43,9 @@ NinjaEntry[] defaultRules() @safe pure nothrow {
             NinjaEntry("rule _ccompile",
                        ["command = " ~ ccompiler ~ " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
                         "deps = gcc",
-                        "depfile = $DEPFILE"])
+                        "depfile = $DEPFILE"]),
+            NinjaEntry("rule _rerun",
+                       ["command = " ~ reggaePath ~ " -b ninja " ~ projectPath] )
         ];
 }
 
@@ -61,6 +64,10 @@ struct Ninja {
                 rawCmdLine.isDefaultCommand ? defaultRule(target, rawCmdLine) : customRule(target, rawCmdLine);
             }
         }
+
+        import reggae.config;
+        buildEntries ~= NinjaEntry("build build.ninja: _rerun | " ~ buildPath(projectPath, "reggaefile.d"),
+                                   ["pool = console"]);
     }
 
     const(NinjaEntry)[] allRuleEntries() @safe pure const {

@@ -29,6 +29,7 @@ NinjaEntry[] defaultRules() @safe pure nothrow {
     immutable dcompiler = "dmd";
     immutable cppcompiler = "g++";
     immutable ccompiler = "gcc";
+    immutable _dflags = dflags == "" ? "" : " --dflags='" ~ dflags ~ "'";
     return [NinjaEntry("rule _dcompile",
                        ["command = .reggae/dcompile " ~ dcompiler ~
                         " $flags $includes $stringImports $out $in $DEPFILE",
@@ -45,7 +46,7 @@ NinjaEntry[] defaultRules() @safe pure nothrow {
                         "deps = gcc",
                         "depfile = $DEPFILE"]),
             NinjaEntry("rule _rerun",
-                       ["command = " ~ reggaePath ~ " -b ninja " ~ projectPath] )
+                       ["command = " ~ reggaePath ~ " -b ninja" ~ _dflags ~ " " ~ projectPath] )
         ];
 }
 
@@ -193,7 +194,7 @@ private:
     void addRerunBuild() @safe pure nothrow {
         import reggae.config;
         buildEntries ~= NinjaEntry("build build.ninja: _rerun | " ~
-                                   buildPath(projectPath, "reggaefile.d") ~ " " ~
+                                   buildFilePath ~ " " ~
                                    reggaePath,
                                    ["pool = console"]);
     }

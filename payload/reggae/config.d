@@ -4,3 +4,4 @@ module reggae.config;
 immutable string projectPath;
 immutable string dflags;
 immutable string reggaePath;
+immutable string buildFilePath;

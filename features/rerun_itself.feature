@@ -62,6 +62,8 @@ Feature: Re-run reggae when dependencies deem it necessary
         """
         Lookee me!
         """
+      Given I successfully run `ninja -t clean`
+      Then I successfully run `ninja`
 
 
     Scenario: Rerun with Make

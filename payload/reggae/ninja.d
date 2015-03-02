@@ -65,10 +65,10 @@ struct Ninja {
 
     const(NinjaEntry)[] allBuildEntries() @safe pure nothrow const {
         import reggae.config;
-        return buildEntries ~ NinjaEntry("build build.ninja: _rerun | " ~
-                                         buildFilePath ~ " " ~
-                                         reggaePath,
-                                         ["pool = console"]);
+        immutable files = [buildFilePath, reggaePath].join(" ");
+        return buildEntries ~
+            NinjaEntry("build build.ninja: _rerun | " ~ files,
+                       ["pool = console"]);
     }
 
     const(NinjaEntry)[] allRuleEntries() @safe pure const {
@@ -77,7 +77,8 @@ struct Ninja {
 
         return ruleEntries ~ defaultRules ~
             NinjaEntry("rule _rerun",
-                       ["command = " ~ reggaePath ~ " -b ninja" ~ _dflags ~ " " ~ projectPath]);
+                       ["command = " ~ reggaePath ~ " -b ninja" ~ _dflags ~ " " ~ projectPath,
+                        "generator = 1"]);
     }
 
     string buildOutput() @safe pure nothrow const {

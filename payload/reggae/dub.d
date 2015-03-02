@@ -53,7 +53,7 @@ struct DubInfo {
         return targets;
     }
 
-    Target target() @safe const {
+    Target mainTarget() @safe const {
         const pack = packages[0];
         string[] libs;
         foreach(p; packages) {

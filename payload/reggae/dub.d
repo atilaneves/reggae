@@ -5,7 +5,7 @@ import reggae.rules;
 import reggae.config: dflags;
 public import std.typecons: Yes, No;
 import std.typecons: Flag;
-import std.algorithm: map;
+import std.algorithm: map, filter;
 import std.array: array;
 import std.path: buildPath;
 
@@ -63,7 +63,8 @@ struct DubInfo {
 
         auto flags = flagsStr.splitter(" ").array;
         flags ~= pack.targetType == "library" ? ["-lib"] : [];
-        flags ~= libs.map!(a => "-L-l" ~ a).array;
+        //hacky hack for dub describe on vibe.d projects
+        flags ~= libs.filter!(a => a != "ev").map!(a => "-L-l" ~ a).array;
         return dLink(packages[0].targetFileName, toTargets(), flags.join(","));
     }
 

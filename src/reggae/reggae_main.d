@@ -111,6 +111,8 @@ private void writeConfig(in Options options) {
     file.writeln("enum projectPath = `", options.projectPath, "`;");
     file.writeln("enum backend = `", options.backend, "`;");
     file.writeln("enum dflags = `", options.dflags, "`;");
+    file.writeln("enum reggaePath = `", options.reggaePath, "`;");
+    file.writeln("enum buildFilePath = `", options.getBuildFileName.absolutePath, "`;");
 
     if(isDubProject(options.projectPath)) {
         auto dubInfo = getDubInfo(options);

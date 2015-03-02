@@ -42,7 +42,7 @@ NinjaEntry[] defaultRules() @safe pure nothrow {
             NinjaEntry("rule _ccompile",
                        ["command = " ~ ccompiler ~ " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
                         "deps = gcc",
-                        "depfile = $DEPFILE"])
+                        "depfile = $DEPFILE"]),
         ];
 }
 
@@ -63,8 +63,30 @@ struct Ninja {
         }
     }
 
+    const(NinjaEntry)[] allBuildEntries() @safe pure nothrow const {
+        import reggae.config;
+        immutable files = [buildFilePath, reggaePath].join(" ");
+        return buildEntries ~
+            NinjaEntry("build build.ninja: _rerun | " ~ files,
+                       ["pool = console"]);
+    }
+
     const(NinjaEntry)[] allRuleEntries() @safe pure const {
-        return ruleEntries ~ defaultRules;
+        import reggae.config;
+        immutable _dflags = dflags == "" ? "" : " --dflags='" ~ dflags ~ "'";
+
+        return ruleEntries ~ defaultRules ~
+            NinjaEntry("rule _rerun",
+                       ["command = " ~ reggaePath ~ " -b ninja" ~ _dflags ~ " " ~ projectPath,
+                        "generator = 1"]);
+    }
+
+    string buildOutput() @safe pure nothrow const {
+        return output(allBuildEntries);
+    }
+
+    string rulesOutput() @safe pure const {
+        return output(allRuleEntries);
     }
 
 private:
@@ -184,6 +206,15 @@ private:
         static int counter = 1;
         return cmd ~ "_" ~ (++counter).to!string;
     }
+
+    string output(const(NinjaEntry)[] entries) @safe pure const nothrow {
+        string output;
+        foreach(entry; entries) {
+            output ~= entry.toString ~ "\n";
+        }
+        return output;
+    }
+
 }
 
 //@trusted because of splitter

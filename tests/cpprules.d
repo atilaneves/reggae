@@ -12,7 +12,8 @@ void testNoIncludePaths() {
         [NinjaEntry("build path/to/src/foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",
                     ["includes = ",
                      "flags = ",
-                     "DEPFILE = path/to/src/foo.o.d"])]);
+                     "DEPFILE = path/to/src/foo.o.d"]),
+            ]);
 }
 
 
@@ -23,7 +24,8 @@ void testIncludePaths() {
         [NinjaEntry("build path/to/src/foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",
                     ["includes = -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path",
                      "flags = ",
-                     "DEPFILE = path/to/src/foo.o.d"])]);
+                     "DEPFILE = path/to/src/foo.o.d"]),
+            ]);
 }
 
 

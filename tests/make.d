@@ -12,13 +12,13 @@ void testMakefileNoPath() {
                             ));
     auto backend = Makefile(build);
     backend.fileName.shouldEqual("Makefile");
-    backend.output.shouldEqual(
+    backend.simpleOutput.shouldEqual(
         "all: leapp\n"
-        "objs/leapp.objs/foo.o: foo.d\n"
+        "objs/leapp.objs/foo.o: foo.d Makefile\n"
         "\tdmd -c -ofobjs/leapp.objs/foo.o foo.d\n"
-        "objs/leapp.objs/bar.o: bar.d\n"
+        "objs/leapp.objs/bar.o: bar.d Makefile\n"
         "\tdmd -c -ofobjs/leapp.objs/bar.o bar.d\n"
-        "leapp: objs/leapp.objs/foo.o objs/leapp.objs/bar.o\n"
+        "leapp: objs/leapp.objs/foo.o objs/leapp.objs/bar.o Makefile\n"
         "\tdmd -ofleapp objs/leapp.objs/foo.o objs/leapp.objs/bar.o\n"
         );
 }
@@ -32,13 +32,13 @@ void testMakefilePath() {
                             ));
     auto backend = Makefile(build, "/global/path/to/");
     backend.fileName.shouldEqual("Makefile");
-    backend.output.shouldEqual(
+    backend.simpleOutput.shouldEqual(
         "all: otherapp\n"
-        "objs/otherapp.objs/boo.o: /global/path/to/boo.c\n"
+        "objs/otherapp.objs/boo.o: /global/path/to/boo.c Makefile\n"
         "\tgcc -c -o objs/otherapp.objs/boo.o /global/path/to/boo.c\n"
-        "objs/otherapp.objs/baz.o: /global/path/to/baz.c\n"
+        "objs/otherapp.objs/baz.o: /global/path/to/baz.c Makefile\n"
         "\tgcc -c -o objs/otherapp.objs/baz.o /global/path/to/baz.c\n"
-        "otherapp: objs/otherapp.objs/boo.o objs/otherapp.objs/baz.o\n"
+        "otherapp: objs/otherapp.objs/boo.o objs/otherapp.objs/baz.o Makefile\n"
         "\tgcc -o otherapp objs/otherapp.objs/boo.o objs/otherapp.objs/baz.o\n"
         );
 }
@@ -47,9 +47,9 @@ void testMakefilePath() {
 void testImplicitDependencies() {
     const target = Target("foo.o", "gcc -o $out -c $in", [Target("foo.c")], [Target("foo.h")]);
     const make = Makefile(Build(target));
-    make.output.shouldEqual(
+    make.simpleOutput.shouldEqual(
         "all: foo.o\n"
-        "foo.o: foo.c foo.h\n"
+        "foo.o: foo.c foo.h Makefile\n"
         "\tgcc -o foo.o -c foo.c\n"
         );
 }

@@ -25,11 +25,9 @@ struct NinjaEntry {
  * Pre-built rules
  */
 NinjaEntry[] defaultRules() @safe pure nothrow {
-    import reggae.config;
     immutable dcompiler = "dmd";
     immutable cppcompiler = "g++";
     immutable ccompiler = "gcc";
-    immutable _dflags = dflags == "" ? "" : " --dflags='" ~ dflags ~ "'";
     return [NinjaEntry("rule _dcompile",
                        ["command = .reggae/dcompile " ~ dcompiler ~
                         " $flags $includes $stringImports $out $in $DEPFILE",
@@ -45,8 +43,6 @@ NinjaEntry[] defaultRules() @safe pure nothrow {
                        ["command = " ~ ccompiler ~ " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
                         "deps = gcc",
                         "depfile = $DEPFILE"]),
-            NinjaEntry("rule _rerun",
-                       ["command = " ~ reggaePath ~ " -b ninja" ~ _dflags ~ " " ~ projectPath] )
         ];
 }
 
@@ -65,12 +61,31 @@ struct Ninja {
                 rawCmdLine.isDefaultCommand ? defaultRule(target, rawCmdLine) : customRule(target, rawCmdLine);
             }
         }
+    }
 
-        addRerunBuild();
+    const(NinjaEntry)[] allBuildEntries() @safe pure nothrow const {
+        import reggae.config;
+        return buildEntries ~ NinjaEntry("build build.ninja: _rerun | " ~
+                                         buildFilePath ~ " " ~
+                                         reggaePath,
+                                         ["pool = console"]);
     }
 
     const(NinjaEntry)[] allRuleEntries() @safe pure const {
-        return ruleEntries ~ defaultRules;
+        import reggae.config;
+        immutable _dflags = dflags == "" ? "" : " --dflags='" ~ dflags ~ "'";
+
+        return ruleEntries ~ defaultRules ~
+            NinjaEntry("rule _rerun",
+                       ["command = " ~ reggaePath ~ " -b ninja" ~ _dflags ~ " " ~ projectPath]);
+    }
+
+    string buildOutput() @safe pure nothrow const {
+        return output(allBuildEntries);
+    }
+
+    string rulesOutput() @safe pure const {
+        return output(allRuleEntries);
     }
 
 private:
@@ -191,13 +206,14 @@ private:
         return cmd ~ "_" ~ (++counter).to!string;
     }
 
-    void addRerunBuild() @safe pure nothrow {
-        import reggae.config;
-        buildEntries ~= NinjaEntry("build build.ninja: _rerun | " ~
-                                   buildFilePath ~ " " ~
-                                   reggaePath,
-                                   ["pool = console"]);
+    string output(const(NinjaEntry)[] entries) @safe pure const nothrow {
+        string output;
+        foreach(entry; entries) {
+            output ~= entry.toString ~ "\n";
+        }
+        return output;
     }
+
 }
 
 //@trusted because of splitter

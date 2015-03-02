@@ -27,7 +27,8 @@ struct Makefile {
         return "Makefile";
     }
 
-    string output() @safe const {
+    string simpleOutput() @safe const {
+
         const outputs = build.targets.map!(a => a.outputs[0]).join(" ");
         auto ret = text("all: ", outputs, "\n");
 
@@ -52,7 +53,15 @@ struct Makefile {
             }
         }
 
-        addRerunBuild(ret);
+        return ret;
+    }
+
+    string output() @safe const {
+        import reggae.config;
+        auto ret = simpleOutput;
+        ret ~= "Makefile: " ~ buildFilePath ~ " " ~ reggaePath ~ "\n";
+        immutable _dflags = dflags == "" ? "" : " --dflags='" ~ dflags ~ "'";
+        ret ~= "\t" ~ reggaePath ~ " -b make" ~ _dflags ~ " " ~ projectPath ~ "\n";
         return ret;
     }
 

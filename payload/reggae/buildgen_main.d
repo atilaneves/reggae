@@ -21,15 +21,10 @@ int main() {
 
             auto buildNinja = File("build.ninja", "w");
             buildNinja.writeln("include rules.ninja\n");
-
-            foreach(entry; ninja.buildEntries) {
-                buildNinja.writeln(entry.toString);
-            }
+            buildNinja.writeln(ninja.buildOutput);
 
             auto rulesNinja = File("rules.ninja", "w");
-            foreach(entry; ninja.allRuleEntries) {
-                rulesNinja.writeln(entry.toString);
-            }
+            rulesNinja.writeln(ninja.rulesOutput);
 
             break;
 

@@ -53,14 +53,16 @@ struct DubInfo {
         return targets;
     }
 
-    Target mainTarget() @safe const {
+    //@trusted: array
+    Target mainTarget(string flagsStr = "") @trusted const {
         const pack = packages[0];
         string[] libs;
         foreach(p; packages) {
             libs ~= p.libs;
         }
 
-        auto flags = pack.targetType == "library" ? ["-lib"] : [];
+        auto flags = flagsStr.splitter(" ").array;
+        flags ~= pack.targetType == "library" ? ["-lib"] : [];
         flags ~= libs.map!(a => "-L-l" ~ a).array;
         return dLink(packages[0].targetFileName, toTargets(), flags.join(","));
     }

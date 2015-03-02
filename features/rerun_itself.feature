@@ -62,3 +62,42 @@ Feature: Re-run reggae when dependencies deem it necessary
         """
         Lookee me!
         """
+
+
+    Scenario: Rerun with Make
+      Given I successfully run `reggae -b make proj`
+      And I successfully run `make`
+      When I successfully run `./myapp`
+      Then the output should contain:
+        """
+        Mainymainy
+        """
+      And the output should not contain:
+        """
+        Lookee me!
+        """
+
+      Given I successfully run `sleep 1` for up to 1 seconds
+      And I overwrite "proj/reggaefile.d" with:
+        """
+        import reggae;
+        const mainObj  = Target(`main.o`,  `dmd -I$project/src -c $in -of$out`, Target(`src/main.d`));
+        const otherObj = Target(`other.o`, `dmd -I$project/src -c $in -of$out`, Target(`src/other.d`));
+        const app = Target(`myapp`,
+                         `dmd -of$out $in`,
+                         [mainObj, otherObj],
+                         );
+        mixin build!(app);
+        """
+      And I overwrite "proj/src/main.d" with:
+        """
+        import other;
+        void main() { myfunc();}
+        """
+
+      When I successfully run `make`
+      And I successfully run `./myapp`
+      Then the output should contain:
+        """
+        Lookee me!
+        """

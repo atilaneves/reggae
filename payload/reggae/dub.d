@@ -71,6 +71,10 @@ struct DubInfo {
     string[] targetImportPaths() @trusted nothrow const {
         return packages[0].allOf!(a => a.packagePaths(a.importPaths))(packages);
     }
+
+    string[][] fetchCommands() @safe pure nothrow const {
+        return packages[0].dependencies.map!(a => ["dub", "fetch", a]).array;
+    }
 }
 
 

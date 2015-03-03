@@ -8,6 +8,7 @@ import std.conv: text;
 import std.exception: enforce;
 import reggae.options;
 import reggae.dub_json;
+import reggae.dub;
 
 
 int main(string[] args) {
@@ -38,6 +39,7 @@ private void createReggaefile(in Options options) {
     file.writeln("    return Build(info.mainTarget);");
     file.writeln("}");
 
+    dubFetch(dubInfo);
 }
 
 private void createBuild(in Options options) {
@@ -121,7 +123,7 @@ private void writeConfig(in Options options) {
 }
 
 
-private auto getDubInfo(in Options options) {
+private DubInfo getDubInfo(in Options options) {
     import std.process;
     const string[string] env = null;
     Config config = Config.none;
@@ -148,4 +150,14 @@ private string getBuildFileName(in Options options) {
     if(regular.exists) return regular;
     immutable path = isDubProject(options.projectPath) ? "" : options.projectPath;
     return buildPath(path, "reggaefile.d");
+}
+
+//@trusted because of writeln
+private void dubFetch(in DubInfo dubInfo) @trusted {
+    foreach(cmd; dubInfo.fetchCommands) {
+        immutable cmdStr = "'" ~ cmd.join(" ") ~ "'";
+        writeln("Fetching package with cmd ", cmdStr);
+        immutable ret = execute(cmd);
+        enforce(ret.status == 0, text("Could not execute ", cmdStr, ":\n", ret.output));
+    }
 }

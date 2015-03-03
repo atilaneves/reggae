@@ -231,3 +231,10 @@ void testDubInfoWithLibs() {
                        [Target("/weird/path/pkg_other/source/africa.d")]),
                    ]));
 }
+
+
+void testDubFetch() {
+    const info = dubInfo(jsonString.dup);
+    info.fetchCommands.shouldEqual(
+        [["dub", "fetch", "pkg_other"]]);
+}

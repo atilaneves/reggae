@@ -1,5 +1,4 @@
-Investigate why vibe says it needs libev
-dub fetch
+Investigate why vibe says it needs libev, why certain dub packages don't work
 Don't include dub packages that are only used for a specific configuration (unittest)
 Semi-realistic example with multiple outputs
 Make global configuration available
@@ -11,7 +10,6 @@ Make it possible to choose which compiler to use for each language
 Static libraries
 Optimise run-time
   Write source files once and create static library to link buildgen
-CMake-like rules for rerunning itself
 Tup backend
 Binary backend
 Automatic selection of files based on OS/arch/etc.

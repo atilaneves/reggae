@@ -144,18 +144,20 @@ private string[] srcFilesInDirs(in string extension, in string[] dirs) {
 }
 
 
-mixin template dExe(App app,
-                    Flags flags = Flags(),
-                    ImportPaths importPaths = ImportPaths(),
-                    StringImportPaths stringImportPaths = StringImportPaths(),
-                    alias linkWithFunction = () { return cast(Target[])[];}) {
-    auto buildFunc() {
-        auto linkWith = linkWithFunction();
-        return Build(dExe(app, flags, importPaths, stringImportPaths, linkWith));
-    }
+//compile-time verson of dExe, to be used with alias
+//all paths relative to projectPath
+Target dExe(App app,
+            Flags flags = Flags(),
+            ImportPaths importPaths = ImportPaths(),
+            StringImportPaths stringImportPaths = StringImportPaths(),
+            alias linkWithFunction = () { return cast(Target[])[];})
+    () {
+    auto linkWith = linkWithFunction();
+    return dExe(app, flags, importPaths, stringImportPaths, linkWith);
 }
 
 
+//regular runtime version of dExe
 //all paths relative to projectPath
 //@trusted because of .array
 Target dExe(in App app, in Flags flags,

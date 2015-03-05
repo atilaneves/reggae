@@ -29,11 +29,12 @@ struct Build {
 }
 
 //a directory for each top-level target no avoid name clashes
-private Target enclose(in Target target, in string dirName) @safe pure nothrow {
-    if(target.isLeaf) return Target(target.outputs[0], target._command, target.dependencies,
-                                    target.implicits);
+//@trusted because of map -> buildPath -> array
+private Target enclose(in Target target, in string dirName) @trusted pure nothrow {
+    if(target.isLeaf) return Target(target.outputs, target._command, target.dependencies,
+                                                   target.implicits);
 
-    return Target(buildPath(dirName, target.outputs[0]),
+    return Target(target.outputs.map!(a => buildPath(dirName, a)).array,
                   target._command,
                   target.dependencies.map!(a => a.enclose(dirName)).array,
                   target.implicits);
@@ -41,7 +42,7 @@ private Target enclose(in Target target, in string dirName) @safe pure nothrow {
 
 
 enum isTarget(alias T) = is(Unqual!(typeof(T)) == Target) ||
-                         isSomeFunction!T && is(ReturnType!T == Target);
+    isSomeFunction!T && is(ReturnType!T == Target);
 
 unittest {
     auto  t1 = Target();

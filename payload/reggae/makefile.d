@@ -33,21 +33,11 @@ struct Makefile {
         auto ret = text("all: ", outputs, "\n");
 
         foreach(topTarget; build.targets) {
-            () @trusted {
-                import std.stdio;
-                writeln("top target is  ", topTarget);
-            }();
-
             foreach(t; DepthFirst(topTarget)) {
 
                 mkDir(t);
 
                 ret ~= text(t.outputs.join(" "), ": ");
-                () @trusted {
-                    import std.stdio;
-                    writeln("Target is ", t);
-                    writeln("outputs are ", t.outputs);
-                }();
                 ret ~= t.dependencyFiles(projectPath);
                 immutable implicitFiles = t.implicitFiles(projectPath);
                 if(!implicitFiles.empty) ret ~= " " ~ t.implicitFiles(projectPath);

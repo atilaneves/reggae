@@ -11,13 +11,13 @@ Feature: Multiple outputs
       import std.path;
       void main(string[] args) {
            auto file = File(args[1]);
-           auto cpp = File(args[1].stripExtension.defaultExtension(`.cpp`), `w`);
-           auto hpp = File(args[1].stripExtension.defaultExtension(`.hpp`), `w`);
+           auto c = File(args[1].baseName.stripExtension.defaultExtension(`.c`), `w`);
+           auto h = File(args[1].baseName.stripExtension.defaultExtension(`.h`), `w`);
            auto reg = regex(`(\{.+?\})$`);
            foreach(line; file.byLine) {
-               cpp.writeln(line);
+               c.writeln(line);
                auto headerLine = line.replaceAll(reg, `;`);
-               hpp.writeln(headerLine);
+               h.writeln(headerLine);
            }
       }
       """
@@ -25,12 +25,12 @@ Feature: Multiple outputs
     And a file named "proj/reggaefile.d" with:
       """
       import reggae;
-      const protoGen = Target([`protocol.hpp`, `protocol.cpp`],
+      const protoGen = Target([`protocol.h`, `protocol.c`],
                               `./compiler $in`,
                               [Target(`protocol.proto`)]);
-      const proto = Target(`bin/protocol.o`, `g++ -o $out -c protocol.cpp`, [protoGen]);
-      const protoD = Target(`src/protocol.d`, `cp protocol.hpp protocol.d`, [Target(`protocol.h`)]);
-      const app = Target(`bin/app`, `dmd -of$out $in`,
+      const proto = Target(`bin/protocol.o`, `gcc -o $out -c protocol.c`, [protoGen]);
+      const protoD = Target(`src/protocol.d`, `echo "extern(C) " > $out; cat $in >> $out`, [Target(`protocol.h`)]);
+      const app = Target(`app`, `dmd -of$out $in`,
                          [Target(`src/main.d`), proto, protoD]);
       mixin build!(app);
       """
@@ -41,7 +41,7 @@ Feature: Multiple outputs
       import std.conv;
       void main(string[] args) {
           auto arg = args[1].to!int;
-          writeln(`I call protoFunc(`, arg, `) and get `, protofunc(arg));
+          writeln(`I call protoFunc(`, arg, `) and get `, protoFunc(arg));
       }
       """
     And a file named "proj/protocol.proto" with:
@@ -52,7 +52,7 @@ Feature: Multiple outputs
     Scenario: Make
       Given I successfully run `reggae -b make proj`
       When I successfully run `make -j8`
-      And I successfully run `bin/app 2`
+      And I successfully run `app 2`
       Then the output should contain:
         """
         I call protoFunc(2) and get 4
@@ -63,7 +63,7 @@ Feature: Multiple outputs
         int protoFunc(int n) { return n * 3;}
         """
       When I successfully run `make -j8`
-      And I successfully run `bin/app 3`
+      And I successfully run `app 3`
       Then the output should contain:
         """
         I call protoFunc(3) and get 9

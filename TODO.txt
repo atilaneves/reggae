@@ -1,11 +1,11 @@
-Investigate why vibe says it needs libev, why certain dub packages don't work
-Don't include dub packages that are only used for a specific configuration (unittest)
 Semi-realistic example with multiple outputs
 Make global configuration available
+travis
+Investigate why vibe says it needs libev, why certain dub packages don't work
+Don't include dub packages that are only used for a specific configuration (unittest)
 Use ranges instead of arrays where possible
 Type-safe dCompile, etc.
 Review all uses of @trusted
-travis
 Make it possible to choose which compiler to use for each language
 Static libraries
 Optimise run-time

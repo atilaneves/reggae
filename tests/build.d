@@ -25,7 +25,7 @@ void testInOut() {
                                   Target("src1.o", "gcc -c -o $out $in", [Target("src1.c")]),
                                   Target("src2.o", "gcc -c -o $out $in", [Target("src2.c")])
                                   ],
-);
+            );
         target.command.shouldEqual("gcc -o tgt src1.o src2.o");
     }
 

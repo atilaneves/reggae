@@ -25,11 +25,15 @@ Feature: Multiple outputs
     And a file named "proj/reggaefile.d" with:
       """
       import reggae;
-      const protoGen = Target([`protocol.h`, `protocol.c`],
+      const protoGen = Target([`$build/protocol.h`, `$build/protocol.c`],
                               `./compiler $in`,
                               [Target(`protocol.proto`)]);
-      const proto = Target(`bin/protocol.o`, `gcc -o $out -c protocol.c`, [protoGen]);
-      const protoD = Target(`src/protocol.d`, `echo "extern(C) " > $out; cat $in >> $out`, [Target(`protocol.h`)]);
+      const proto = Target(`bin/protocol.o`,
+                           `gcc -o $out -c protocol.c`,
+                           [protoGen]);
+      const protoD = Target(`src/protocol.d`,
+                            `echo "extern(C) " > $out; cat $in >> $out`,
+                            [Target(`$build/protocol.h`)]);
       const app = Target(`app`, `dmd -of$out $in`,
                          [Target(`src/main.d`), proto, protoD]);
       mixin build!(app);

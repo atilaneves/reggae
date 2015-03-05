@@ -2,7 +2,7 @@ all: reggae
 
 reggae: bin/reggae
 
-bin/reggae_bootstrap: reggaefile.d src/reggae/reggae_main.d payload/reggae/build.d payload/reggae/rules.d
+bin/reggae_bootstrap: reggaefile.d src/reggae/reggae_main.d src/reggae/options.d src/reggae/dub_json.d payload/reggae/build.d payload/reggae/rules.d
 	dub build --compiler=dmd
 	mv bin/reggae bin/reggae_bootstrap
 

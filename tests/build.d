@@ -53,3 +53,13 @@ void testProject() {
                           [Target("bar"), Target("baz")]);
     target.command("/tmp").shouldEqual("makefoo -i /tmp/bar /tmp/baz -o foo -p /tmp");
 }
+
+
+void testMultipleOutputs() {
+    const target = Target(["foo.hpp", "foo.cpp"], "protocomp $in", [Target("foo.proto")]);
+    target.outputs.shouldEqual(["foo.hpp", "foo.cpp"]);
+    target.command("myproj").shouldEqual("protocomp myproj/foo.proto");
+
+    const bld = Build(target);
+    bld.targets[0].outputs.shouldEqual(["foo.hpp", "foo.cpp"]);
+}

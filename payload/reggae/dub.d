@@ -2,6 +2,7 @@ module reggae.dub;
 
 import reggae.build;
 import reggae.rules;
+import reggae.types;
 import reggae.config: dflags;
 public import std.typecons: Yes, No;
 import std.typecons: Flag;
@@ -105,7 +106,8 @@ Target dubMainTarget(string flags)() {
 }
 
 
-Target dExeWithDubObjs(string exeName, alias objsFunction)() {
+Target dExeWithDubObjs(string exeName, alias objsFunction, Flags flags = Flags())
+    () if(isSomeFunction!objsFunction) {
     import reggae.config;
-    return dLink(exeName, objsFunction() ~ dubInfo.toTargets(No.main));
+    return dLink(exeName, objsFunction() ~ dubInfo.toTargets(No.main), flags.flags);
 }

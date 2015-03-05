@@ -85,12 +85,9 @@ Feature: Augmenting dub projects with reggae builds
     And a file named "dub_reggae_proj/reggaefile.d" with:
       """
       import reggae;
-
-      Build getBuild() {
-          const utObjs = dObjects!(SrcDirs([`tests`]), Flags(`-unittest`), ImportPaths([`source`]));
-          const ut = dLink(`ut`, utObjs ~ dubInfo.toTargets(No.main));
-          return Build(dubInfo.mainTarget, ut);
-      }
+      alias utObjs = dObjects!(SrcDirs([`tests`]), Flags(`-unittest`), ImportPaths([`source`]));
+      alias ut = dExeWithDubObjs!(`ut`, utObjs);
+      mixin build!(dubInfo.mainTarget(), ut);
       """
 
     Scenario: Dub/Reggae build with Ninja

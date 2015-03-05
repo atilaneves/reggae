@@ -57,12 +57,13 @@ Feature: Linking a D executable
                                   ImportPaths(),
                                   SrcFiles([`extra/constants.cpp`]),
                                   ExcludeFiles([`cpp/extra_main.cpp`]));
-      mixin dExe!(App(`d/main.d`, `calc`),
-                  Flags(`-debug -O`),
-                  ImportPaths([`d`]),
-                  StringImportPaths([`resources/text`]),
-                  cppObjs,
-                  );
+      alias app = dExe!(App(`d/main.d`, `calc`),
+                        Flags(`-debug -O`),
+                        ImportPaths([`d`]),
+                        StringImportPaths([`resources/text`]),
+                        cppObjs,
+                        );
+      mixin build!(app);
       """
 
   Scenario: Ninja backend

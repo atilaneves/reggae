@@ -12,12 +12,18 @@ struct Build {
 
     this(T...)(in T targets) {
         foreach(t; targets) {
-            immutable dirName = buildPath("objs", t.outputs[0] ~ ".objs");
+            static if(isSomeFunction!(typeof(t))) {
+                const target = t();
+            } else {
+                const target = t;
+            }
 
-            this.targets ~= Target(t.outputs[0],
-                                   t._command,
-                                   t.dependencies.map!(a => a.enclose(dirName)).array,
-                                   t.implicits);
+            immutable dirName = buildPath("objs", target.outputs[0] ~ ".objs");
+
+            this.targets ~= Target(target.outputs[0],
+                                   target._command,
+                                   target.dependencies.map!(a => a.enclose(dirName)).array,
+                                   target.implicits);
         }
     }
 }
@@ -34,7 +40,8 @@ private Target enclose(in Target target, in string dirName) @safe pure nothrow {
 }
 
 
-enum isTarget(alias T) = is(Unqual!(typeof(T)) == Target);
+enum isTarget(alias T) = is(Unqual!(typeof(T)) == Target) ||
+    isSomeFunction!T && is(ReturnType!T == Target);
 
 unittest {
     auto  t1 = Target();

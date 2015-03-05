@@ -20,7 +20,7 @@ struct Build {
 
             immutable dirName = buildPath("objs", target.outputs[0] ~ ".objs");
 
-            this.targets ~= Target(target.outputs[0],
+            this.targets ~= Target(target.outputs,
                                    target._command,
                                    target.dependencies.map!(a => a.enclose(dirName)).array,
                                    target.implicits);
@@ -74,25 +74,25 @@ unittest {
 
 
 struct Target {
-    string[] outputs;
+    const(string)[] outputs;
     const(Target)[] dependencies;
     const(Target)[] implicits;
 
-    this(string output) @safe pure nothrow {
+    this(in string output) @safe pure nothrow {
         this(output, null, null);
     }
 
-    this(string output, string command, in Target dependency,
+    this(in string output, string command, in Target dependency,
          in Target[] implicits = []) @safe pure nothrow {
         this([output], command, [dependency], implicits);
     }
 
-    this(string output, string command,
+    this(in string output, string command,
          in Target[] dependencies, in Target[] implicits = []) @safe pure nothrow {
         this([output], command, dependencies, implicits);
     }
 
-    this(string[] outputs, string command,
+    this(in string[] outputs, string command,
          in Target[] dependencies, in Target[] implicits = []) @safe pure nothrow {
         this.outputs = outputs;
         this.dependencies = dependencies;

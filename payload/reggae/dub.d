@@ -97,3 +97,15 @@ private string[] allOf(alias F)(in DubPackage pack, in DubPackage[] packages) @t
     }
     return paths;
 }
+
+
+Target dubMainTarget(string flags)() {
+    import reggae.config;
+    return dubInfo.mainTarget(flags);
+}
+
+
+Target dExeWithDubObjs(string exeName, alias objsFunction)() {
+    import reggae.config;
+    return dLink(exeName, objsFunction() ~ dubInfo.toTargets(No.main));
+}

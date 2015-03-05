@@ -41,7 +41,7 @@ private Target enclose(in Target target, in string dirName) @safe pure nothrow {
 
 
 enum isTarget(alias T) = is(Unqual!(typeof(T)) == Target) ||
-    isSomeFunction!T && is(ReturnType!T == Target);
+                         isSomeFunction!T && is(ReturnType!T == Target);
 
 unittest {
     auto  t1 = Target();

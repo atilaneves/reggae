@@ -1,5 +1,8 @@
 import reggae;
 
+alias main = dubMainTarget!("-g -debug");
+
 alias utObjs = dObjects!(SrcDirs([`tests`]), Flags(`-unittest`), ImportPaths(dubInfo.targetImportPaths));
-mixin build!(dubInfo.mainTarget("-g -debug"),
-             () { return dLink("ut", utObjs ~ dubInfo.toTargets(No.main)); });
+alias ut = dExeWithDubObjs!("ut", utObjs);
+
+mixin build!(main, ut);

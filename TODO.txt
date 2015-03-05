@@ -13,3 +13,17 @@ Optimise run-time
 Tup backend
 Binary backend
 Automatic selection of files based on OS/arch/etc.
+
+
+Dicebot:
+
+bin/app: src/app/main.d protocol.o
+    # compile app
+
+src/app/main.d: $(D_SOURCES)
+
+protocol.d: protocol.h
+    # use dstep
+
+protocol.h protocol.c: protocol.proto
+    # use proto-c, protocol buffer C compiler

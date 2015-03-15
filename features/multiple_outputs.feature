@@ -25,10 +25,10 @@ Feature: Multiple outputs
     And a file named "proj/reggaefile.d" with:
       """
       import reggae;
-      const protoC = Target(`protocol.c`,
+      const protoC = Target(`$builddir/protocol.c`,
                             `./compiler $in`,
                             [Target(`protocol.proto`)]);
-      const protoH = Target(`protocol.h`,
+      const protoH = Target(`$builddir/protocol.h`,
                             `./compiler $in`,
                             [Target(`protocol.proto`)]);
       const protoObj = Target(`bin/protocol.o`,
@@ -60,7 +60,7 @@ Feature: Multiple outputs
     Scenario: Make
       Given I successfully run `reggae -b make proj`
       When I successfully run `make -j8`
-      And I successfully run `app 2`
+      And I successfully run `./app 2`
       Then the output should contain:
         """
         I call protoFunc(2) and get 4
@@ -71,7 +71,7 @@ Feature: Multiple outputs
         int protoFunc(int n) { return n * 3;}
         """
       When I successfully run `make -j8`
-      And I successfully run `app 3`
+      And I successfully run `./app 3`
       Then the output should contain:
         """
         I call protoFunc(3) and get 9

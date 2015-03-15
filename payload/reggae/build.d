@@ -18,11 +18,9 @@ struct Build {
                 const target = t;
             }
 
-            immutable dirName = buildPath("objs", target.outputs[0] ~ ".objs");
-
             this.targets ~= Target(target.outputs,
                                    target._command,
-                                   target.dependencies.map!(a => a.enclose(dirName)).array,
+                                   target.dependencies.map!(a => a.enclose(target)).array,
                                    target.implicits);
         }
     }
@@ -30,14 +28,25 @@ struct Build {
 
 //a directory for each top-level target no avoid name clashes
 //@trusted because of map -> buildPath -> array
-private Target enclose(in Target target, in string dirName) @trusted pure nothrow {
-    if(target.isLeaf) return Target(target.outputs, target._command, target.dependencies,
-                                                   target.implicits);
+Target enclose(in Target target, in Target topLevel) @trusted nothrow {
+    if(target.isLeaf) return Target(target.outputs, target._command,
+                                    target.dependencies, target.implicits);
 
-    return Target(target.outputs.map!(a => buildPath(dirName, a)).array,
+    immutable dirName = buildPath("objs", topLevel.outputs[0] ~ ".objs");
+    return Target(target.outputs.map!(a => realTargetPath(dirName, a)).array,
                   target._command,
-                  target.dependencies.map!(a => a.enclose(dirName)).array,
+                  target.dependencies.map!(a => a.enclose(topLevel)).array,
                   target.implicits);
+}
+
+private string realTargetPath(in string dirName, in string output) @trusted pure nothrow {
+    import std.algorithm;
+    import std.path: buildNormalizedPath;
+    static immutable builddir = "$builddir";
+
+    return output.canFind(builddir)
+        ? output.replace(builddir, ".").buildNormalizedPath
+        : buildPath(dirName, output);
 }
 
 

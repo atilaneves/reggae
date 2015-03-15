@@ -63,3 +63,16 @@ void testMultipleOutputs() {
     const bld = Build(target);
     bld.targets[0].outputs.shouldEqual(["foo.hpp", "foo.cpp"]);
 }
+
+
+void testEnclose() {
+
+    Target("foo.o", "", [Target("foo.c")]).enclose(Target("theapp")).shouldEqual(
+            Target("objs/theapp.objs/foo.o", "", [Target("foo.c")]));
+
+    Target("$builddir/bar.o", "", [Target("bar.c")]).enclose(Target("theapp")).shouldEqual(
+        Target("bar.o", "", [Target("bar.c")]));
+
+    const leafTarget = Target("foo.c");
+    leafTarget.enclose(Target("theapp")).shouldEqual(leafTarget);
+}

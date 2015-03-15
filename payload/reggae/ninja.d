@@ -129,8 +129,8 @@ private:
         auto reg = regex(`^[^ ]+ +(.*?)(\$in|\$out)(.*?)(\$in|\$out)(.*?)$`);
 
         auto mat = rawCmdLine.match(reg);
-        enforce(!mat.captures.empty, text("Could not find both $in and $out. Command: ",
-                                          rawCmdLine, ", Captures: ", mat.captures));
+        enforce(!mat.captures.empty, text("Could not find both $in and $out.\nCommand: ",
+                                          rawCmdLine, "\nCaptures: ", mat.captures));
         immutable before = mat.captures[1].strip;
         immutable first = mat.captures[2];
         immutable between = mat.captures[3].strip;
@@ -208,11 +208,7 @@ private:
     }
 
     string output(const(NinjaEntry)[] entries) @safe pure const nothrow {
-        string output;
-        foreach(entry; entries) {
-            output ~= entry.toString ~ "\n";
-        }
-        return output;
+        return entries.map!(a => a.toString).join("\n\n");
     }
 
 }

@@ -75,6 +75,28 @@ Feature: Multiple outputs
       int protoFunc(int n) { return n * 2; }
       """
 
+  Scenario: Ninja separate
+      Given I successfully run `cp proj/reggaefile_sep.d proj/reggaefile.d`
+      And I successfully run `reggae -b ninja proj`
+      When I successfully run `ninja -j8`
+      And I successfully run `./app 2`
+      Then the output should contain:
+        """
+        I call protoFunc(2) and get 4
+        """
+
+      Given I overwrite "proj/protocol.proto" with:
+        """
+        int protoFunc(int n) { return n * 3;}
+        """
+      When I successfully run `ninja -j8`
+      And I successfully run `./app 3`
+      Then the output should contain:
+        """
+        I call protoFunc(3) and get 9
+        """
+
+
     Scenario: Make separate
       Given I successfully run `cp proj/reggaefile_sep.d proj/reggaefile.d`
       And I successfully run `reggae -b make proj`

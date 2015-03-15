@@ -7,6 +7,7 @@ import reggae;
 void testIsLeaf() {
     Target("tgt").isLeaf.shouldBeTrue;
     Target("other", "", [Target("foo"), Target("bar")]).isLeaf.shouldBeFalse;
+    Target("implicits", "", [], [Target("foo")]).isLeaf.shouldBeFalse;
 }
 
 
@@ -75,4 +76,36 @@ void testEnclose() {
 
     const leafTarget = Target("foo.c");
     leafTarget.enclose(Target("theapp")).shouldEqual(leafTarget);
+}
+
+
+void testMultipleOutputsImplicits() {
+    const protoSrcs = Target([`$builddir/gen/protocol.c`, `$builddir/gen/protocol.h`],
+                             `./compiler $in`,
+                             [Target(`protocol.proto`)]);
+    const protoObj = Target(`$builddir/bin/protocol.o`,
+                            `gcc -o $out -c $builddir/gen/protocol.c`,
+                            [], [protoSrcs]);
+    const protoD = Target(`$builddir/gen/protocol.d`,
+                          `echo "extern(C) " > $out; cat $builddir/gen/protocol.h >> $out`,
+                          [], [protoSrcs]);
+    const app = Target(`app`,
+                       `dmd -of$out $in`,
+                       [Target(`src/main.d`), protoObj, protoD]);
+    const build = Build(app);
+
+    const newProtoSrcs = Target([`gen/protocol.c`, `gen/protocol.h`],
+                                `./compiler $in`,
+                                [Target(`protocol.proto`)]);
+    const newProtoD = Target(`gen/protocol.d`,
+                             `echo "extern(C) " > $out; cat gen/protocol.h >> $out`,
+                             [], [newProtoSrcs]);
+
+    build.targets.shouldEqual(
+        [Target("app", "dmd -of$out $in",
+                [Target("src/main.d"),
+                 Target("bin/protocol.o", "gcc -o $out -c gen/protocol.c",
+                        [], [newProtoSrcs]),
+                 newProtoD])]
+        );
 }

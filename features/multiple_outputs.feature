@@ -10,7 +10,7 @@ Feature: Multiple outputs
       import std.regex;
       import std.path;
       void main(string[] args) {
-           auto file = File(args[1]);
+           auto file = File(buildPath(`gen`, args[1]));
            auto c = File(args[1].baseName.stripExtension.defaultExtension(`.c`), `w`);
            auto h = File(args[1].baseName.stripExtension.defaultExtension(`.h`), `w`);
            auto reg = regex(`(\{.+?\})$`);
@@ -22,19 +22,19 @@ Feature: Multiple outputs
       }
       """
     And I successfully run `dmd proj/compiler.d`
-    And a file named "proj/reggaefile.d" with:
+    And a file named "proj/reggaefile_sep.d" with:
       """
       import reggae;
-      const protoC = Target(`$builddir/protocol.c`,
+      const protoC = Target(`$builddir/gen/protocol.c`,
                             `./compiler $in`,
                             [Target(`protocol.proto`)]);
-      const protoH = Target(`$builddir/protocol.h`,
+      const protoH = Target(`$builddir/gen/protocol.h`,
                             `./compiler $in`,
                             [Target(`protocol.proto`)]);
-      const protoObj = Target(`bin/protocol.o`,
+      const protoObj = Target(`$builddir/bin/protocol.o`,
                               `gcc -o $out -c $in`,
                               [protoC]);
-      const protoD = Target(`src/protocol.d`,
+      const protoD = Target(`$builddir/gen/protocol.d`,
                             `echo "extern(C) " > $out; cat $in >> $out`,
                             [protoH]);
       const app = Target(`app`,
@@ -42,6 +42,24 @@ Feature: Multiple outputs
                          [Target(`src/main.d`), protoObj, protoD]);
       mixin build!(app);
       """
+    And a file named "proj/reggaefile_tog.d" with:
+      """
+      import reggae;
+      const protoSrcs = Target([`$builddir/gen/protocol.c`, `$builddir/gen/protocol.h`],
+                                `./compiler $in`,
+                                [Target(`protocol.proto`)]);
+      const protoObj = Target(`$builddir/bin/protocol.o`,
+                              `gcc -o $out -c $builddir/gen/protocol.c`,
+                              [], [protoSrcs]);
+      const protoD = Target(`$builddir/gen/protocol.d`,
+                            `echo "extern(C) " > $out; cat $builddir/gen/protocol.h >> $out`,
+                            [], [protoSrcs]);
+      const app = Target(`app`,
+                         `dmd -of$out $in`,
+                         [Target(`src/main.d`), protoObj, protoD]);
+      mixin build!(app);
+      """
+
     And a file named "proj/src/main.d" with:
       """
       import protocol;
@@ -57,8 +75,30 @@ Feature: Multiple outputs
       int protoFunc(int n) { return n * 2; }
       """
 
-    Scenario: Make
-      Given I successfully run `reggae -b make proj`
+    Scenario: Make separate
+      Given I successfully run `cp proj/reggaefile_sep.d proj/reggaefile.d`
+      And I successfully run `reggae -b make proj`
+      When I successfully run `make -j8`
+      And I successfully run `./app 2`
+      Then the output should contain:
+        """
+        I call protoFunc(2) and get 4
+        """
+
+      Given I overwrite "proj/protocol.proto" with:
+        """
+        int protoFunc(int n) { return n * 3;}
+        """
+      When I successfully run `make -j8`
+      And I successfully run `./app 3`
+      Then the output should contain:
+        """
+        I call protoFunc(3) and get 9
+        """
+
+    Scenario: Make together
+      Given I successfully run `cp proj/reggaefile_tog.d proj/reggaefile.d`
+      And I successfully run `reggae -b make proj`
       When I successfully run `make -j8`
       And I successfully run `./app 2`
       Then the output should contain:

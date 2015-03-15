@@ -22,6 +22,24 @@ Feature: Multiple outputs
       }
       """
     And I successfully run `dmd proj/compiler.d`
+    And a file named "proj/translator.d" with:
+      """
+      import std.stdio;
+      import std.path;
+      import std.file;
+      import std.exception;
+      import std.conv;
+      void main(string[] args) {
+          enforce(args.length == 3, text(`Invalid translator args `, args));
+          immutable dir = args[2].dirName;
+          if(!dir.exists()) mkdir(dir);
+          auto input  = File(args[1]);
+          auto output = File(args[2], `w`);
+          output.write(`extern(C) `);
+          foreach(line; input.byLine) output.write(line);
+      }
+      """
+    And I successfully run `dmd proj/translator.d`
     And a file named "proj/reggaefile_sep.d" with:
       """
       import reggae;
@@ -35,7 +53,7 @@ Feature: Multiple outputs
                               `gcc -o $out -c $in`,
                               [protoC]);
       const protoD = Target(`$builddir/gen/protocol.d`,
-                            `echo "extern(C) " > $out; cat $in >> $out`,
+                            `./translator $in $out`,
                             [protoH]);
       const app = Target(`app`,
                          `dmd -of$out $in`,
@@ -52,7 +70,7 @@ Feature: Multiple outputs
                               `gcc -o $out -c $builddir/gen/protocol.c`,
                               [], [protoSrcs]);
       const protoD = Target(`$builddir/gen/protocol.d`,
-                            `echo "extern(C) " > $out; cat $builddir/gen/protocol.h >> $out`,
+                            `./translator $builddir/gen/protocol.h $out`,
                             [], [protoSrcs]);
       const app = Target(`app`,
                          `dmd -of$out $in`,
@@ -78,18 +96,40 @@ Feature: Multiple outputs
   Scenario: Ninja separate
       Given I successfully run `cp proj/reggaefile_sep.d proj/reggaefile.d`
       And I successfully run `reggae -b ninja proj`
-      When I successfully run `ninja -j8`
+      When I successfully run `ninja`
+      And I successfully run `./app 2`
+      Then the output should contain:
+        """
+        I call protoFunc(2) and get 4
+        """
+      Given I successfully run `sleep 1` for up to 1 seconds
+      And I overwrite "proj/protocol.proto" with:
+        """
+        int protoFunc(int n) { return n * 3;}
+        """
+      When I successfully run `ninja`
+      And I successfully run `./app 3`
+      Then the output should contain:
+        """
+        I call protoFunc(3) and get 9
+        """
+
+    Scenario: Ninja together
+      Given I successfully run `cp proj/reggaefile_tog.d proj/reggaefile.d`
+      And I successfully run `reggae -b ninja proj`
+      When I successfully run `ninja`
       And I successfully run `./app 2`
       Then the output should contain:
         """
         I call protoFunc(2) and get 4
         """
 
-      Given I overwrite "proj/protocol.proto" with:
+      Given I successfully run `sleep 1` for up to 1 seconds
+      And I overwrite "proj/protocol.proto" with:
         """
         int protoFunc(int n) { return n * 3;}
         """
-      When I successfully run `ninja -j8`
+      When I successfully run `ninja`
       And I successfully run `./app 3`
       Then the output should contain:
         """

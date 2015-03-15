@@ -154,3 +154,18 @@ void testDefaultRules() {
                      "depfile = $DEPFILE"]),
             ]);
 }
+
+
+void testImplicitOutput() {
+    const foo = Target(["foo.h", "foo.c"], "protocomp $in", [Target("foo.proto")]);
+    const bar = Target(["bar.h", "bar.c"], "protocomp $in", [Target("bar.proto")]);
+    const ninja = Ninja(Build(foo, bar));
+
+    ninja.buildEntries.shouldEqual(
+        [NinjaEntry("build foo.h foo.c: protocomp foo.proto"),
+         NinjaEntry("build bar.h bar.c: protocomp bar.proto")]);
+
+    ninja.ruleEntries.shouldEqual(
+        [NinjaEntry("rule protocomp",
+                    ["command = protocomp $in "])]);
+}

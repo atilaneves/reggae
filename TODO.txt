@@ -1,4 +1,5 @@
 Semi-realistic example with multiple outputs
+Fix dependency tracking of reggae itself (if ninja.d changes, it should recompile itself)
 Make global configuration available
 travis
 Investigate why vibe says it needs libev, why certain dub packages don't work

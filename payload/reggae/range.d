@@ -13,10 +13,11 @@ struct DepthFirst {
 
     const(Target)[] depthFirstTargets(in Target target) @safe pure nothrow {
         //if leaf, return
-        if(target.dependencies is null) return target.command is null ? [] : [target];
+        if(target.isLeaf) return target.command is null ? [] : [target];
 
         //if not, add ourselves to the end to get depth-first
         return reduce!((a, b) => a ~ depthFirstTargets(b))(typeof(return).init, target.dependencies) ~
+            reduce!((a, b) => a ~ depthFirstTargets(b))(typeof(return).init, target.implicits) ~
             target;
     }
 

@@ -126,16 +126,19 @@ private:
     }
 
     void customRule(in Target target, in string rawCmdLine) @safe {
+        immutable implicitInput =  () @trusted { return !rawCmdLine.canFind("$in");  }();
         immutable implicitOutput = () @trusted { return !rawCmdLine.canFind("$out"); }();
 
         if(implicitOutput) {
             implicitOutputRule(target, rawCmdLine);
+        } else if(implicitInput) {
+            implicitInputRule(target, rawCmdLine);
         } else {
             explicitInOutRule(target, rawCmdLine);
         }
     }
 
-    void explicitInOutRule(in Target target, in string rawCmdLine) @safe {
+    void explicitInOutRule(in Target target, in string rawCmdLine, in string implicitInput = "") @safe {
         import std.regex;
         auto reg = regex(`^[^ ]+ +(.*?)(\$in|\$out)(.*?)(\$in|\$out)(.*?)$`);
 
@@ -148,12 +151,16 @@ private:
         immutable last    = mat.captures[4];
         immutable after   = mat.captures[5].strip;
 
-        immutable ruleCmdLine = getRuleCommandLine(target, before, first, between, last, after);
+        immutable ruleCmdLine = getRuleCommandLine(target, rawCmdLine, before, first, between, last, after);
         bool haveToAdd;
         immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAdd);
 
+        immutable deps = implicitInput.empty
+            ? target.dependencyFiles(_projectPath)
+            : implicitInput;
+
         auto buildLine = "build " ~ target.outputs.join(" ") ~ ": " ~ ruleName ~
-            " " ~ target.dependencyFiles(_projectPath);
+            " " ~ deps;
         if(!target.implicits.empty) buildLine ~= " | " ~ target.implicitFiles(_projectPath);
 
         string[] buildParamLines;
@@ -170,7 +177,7 @@ private:
 
     void implicitOutputRule(in Target target, in string rawCmdLine) @safe nothrow {
         bool haveToAdd;
-        immutable ruleCmdLine = getRuleCommandLine(target, "" /*before*/, "$in");
+        immutable ruleCmdLine = getRuleCommandLine(target, rawCmdLine, "" /*before*/, "$in");
         immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAdd);
 
         immutable buildLine = "build " ~ target.outputs.join(" ") ~ ": " ~ ruleName ~
@@ -182,11 +189,31 @@ private:
         }
     }
 
+    void implicitInputRule(in Target target, in string rawCmdLine) @safe {
+        string input;
+
+        immutable cmdLine = () @trusted {
+            string line = rawCmdLine;
+            auto allDeps = (target.dependencyFiles(_projectPath) ~ " " ~
+                            target.implicitFiles(_projectPath)).splitter(" ");
+            foreach(string dep; allDeps) {
+                if(line.canFind(dep)) {
+                    line = line.replace(dep, "$in");
+                    input = dep;
+                }
+            }
+            return line;
+        }();
+
+        explicitInOutRule(target, cmdLine, input);
+    }
+
     //@trusted because of canFind
-    string getRuleCommandLine(in Target target, in string before = "", in string first = "",
+    string getRuleCommandLine(in Target target, in string rawCmdLine,
+                              in string before = "", in string first = "",
                               in string between = "",
                               in string last = "", in string after = "") @trusted pure nothrow const {
-        immutable rawCmdLine = target.inOutCommand(_projectPath);
+
         auto cmdLine = "command = " ~ targetRawCommand(target);
         if(!before.empty) cmdLine ~= " $before";
         cmdLine ~= rawCmdLine.canFind(" " ~ first) ? " " ~ first : first;

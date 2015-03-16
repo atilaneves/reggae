@@ -169,3 +169,42 @@ void testImplicitOutput() {
         [NinjaEntry("rule protocomp",
                     ["command = protocomp $in "])]);
 }
+
+
+void testImplicitInput() {
+    const protoSrcs = Target([`$builddir/gen/protocol.c`, `$builddir/gen/protocol.h`],
+                             `./compiler $in`,
+                             [Target(`protocol.proto`)]);
+    const protoObj = Target(`$builddir/bin/protocol.o`,
+                            `gcc -o $out -c $builddir/gen/protocol.c`,
+                            [], [protoSrcs]);
+    const protoD = Target(`$builddir/gen/protocol.d`,
+                          `./translator $builddir/gen/protocol.h $out`,
+                          [], [protoSrcs]);
+    const app = Target(`app`, `dmd -of$out $in`,
+                       [Target("src/main.d"), protoObj, protoD]);
+
+    const ninja = Ninja(Build(app));
+
+    ninja.buildEntries.shouldEqual(
+        [NinjaEntry("build gen/protocol.c gen/protocol.h: compiler protocol.proto"),
+         NinjaEntry("build bin/protocol.o: gcc gen/protocol.c | gen/protocol.c gen/protocol.h",
+                    ["before = -o",
+                     "between = -c"]),
+         NinjaEntry("build gen/protocol.c gen/protocol.h: compiler protocol.proto"),
+         NinjaEntry("build gen/protocol.d: translator gen/protocol.h | gen/protocol.c gen/protocol.h"),
+         NinjaEntry("build app: dmd src/main.d bin/protocol.o gen/protocol.d",
+                    ["before = -of"])
+            ]);
+
+    ninja.ruleEntries.shouldEqual(
+        [NinjaEntry("rule compiler",
+                    ["command = ./compiler $in "]),
+         NinjaEntry("rule gcc",
+                    ["command = gcc $before $out $between $in"]),
+         NinjaEntry("rule translator",
+                    ["command = ./translator $in $out"]),
+         NinjaEntry("rule dmd",
+                    ["command = dmd $before$out $in"])
+            ]);
+}

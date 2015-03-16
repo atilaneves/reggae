@@ -71,6 +71,7 @@ private void createBuild(in Options options) {
     immutable retRunBuildgen = execute([buildPath(".",  binName), "-b", options.backend, options.projectPath]);
     enforce(retRunBuildgen.status == 0,
             text("Couldn't execute the produced ", binName, " binary:\n", retRunBuildgen.output));
+    writeln(retRunBuildgen.output);
 
     immutable retCompDcompile = execute(["dmd",
                                          "-of" ~ buildPath(reggaeDir, "dcompile"),

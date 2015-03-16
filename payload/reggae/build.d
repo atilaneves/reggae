@@ -18,30 +18,51 @@ struct Build {
                 const target = t;
             }
 
-            immutable dirName = buildPath("objs", target.outputs[0] ~ ".objs");
-
-            this.targets ~= Target(target.outputs[0],
-                                   target._command,
-                                   target.dependencies.map!(a => a.enclose(dirName)).array,
-                                   target.implicits);
+            this.targets ~= Target(target.outputs,
+                                   target._command.removeBuilddir,
+                                   target.dependencies.map!(a => a.enclose(target)).array,
+                                   target.implicits.map!(a => a.enclose(target)).array);
         }
     }
 }
 
 //a directory for each top-level target no avoid name clashes
-private Target enclose(in Target target, in string dirName) @safe pure nothrow {
-    if(target.isLeaf) return Target(target.outputs[0], target._command, target.dependencies,
+//@trusted because of map -> buildPath -> array
+Target enclose(in Target target, in Target topLevel) @trusted {
+    if(target.isLeaf) return Target(target.outputs.map!(a => a.removeBuilddir).array,
+                                    target._command.removeBuilddir,
+                                    target.dependencies,
                                     target.implicits);
 
-    return Target(buildPath(dirName, target.outputs[0]),
-                  target._command,
-                  target.dependencies.map!(a => a.enclose(dirName)).array,
-                  target.implicits);
+    immutable dirName = buildPath("objs", topLevel.outputs[0] ~ ".objs");
+    return Target(target.outputs.map!(a => realTargetPath(dirName, a)).array,
+                  target._command.removeBuilddir,
+                  target.dependencies.map!(a => a.enclose(topLevel)).array,
+                  target.implicits.map!(a => a.enclose(topLevel)).array);
 }
 
+immutable gBuilddir = "$builddir";
+
+
+private string realTargetPath(in string dirName, in string output) @trusted pure {
+    import std.algorithm: canFind;
+
+    return output.canFind(gBuilddir)
+        ? output.removeBuilddir
+        : buildPath(dirName, output);
+}
+
+private string removeBuilddir(in string output) @trusted pure {
+    import std.path: buildNormalizedPath;
+    import std.algorithm;
+    return output.
+        splitter.
+        map!(a => a.canFind(gBuilddir) ? a.replace(gBuilddir, ".").buildNormalizedPath : a).
+        join(" ");
+}
 
 enum isTarget(alias T) = is(Unqual!(typeof(T)) == Target) ||
-                         isSomeFunction!T && is(ReturnType!T == Target);
+    isSomeFunction!T && is(ReturnType!T == Target);
 
 unittest {
     auto  t1 = Target();
@@ -74,25 +95,25 @@ unittest {
 
 
 struct Target {
-    string[] outputs;
+    const(string)[] outputs;
     const(Target)[] dependencies;
     const(Target)[] implicits;
 
-    this(string output) @safe pure nothrow {
+    this(in string output) @safe pure nothrow {
         this(output, null, null);
     }
 
-    this(string output, string command, in Target dependency,
+    this(in string output, string command, in Target dependency,
          in Target[] implicits = []) @safe pure nothrow {
         this([output], command, [dependency], implicits);
     }
 
-    this(string output, string command,
+    this(in string output, string command,
          in Target[] dependencies, in Target[] implicits = []) @safe pure nothrow {
         this([output], command, dependencies, implicits);
     }
 
-    this(string[] outputs, string command,
+    this(in string[] outputs, string command,
          in Target[] dependencies, in Target[] implicits = []) @safe pure nothrow {
         this.outputs = outputs;
         this.dependencies = dependencies;
@@ -122,7 +143,7 @@ struct Target {
     }
 
     bool isLeaf() @safe pure const nothrow {
-        return dependencies is null;
+        return dependencies is null && implicits is null;
     }
 
     //@trusted because of replace

@@ -37,7 +37,7 @@ struct Makefile {
 
                 mkDir(t);
 
-                ret ~= text(t.outputs[0], ": ");
+                ret ~= text(t.outputs.join(" "), ": ");
                 ret ~= t.dependencyFiles(projectPath);
                 immutable implicitFiles = t.implicitFiles(projectPath);
                 if(!implicitFiles.empty) ret ~= " " ~ t.implicitFiles(projectPath);

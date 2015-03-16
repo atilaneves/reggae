@@ -11,6 +11,7 @@ import std.algorithm: splitter;
 string[] dMainDependencies(in string output) @trusted {
     string[] dependencies;
     auto importReg = ctRegex!`^import +([^\t]+)\t+\((.+)\)$`;
+    auto fileReg = ctRegex!`^file +([^\t]+)\t+\((.+)\)$`;
     auto stdlibReg = ctRegex!`^(std\.|core\.|object$)`;
     foreach(line; output.splitter("\n")) {
         auto importMatch = line.matchFirst(importReg);
@@ -20,6 +21,8 @@ string[] dMainDependencies(in string output) @trusted {
                 dependencies ~= importMatch.captures[2];
             }
         }
+        auto fileMatch = line.matchFirst(fileReg);
+        if(fileMatch) dependencies ~= fileMatch.captures[2];
     }
 
     return dependencies;

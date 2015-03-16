@@ -4,7 +4,18 @@ import std.stdio;
 
 int main(string[] args) {
     writeln("\nAutomatically generated file tests/ut.d");
-    writeln(`Running unit tests from dirs ["tests"]
-`);
-    return runTests!("tests.simple_foo_reggaefile", "tests.simple_bar_reggaefile", "tests.ninja", "tests.default_rules", "tests.dub_describe", "tests.cpprules", "tests.realistic_build", "tests.drules", "tests.range", "tests.reflect", "tests.build", "tests.make")(args);
+    writeln(`Running unit tests from dirs ["tests"]`);
+    return args.runTests!("tests.simple_foo_reggaefile",
+                          "tests.simple_bar_reggaefile",
+                          "tests.ninja",
+                          "tests.default_rules",
+                          "tests.dub_describe",
+                          "tests.cpprules",
+                          "tests.realistic_build",
+                          "tests.drules",
+                          "tests.range",
+                          "tests.reflect",
+                          "tests.build",
+                          "tests.make",
+                          "tests.dependencies");
 }

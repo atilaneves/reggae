@@ -50,14 +50,28 @@ Feature: User-defined variables
                                Flags(`-unittest -main`),
                                ImportPaths(dubInfo.targetImportPaths() ~ `source`));
       alias ut = dExeWithDubObjs!(`ut`, utObjs);
-      mixin build!(dubInfo.mainTarget(), ut);
+      static if(userVars.get(`noUnitTests`, false)) {
+          mixin build!(dubInfo.mainTarget());
+      } else {
+          mixin build!(dubInfo.mainTarget(), ut);
+      }
       """
 
     Scenario: User-defined variabled with Ninja
-      Given I successfully run `reggae -b ninja dub_reggae_proj`
+      Given I successfully run `reggae -b ninja -d noUnitTests=true dub_reggae_proj`
       When I successfully run `ninja`
       And I successfully run `./var_app 3`
       Then the output should contain:
         """
         Numberisation: [0, 0, 0, 3]
         """
+      And a file named "ut" should not exist
+
+      Given I successfully run `reggae -b ninja -d noUnitTests=false dub_reggae_proj`
+      When I successfully run `ninja`
+      And I successfully run `./var_app 3`
+      Then the output should contain:
+        """
+        Numberisation: [0, 0, 0, 3]
+        """
+      When I successfully run `./ut`

@@ -13,7 +13,7 @@ import reggae.dub;
 
 int main(string[] args) {
     try {
-        immutable options = getOptions(args);
+        const options = getOptions(args);
         enforce(options.projectPath != "", "A project path must be specified");
 
         if(isDubProject(options.projectPath) && !projectBuildFile(options).exists) {

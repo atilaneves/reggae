@@ -25,22 +25,20 @@ struct NinjaEntry {
  * Pre-built rules
  */
 NinjaEntry[] defaultRules() @safe pure nothrow {
-    immutable dcompiler = "dmd";
-    immutable cppcompiler = "g++";
-    immutable ccompiler = "gcc";
+    import reggae.config;
     return [NinjaEntry("rule _dcompile",
-                       ["command = .reggae/dcompile " ~ dcompiler ~
+                       ["command = .reggae/dcompile " ~ dCompiler ~
                         " $flags $includes $stringImports $out $in $DEPFILE",
                         "deps = gcc",
                         "depfile = $DEPFILE"]),
             NinjaEntry("rule _dlink",
-                       ["command = " ~ dcompiler ~ " $flags -of$out $in"]),
+                       ["command = " ~ dCompiler ~ " $flags -of$out $in"]),
             NinjaEntry("rule _cppcompile",
-                       ["command = " ~ cppcompiler ~ " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
+                       ["command = " ~ cppCompiler ~ " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
                         "deps = gcc",
                         "depfile = $DEPFILE"]),
             NinjaEntry("rule _ccompile",
-                       ["command = " ~ ccompiler ~ " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
+                       ["command = " ~ cCompiler ~ " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
                         "deps = gcc",
                         "depfile = $DEPFILE"]),
         ];

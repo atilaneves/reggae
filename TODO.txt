@@ -1,12 +1,17 @@
+Code coverage, tests
+Refactoring:
+  Type-safe dCompile, etc.
+  Review all uses of @trusted
+  Use ranges instead of arrays where possible
+
+Static libraries
 travis
 dub bugs
-Use ranges instead of arrays where possible
-Type-safe dCompile, etc.
-Review all uses of @trusted
-Make it possible to choose which compiler to use for each language
-Static libraries
+Use CC, CXX environment variables
 Optimise run-time
   Write source files once and create static library to link buildgen
+  Optimise dcompile
 Tup backend
 Binary backend
 Automatic selection of files based on OS/arch/etc.
+Finding of C/C++ libraries (Qt, boost, libevent)

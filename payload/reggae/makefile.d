@@ -73,7 +73,8 @@ struct Makefile {
     }
 
     string command(in Target target, in string rawCmdLine) @safe const {
-        immutable dCompiler = "dmd";
+        import reggae.config;
+
         immutable rule = rawCmdLine.getDefaultRule;
         immutable flags = rawCmdLine.getDefaultRuleParams("flags", []).join(" ");
         immutable includes = rawCmdLine.getDefaultRuleParams("includes", []).join(" ");
@@ -93,9 +94,9 @@ struct Makefile {
             return command ~ makeAutoDeps(depfile);
 
         } else if(rule == "_cppcompile") {
-            return ccCommand("g++");
+            return ccCommand(cppCompiler);
         } else if(rule == "_ccompile") {
-            return ccCommand("gcc");
+            return ccCommand(cCompiler);
         } else if(rule == "_dlink") {
             return [dCompiler, "-of" ~ target.outputs[0], target.dependencyFiles(projectPath)].join(" ");
         } else {

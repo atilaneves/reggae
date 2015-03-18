@@ -1,4 +1,6 @@
 language: d
 sudo: false
+install:
+  - sudo apt-get -y install ninja-build
 script:
  - make test

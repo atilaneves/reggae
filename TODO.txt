@@ -1,4 +1,3 @@
-Make global configuration available
 travis
 dub bugs
 Use ranges instead of arrays where possible

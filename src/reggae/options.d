@@ -7,6 +7,7 @@ struct Options {
     string projectPath;
     string dflags;
     string reggaePath;
+    string[string] userVars;
 }
 
 
@@ -19,6 +20,7 @@ Options getOptions(string[] args) @trusted {
     getopt(args,
            "backend|b", &options.backend,
            "dflags", &options.dflags,
+           "d", &options.userVars,
         );
 
     options.reggaePath = thisExePath();

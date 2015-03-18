@@ -9,11 +9,12 @@ import std.exception: enforce;
 import reggae.options;
 import reggae.dub_json;
 import reggae.dub;
+import reggae.ctaa;
 
 
 int main(string[] args) {
     try {
-        immutable options = getOptions(args);
+        const options = getOptions(args);
         enforce(options.projectPath != "", "A project path must be specified");
 
         if(isDubProject(options.projectPath) && !projectBuildFile(options).exists) {
@@ -52,7 +53,7 @@ private void createBuild(in Options options) {
                                  "makefile.d", "ninja.d",
                                  "package.d", "range.d", "reflect.d",
                                  "rules.d", "dependencies.d", "types.d",
-                                 "dub.d");
+                                 "dub.d", "ctaa.d");
     writeSrcFiles!(fileNames)(options);
     string[] reggaeSrcs = [reggaeSrcFileName("config.d")];
     foreach(fileName; fileNames) {
@@ -111,11 +112,17 @@ private void writeConfig(in Options options) {
     auto file = File(reggaeSrcFileName("config.d"), "w");
     file.writeln("module reggae.config;");
     file.writeln("import reggae.dub;");
+    file.writeln("import reggae.ctaa;");
     file.writeln("enum projectPath = `", options.projectPath, "`;");
     file.writeln("enum backend = `", options.backend, "`;");
     file.writeln("enum dflags = `", options.dflags, "`;");
     file.writeln("enum reggaePath = `", options.reggaePath, "`;");
     file.writeln("enum buildFilePath = `", options.getBuildFileName.absolutePath, "`;");
+    file.writeln("enum userVars = AssocList([");
+    foreach(key, value; options.userVars) {
+        file.writeln("AssocEntry(`", key, "`, `", value, "`), ");
+    }
+    file.writeln("]);");
 
     if(isDubProject(options.projectPath)) {
         auto dubInfo = getDubInfo(options);

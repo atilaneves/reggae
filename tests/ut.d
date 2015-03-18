@@ -17,5 +17,6 @@ int main(string[] args) {
                           "tests.reflect",
                           "tests.build",
                           "tests.make",
-                          "tests.dependencies");
+                          "tests.dependencies",
+                          "tests.ctaa");
 }

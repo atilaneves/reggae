@@ -9,3 +9,4 @@ public import reggae.rules;
 public import reggae.types;
 public import reggae.dub;
 public import reggae.config;
+public import reggae.ctaa;

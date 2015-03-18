@@ -4,4 +4,6 @@ install:
   - sudo apt-get -y install ninja-build
   - gem install cucumber rspec aruba
 script:
- - make test
+ - dub test
+ - dub build --compiler=dmd --force
+ - cucumber

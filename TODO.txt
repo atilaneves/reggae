@@ -5,7 +5,6 @@ Refactoring:
   Use ranges instead of arrays where possible
 
 Static libraries
-travis
 dub bugs
 Use CC, CXX environment variables
 Optimise run-time

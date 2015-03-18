@@ -75,6 +75,7 @@ private void createBuild(in Options options) {
     writeln(retRunBuildgen.output);
 
     immutable retCompDcompile = execute(["dmd",
+                                         "-O", "-release", "-inline",
                                          "-of" ~ buildPath(reggaeDir, "dcompile"),
                                          reggaeSrcFileName("dcompile.d"),
                                          reggaeSrcFileName("dependencies.d")]);

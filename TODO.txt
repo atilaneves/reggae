@@ -10,7 +10,6 @@ dub bugs
 Use CC, CXX environment variables
 Optimise run-time
   Write source files once and create static library to link buildgen
-  Optimise dcompile
 Tup backend
 Binary backend
 Automatic selection of files based on OS/arch/etc.

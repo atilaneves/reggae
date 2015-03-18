@@ -1,9 +1,11 @@
 language: d
 install:
-  - sudo apt-get update
-  - sudo apt-get -y install ninja-build
+  - git clone https://github.com/martine/ninja.git
+  - cd ninja
+  - ./configure.py --bootstrap
+  - cd ..
+  - mkdir bin
+  - cp ninja/ninja bin
   - gem install cucumber rspec aruba
 script:
- - dub test
- - dub build --compiler=dmd --force
- - cucumber
+ - make test

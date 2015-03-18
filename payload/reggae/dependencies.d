@@ -9,9 +9,26 @@ import std.algorithm: splitter;
  */
 //@trusted because of splitter
 string[] dMainDependencies(in string output) @trusted {
+    string[] dependencies = dMainDepSrcs(output);
+    auto fileReg = ctRegex!`^file +([^\t]+)\t+\((.+)\)$`;
+    foreach(line; output.splitter("\n")) {
+        auto fileMatch = line.matchFirst(fileReg);
+        if(fileMatch) dependencies ~= fileMatch.captures[2];
+    }
+
+    return dependencies;
+}
+
+
+
+/**
+ * Given a source file with a D main() function, return
+ * The list of D files to compile to link the executable
+ */
+//@trusted because of splitter
+string[] dMainDepSrcs(in string output) @trusted {
     string[] dependencies;
     auto importReg = ctRegex!`^import +([^\t]+)\t+\((.+)\)$`;
-    auto fileReg = ctRegex!`^file +([^\t]+)\t+\((.+)\)$`;
     auto stdlibReg = ctRegex!`^(std\.|core\.|object$)`;
     foreach(line; output.splitter("\n")) {
         auto importMatch = line.matchFirst(importReg);
@@ -21,8 +38,6 @@ string[] dMainDependencies(in string output) @trusted {
                 dependencies ~= importMatch.captures[2];
             }
         }
-        auto fileMatch = line.matchFirst(fileReg);
-        if(fileMatch) dependencies ~= fileMatch.captures[2];
     }
 
     return dependencies;

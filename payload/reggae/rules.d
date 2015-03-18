@@ -173,7 +173,7 @@ Target dExe(in App app, in Flags flags,
         return dCompile(dep.removeProjectPath, flags.flags, importPaths.paths, stringImportPaths.paths);
     }
 
-    const dependencies = [mainObj] ~ dMainDependencies(output).map!depCompile.array;
+    const dependencies = [mainObj] ~ dMainDepSrcs(output).map!depCompile.array;
 
     return dLink(app.exeFileName, dependencies ~ linkWith);
 }

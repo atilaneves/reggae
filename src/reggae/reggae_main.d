@@ -173,6 +173,9 @@ private void dubFetch(in DubInfo dubInfo) @trusted {
         immutable cmdStr = "'" ~ cmd.join(" ") ~ "'";
         writeln("Fetching package with cmd ", cmdStr);
         immutable ret = execute(cmd);
-        enforce(ret.status == 0, text("Could not execute ", cmdStr, ":\n", ret.output));
+        if(ret.status) {
+            stderr.writeln("Could not execute dub fetch with:\n", cmd.join(" "), "\n",
+                ret.output);
+        }
     }
 }

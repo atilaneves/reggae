@@ -130,6 +130,9 @@ private void writeConfig(in Options options) {
 
     if(isDubProject(options.projectPath)) {
         auto dubInfo = getDubInfo(options);
+        immutable targetType = dubInfo.packages[0].targetType;
+        enforce(targetType == "executable" || targetType == "library",
+                text("Unsupported dub targetType '", targetType, "'"));
         file.writeln("const dubInfo = ", dubInfo, ";");
     }
 }

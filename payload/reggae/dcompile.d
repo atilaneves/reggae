@@ -17,7 +17,7 @@ int main(string[] args) {
         immutable objFile = args[$ - 3];
         const compArgs = args[1 .. $ - 3] ~ ["-v", "-of" ~ objFile, "-c", srcFile];
         const compRes = execute(compArgs);
-        enforce(compRes.status == 0, text("Could not compile with args ", compArgs.join(" "), " :\n",
+        enforce(compRes.status == 0, text("Could not compile with args:\n", compArgs.join(" "), " :\n",
                                           compRes.output));
 
         auto file = File(depFile, "w");

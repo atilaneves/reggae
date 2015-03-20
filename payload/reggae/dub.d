@@ -56,12 +56,12 @@ struct DubInfo {
 
     //@trusted: array
     Target mainTarget(string flagsStr = "") @trusted const {
-        const pack = packages[0];
         string[] libs;
         foreach(p; packages) {
             libs ~= p.libs;
         }
 
+        const pack = packages[0];
         auto flags = flagsStr.splitter(" ").array;
         flags ~= pack.targetType == "library" ? ["-lib"] : [];
         //hacky hack for dub describe on vibe.d projects

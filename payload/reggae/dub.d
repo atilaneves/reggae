@@ -7,7 +7,7 @@ import reggae.config: dflags;
 public import std.typecons: Yes, No;
 import std.typecons: Flag;
 import std.algorithm: map, filter;
-import std.array: array;
+import std.array: array, join;
 import std.path: buildPath;
 
 

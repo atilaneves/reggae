@@ -71,7 +71,7 @@ auto jsonString =
 
 
 void testJsonToDubDescribe() {
-    const info = dubInfo(jsonString.dup);
+    const info = getDubInfo(jsonString.dup);
     info.shouldEqual(
         DubInfo(
             [DubPackage("pkg1", "/path/to/pkg1", "src/boooo.d", "super_app",
@@ -91,7 +91,7 @@ void testJsonToDubDescribe() {
 
 
 void testDubInfoToTargets() {
-    const info = dubInfo(jsonString.dup);
+    const info = getDubInfo(jsonString.dup);
     info.toTargets.shouldEqual(
         [Target("path/to/pkg1/src/foo.o",
                 "_dcompile  "
@@ -156,7 +156,7 @@ void testDubInfoToTargets() {
 
 
 void testDubInfoToTargetsLib() {
-    const info = dubInfo(jsonString.replace("executable", "library"));
+    const info = getDubInfo(jsonString.replace("executable", "library"));
     info.mainTarget.shouldEqual(
         Target("super_app", "_dlink flags=-lib,-L-lliblib,-L-lotherlib",
                [Target("path/to/pkg1/src/foo.o",
@@ -195,7 +195,7 @@ void testDubInfoToTargetsLib() {
 
 
 void testDubInfoWithLibs() {
-    const info = dubInfo(jsonString.dup);
+    const info = getDubInfo(jsonString.dup);
     info.mainTarget.shouldEqual(
         Target("super_app", "_dlink flags=-L-lliblib,-L-lotherlib",
                [Target("path/to/pkg1/src/foo.o",
@@ -234,7 +234,7 @@ void testDubInfoWithLibs() {
 
 
 void testDubFetch() {
-    const info = dubInfo(jsonString.dup);
+    const info = getDubInfo(jsonString.dup);
     info.fetchCommands.shouldEqual(
         [["dub", "fetch", "pkg_other"]]);
 }

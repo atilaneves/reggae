@@ -1,11 +1,12 @@
 module reggae.build;
 
 import std.string: replace;
-import std.algorithm: map, join;
+import std.algorithm: map;
 import std.path: buildPath;
 import std.typetuple: allSatisfy;
 import std.traits: Unqual, isSomeFunction, ReturnType, arity;
-import std.array: array;
+import std.array: array, join;
+
 
 struct Build {
     const(Target)[] targets;

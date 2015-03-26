@@ -6,7 +6,7 @@ import stdx.data.json;
 import std.algorithm: map, filter;
 
 
-DubInfo dubInfo(string jsonString) @safe {
+DubInfo getDubInfo(string jsonString) @safe {
     auto json = parseJSONValue(jsonString);
     auto packages = json.byKey("packages").get!(JSONValue[]);
     return DubInfo(packages.map!(a => DubPackage(a.byKey("name").get!string,

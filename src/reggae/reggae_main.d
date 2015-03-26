@@ -31,7 +31,7 @@ int main(string[] args) {
 }
 
 private void createReggaefile(in Options options) {
-    const dubInfo = getDubInfo(options);
+    const dubInfo = _getDubInfo(options);
 
     auto file = File("reggaefile.d", "w");
     file.writeln("import reggae;");
@@ -129,7 +129,7 @@ private void writeConfig(in Options options) {
     file.writeln("]);");
 
     if(isDubProject(options.projectPath)) {
-        auto dubInfo = getDubInfo(options);
+        auto dubInfo = _getDubInfo(options);
         immutable targetType = dubInfo.packages[0].targetType;
         enforce(targetType == "executable" || targetType == "library",
                 text("Unsupported dub targetType '", targetType, "'"));
@@ -138,7 +138,7 @@ private void writeConfig(in Options options) {
 }
 
 
-private DubInfo getDubInfo(in Options options) {
+private DubInfo _getDubInfo(in Options options) {
     import std.process;
     const string[string] env = null;
     Config config = Config.none;
@@ -149,7 +149,7 @@ private DubInfo getDubInfo(in Options options) {
     immutable ret = execute(dubArgs, env, config, maxOutput, workDir);
     enforce(ret.status == 0, text("Could not get description from dub with ", dubArgs, ":\n",
                                   ret.output));
-    return dubInfo(ret.output);
+    return getDubInfo(ret.output);
 }
 
 private string reggaeSrcFileName(in string fileName) @safe pure nothrow {

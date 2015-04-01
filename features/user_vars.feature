@@ -17,7 +17,7 @@ Feature: User-defined variables
       """
       import cerealed;
       struct MyStruct { int i;}
-      ubyte[] numberise(in MyStruct s) {
+      const(ubyte)[] numberise(in MyStruct s) {
           auto enc = Cerealiser();
           enc ~= s;
           return enc.bytes;

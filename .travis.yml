@@ -1,6 +1,5 @@
 language: d
 install:
-  - sudo apt-get update
   - git clone https://github.com/martine/ninja.git
   - cd ninja
   - ./configure.py --bootstrap

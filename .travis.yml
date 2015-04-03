@@ -11,4 +11,8 @@ install:
   - export PATH=$PATH:$PWD/bin
   - gem install cucumber rspec aruba
 script:
- - make test
+ - dub build
+ - bin/reggae -b ninja .
+ - ninja
+ - ./ut
+ - cucumber

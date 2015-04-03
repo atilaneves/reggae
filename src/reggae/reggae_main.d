@@ -15,6 +15,7 @@ import reggae.ctaa;
 int main(string[] args) {
     try {
         const options = getOptions(args);
+        if(options.help) return 0;
         enforce(options.projectPath != "", "A project path must be specified");
 
         if(isDubProject(options.projectPath) && !projectBuildFile(options).exists) {

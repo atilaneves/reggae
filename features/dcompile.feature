@@ -35,6 +35,8 @@ Feature: D compilation rule
 
     And a file named "leproj/reggaefile.d" with:
       """
+      //constants.d is never mentioned here but changes to it
+      //should trigger recompilation
       import reggae;
       const mainObj  = dCompile(`source/main.d`,  ``, [`source`]);
       const mathsObj = dCompile(`source/maths.d`, ``, [`source`]);

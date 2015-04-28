@@ -11,16 +11,17 @@ import std.getopt;
 
 int main(string[] args) {
     try {
-        string depFile, srcFile, objFile;
+        string depFile, objFile;
+        string[] srcFiles;
         auto helpInfo = getopt(args,
                                std.getopt.config.passThrough,
-                               "srcFile", "The source file to compile", &srcFile,
+                               "srcFile", "The source file(s) to compile", &srcFiles,
                                "depFile", "The dependency file to write", &depFile,
                                "objFile", "The object file to output", &objFile,
             );
         enforce(args.length >= 2, "Usage: dcompile -o <objFile> -s <srcFile> -d <depFile> <compiler> <options>");
-        enforce(!depFile.empty && !srcFile.empty && !objFile.empty, "The -d, -s and -o options are mandatory");
-        const compArgs = args[1 .. $] ~ ["-v", "-of" ~ objFile, "-c", srcFile];
+        enforce(!depFile.empty && !srcFiles.empty && !objFile.empty, "The -d, -s and -o options are mandatory");
+        const compArgs = args[1 .. $] ~ ["-v", "-of" ~ objFile, "-c"] ~ srcFiles;
         const compRes = execute(compArgs);
         enforce(compRes.status == 0, text("Could not compile with args:\n", compArgs.join(" "), " :\n",
                                           compRes.output.split("\n").

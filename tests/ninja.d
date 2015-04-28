@@ -139,7 +139,7 @@ void testImplicitDependenciesMoreThanOne() {
 void testDefaultRules() {
     defaultRules().shouldEqual(
         [NinjaEntry("rule _dcompile",
-                    ["command = .reggae/dcompile dmd $flags $includes $stringImports $out $in $DEPFILE",
+                    ["command = .reggae/dcompile --srcFile=$in --objFile=$out --depFile=$DEPFILE dmd $flags $includes $stringImports",
                      "deps = gcc",
                      "depfile = $DEPFILE"]),
          NinjaEntry("rule _dlink",

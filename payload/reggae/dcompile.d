@@ -14,9 +14,9 @@ int main(string[] args) {
         string depFile, srcFile, objFile;
         auto helpInfo = getopt(args,
                                std.getopt.config.passThrough,
-                               "srcFile|s", "The source file to compile", &srcFile,
-                               "depFile|d", "The dependency file to write", &depFile,
-                               "objFile|o", "The object file to output", &objFile,
+                               "srcFile", "The source file to compile", &srcFile,
+                               "depFile", "The dependency file to write", &depFile,
+                               "objFile", "The object file to output", &objFile,
             );
         enforce(args.length > 2, "Usage: dcompile -o <objFile> -s <srcFile> -d <depFile> <compiler> <options>");
         enforce(!depFile.empty && !srcFile.empty && !objFile.empty, "The -d, -s and -o options are mandatory");

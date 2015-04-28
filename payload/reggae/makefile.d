@@ -43,12 +43,7 @@ struct Makefile {
                 if(!implicitFiles.empty) ret ~= " " ~ t.implicitFiles(projectPath);
                 ret ~= " Makefile\n";
                 ret ~= "\t";
-                immutable rawCmdLine = t.inOutCommand(projectPath);
-                if(rawCmdLine.isDefaultCommand) {
-                    ret ~= command(t, rawCmdLine);
-                } else {
-                    ret ~= t.command(projectPath);
-                }
+                ret ~= command(t);
                 ret ~= "\n";
             }
         }
@@ -72,6 +67,15 @@ struct Makefile {
         }
     }
 
+    string command(in Target target) @safe const {
+        immutable rawCmdLine = target.inOutCommand(projectPath);
+        if(rawCmdLine.isDefaultCommand) {
+            return command(target, rawCmdLine);
+        } else {
+            return target.command(projectPath);
+        }
+    }
+
     string command(in Target target, in string rawCmdLine) @safe const {
         import reggae.config;
 
@@ -89,8 +93,12 @@ struct Makefile {
 
         if(rule == "_dcompile") {
             immutable stringImports = rawCmdLine.getDefaultRuleParams("stringImports", []).join(" ");
-            immutable command = [".reggae/dcompile", dCompiler, flags, includes, stringImports, target.outputs[0],
-                                 target.dependencyFiles(projectPath), depfile].join(" ");
+            immutable command = [".reggae/dcompile",
+                                 "--srcFile=" ~ target.dependencyFiles(projectPath),
+                                 "--objFile=" ~ target.outputs[0],
+                                 "--depFile=" ~ depfile, dCompiler,
+                                 flags, includes].join(" ");
+
             return command ~ makeAutoDeps(depfile);
 
         } else if(rule == "_cppcompile") {

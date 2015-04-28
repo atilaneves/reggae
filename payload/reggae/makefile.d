@@ -97,7 +97,7 @@ struct Makefile {
                                  "--srcFile=" ~ target.dependencyFiles(projectPath),
                                  "--objFile=" ~ target.outputs[0],
                                  "--depFile=" ~ depfile, dCompiler,
-                                 flags, includes].join(" ");
+                                 flags, includes, stringImports].join(" ");
 
             return command ~ makeAutoDeps(depfile);
 

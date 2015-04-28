@@ -18,7 +18,7 @@ int main(string[] args) {
                                "depFile", "The dependency file to write", &depFile,
                                "objFile", "The object file to output", &objFile,
             );
-        enforce(args.length > 2, "Usage: dcompile -o <objFile> -s <srcFile> -d <depFile> <compiler> <options>");
+        enforce(args.length >= 2, "Usage: dcompile -o <objFile> -s <srcFile> -d <depFile> <compiler> <options>");
         enforce(!depFile.empty && !srcFile.empty && !objFile.empty, "The -d, -s and -o options are mandatory");
         const compArgs = args[1 .. $] ~ ["-v", "-of" ~ objFile, "-c", srcFile];
         const compRes = execute(compArgs);

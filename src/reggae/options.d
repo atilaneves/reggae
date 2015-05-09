@@ -11,6 +11,7 @@ struct Options {
     string cCompiler;
     string cppCompiler;
     string dCompiler;
+    bool noFetch;
     bool help;
 }
 
@@ -29,6 +30,7 @@ Options getOptions(string[] args) @trusted {
         "dc", "D compiler to use (default dmd).", &options.dCompiler,
         "cc", "C compiler to use (default gcc).", &options.cCompiler,
         "cxx", "C++ compiler to use (default g++).", &options.cppCompiler,
+        "nofetch", "Assume dub packages are present (no dub fetch).", &options.noFetch,
     );
 
     if(helpInfo.helpWanted) {

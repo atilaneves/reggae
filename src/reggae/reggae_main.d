@@ -41,7 +41,7 @@ private void createReggaefile(in Options options) {
     file.writeln("    return Build(info.mainTarget);");
     file.writeln("}");
 
-    dubFetch(dubInfo);
+    if(!options.noFetch) dubFetch(dubInfo);
 }
 
 private void createBuild(in Options options) {

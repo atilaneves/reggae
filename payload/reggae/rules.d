@@ -57,7 +57,7 @@ Target cCompile(in string srcFileName, in string flags = "",
 
 /**
  * Compile-time function to that returns a list of Target objects
- * corresponding to C++ source files from a particular directory
+ * corresponding to D source files from a particular directory
  */
 Target[] dObjects(SrcDirs dirs = SrcDirs(),
                   Flags flags = Flags(),

@@ -21,18 +21,20 @@ Options getOptions(string[] args) @trusted {
 
     Options options;
 
-    getopt(args,
-           "backend|b", &options.backend,
-           "dflags", &options.dflags,
-           "d", &options.userVars,
-           "dc", &options.dCompiler,
-           "cc", &options.cCompiler,
-           "cxx", &options.cppCompiler,
-           "help|h", &options.help,
-        );
+    auto helpInfo = getopt(
+        args,
+        "backend|b", "Backend to use (ninja|make). Mandatory.", &options.backend,
+        "dflags", "D compiler flags.", &options.dflags,
+        "d", "User-defined variables (e.g. -d myvar=foo).", &options.userVars,
+        "dc", "D compiler to use (default dmd).", &options.dCompiler,
+        "cc", "C compiler to use (default gcc).", &options.cCompiler,
+        "cxx", "C++ compiler to use (default g++).", &options.cppCompiler,
+    );
 
-    if(options.help) {
-        writeHelp;
+    if(helpInfo.helpWanted) {
+        defaultGetoptPrinter("Usage: reggae -b <ninja|make> </path/to/project>",
+                             helpInfo.options);
+        options.help = true;
     }
 
     options.reggaePath = thisExePath();
@@ -43,16 +45,4 @@ Options getOptions(string[] args) @trusted {
     if(!options.dCompiler)   options.dCompiler   = "dmd";
 
     return options;
-}
-
-void writeHelp() {
-    import std.stdio;
-    writeln("Usage: reggae -b <ninja|make> </path/to/project>");
-    writeln("Options: ");
-    writeln("  -h/--help: help");
-    writeln("  -d: User-defined variables (-d myvar=foo)");
-    writeln("  --dflags: D compiler flags");
-    writeln("  --dc: D compiler to use (default dmd)");
-    writeln("  --cc: C compiler to use (default gcc)");
-    writeln("  --cxx: C++ compiler to use (default g++)");
 }

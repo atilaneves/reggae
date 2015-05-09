@@ -55,5 +55,6 @@ bool isInterestingCompilerErrorLine(in string line) @safe pure nothrow {
     if(line.startsWith("semantic")) return false;
     if(line.startsWith("code ")) return false;
     if(line.startsWith("function ")) return false;
+    if(line.startsWith("entry ")) return false;
     return true;
 }

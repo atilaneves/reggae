@@ -1,13 +1,28 @@
 module reggae.sorting;
 
-import std.range: zip;
+import std.range: isInputRange;
 import std.path: pathSplitter;
 import std.array: array;
 
 @safe:
 
-bool isInSamePackageAs(in string path1, in string path2) pure nothrow {
-    const pathParts1 = path1.pathSplitter.array[0.. $ - 2];
-    const pathParts2 = path2.pathSplitter.array[0.. $ - 2];
-    return pathParts1 == pathParts2;
+
+private string[] packageParts(string path) pure nothrow {
+    return () @trusted { return cast(string[])path.pathSplitter.array[0 .. $-1]; }();
+}
+
+private string filePackage(string path) pure nothrow {
+    import std.array: join;
+    return path.packageParts.join(".");
+}
+
+
+auto byPackage(R)(R files) if(isInputRange!R) {
+    string[][string] packageToFiles;
+    foreach(file; files) {
+        auto package_ = file.filePackage;
+        if(package_ !in packageToFiles) packageToFiles[package_] = [];
+        packageToFiles[package_] ~= file;
+    }
+    return () @trusted { return packageToFiles.values; }();
 }

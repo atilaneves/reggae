@@ -33,19 +33,19 @@ struct DubInfo {
     Target[] toTargets(Flag!"main" includeMain = Yes.main) @safe const {
         Target[] targets;
 
-        foreach(const i, const pack; packages) {
-            const importPaths = pack.allOf!(a => a.packagePaths(a.importPaths))(packages);
-            const stringImportPaths = pack.allOf!(a => a.packagePaths(a.stringImportPaths))(packages);
-            const versions = pack.allOf!(a => a.versions)(packages);
+        foreach(const i, const dubPackage; packages) {
+            const importPaths = dubPackage.allOf!(a => a.packagePaths(a.importPaths))(packages);
+            const stringImportPaths = dubPackage.allOf!(a => a.packagePaths(a.stringImportPaths))(packages);
+            const versions = dubPackage.allOf!(a => a.versions)(packages);
             //the path must be explicit for the other packages, implicit for the "main"
             //package
-            const projDir = i == 0 ? "" : pack.path;
+            const projDir = i == 0 ? "" : dubPackage.path;
 
-            foreach(const file; pack.files) {
-                if(file == pack.mainSourceFile && !includeMain) continue;
-                immutable flags = pack.flags.join(" ") ~ dflags ~ " " ~
+            foreach(const file; dubPackage.files) {
+                if(file == dubPackage.mainSourceFile && !includeMain) continue;
+                immutable flags = dubPackage.flags.join(" ") ~ dflags ~ " " ~
                     versions.map!(a => "-version=" ~ a).join(" ");
-                targets ~= dCompile(buildPath(pack.path, file),
+                targets ~= dCompile(buildPath(dubPackage.path, file),
                                     flags,
                                     importPaths, stringImportPaths, projDir);
             }

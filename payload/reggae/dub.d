@@ -43,13 +43,12 @@ struct DubInfo {
 
             immutable flags = dubPackage.flags.join(" ") ~ dflags ~ " " ~
                 versions.map!(a => "-version=" ~ a).join(" ");
-            auto files = dubPackage.files.filter!(a => includeMain || a != dubPackage.mainSourceFile);
+            auto files = dubPackage.
+                files.
+                filter!(a => includeMain || a != dubPackage.mainSourceFile).
+                map!(a => buildPath(dubPackage.path, a));
 
-            foreach(const file; files) {
-                targets ~= dCompile(buildPath(dubPackage.path, file),
-                                    flags,
-                                    importPaths, stringImportPaths, projDir);
-            }
+            targets ~= files.map!(a => dCompile(a, flags, importPaths, stringImportPaths, projDir)).array;
         }
 
         return targets;

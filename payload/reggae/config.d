@@ -10,5 +10,6 @@ immutable string buildFilePath;
 immutable string cCompiler = "gcc";
 immutable string cppCompiler = "g++";
 immutable string dCompiler = "dmd";
+immutable bool perModule = false;
 
 enum dubInfo = DubInfo();

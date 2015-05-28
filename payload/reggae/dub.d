@@ -41,10 +41,11 @@ struct DubInfo {
             //package
             const projDir = i == 0 ? "" : dubPackage.path;
 
-            foreach(const file; dubPackage.files) {
-                if(file == dubPackage.mainSourceFile && !includeMain) continue;
-                immutable flags = dubPackage.flags.join(" ") ~ dflags ~ " " ~
-                    versions.map!(a => "-version=" ~ a).join(" ");
+            immutable flags = dubPackage.flags.join(" ") ~ dflags ~ " " ~
+                versions.map!(a => "-version=" ~ a).join(" ");
+            auto files = dubPackage.files.filter!(a => includeMain || a != dubPackage.mainSourceFile);
+
+            foreach(const file; files) {
                 targets ~= dCompile(buildPath(dubPackage.path, file),
                                     flags,
                                     importPaths, stringImportPaths, projDir);

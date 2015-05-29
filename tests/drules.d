@@ -32,7 +32,7 @@ void testDCompileIncludePathsNinja() {
 void testDCompileIncludePathsMake() {
     const build = Build(dCompile("path/to/src/foo.d", "-O", ["path/to/src", "other/path"]));
     const make = Makefile(build, "/tmp/myproject");
-    make.command(build.targets[0]).startsWith(".reggae/dcompile --srcFile=path/to/src/foo.d --objFile=path/to/src/foo.o --depFile=path/to/src/foo.o.d dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path").shouldBeTrue;
+    make.command(build.targets[0]).startsWith(".reggae/dcompile --objFile=path/to/src/foo.o --depFile=path/to/src/foo.o.d dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path  path/to/src/foo.d").shouldBeTrue;
 }
 
 
@@ -49,9 +49,9 @@ void testDCompileWithMultipleFilesMake() {
                                       "-O", ["path/to/src", "other/path"]));
     const make = Makefile(build, "/tmp/myproject");
 
-    make.command(build.targets[0]).startsWith(".reggae/dcompile --srcFile=other/weird.d --objFile=other.o --depFile=other.o.d dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path").shouldBeTrue;
+    make.command(build.targets[0]).startsWith(".reggae/dcompile --objFile=other.o --depFile=other.o.d dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path  other/weird.d").shouldBeTrue;
 
-    make.command(build.targets[1]).startsWith(".reggae/dcompile --srcFile=path/to/src/foo.d --srcFile=path/to/src/bar.d --objFile=path/to/src.o --depFile=path/to/src.o.d dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path").shouldBeTrue;
+    make.command(build.targets[1]).startsWith(".reggae/dcompile --objFile=path/to/src.o --depFile=path/to/src.o.d dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path  path/to/src/foo.d path/to/src/bar.d").shouldBeTrue;
 
 }
 

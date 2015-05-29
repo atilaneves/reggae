@@ -13,6 +13,7 @@ struct Options {
     string dCompiler;
     bool noFetch;
     bool help;
+    bool perModule;
 }
 
 

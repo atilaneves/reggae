@@ -3,7 +3,7 @@ module reggae.dub;
 import reggae.build;
 import reggae.rules;
 import reggae.types;
-import reggae.config: dflags;
+import reggae.config: dflags, perModule;
 import reggae.sorting;
 
 public import std.typecons: Yes, No;
@@ -51,7 +51,8 @@ struct DubInfo {
                 filter!(a => includeMain || a != dubPackage.mainSourceFile).
                 map!(a => buildPath(dubPackage.path, a));
 
-            targets ~= dCompilePerModule(files.array, flags, importPaths, stringImportPaths, projDir);
+            auto dcomp = perModule ? &dCompilePerModule : &dCompilePerPackage;
+            targets ~= dcomp(files.array, flags, importPaths, stringImportPaths, projDir);
         }
 
         return targets;

@@ -39,6 +39,14 @@ private string dCompileCommand(in string flags = "",
             "stringImports=" ~ stringParams].join(" ");
 }
 
+Target[] dCompileGrouped(in string[] srcFiles, in string flags = "",
+                         in string[] importPaths = [], in string[] stringImportPaths = [],
+                         in string projDir = "$project") @safe {
+    import reggae.config;
+    auto func = perModule ? &dCompilePerModule : &dCompilePerPackage;
+    return func(srcFiles, flags, importPaths, stringImportPaths, projDir);
+}
+
 Target[] dCompilePerPackage(in string[] srcFiles, in string flags = "",
                             in string[] importPaths = [], in string[] stringImportPaths = [],
                             in string projDir = "$project") @safe {
@@ -93,8 +101,7 @@ Target[] dObjects(SrcDirs dirs = SrcDirs(),
     () {
 
     Target[] dCompileInner(in string[] files) {
-        return dCompilePerModule(files, flags.flags, ["."] ~ includes.paths,
-                                 stringImports.paths);
+        return dCompileGrouped(files, flags.flags, ["."] ~ includes.paths, stringImports.paths);
     }
 
     return srcObjects!dCompileInner("d", dirs.paths, srcFiles.paths, excludeFiles.paths);
@@ -195,8 +202,8 @@ Target dExe(in App app, in Flags flags,
                                 importPaths.paths, stringImportPaths.paths);
 
     const files = dMainDepSrcs(output).map!(a => a.removeProjectPath).array;
-    const dependencies = [mainObj] ~ dCompilePerModule(files, flags.flags,
-                                                       importPaths.paths, stringImportPaths.paths);
+    const dependencies = [mainObj] ~ dCompileGrouped(files, flags.flags,
+                                                     importPaths.paths, stringImportPaths.paths);
 
     return dLink(app.exeFileName, dependencies ~ linkWith);
 }

@@ -51,8 +51,7 @@ struct DubInfo {
                 filter!(a => includeMain || a != dubPackage.mainSourceFile).
                 map!(a => buildPath(dubPackage.path, a));
 
-            auto dcomp = perModule ? &dCompilePerModule : &dCompilePerPackage;
-            targets ~= dcomp(files.array, flags, importPaths, stringImportPaths, projDir);
+            targets ~= dCompileGrouped(files.array, flags, importPaths, stringImportPaths, projDir);
         }
 
         return targets;

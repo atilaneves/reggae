@@ -51,7 +51,7 @@ struct DubInfo {
                 filter!(a => includeMain || a != dubPackage.mainSourceFile).
                 map!(a => buildPath(dubPackage.path, a));
 
-            targets ~= files.map!(a => dCompile(a, flags, importPaths, stringImportPaths, projDir)).array;
+            targets ~= dCompilePerModule(files.array, flags, importPaths, stringImportPaths, projDir);
         }
 
         return targets;

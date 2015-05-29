@@ -49,6 +49,14 @@ Target[] dCompilePerPackage(in string[] srcFiles, in string flags = "",
                                                a.map!(a => Target(a)).array)).array;
 }
 
+Target[] dCompilePerModule(in string[] srcFiles, in string flags = "",
+                           in string[] importPaths = [], in string[] stringImportPaths = [],
+                           in string projDir = "$project") @safe {
+
+    immutable command = dCompileCommand(flags, importPaths, stringImportPaths, projDir);
+    return srcFiles.map!(a => dCompile(a, flags, importPaths, stringImportPaths, projDir)).array;
+}
+
 
 //@trusted because of join
 Target dCompile(in string srcFileName, in string flags = "",

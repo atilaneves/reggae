@@ -194,11 +194,9 @@ Target dExe(in App app, in Flags flags,
     const output = runDCompiler(buildPath(projectPath, app.srcFileName), flags.flags,
                                 importPaths.paths, stringImportPaths.paths);
 
-    Target depCompile(in string dep) @safe {
-        return dCompile(dep.removeProjectPath, flags.flags, importPaths.paths, stringImportPaths.paths);
-    }
-
-    const dependencies = [mainObj] ~ dMainDepSrcs(output).map!depCompile.array;
+    const files = dMainDepSrcs(output).map!(a => a.removeProjectPath).array;
+    const dependencies = [mainObj] ~ dCompilePerModule(files, flags.flags,
+                                                       importPaths.paths, stringImportPaths.paths);
 
     return dLink(app.exeFileName, dependencies ~ linkWith);
 }

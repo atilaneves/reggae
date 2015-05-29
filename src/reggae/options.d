@@ -32,6 +32,7 @@ Options getOptions(string[] args) @trusted {
         "cc", "C compiler to use (default gcc).", &options.cCompiler,
         "cxx", "C++ compiler to use (default g++).", &options.cppCompiler,
         "nofetch", "Assume dub packages are present (no dub fetch).", &options.noFetch,
+        "per_module", "Compile D files per module (default is per package)", &options.perModule,
     );
 
     if(helpInfo.helpWanted) {

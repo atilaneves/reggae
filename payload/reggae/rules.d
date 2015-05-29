@@ -92,9 +92,9 @@ Target[] dObjects(SrcDirs dirs = SrcDirs(),
                   ExcludeFiles excludeFiles = ExcludeFiles())
     () {
 
-    auto dCompileInner(in string srcFileName) {
-        return dCompile(srcFileName, flags.flags, ["."] ~ includes.paths,
-                        stringImports.paths);
+    Target[] dCompileInner(in string[] files) {
+        return dCompilePerModule(files, flags.flags, ["."] ~ includes.paths,
+                                 stringImports.paths);
     }
 
     return srcObjects!dCompileInner("d", dirs.paths, srcFiles.paths, excludeFiles.paths);
@@ -111,8 +111,8 @@ auto cppObjects(SrcDirs dirs = SrcDirs(),
                 ExcludeFiles excludeFiles = ExcludeFiles())
     () {
 
-    auto cppCompileInner(in string srcFileName) {
-        return cppCompile(srcFileName, flags.flags, includes.paths);
+    Target[] cppCompileInner(in string[] files) {
+        return files.map!(a => cppCompile(a, flags.flags, includes.paths)).array;
     }
 
     return srcObjects!cppCompileInner("cpp", dirs.paths, srcFiles.paths, excludeFiles.paths);
@@ -130,8 +130,8 @@ auto cObjects(SrcDirs dirs = SrcDirs(),
               ExcludeFiles excludeFiles = ExcludeFiles())
     () {
 
-    auto cCompileInner(in string srcFileName) {
-        return cCompile(srcFileName, flags.flags, includes.paths);
+    Target[] cCompileInner(in string[] files) {
+        return files.map!(a => cCompile(a, flags.flags, includes.paths)).array;
     }
 
 
@@ -139,10 +139,10 @@ auto cObjects(SrcDirs dirs = SrcDirs(),
 }
 
 
-auto srcObjects(alias func)(in string extension,
-                            string[] dirs, string[] srcFiles, in string[] excludeFiles) {
+Target[] srcObjects(alias func)(in string extension,
+                                string[] dirs, string[] srcFiles, in string[] excludeFiles) {
     auto files = selectSrcFiles(srcFilesInDirs(extension, dirs), srcFiles, excludeFiles);
-    return files.map!func.array;
+    return func(files);
 }
 
 //The parameters would be "in" except that "remove" doesn't like that...

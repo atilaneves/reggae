@@ -54,7 +54,7 @@ private void createBuild(in Options options) {
                                  "makefile.d", "ninja.d",
                                  "package.d", "range.d", "reflect.d",
                                  "rules.d", "dependencies.d", "types.d",
-                                 "dub.d", "ctaa.d");
+                                 "dub.d", "ctaa.d", "sorting.d");
     writeSrcFiles!(fileNames)(options);
     string[] reggaeSrcs = [reggaeSrcFileName("config.d")];
     foreach(fileName; fileNames) {
@@ -123,6 +123,7 @@ private void writeConfig(in Options options) {
     file.writeln("enum cCompiler = `", options.cCompiler, "`;");
     file.writeln("enum cppCompiler = `", options.cppCompiler, "`;");
     file.writeln("enum dCompiler = `", options.dCompiler, "`;");
+    file.writeln("enum perModule = ", options.perModule, ";");
     file.writeln("enum userVars = AssocList([");
     foreach(key, value; options.userVars) {
         file.writeln("AssocEntry(`", key, "`, `", value, "`), ");

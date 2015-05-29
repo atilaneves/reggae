@@ -18,5 +18,7 @@ int main(string[] args) {
                           "tests.build",
                           "tests.make",
                           "tests.dependencies",
-                          "tests.ctaa");
+                          "tests.ctaa",
+                          "tests.by_package",
+        );
 }

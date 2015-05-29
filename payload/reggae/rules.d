@@ -5,6 +5,7 @@ import reggae.build;
 import reggae.config;
 import reggae.dependencies;
 import reggae.types;
+import reggae.sorting;
 import std.path : baseName, absolutePath, dirSeparator;
 import std.algorithm: map, splitter, remove, canFind, startsWith, find;
 import std.array: array, replace;
@@ -28,17 +29,49 @@ private string objFileName(in string srcFileName) @safe pure nothrow {
 }
 
 
+private string dCompileCommand(in string flags = "",
+                               in string[] importPaths = [], in string[] stringImportPaths = [],
+                               in string projDir = "$project") @safe pure {
+    immutable importParams = importPaths.map!(a => "-I" ~ buildPath(projDir, a)).join(",");
+    immutable stringParams = stringImportPaths.map!(a => "-J" ~ buildPath(projDir, a)).join(",");
+    immutable flagParams = flags.splitter.join(",");
+    return ["_dcompile ", "includes=" ~ importParams, "flags=" ~ flagParams,
+            "stringImports=" ~ stringParams].join(" ");
+}
+
+Target[] dCompileGrouped(in string[] srcFiles, in string flags = "",
+                         in string[] importPaths = [], in string[] stringImportPaths = [],
+                         in string projDir = "$project") @safe {
+    import reggae.config;
+    auto func = perModule ? &dCompilePerModule : &dCompilePerPackage;
+    return func(srcFiles, flags, importPaths, stringImportPaths, projDir);
+}
+
+Target[] dCompilePerPackage(in string[] srcFiles, in string flags = "",
+                            in string[] importPaths = [], in string[] stringImportPaths = [],
+                            in string projDir = "$project") @safe {
+
+    immutable command = dCompileCommand(flags, importPaths, stringImportPaths, projDir);
+    return srcFiles.byPackage.map!(a => Target(a[0].packagePath.objFileName,
+                                               command,
+                                               a.map!(a => Target(a)).array)).array;
+}
+
+Target[] dCompilePerModule(in string[] srcFiles, in string flags = "",
+                           in string[] importPaths = [], in string[] stringImportPaths = [],
+                           in string projDir = "$project") @safe {
+
+    immutable command = dCompileCommand(flags, importPaths, stringImportPaths, projDir);
+    return srcFiles.map!(a => dCompile(a, flags, importPaths, stringImportPaths, projDir)).array;
+}
+
+
 //@trusted because of join
 Target dCompile(in string srcFileName, in string flags = "",
                 in string[] importPaths = [], in string[] stringImportPaths = [],
                 in string projDir = "$project") @trusted pure {
 
-    immutable importParams = importPaths.map!(a => "-I" ~ buildPath(projDir, a)).join(",");
-    immutable stringParams = stringImportPaths.map!(a => "-J" ~ buildPath(projDir, a)).join(",");
-    immutable flagParams = flags.splitter.join(",");
-    immutable command = ["_dcompile ", "includes=" ~ importParams, "flags=" ~ flagParams,
-                         "stringImports=" ~ stringParams].join(" ");
-
+    immutable command = dCompileCommand(flags, importPaths, stringImportPaths, projDir);
     return Target(srcFileName.objFileName, command, [Target(srcFileName)]);
 }
 
@@ -67,9 +100,8 @@ Target[] dObjects(SrcDirs dirs = SrcDirs(),
                   ExcludeFiles excludeFiles = ExcludeFiles())
     () {
 
-    auto dCompileInner(in string srcFileName) {
-        return dCompile(srcFileName, flags.flags, ["."] ~ includes.paths,
-                        stringImports.paths);
+    Target[] dCompileInner(in string[] files) {
+        return dCompileGrouped(files, flags.flags, ["."] ~ includes.paths, stringImports.paths);
     }
 
     return srcObjects!dCompileInner("d", dirs.paths, srcFiles.paths, excludeFiles.paths);
@@ -86,8 +118,8 @@ auto cppObjects(SrcDirs dirs = SrcDirs(),
                 ExcludeFiles excludeFiles = ExcludeFiles())
     () {
 
-    auto cppCompileInner(in string srcFileName) {
-        return cppCompile(srcFileName, flags.flags, includes.paths);
+    Target[] cppCompileInner(in string[] files) {
+        return files.map!(a => cppCompile(a, flags.flags, includes.paths)).array;
     }
 
     return srcObjects!cppCompileInner("cpp", dirs.paths, srcFiles.paths, excludeFiles.paths);
@@ -105,8 +137,8 @@ auto cObjects(SrcDirs dirs = SrcDirs(),
               ExcludeFiles excludeFiles = ExcludeFiles())
     () {
 
-    auto cCompileInner(in string srcFileName) {
-        return cCompile(srcFileName, flags.flags, includes.paths);
+    Target[] cCompileInner(in string[] files) {
+        return files.map!(a => cCompile(a, flags.flags, includes.paths)).array;
     }
 
 
@@ -114,10 +146,10 @@ auto cObjects(SrcDirs dirs = SrcDirs(),
 }
 
 
-auto srcObjects(alias func)(in string extension,
-                            string[] dirs, string[] srcFiles, in string[] excludeFiles) {
+Target[] srcObjects(alias func)(in string extension,
+                                string[] dirs, string[] srcFiles, in string[] excludeFiles) {
     auto files = selectSrcFiles(srcFilesInDirs(extension, dirs), srcFiles, excludeFiles);
-    return files.map!func.array;
+    return func(files);
 }
 
 //The parameters would be "in" except that "remove" doesn't like that...
@@ -169,11 +201,9 @@ Target dExe(in App app, in Flags flags,
     const output = runDCompiler(buildPath(projectPath, app.srcFileName), flags.flags,
                                 importPaths.paths, stringImportPaths.paths);
 
-    Target depCompile(in string dep) @safe {
-        return dCompile(dep.removeProjectPath, flags.flags, importPaths.paths, stringImportPaths.paths);
-    }
-
-    const dependencies = [mainObj] ~ dMainDepSrcs(output).map!depCompile.array;
+    const files = dMainDepSrcs(output).map!(a => a.removeProjectPath).array;
+    const dependencies = [mainObj] ~ dCompileGrouped(files, flags.flags,
+                                                     importPaths.paths, stringImportPaths.paths);
 
     return dLink(app.exeFileName, dependencies ~ linkWith);
 }

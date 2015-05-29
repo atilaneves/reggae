@@ -27,8 +27,8 @@ struct NinjaEntry {
 NinjaEntry[] defaultRules() @safe pure nothrow {
     import reggae.config;
     return [NinjaEntry("rule _dcompile",
-                       ["command = .reggae/dcompile --srcFile=$in --objFile=$out --depFile=$DEPFILE " ~
-                        dCompiler ~ " $flags $includes $stringImports",
+                       ["command = .reggae/dcompile --objFile=$out --depFile=$DEPFILE " ~
+                        dCompiler ~ " $flags $includes $stringImports $in",
                         "deps = gcc",
                         "depfile = $DEPFILE"]),
             NinjaEntry("rule _dlink",

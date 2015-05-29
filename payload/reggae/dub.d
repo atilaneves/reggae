@@ -4,6 +4,8 @@ import reggae.build;
 import reggae.rules;
 import reggae.types;
 import reggae.config: dflags;
+import reggae.sorting;
+
 public import std.typecons: Yes, No;
 import std.typecons: Flag;
 import std.algorithm: map, filter;
@@ -43,6 +45,7 @@ struct DubInfo {
 
             immutable flags = dubPackage.flags.join(" ") ~ dflags ~ " " ~
                 versions.map!(a => "-version=" ~ a).join(" ");
+
             auto files = dubPackage.
                 files.
                 filter!(a => includeMain || a != dubPackage.mainSourceFile).

@@ -20,3 +20,8 @@ void testByPackage() {
     byPackage.shouldInclude(["/src/utils/important.d", "/src/utils/also_important.d"]);
     byPackage.shouldInclude(["/src/utils/data/defs.d", "/src/utils/data/foo.d", "/src/utils/data/bar.d"]);
 }
+
+
+void testPackagePath() {
+    "src/utils/data/defs.d".packagePath.shouldEqual("src/utils/data");
+}

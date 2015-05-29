@@ -94,7 +94,8 @@ struct Makefile {
         if(rule == "_dcompile") {
             immutable stringImports = rawCmdLine.getDefaultRuleParams("stringImports", []).join(" ");
             immutable command = [".reggae/dcompile",
-                                 "--srcFile=" ~ target.dependencyFiles(projectPath),
+                                 target.dependencyFiles(projectPath).splitter(" ").
+                                 map!(a => "--srcFile=" ~ a).join(" "),
                                  "--objFile=" ~ target.outputs[0],
                                  "--depFile=" ~ depfile, dCompiler,
                                  flags, includes, stringImports].join(" ");

@@ -8,8 +8,20 @@ import std.traits: Unqual, isSomeFunction, ReturnType, arity;
 import std.array: array, join;
 
 
+Target createTargetFromTarget(in Target target) {
+    return Target(target.outputs,
+                  target._command.removeBuilddir,
+                  target.dependencies.map!(a => a.enclose(target)).array,
+                  target.implicits.map!(a => a.enclose(target)).array);
+}
+
+
 struct Build {
     const(Target)[] targets;
+
+    this(in Target[] targets) {
+        this.targets = targets.map!createTargetFromTarget.array;
+    }
 
     this(T...)(in T targets) {
         foreach(t; targets) {
@@ -19,10 +31,7 @@ struct Build {
                 const target = t;
             }
 
-            this.targets ~= Target(target.outputs,
-                                   target._command.removeBuilddir,
-                                   target.dependencies.map!(a => a.enclose(target)).array,
-                                   target.implicits.map!(a => a.enclose(target)).array);
+            this.targets ~= createTargetFromTarget(target);
         }
     }
 }

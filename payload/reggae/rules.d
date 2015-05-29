@@ -5,6 +5,7 @@ import reggae.build;
 import reggae.config;
 import reggae.dependencies;
 import reggae.types;
+import reggae.sorting;
 import std.path : baseName, absolutePath, dirSeparator;
 import std.algorithm: map, splitter, remove, canFind, startsWith, find;
 import std.array: array, replace;
@@ -28,17 +29,33 @@ private string objFileName(in string srcFileName) @safe pure nothrow {
 }
 
 
+private string dCompileCommand(in string flags = "",
+                               in string[] importPaths = [], in string[] stringImportPaths = [],
+                               in string projDir = "$project") @safe pure {
+    immutable importParams = importPaths.map!(a => "-I" ~ buildPath(projDir, a)).join(",");
+    immutable stringParams = stringImportPaths.map!(a => "-J" ~ buildPath(projDir, a)).join(",");
+    immutable flagParams = flags.splitter.join(",");
+    return ["_dcompile ", "includes=" ~ importParams, "flags=" ~ flagParams,
+            "stringImports=" ~ stringParams].join(" ");
+}
+
+Target[] dCompilePerPackage(in string[] srcFiles, in string flags = "",
+                            in string[] importPaths = [], in string[] stringImportPaths = [],
+                            in string projDir = "$project") @safe {
+
+    immutable command = dCompileCommand(flags, importPaths, stringImportPaths, projDir);
+    return srcFiles.byPackage.map!(a => Target(a[0].packagePath.objFileName,
+                                               command,
+                                               a.map!(a => Target(a)).array)).array;
+}
+
+
 //@trusted because of join
 Target dCompile(in string srcFileName, in string flags = "",
                 in string[] importPaths = [], in string[] stringImportPaths = [],
                 in string projDir = "$project") @trusted pure {
 
-    immutable importParams = importPaths.map!(a => "-I" ~ buildPath(projDir, a)).join(",");
-    immutable stringParams = stringImportPaths.map!(a => "-J" ~ buildPath(projDir, a)).join(",");
-    immutable flagParams = flags.splitter.join(",");
-    immutable command = ["_dcompile ", "includes=" ~ importParams, "flags=" ~ flagParams,
-                         "stringImports=" ~ stringParams].join(" ");
-
+    immutable command = dCompileCommand(flags, importPaths, stringImportPaths, projDir);
     return Target(srcFileName.objFileName, command, [Target(srcFileName)]);
 }
 

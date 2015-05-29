@@ -54,7 +54,7 @@ private void createBuild(in Options options) {
                                  "makefile.d", "ninja.d",
                                  "package.d", "range.d", "reflect.d",
                                  "rules.d", "dependencies.d", "types.d",
-                                 "dub.d", "ctaa.d");
+                                 "dub.d", "ctaa.d", "sorting.d");
     writeSrcFiles!(fileNames)(options);
     string[] reggaeSrcs = [reggaeSrcFileName("config.d")];
     foreach(fileName; fileNames) {

@@ -24,10 +24,17 @@ Available configurations:
 Generating using build
 `;
 
+immutable noConfigOutput = `Available configurations:
+
+Error executing command build:
+`;
+
 void testGetConfigs() {
 
     getConfigurations(reggaeOutput).shouldEqual(DubConfigurations(["executable", "unittest"],
                                                                   "executable"));
     getConfigurations(dubOutput).shouldEqual(DubConfigurations(["application", "library", "library-nonet"],
                                                                "application"));
+    DubConfigurations emptyConfigs;
+    getConfigurations(noConfigOutput).shouldEqual(emptyConfigs);
 }

@@ -10,6 +10,7 @@ import reggae.options;
 import reggae.dub_json;
 import reggae.dub;
 import reggae.ctaa;
+import reggae.dub_call;
 
 
 int main(string[] args) {
@@ -30,6 +31,8 @@ int main(string[] args) {
 
     return 0;
 }
+
+DubInfo[string] gDubInfos;
 
 private void createReggaefile(in Options options) {
     const dubInfo = _getDubInfo(options);
@@ -140,20 +143,43 @@ private void writeConfig(in Options options) {
     }
 }
 
-
 private DubInfo _getDubInfo(in Options options) {
+
+    if("default" !in gDubInfos) {
+        immutable dubBuildArgs = ["dub", "--annotate", "build", "--compiler=dmd", "--print-configs"];
+        immutable dubBuildOutput = _callDub(options, dubBuildArgs);
+        immutable configs = getConfigurations(dubBuildOutput);
+
+        if(configs.configurations.empty) {
+            immutable descArgs = ["dub", "describe"];
+            immutable descOutput = _callDub(options, descArgs);
+            gDubInfos["default"] = getDubInfo(descOutput);
+        } else {
+            foreach(config; configs.configurations) {
+                immutable descArgs = ["dub", "describe", "-c", config];
+                immutable descOutput = _callDub(options, descArgs);
+                gDubInfos[config] = getDubInfo(descOutput);
+            }
+            gDubInfos["default"] = gDubInfos[configs.default_];
+        }
+    }
+
+    return gDubInfos["default"];
+}
+
+private string _callDub(in Options options, in string[] args) {
     import std.process;
     const string[string] env = null;
     Config config = Config.none;
     size_t maxOutput = size_t.max;
     immutable workDir = options.projectPath;
 
-    immutable dubArgs = ["dub", "describe"];
-    immutable ret = execute(dubArgs, env, config, maxOutput, workDir);
-    enforce(ret.status == 0, text("Could not get description from dub with ", dubArgs, ":\n",
+    immutable ret = execute(args, env, config, maxOutput, workDir);
+    enforce(ret.status == 0, text("Error calling ", args.join(" "), ":\n",
                                   ret.output));
-    return getDubInfo(ret.output);
+    return ret.output;
 }
+
 
 private string reggaeSrcFileName(in string fileName) @safe pure nothrow {
     return buildPath(reggaeSrcDirName, fileName);

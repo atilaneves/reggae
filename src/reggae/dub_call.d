@@ -1,7 +1,7 @@
 module reggae.dub_call;
 
 import std.algorithm: splitter, find, map, canFind, until;
-import std.array: array, front, replace;
+import std.array: array, front, replace, empty;
 import std.string: stripLeft;
 
 @safe:
@@ -18,6 +18,7 @@ DubConfigurations getConfigurations(in string output) pure {
         until!(a => a == "").
         map!(a => a.stripLeft).
         array[1..$];
+    if(fromConfigs.empty) return DubConfigurations();
 
     immutable defMarker = " [default]";
     auto default_ = fromConfigs.find!(a => a.canFind(defMarker)).front.replace(defMarker, "");

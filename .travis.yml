@@ -3,6 +3,6 @@ d: dmd-2.067.0
 install:
   - gem install cucumber rspec aruba
 script:
-  - ./boostrap.sh make
+  - ./bootstrap.sh make
   - bin/ut
   - cucumber

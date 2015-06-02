@@ -1,6 +1,7 @@
 import reggae;
 
 //the actual reggae binary
+//could also be dExeWithDubObjs(..., Configuration("executable"))
 alias main = dubMainTarget!("-g -debug");
 
 //the unit test binary

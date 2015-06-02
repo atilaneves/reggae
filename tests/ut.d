@@ -9,7 +9,7 @@ int main(string[] args) {
                           "tests.simple_bar_reggaefile",
                           "tests.ninja",
                           "tests.default_rules",
-                          "tests.dub_describe",
+                          "tests.dub_json",
                           "tests.cpprules",
                           "tests.realistic_build",
                           "tests.drules",

@@ -2,15 +2,15 @@ module reggae.dub_json;
 
 import reggae.dub;
 import reggae.build;
-import stdx.data.json;
+import std.json;
 import std.algorithm: map, filter;
 
 
-DubInfo getDubInfo(string jsonString) @safe {
-    auto json = parseJSONValue(jsonString);
-    auto packages = json.byKey("packages").get!(JSONValue[]);
-    return DubInfo(packages.map!(a => DubPackage(a.byKey("name").get!string,
-                                                 a.byKey("path").get!string,
+DubInfo getDubInfo(string jsonString) @trusted {
+    auto json = parseJSON(jsonString);
+    auto packages = json.byKey("packages").array;
+    return DubInfo(packages.map!(a => DubPackage(a.byKey("name").str,
+                                                 a.byKey("path").str,
                                                  a.getOptional("mainSourceFile"),
                                                  a.getOptional("targetFileName"),
                                                  a.byKey("dflags").jsonValueToStrings,
@@ -24,35 +24,43 @@ DubInfo getDubInfo(string jsonString) @safe {
 }
 
 
-private string[] jsonValueToFiles(JSONValue files) @safe {
-    return files.get!(JSONValue[]).
-        filter!(a => a.byKey("type") == "source").
+private string[] jsonValueToFiles(JSONValue files) @trusted {
+    return files.array.
+        filter!(a => a.byKey("type").str == "source").
         filter!(a => a.byOptionalKey("active", true)). //true for backward compatibility
-        map!(a => a.byKey("path").get!string).
+        map!(a => a.byKey("path").str).
         array;
 }
 
-private string[] jsonValueToStrings(JSONValue json) @safe {
-    return json.get!(JSONValue[]).map!(a => a.get!string).array;
+private string[] jsonValueToStrings(JSONValue json) @trusted {
+    return json.array.map!(a => a.str).array;
 }
 
 
-private auto byKey(JSONValue json, in string key) @safe {
-    return json.get!(JSONValue[string])[key];
+private auto byKey(JSONValue json, in string key) @trusted {
+    return json.object[key];
 }
 
-private auto byOptionalKey(T)(JSONValue json, in string key, T def) {
-    auto value = json.get!(JSONValue[string]);
-    return key in value ? value[key].get!T : def;
+private auto byOptionalKey(JSONValue json, in string key, bool def) {
+    import std.conv: to;
+    auto value = json.object;
+    return key in value ? value[key].boolean : def;
 }
 
-
-private string getOptional(JSONValue json, in string key) @safe {
-    auto aa = json.get!(JSONValue[string]);
-    return key in aa ? aa[key].get!string : "";
+//std.json has no conversion to bool
+private bool boolean(JSONValue json) @trusted {
+    import std.exception: enforce;
+    enforce!JSONException(json.type == JSON_TYPE.TRUE || json.type == JSON_TYPE.FALSE,
+                          "JSONValue is not a boolean");
+    return json.type == JSON_TYPE.TRUE;
 }
 
-private string[] getOptionalList(JSONValue json, in string key) @safe {
-    auto aa = json.get!(JSONValue[string]);
+private string getOptional(JSONValue json, in string key) @trusted {
+    auto aa = json.object;
+    return key in aa ? aa[key].str : "";
+}
+
+private string[] getOptionalList(JSONValue json, in string key) @trusted {
+    auto aa = json.object;
     return key in aa ? aa[key].jsonValueToStrings : [];
 }

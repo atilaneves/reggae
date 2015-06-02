@@ -114,3 +114,13 @@ Target dExeWithDubObjs(string exeName, alias objsFunction, Flags flags = Flags()
     import reggae.config;
     return dLink(exeName, objsFunction() ~ dubInfo.toTargets(No.main), flags.flags);
 }
+
+Target dExeWithDubObjsConfig(ExeName exeName,
+                             Configuration config,
+                             alias objsFunction = () { Target[] t; return t; },
+                             Flags flags = Flags())()
+    if(isSomeFunction!objsFunction) {
+
+    import reggae.config;
+    return dLink(exeName.name, objsFunction() ~ configToDubInfo[config.config].toTargets(Yes.main), flags.flags);
+}

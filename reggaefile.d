@@ -7,6 +7,6 @@ alias main = dubMainTarget!("-g -debug");
 alias utObjs = dObjects!(SrcDirs([`tests`]),
                          Flags(`-unittest -g -debug`),
                          ImportPaths(dubInfo.targetImportPaths ~ "src"));
-alias ut = dExeWithDubObjs!("ut", utObjs);
+alias ut = dExeWithDubObjsConfig!(ExeName("ut"), Configuration("unittest"));
 
 mixin build!(main, ut);

@@ -46,3 +46,11 @@ struct SrcFiles {
 struct ExcludeFiles {
     string[] paths;
 }
+
+struct ExeName {
+    string name;
+}
+
+struct Configuration {
+    string config;
+}

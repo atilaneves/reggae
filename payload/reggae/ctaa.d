@@ -31,8 +31,8 @@ struct AssocListT(K, V) {
 
     const(V) opIndex(K key) pure const nothrow {
         auto res = entries.find!(a => a.key == key);
-        assert(!res.empty);
-        return entries.front.value;
+        assert(!res.empty, "AssocList does not contain key " ~ key);
+        return res.front.value;
     }
 
 }

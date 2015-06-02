@@ -1,12 +1,8 @@
 language: d
-d:
-  - dmd-2.067
+d: dmd-2.067.0
 install:
   - gem install cucumber rspec aruba
 script:
- - dub build
- - bin/reggae -b make .
- - make
- - ./ut
- - cp reggae bin
- - cucumber
+  - ./boostrap.sh make
+  - bin/ut
+  - cucumber

@@ -12,4 +12,4 @@ immutable string cppCompiler = "g++";
 immutable string dCompiler = "dmd";
 immutable bool perModule = true; //only for UTs, false in the real world
 
-enum dubInfo = DubInfo();
+enum dubInfo = ["default": DubInfo() ];

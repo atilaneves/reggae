@@ -135,7 +135,8 @@ private void writeConfig(in Options options) {
         immutable targetType = dubInfo.packages[0].targetType;
         enforce(targetType == "executable" || targetType == "library",
                 text("Unsupported dub targetType '", targetType, "'"));
-        file.writeln("const dubInfo = ", dubInfo, ";");
+        file.writeln(`const configToDubInfo = assocList([assocEntry("default", `, dubInfo, `)]);`);
+        file.writeln(`auto dubInfo() { return configToDubInfo["default"]; }`);
     }
 }
 

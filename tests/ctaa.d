@@ -15,3 +15,10 @@ void testConversion() {
     aa.get("bar", false).shouldBeFalse();
     aa.get("bar", true).shouldBeTrue();
 }
+
+void testOpIndex() {
+    static struct MyInt { int i; }
+    auto aa = assocList([assocEntry("one", MyInt(1)), assocEntry("two", MyInt(2))]);
+    aa["one"].shouldEqual(MyInt(1));
+    aa["two"].shouldEqual(MyInt(1));
+}

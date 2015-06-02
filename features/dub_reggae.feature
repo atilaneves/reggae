@@ -86,7 +86,7 @@ Feature: Augmenting dub projects with reggae builds
       """
       import reggae;
       alias utObjs = dObjects!(SrcDirs([`tests`]), Flags(`-unittest`), ImportPaths([`source`]));
-      alias ut = dExeWithDubObjs!(`ut`, utObjs);
+      alias ut = dExeWithDubObjs!(ExeName(`ut`), Configuration(`default`), utObjs, No.main);
       mixin build!(dubInfo.mainTarget(), ut);
       """
 

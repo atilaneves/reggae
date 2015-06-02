@@ -52,6 +52,20 @@ That was just an example. To build D apps with no external dependencies, this wi
 
 There are also other functions and pre-built rules for C and C++ objects.
 
+Dub integration
+---------------
+
+The easiest dub integration is to run reggae with a directory containing a dub project as
+parameter. That will create a build system that would do the same as "dub build" but probably
+faster. In all likelihood a user needing reggae will need more than that, and reggae provides
+an API to use dub build information in a `reggaefile.d` build description file. A simple
+example for building production and unittest binaries concurrently is this:
+
+    import reggae;
+    alias main = dubMainTarget!("-g -debug");
+    alias ut = dExeWithDubObjs!(ExeName("ut"), Configuration("unittest"));
+    mixin build!(main, ut);
+
 
 Building Reggae
 ---------------

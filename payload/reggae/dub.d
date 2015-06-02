@@ -11,6 +11,7 @@ import std.typecons: Flag;
 import std.algorithm: map, filter;
 import std.array: array, join;
 import std.path: buildPath;
+import std.traits: isCallable;
 
 
 struct DubPackage {
@@ -109,18 +110,15 @@ Target dubMainTarget(string flags)() {
 }
 
 
-Target dExeWithDubObjs(string exeName, alias objsFunction, Flags flags = Flags())
-    () if(isSomeFunction!objsFunction) {
-    import reggae.config;
-    return dLink(exeName, objsFunction() ~ dubInfo.toTargets(No.main), flags.flags);
-}
-
-Target dExeWithDubObjsConfig(ExeName exeName,
-                             Configuration config,
-                             alias objsFunction = () { Target[] t; return t; },
-                             Flags flags = Flags())()
-    if(isSomeFunction!objsFunction) {
+Target dExeWithDubObjs(ExeName exeName,
+                       Configuration config = Configuration("default"),
+                       alias objsFunction = () { Target[] t; return t; },
+                       Flag!"main" includeMain = Yes.main,
+                       Flags flags = Flags())()
+    if(isCallable!objsFunction) {
 
     import reggae.config;
-    return dLink(exeName.name, objsFunction() ~ configToDubInfo[config.config].toTargets(Yes.main), flags.flags);
+    return dLink(exeName.name,
+                 objsFunction() ~ configToDubInfo[config.config].toTargets(includeMain),
+                 flags.flags);
 }

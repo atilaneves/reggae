@@ -52,5 +52,5 @@ struct ExeName {
 }
 
 struct Configuration {
-    string config;
+    string config = "default";
 }

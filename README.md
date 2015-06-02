@@ -70,8 +70,10 @@ example for building production and unittest binaries concurrently is this:
 Building Reggae
 ---------------
 
-Reggae can build itself. To bootstrap, use dub. The [Makefile](Makefile) bootstraps it in a `bin`
-directory. A Makefile included in a build system meant to replace it? I know.
+Reggae can build itself. To bootstrap, either use dub or the [included bootstrap script](bootstrap.sh).
+Call it without arguments for `make` or with one to choose another backend, such as `ninja`. This
+will create a `reggae` binary in a `bin` directory then call itself to generate the "real" build
+system with the requested backend.
 
 Goals
 -----

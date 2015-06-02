@@ -26,15 +26,18 @@ auto jsonString =
     `      "files": [`
     `        {`
     `          "path": "src/foo.d",`
-    `          "type": "source"`
+    `          "type": "source",`
+    `          "active": true`
     `        },`
     `        {`
     `          "path": "src/bar.d",`
-    `          "type": "source"`
+    `          "type": "source",`
+    `          "active": true`
     `        },`
     `        {`
     `          "path": "src/boooo.d",`
-    `          "type": "source"`
+    `          "type": "source",`
+    `          "active": true`
     `        }`
     `      ]`
     `    },`
@@ -54,15 +57,18 @@ auto jsonString =
     `      "files": [`
     `        {`
     `          "path": "source/toto.d",`
-    `          "type": "source"`
+    `          "type": "source",`
+    `          "active": true`
     `        },`
     `        {`
     `          "path": "source/africa.d",`
-    `          "type": "source"`
+    `          "type": "source",`
+    `          "active": true`
     `        },`
     `        {`
     `          "path": "source/africa.d",`
-    `          "type": "weirdo"`
+    `          "type": "weirdo",`
+    `          "active": true`
     `        }`
     `      ]`
     `    }`

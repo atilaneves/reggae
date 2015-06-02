@@ -20,5 +20,6 @@ int main(string[] args) {
                           "tests.dependencies",
                           "tests.ctaa",
                           "tests.by_package",
+                          "tests.dub_call",
         );
 }

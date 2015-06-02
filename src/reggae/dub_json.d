@@ -27,6 +27,7 @@ DubInfo getDubInfo(string jsonString) @safe {
 private string[] jsonValueToFiles(JSONValue files) @safe {
     return files.get!(JSONValue[]).
         filter!(a => a.byKey("type") == "source").
+        filter!(a => a.byOptionalKey("active", true)). //true for backward compatibility
         map!(a => a.byKey("path").get!string).
         array;
 }
@@ -38,6 +39,11 @@ private string[] jsonValueToStrings(JSONValue json) @safe {
 
 private auto byKey(JSONValue json, in string key) @safe {
     return json.get!(JSONValue[string])[key];
+}
+
+private auto byOptionalKey(T)(JSONValue json, in string key, T def) {
+    auto value = json.get!(JSONValue[string]);
+    return key in value ? value[key].get!T : def;
 }
 
 

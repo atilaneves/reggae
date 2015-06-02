@@ -2,17 +2,11 @@ language: d
 d:
   - dmd-2.067
 install:
-  - git clone https://github.com/martine/ninja.git
-  - cd ninja
-  - ./configure.py --bootstrap
-  - cd ..
-  - mkdir bin
-  - cp ninja/ninja bin
-  - export PATH=$PATH:$PWD/bin
   - gem install cucumber rspec aruba
 script:
  - dub build
- - bin/reggae -b ninja .
- - ninja
+ - bin/reggae -b make .
+ - make
  - ./ut
+ - cp reggae bin
  - cucumber

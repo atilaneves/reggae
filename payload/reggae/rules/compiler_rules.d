@@ -20,7 +20,7 @@ version(Windows) {
 }
 
 
-private string objFileName(in string srcFileName) @safe pure nothrow {
+package string objFileName(in string srcFileName) @safe pure nothrow {
     import std.path: stripExtension, defaultExtension, isRooted, stripDrive;
     immutable localFileName = srcFileName.isRooted
         ? srcFileName.stripDrive[1..$]
@@ -147,7 +147,9 @@ auto cObjects(SrcDirs dirs = SrcDirs(),
 
 
 Target[] srcObjects(alias func)(in string extension,
-                                string[] dirs, string[] srcFiles, in string[] excludeFiles) {
+                                string[] dirs,
+                                string[] srcFiles,
+                                in string[] excludeFiles) {
     auto files = selectSrcFiles(srcFilesInDirs(extension, dirs), srcFiles, excludeFiles);
     return func(files);
 }
@@ -237,64 +239,4 @@ private auto runDCompiler(in string srcFileName, in string flags,
 string removeProjectPath(in string path) @safe pure {
     import std.path: relativePath;
     return path.absolutePath.relativePath(projectPath.absolutePath);
-}
-
-private immutable defaultRules = ["_dcompile", "_ccompile", "_cppcompile", "_dlink"];
-
-private bool isDefaultRule(in string command) @safe pure nothrow {
-    return defaultRules.canFind(command);
-}
-
-private string getRule(in string command) @safe pure {
-    return command.splitter.front;
-}
-
-bool isDefaultCommand(in string command) @safe pure {
-    return isDefaultRule(command.getRule);
-}
-
-string getDefaultRule(in string command) @safe pure {
-    immutable rule = command.getRule;
-    if(!isDefaultRule(rule)) {
-        throw new Exception("Cannot get defaultRule from " ~ command);
-    }
-
-    return rule;
-}
-
-
-string[] getDefaultRuleParams(in string command, in string key) @safe pure {
-    return getDefaultRuleParams(command, key, false);
-}
-
-
-string[] getDefaultRuleParams(in string command, in string key, string[] ifNotFound) @safe pure {
-    return getDefaultRuleParams(command, key, true, ifNotFound);
-}
-
-
-//@trusted because of replace
-private string[] getDefaultRuleParams(in string command, in string key,
-                                      bool useIfNotFound, string[] ifNotFound = []) @trusted pure {
-    import std.conv: text;
-
-    auto parts = command.splitter;
-    immutable cmd = parts.front;
-    if(!isDefaultRule(cmd)) {
-        throw new Exception("Cannot get defaultRule from " ~ command);
-    }
-
-    auto fromParamPart = parts.find!(a => a.startsWith(key ~ "="));
-    if(fromParamPart.empty) {
-        if(useIfNotFound) {
-            return ifNotFound;
-        } else {
-            throw new Exception ("Cannot get default rule from " ~ command);
-        }
-    }
-
-    auto paramPart = fromParamPart.front;
-    auto removeKey = paramPart.replace(key ~ "=", "");
-
-    return removeKey.splitter(",").array;
 }

@@ -1,6 +1,6 @@
 module tests.default_rules;
 
-import reggae;
+import reggae.rules.defaults;
 import unit_threaded;
 
 void testNoDefaultRule() {

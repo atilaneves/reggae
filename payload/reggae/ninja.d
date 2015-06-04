@@ -4,6 +4,7 @@ module reggae.ninja;
 import reggae.build;
 import reggae.range;
 import reggae.rules.compiler_rules;
+import reggae.rules.defaults;
 import std.array;
 import std.range;
 import std.algorithm;

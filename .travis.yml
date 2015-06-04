@@ -7,9 +7,10 @@ install:
   - ./configure.py --bootstrap
   - sudo cp ninja /usr/bin
   - cd ..
+  - dub fetch unit-threaded --version=0.4.10
+  - dub fetch cerealed --version=0.5.4
 
 script:
-  - dub fetch unit-threaded --version=0.4.10
   - ./bootstrap.sh make
   - bin/ut
   - cucumber

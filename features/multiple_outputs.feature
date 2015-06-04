@@ -103,7 +103,7 @@ Feature: Multiple outputs
         """
         I call protoFunc(2) and get 4
         """
-      Given I successfully run `sleep 1` for up to 1 seconds
+      Given I successfully run `sleep 1` for up to 2 seconds
       And I overwrite "proj/protocol.proto" with:
         """
         int protoFunc(int n) { return n * 3;}
@@ -125,7 +125,7 @@ Feature: Multiple outputs
         I call protoFunc(2) and get 4
         """
 
-      Given I successfully run `sleep 1` for up to 1 seconds
+      Given I successfully run `sleep 1` for up to 2 seconds
       And I overwrite "proj/protocol.proto" with:
         """
         int protoFunc(int n) { return n * 3;}

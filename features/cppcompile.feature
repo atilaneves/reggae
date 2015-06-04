@@ -43,7 +43,7 @@ Feature: C++ compilation rule
       """
       The result of calc(5) is 15
       """
-    Given I successfully run `sleep 1` for up to 1 seconds
+    Given I successfully run `sleep 1` for up to 2 seconds
     And I overwrite "mixproj/headers/maths.hpp" with:
       """
       const int factor = 10;
@@ -63,7 +63,7 @@ Feature: C++ compilation rule
       """
       The result of calc(5) is 15
       """
-    Given I successfully run `sleep 1` for up to 1 seconds
+    Given I successfully run `sleep 1` for up to 2 seconds
     And I overwrite "mixproj/headers/maths.hpp" with:
       """
       const int factor = 10;

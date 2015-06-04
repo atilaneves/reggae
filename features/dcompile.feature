@@ -52,7 +52,7 @@ Feature: D compilation rule
       """
       output: The result of 5 is 120
       """
-    Given I successfully run `sleep 1` for up to 1 seconds
+    Given I successfully run `sleep 1` for up to 2 seconds
     And I overwrite "leproj/source/constants.d" with:
       """
       immutable int leconst = 2;
@@ -63,7 +63,7 @@ Feature: D compilation rule
       """
       output: The result of 5 is 10
       """
-    Given I successfully run `sleep 1` for up to 1 seconds
+    Given I successfully run `sleep 1` for up to 2 seconds
     And I overwrite "leproj/source/constants.d" with:
       """
       import generator;
@@ -79,7 +79,7 @@ Feature: D compilation rule
       """
       output: The result of 5 is 25
       """
-    Given I successfully run `sleep 1` for up to 1 seconds
+    Given I successfully run `sleep 1` for up to 2 seconds
     And I overwrite "leproj/source/generator.d" with:
       """
       int constInt() { return 6; }
@@ -99,7 +99,7 @@ Feature: D compilation rule
       """
       output: The result of 5 is 120
       """
-    Given I successfully run `sleep 1` for up to 1 seconds
+    Given I successfully run `sleep 1` for up to 2 seconds
     And I overwrite "leproj/source/constants.d" with:
       """
       immutable int leconst = 2;
@@ -110,7 +110,7 @@ Feature: D compilation rule
       """
       output: The result of 5 is 10
       """
-    Given I successfully run `sleep 1` for up to 1 seconds
+    Given I successfully run `sleep 1` for up to 2 seconds
     And I overwrite "leproj/source/constants.d" with:
       """
       import generator;
@@ -126,7 +126,7 @@ Feature: D compilation rule
       """
       output: The result of 5 is 25
       """
-    Given I successfully run `sleep 1` for up to 1 seconds
+    Given I successfully run `sleep 1` for up to 2 seconds
     And I overwrite "leproj/source/generator.d" with:
       """
       int constInt() { return 6; }

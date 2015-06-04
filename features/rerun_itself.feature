@@ -38,7 +38,7 @@ Feature: Re-run reggae when dependencies deem it necessary
         Lookee me!
         """
 
-      Given I successfully run `sleep 1` for up to 1 seconds
+      Given I successfully run `sleep 1` for up to 2 seconds
       And I overwrite "proj/reggaefile.d" with:
         """
         import reggae;
@@ -79,7 +79,7 @@ Feature: Re-run reggae when dependencies deem it necessary
         Lookee me!
         """
 
-      Given I successfully run `sleep 1` for up to 1 seconds
+      Given I successfully run `sleep 1` for up to 2 seconds
       And I overwrite "proj/reggaefile.d" with:
         """
         import reggae;

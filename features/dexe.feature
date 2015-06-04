@@ -84,7 +84,7 @@ Feature: Linking a D executable
       Logger says... woohoo The result of feeding 2 and 3 to C++ is 7
       """
 
-    Given I successfully run `sleep 1` for up to 1 seconds
+    Given I successfully run `sleep 1` for up to 2 seconds
     And I overwrite "linkproj/d/constants.d" with:
       """
       immutable myconst = `ohnoes`;
@@ -114,7 +114,7 @@ Feature: Linking a D executable
       Logger says... woohoo The result of feeding 2 and 3 to C++ is 7
       """
 
-    Given I successfully run `sleep 1` for up to 1 seconds
+    Given I successfully run `sleep 1` for up to 2 seconds
     And I overwrite "linkproj/d/constants.d" with:
       """
       immutable myconst = `ohnoes`;

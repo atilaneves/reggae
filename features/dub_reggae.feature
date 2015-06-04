@@ -87,7 +87,7 @@ Feature: Augmenting dub projects with reggae builds
       import reggae;
       alias utObjs = dObjects!(SrcDirs([`tests`]), Flags(`-unittest`), ImportPaths([`source`]));
       alias ut = dubConfigurationTarget!(ExeName(`ut`), Configuration(`default`), utObjs, No.main);
-      mixin build!(dubInfo.mainTarget(), ut);
+      mixin build!(dubDefaultTarget, ut);
       """
 
     Scenario: Dub/Reggae build with Ninja

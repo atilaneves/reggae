@@ -10,7 +10,12 @@ static if(isDubProject) {
     import reggae.rules.d;
 
 
-    Target dubDefaultTarget(Flags flags = Flags())() {
+    Target dubDefaultTarget() {
+        return configToDubInfo["default"].mainTarget;
+    }
+
+
+    Target dubDefaultTargetWithFlags(Flags flags = Flags())() {
         return configToDubInfo["default"].mainTarget(flags.value);
     }
 

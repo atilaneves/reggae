@@ -39,10 +39,7 @@ private void createReggaefile(in Options options) {
 
     auto file = File("reggaefile.d", "w");
     file.writeln("import reggae;");
-    file.writeln("Build bld() {");
-    file.writeln("    auto info = ", dubInfo, ";");
-    file.writeln("    return Build(info.mainTarget);");
-    file.writeln("}");
+    file.writeln("mixin build!dubDefaultTarget;");
 
     if(!options.noFetch) dubFetch(dubInfo);
 }

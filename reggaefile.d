@@ -2,7 +2,7 @@ import reggae;
 
 //the actual reggae binary
 //could also be dubConfigurationTarget(ExeName("reggae"), Configuration("executable"))
-alias main = dubDefaultTarget!(Flags("-g -debug"));
+alias main = dubDefaultTargetWithFlags!(Flags("-g -debug"));
 
 //the unit test binary
 alias ut = dubConfigurationTarget!(ExeName("ut"),

@@ -51,9 +51,9 @@ Feature: User-defined variables
                                ImportPaths(dubInfo.targetImportPaths() ~ `source`));
       alias ut = dubConfigurationTarget!(ExeName(`ut`), Configuration(), utObjs, No.main);
       static if(userVars.get(`noUnitTests`, false)) {
-          mixin build!(dubInfo.mainTarget());
+          mixin build!dubDefaultTarget;
       } else {
-          mixin build!(dubInfo.mainTarget(), ut);
+          mixin build!(dubDefaultTarget, ut);
       }
       """
 

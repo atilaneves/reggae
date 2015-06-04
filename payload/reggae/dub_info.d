@@ -1,14 +1,14 @@
-module reggae.dub;
+module reggae.dub_info;
 
 import reggae.build;
-import reggae.rules;
+import reggae.rules.d;
 import reggae.types;
 import reggae.config: dflags, perModule;
 import reggae.sorting;
 
 public import std.typecons: Yes, No;
 import std.typecons: Flag;
-import std.algorithm: map, filter;
+import std.algorithm: map, filter, find, splitter;
 import std.array: array, join;
 import std.path: buildPath;
 import std.traits: isCallable;
@@ -101,23 +101,4 @@ private string[] allOf(alias F)(in DubPackage pack, in DubPackage[] packages) @t
         paths ~= F(depPack).array;
     }
     return paths;
-}
-
-
-Target dubMainTarget(string flags)() {
-    import reggae.config;
-    return dubInfo.mainTarget(flags);
-}
-
-
-Target dExeWithDubObjs(ExeName exeName,
-                       Configuration config = Configuration("default"),
-                       alias objsFunction = () { Target[] t; return t; },
-                       Flag!"main" includeMain = Yes.main,
-                       Flags compilerFlags = Flags())()
-    if(isCallable!objsFunction) {
-
-    import reggae.config: configToDubInfo;
-    const dubObjs = configToDubInfo[config.value].toTargets(includeMain, compilerFlags.value);
-    return dLink(exeName.value, objsFunction() ~ dubObjs);
 }

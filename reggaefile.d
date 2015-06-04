@@ -1,14 +1,12 @@
 import reggae;
 
 //the actual reggae binary
-//could also be dExeWithDubObjs(ExeName("reggae"), Configuration("executable"))
-alias main = dubMainTarget!("-g -debug");
+//could also be dubConfigurationTarget(ExeName("reggae"), Configuration("executable"))
+alias main = dubDefaultTargetWithFlags!(Flags("-g -debug"));
 
 //the unit test binary
-alias ut = dExeWithDubObjs!(ExeName("ut"),
-                            Configuration("unittest"),
-                            (){ Target[] t; return t;},
-                            Yes.main,
-                            Flags("-cov"));
+alias ut = dubConfigurationTarget!(ExeName("ut"),
+                                   Configuration("unittest"),
+                                   Flags("-cov"));
 
 mixin build!(main, ut);

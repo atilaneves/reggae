@@ -62,8 +62,8 @@ an API to use dub build information in a `reggaefile.d` build description file. 
 example for building production and unittest binaries concurrently is this:
 
     import reggae;
-    alias main = dubMainTarget!("-g -debug");
-    alias ut = dExeWithDubObjs!(ExeName("ut"), Configuration("unittest"));
+    alias main = dubDefaultTarget!("-g -debug");
+    alias ut = dubConfigurationTarget!(ExeName("ut"), Configuration("unittest"));
     mixin build!(main, ut);
 
 

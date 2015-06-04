@@ -7,6 +7,6 @@ public import reggae.makefile;
 public import reggae.ninja;
 public import reggae.rules;
 public import reggae.types;
-public import reggae.dub;
+public import reggae.dub_info;
 public import reggae.config;
 public import reggae.ctaa;

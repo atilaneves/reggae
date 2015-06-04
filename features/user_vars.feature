@@ -49,11 +49,11 @@ Feature: User-defined variables
       alias utObjs = dObjects!(SrcDirs([`tests`]),
                                Flags(`-unittest -main`),
                                ImportPaths(dubInfo.targetImportPaths() ~ `source`));
-      alias ut = dExeWithDubObjs!(ExeName(`ut`), Configuration(), utObjs, No.main);
+      alias ut = dubConfigurationTarget!(ExeName(`ut`), Configuration(), Flags(), No.main, utObjs);
       static if(userVars.get(`noUnitTests`, false)) {
-          mixin build!(dubInfo.mainTarget());
+          mixin build!dubDefaultTarget;
       } else {
-          mixin build!(dubInfo.mainTarget(), ut);
+          mixin build!(dubDefaultTarget, ut);
       }
       """
 

@@ -8,7 +8,7 @@ import std.conv: text;
 import std.exception: enforce;
 import reggae.options;
 import reggae.dub_json;
-import reggae.dub;
+import reggae.dub_info;
 import reggae.ctaa;
 import reggae.dub_call;
 
@@ -39,10 +39,7 @@ private void createReggaefile(in Options options) {
 
     auto file = File("reggaefile.d", "w");
     file.writeln("import reggae;");
-    file.writeln("Build bld() {");
-    file.writeln("    auto info = ", dubInfo, ";");
-    file.writeln("    return Build(info.mainTarget);");
-    file.writeln("}");
+    file.writeln("mixin build!dubDefaultTarget;");
 
     if(!options.noFetch) dubFetch(dubInfo);
 }
@@ -56,8 +53,11 @@ private void createBuild(in Options options) {
                                  "build.d",
                                  "makefile.d", "ninja.d",
                                  "package.d", "range.d", "reflect.d",
-                                 "rules.d", "dependencies.d", "types.d",
-                                 "dub.d", "ctaa.d", "sorting.d");
+                                 "dependencies.d", "types.d",
+                                 "dub_info.d", "ctaa.d", "sorting.d",
+                                 "rules/package.d",
+                                 "rules/dub.d", "rules/defaults.d", "rules/common.d",
+                                 "rules/d.d", "rules/cpp.d", "rules/c.d");
     writeSrcFiles!(fileNames)(options);
     string[] reggaeSrcs = [reggaeSrcFileName("config.d")];
     foreach(fileName; fileNames) {
@@ -94,11 +94,15 @@ private bool isDubProject(in string projectPath) @safe {
 
 
 immutable reggaeSrcDirName = buildPath(".reggae", "src", "reggae");
+immutable reggaeRulesSrcDirName = buildPath(reggaeSrcDirName, "rules");
 
 
 private void writeSrcFiles(fileNames...)(in Options options) {
     import std.file: mkdirRecurse;
-    if(!reggaeSrcDirName.exists) mkdirRecurse(reggaeSrcDirName);
+    if(!reggaeSrcDirName.exists) {
+        mkdirRecurse(reggaeSrcDirName);
+        mkdirRecurse(reggaeRulesSrcDirName);
+    }
 
     foreach(fileName; fileNames) {
         auto file = File(reggaeSrcFileName(fileName), "w");
@@ -116,7 +120,7 @@ private void writeSrcFiles(fileNames...)(in Options options) {
 private void writeConfig(in Options options) {
     auto file = File(reggaeSrcFileName("config.d"), "w");
     file.writeln("module reggae.config;");
-    file.writeln("import reggae.dub;");
+    file.writeln("import reggae.dub_info;");
     file.writeln("import reggae.ctaa;");
     file.writeln("enum projectPath = `", options.projectPath, "`;");
     file.writeln("enum backend = `", options.backend, "`;");
@@ -134,6 +138,7 @@ private void writeConfig(in Options options) {
     file.writeln("]);");
 
     if(isDubProject(options.projectPath)) {
+        file.writeln("enum isDubProject = true;");
         auto dubInfo = _getDubInfo(options);
         immutable targetType = dubInfo.packages[0].targetType;
         enforce(targetType == "executable" || targetType == "library",
@@ -146,6 +151,8 @@ private void writeConfig(in Options options) {
         file.writeln(`]);`);
         file.writeln;
         file.writeln(`auto dubInfo() { return configToDubInfo["default"]; }`);
+    } else {
+        file.writeln("enum isDubProject = false;");
     }
 }
 

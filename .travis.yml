@@ -9,6 +9,7 @@ install:
   - cd ..
 
 script:
+  - dub fetch unit-threaded --version=0.4.10
   - ./bootstrap.sh make
   - bin/ut
   - cucumber

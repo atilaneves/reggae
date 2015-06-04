@@ -1,4 +1,4 @@
-module reggae.rules;
+module reggae.rules.compiler_rules;
 
 
 import reggae.build;

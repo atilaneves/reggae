@@ -1,6 +1,6 @@
 module reggae.dub_json;
 
-import reggae.dub;
+import reggae.dub_info;
 import reggae.build;
 import std.json;
 import std.algorithm: map, filter;

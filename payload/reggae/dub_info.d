@@ -1,7 +1,7 @@
-module reggae.dub;
+module reggae.dub_info;
 
 import reggae.build;
-import reggae.rules;
+import reggae.rules.compiler_rules;
 import reggae.types;
 import reggae.config: dflags, perModule;
 import reggae.sorting;
@@ -101,23 +101,4 @@ private string[] allOf(alias F)(in DubPackage pack, in DubPackage[] packages) @t
         paths ~= F(depPack).array;
     }
     return paths;
-}
-
-
-Target dubDefaultTarget(string flags)() {
-    import reggae.config: configToDubInfo;
-    return configToDubInfo["default"].mainTarget(flags);
-}
-
-
-Target dubConfigurationTarget(ExeName exeName,
-                       Configuration config = Configuration("default"),
-                       alias objsFunction = () { Target[] t; return t; },
-                       Flag!"main" includeMain = Yes.main,
-                       Flags compilerFlags = Flags())()
-    if(isCallable!objsFunction) {
-
-    import reggae.config: configToDubInfo;
-    const dubObjs = configToDubInfo[config.value].toTargets(includeMain, compilerFlags.value);
-    return dLink(exeName.value, objsFunction() ~ dubObjs);
 }

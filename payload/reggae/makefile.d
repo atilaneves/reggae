@@ -2,7 +2,7 @@ module reggae.makefile;
 
 import reggae.build;
 import reggae.range;
-import reggae.rules;
+import reggae.rules.compiler_rules;
 import std.conv;
 import std.array;
 import std.path;

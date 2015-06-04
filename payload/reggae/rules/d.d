@@ -57,6 +57,25 @@ Target dCompile(in string srcFileName, in string flags = "",
     return Target(srcFileName.objFileName, command, [Target(srcFileName)]);
 }
 
+/**
+ * Compile-time function to that returns a list of Target objects
+ * corresponding to D source files from a particular directory
+ */
+Target[] dObjects(SrcDirs dirs = SrcDirs(),
+                  Flags flags = Flags(),
+                  ImportPaths includes = ImportPaths(),
+                  StringImportPaths stringImports = StringImportPaths(),
+                  SrcFiles srcFiles = SrcFiles(),
+                  ExcludeFiles excludeFiles = ExcludeFiles())
+    () {
+
+    Target[] dCompileInner(in string[] files) {
+        return dCompileGrouped(files, flags.value, ["."] ~ includes.value, stringImports.value);
+    }
+
+    return srcObjects!dCompileInner("d", dirs.value, srcFiles.value, excludeFiles.value);
+}
+
 //compile-time verson of dExe, to be used with alias
 //all paths relative to projectPath
 Target dExe(App app,
@@ -94,25 +113,6 @@ Target dLink(in string exeName, in Target[] dependencies, in string flags = "") 
     auto cmd = "_dlink";
     if(flags != "") cmd ~= " flags=" ~ flags;
     return Target(exeName, cmd, dependencies);
-}
-
-/**
- * Compile-time function to that returns a list of Target objects
- * corresponding to D source files from a particular directory
- */
-Target[] dObjects(SrcDirs dirs = SrcDirs(),
-                  Flags flags = Flags(),
-                  ImportPaths includes = ImportPaths(),
-                  StringImportPaths stringImports = StringImportPaths(),
-                  SrcFiles srcFiles = SrcFiles(),
-                  ExcludeFiles excludeFiles = ExcludeFiles())
-    () {
-
-    Target[] dCompileInner(in string[] files) {
-        return dCompileGrouped(files, flags.value, ["."] ~ includes.value, stringImports.value);
-    }
-
-    return srcObjects!dCompileInner("d", dirs.value, srcFiles.value, excludeFiles.value);
 }
 
 

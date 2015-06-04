@@ -6,6 +6,8 @@ import std.algorithm: splitter;
 /**
  * Given a source file with a D main() function, return
  * The list of D files to compile to link the executable
+ * Includes all dependencies, not just source files to
+ * compile.
  */
 //@trusted because of splitter
 string[] dMainDependencies(in string output) @trusted {
@@ -23,13 +25,14 @@ string[] dMainDependencies(in string output) @trusted {
 
 /**
  * Given a source file with a D main() function, return
- * The list of D files to compile to link the executable
+ * The list of D files to compile to link the executable.
+ * Only includes source files to compile
  */
 //@trusted because of splitter
 string[] dMainDepSrcs(in string output) @trusted {
     string[] dependencies;
-    auto importReg = ctRegex!`^import +([^\t]+)\t+\((.+)\)$`;
-    auto stdlibReg = ctRegex!`^(std\.|core\.|object$)`;
+    auto importReg = ctRegex!`^import +([^\t]+)[\t\s]+\((.+)\)$`;
+    auto stdlibReg = ctRegex!`^(std\.|core\.|etc\.|object$)`;
     foreach(line; output.splitter("\n")) {
         auto importMatch = line.matchFirst(importReg);
         if(importMatch) {

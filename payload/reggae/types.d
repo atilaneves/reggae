@@ -1,6 +1,6 @@
 module reggae.types;
 
-import reggae.rules.compiler_rules: exeExt;
+import reggae.rules.common: exeExt;
 import std.path: baseName, stripExtension, defaultExtension;
 
 //Wrapper structs to ensure type-safety and readability

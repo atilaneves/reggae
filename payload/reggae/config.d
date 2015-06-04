@@ -13,5 +13,6 @@ immutable string cppCompiler = "g++";
 immutable string dCompiler = "dmd";
 immutable bool perModule = true; //only for UTs, false in the real world
 
+enum isDubProject = true;
 enum dubInfo = ["default": DubInfo() ];
 enum configToDubInfo = AssocList!(string, DubInfo)();

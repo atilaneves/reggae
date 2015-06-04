@@ -56,9 +56,11 @@ private void createBuild(in Options options) {
                                  "build.d",
                                  "makefile.d", "ninja.d",
                                  "package.d", "range.d", "reflect.d",
-                                 "rules/compiler_rules.d", "dependencies.d", "types.d",
+                                 "dependencies.d", "types.d",
                                  "dub_info.d", "ctaa.d", "sorting.d",
-                                 "rules/dub.d", "rules/defaults.d");
+                                 "rules/package.d",
+                                 "rules/dub.d", "rules/defaults.d", "rules/common.d",
+                                 "rules/d.d", "rules/cpp.d", "rules/c.d");
     writeSrcFiles!(fileNames)(options);
     string[] reggaeSrcs = [reggaeSrcFileName("config.d")];
     foreach(fileName; fileNames) {
@@ -139,6 +141,7 @@ private void writeConfig(in Options options) {
     file.writeln("]);");
 
     if(isDubProject(options.projectPath)) {
+        file.writeln("enum isDubProject = true;");
         auto dubInfo = _getDubInfo(options);
         immutable targetType = dubInfo.packages[0].targetType;
         enforce(targetType == "executable" || targetType == "library",
@@ -151,6 +154,8 @@ private void writeConfig(in Options options) {
         file.writeln(`]);`);
         file.writeln;
         file.writeln(`auto dubInfo() { return configToDubInfo["default"]; }`);
+    } else {
+        file.writeln("enum isDubProject = false;");
     }
 }
 

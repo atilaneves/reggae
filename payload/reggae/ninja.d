@@ -3,15 +3,14 @@ module reggae.ninja;
 
 import reggae.build;
 import reggae.range;
-import reggae.rules.compiler_rules;
-import reggae.rules.defaults;
+import reggae.rules;
 import std.array;
 import std.range;
 import std.algorithm;
 import std.exception: enforce;
 import std.conv: text;
 import std.string: strip;
-import std.path: defaultExtension;
+import std.path: defaultExtension, absolutePath;
 
 struct NinjaEntry {
     string mainLine;

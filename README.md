@@ -63,7 +63,7 @@ example for building production and unittest binaries concurrently is this:
 
     import reggae;
     alias main = dubMainTarget!("-g -debug");
-    alias ut = dExeWithDubObjs!(ExeName("ut"), Configuration("unittest"));
+    alias ut = dubConfigurationTarget!(ExeName("ut"), Configuration("unittest"));
     mixin build!(main, ut);
 
 

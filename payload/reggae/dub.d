@@ -110,7 +110,7 @@ Target dubMainTarget(string flags)() {
 }
 
 
-Target dExeWithDubObjs(ExeName exeName,
+Target dubConfigurationTarget(ExeName exeName,
                        Configuration config = Configuration("default"),
                        alias objsFunction = () { Target[] t; return t; },
                        Flag!"main" includeMain = Yes.main,

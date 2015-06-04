@@ -7,8 +7,6 @@ alias main = dubDefaultTargetWithFlags!(Flags("-g -debug"));
 //the unit test binary
 alias ut = dubConfigurationTarget!(ExeName("ut"),
                                    Configuration("unittest"),
-                                   (){ Target[] t; return t;},
-                                   Yes.main,
                                    Flags("-cov"));
 
 mixin build!(main, ut);

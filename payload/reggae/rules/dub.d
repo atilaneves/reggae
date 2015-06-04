@@ -22,10 +22,10 @@ static if(isDubProject) {
 
     Target dubConfigurationTarget(ExeName exeName,
                                   Configuration config = Configuration("default"),
-                                  alias objsFunction = () { Target[] t; return t; },
+                                  Flags compilerFlags = Flags(),
                                   Flag!"main" includeMain = Yes.main,
-                                  Flags compilerFlags = Flags())()
-        if(isCallable!objsFunction) {
+                                  alias objsFunction = () { Target[] t; return t; },
+        )() if(isCallable!objsFunction) {
 
             const dubObjs = configToDubInfo[config.value].toTargets(includeMain, compilerFlags.value);
             return dLink(exeName.value, objsFunction() ~ dubObjs);

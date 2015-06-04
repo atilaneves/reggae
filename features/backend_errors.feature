@@ -21,12 +21,12 @@ Feature: Backend errors
     When I run `reggae -b lvl1/lvl2`
     Then it should fail with:
       """
-      A project path must be specified
+      Unsupported backend, -b must be make or ninja
       """
 
   Scenario: Non-existent option used
     When I run `reggae -b foo lvl1/lvl2`
     Then it should fail with:
       """
-      Unsupported backend foo
+      Unsupported backend, -b must be make or ninja
       """

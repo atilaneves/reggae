@@ -54,3 +54,9 @@ struct ExeName {
 struct Configuration {
     string value = "default";
 }
+
+enum Backend {
+    none,
+    make,
+    ninja,
+}

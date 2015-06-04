@@ -1,22 +1,22 @@
-import reggaefile;
+import reggaefile; //the user's build description
 import reggae;
 import std.stdio;
 
 
 int main() {
     try {
-        const buildFunc = getBuild!(reggaefile);
-        const build = buildFunc();
+        const buildFunc = getBuild!(reggaefile); //get the function to call by CT reflection
+        const build = buildFunc(); //actually call the function to get the build description
 
-        switch(backend) {
+        final switch(backend) with(Backend) {
 
-        case "make":
+        case make:
             const makefile = Makefile(build, projectPath);
             auto file = File(makefile.fileName, "w");
             file.write(makefile.output);
             break;
 
-        case "ninja":
+        case ninja:
             const ninja = Ninja(build, projectPath);
 
             auto buildNinja = File("build.ninja", "w");
@@ -28,11 +28,8 @@ int main() {
 
             break;
 
-        case "":
+        case none:
             throw new Exception("A backend must be specified with -b/--backend");
-
-        default:
-            throw new Exception("Unsupported backend " ~ backend);
         }
     } catch(Exception ex) {
         stderr.writeln(ex.msg);

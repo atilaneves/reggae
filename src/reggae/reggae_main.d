@@ -6,6 +6,7 @@ import std.typetuple;
 import std.file: exists;
 import std.conv: text;
 import std.exception: enforce;
+import std.conv: to;
 import reggae.options;
 import reggae.dub_json;
 import reggae.dub_info;
@@ -73,7 +74,8 @@ private void createBuild(in Options options) {
     enforce(retCompBuildgen.status == 0,
             text("Couldn't execute ", compile.join(" "), ":\n", retCompBuildgen.output));
 
-    immutable retRunBuildgen = execute([buildPath(".",  binName), "-b", options.backend, options.projectPath]);
+    immutable retRunBuildgen = execute([buildPath(".",  binName),
+                                        "-b", options.backend.to!string, options.projectPath]);
     enforce(retRunBuildgen.status == 0,
             text("Couldn't execute the produced ", binName, " binary:\n", retRunBuildgen.output));
     writeln(retRunBuildgen.output);
@@ -122,8 +124,9 @@ private void writeConfig(in Options options) {
     file.writeln("module reggae.config;");
     file.writeln("import reggae.dub_info;");
     file.writeln("import reggae.ctaa;");
+    file.writeln("import reggae.types: Backend;");
     file.writeln("enum projectPath = `", options.projectPath, "`;");
-    file.writeln("enum backend = `", options.backend, "`;");
+    file.writeln("enum backend = Backend.", options.backend, ";");
     file.writeln("enum dflags = `", options.dflags, "`;");
     file.writeln("enum reggaePath = `", options.reggaePath, "`;");
     file.writeln("enum buildFilePath = `", options.getBuildFileName.absolutePath, "`;");

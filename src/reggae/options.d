@@ -1,9 +1,11 @@
 module reggae.options;
+import reggae.types: Backend;
 import std.file: thisExePath;
+import std.conv: ConvException;
 
 
 struct Options {
-    string backend;
+    Backend backend;
     string projectPath;
     string dflags;
     string reggaePath;
@@ -22,23 +24,28 @@ Options getOptions(string[] args) @trusted {
     import std.getopt;
 
     Options options;
+    try {
+        auto helpInfo = getopt(
+            args,
+            "backend|b", "Backend to use (ninja|make). Mandatory.", &options.backend,
+            "dflags", "D compiler flags.", &options.dflags,
+            "d", "User-defined variables (e.g. -d myvar=foo).", &options.userVars,
+            "dc", "D compiler to use (default dmd).", &options.dCompiler,
+            "cc", "C compiler to use (default gcc).", &options.cCompiler,
+            "cxx", "C++ compiler to use (default g++).", &options.cppCompiler,
+            "nofetch", "Assume dub packages are present (no dub fetch).", &options.noFetch,
+            "per_module", "Compile D files per module (default is per package)", &options.perModule,
 
-    auto helpInfo = getopt(
-        args,
-        "backend|b", "Backend to use (ninja|make). Mandatory.", &options.backend,
-        "dflags", "D compiler flags.", &options.dflags,
-        "d", "User-defined variables (e.g. -d myvar=foo).", &options.userVars,
-        "dc", "D compiler to use (default dmd).", &options.dCompiler,
-        "cc", "C compiler to use (default gcc).", &options.cCompiler,
-        "cxx", "C++ compiler to use (default g++).", &options.cppCompiler,
-        "nofetch", "Assume dub packages are present (no dub fetch).", &options.noFetch,
-        "per_module", "Compile D files per module (default is per package)", &options.perModule,
-    );
+            );
 
-    if(helpInfo.helpWanted) {
-        defaultGetoptPrinter("Usage: reggae -b <ninja|make> </path/to/project>",
-                             helpInfo.options);
-        options.help = true;
+        if(helpInfo.helpWanted) {
+            defaultGetoptPrinter("Usage: reggae -b <ninja|make> </path/to/project>",
+                                 helpInfo.options);
+            options.help = true;
+        }
+
+    } catch(ConvException ex) {
+        throw new Exception("Unsupported backend, -b must be make or ninja");
     }
 
     options.reggaePath = thisExePath();

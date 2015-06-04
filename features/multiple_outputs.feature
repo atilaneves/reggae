@@ -29,14 +29,15 @@ Feature: Multiple outputs
       import std.file;
       import std.exception;
       import std.conv;
+      import std.algorithm;
       void main(string[] args) {
           enforce(args.length == 3, text(`Invalid translator args `, args));
           immutable dir = args[2].dirName;
           if(!dir.exists()) mkdir(dir);
           auto input  = File(args[1]);
           auto output = File(args[2], `w`);
-          output.write(`extern(C) `);
-          foreach(line; input.byLine) output.write(line);
+          foreach(l; input.byLine) output.write(`extern(C) ` ~ l);
+          output.writeln;
       }
       """
     And I successfully run `dmd proj/translator.d`

@@ -6,6 +6,7 @@ install:
   - cd ninja
   - ./configure.py --bootstrap
   - sudo cp ninja /usr/bin
+  - cd ..
 
 script:
   - ./bootstrap.sh make

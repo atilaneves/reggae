@@ -137,7 +137,7 @@ private void writeConfig(in Options options) {
         file.writeln("enum isDubProject = true;");
         auto dubInfo = _getDubInfo(options);
         immutable targetType = dubInfo.packages[0].targetType;
-        enforce(targetType == "executable" || targetType == "library",
+        enforce(targetType == "executable" || targetType == "library" || targetType == "staticLibrary",
                 text("Unsupported dub targetType '", targetType, "'"));
 
         file.writeln(`const configToDubInfo = assocList([`);

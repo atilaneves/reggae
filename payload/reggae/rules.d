@@ -101,10 +101,10 @@ Target[] dObjects(SrcDirs dirs = SrcDirs(),
     () {
 
     Target[] dCompileInner(in string[] files) {
-        return dCompileGrouped(files, flags.flags, ["."] ~ includes.paths, stringImports.paths);
+        return dCompileGrouped(files, flags.value, ["."] ~ includes.value, stringImports.value);
     }
 
-    return srcObjects!dCompileInner("d", dirs.paths, srcFiles.paths, excludeFiles.paths);
+    return srcObjects!dCompileInner("d", dirs.value, srcFiles.value, excludeFiles.value);
 }
 
 /**
@@ -119,10 +119,10 @@ auto cppObjects(SrcDirs dirs = SrcDirs(),
     () {
 
     Target[] cppCompileInner(in string[] files) {
-        return files.map!(a => cppCompile(a, flags.flags, includes.paths)).array;
+        return files.map!(a => cppCompile(a, flags.value, includes.value)).array;
     }
 
-    return srcObjects!cppCompileInner("cpp", dirs.paths, srcFiles.paths, excludeFiles.paths);
+    return srcObjects!cppCompileInner("cpp", dirs.value, srcFiles.value, excludeFiles.value);
 }
 
 
@@ -138,11 +138,11 @@ auto cObjects(SrcDirs dirs = SrcDirs(),
     () {
 
     Target[] cCompileInner(in string[] files) {
-        return files.map!(a => cCompile(a, flags.flags, includes.paths)).array;
+        return files.map!(a => cCompile(a, flags.value, includes.value)).array;
     }
 
 
-    return srcObjects!cCompileInner("c", dirs.paths, srcFiles.paths, excludeFiles.paths);
+    return srcObjects!cCompileInner("c", dirs.value, srcFiles.value, excludeFiles.value);
 }
 
 

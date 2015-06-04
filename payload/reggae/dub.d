@@ -105,8 +105,8 @@ private string[] allOf(alias F)(in DubPackage pack, in DubPackage[] packages) @t
 
 
 Target dubDefaultTarget(string flags)() {
-    import reggae.config;
-    return dubInfo.mainTarget(flags);
+    import reggae.config: configToDubInfo;
+    return configToDubInfo["default"].mainTarget(flags);
 }
 
 

@@ -33,7 +33,7 @@ struct DubPackage {
 struct DubInfo {
     DubPackage[] packages;
 
-    Target[] toTargets(Flag!"main" includeMain = Yes.main) @safe const {
+    Target[] toTargets(Flag!"main" includeMain = Yes.main, in string compilerFlags = "") @safe const {
         Target[] targets;
 
         foreach(const i, const dubPackage; packages) {
@@ -44,7 +44,8 @@ struct DubInfo {
             //package
             const projDir = i == 0 ? "" : dubPackage.path;
 
-            immutable flags = chain(dubPackage.flags, versions).join(" ") ~ " " ~ dflags;
+            immutable flags = chain(dubPackage.flags, versions).join(" ") ~
+                " " ~ dflags ~ " " ~ compilerFlags;
 
             const files = dubPackage.
                 files.
@@ -113,11 +114,10 @@ Target dExeWithDubObjs(ExeName exeName,
                        Configuration config = Configuration("default"),
                        alias objsFunction = () { Target[] t; return t; },
                        Flag!"main" includeMain = Yes.main,
-                       Flags flags = Flags())()
+                       Flags compilerFlags = Flags())()
     if(isCallable!objsFunction) {
 
-    import reggae.config;
-    return dLink(exeName.name,
-                 objsFunction() ~ configToDubInfo[config.config].toTargets(includeMain),
-                 flags.flags);
+    import reggae.config: configToDubInfo;
+    const dubObjs = configToDubInfo[config.value].toTargets(includeMain, compilerFlags.value);
+    return dLink(exeName.value, objsFunction() ~ dubObjs);
 }

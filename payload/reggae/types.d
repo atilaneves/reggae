@@ -24,33 +24,33 @@ struct App {
 
 
 struct Flags {
-    string flags;
+    string value;
 }
 
 struct ImportPaths {
-    string[] paths;
+    string[] value;
 }
 
 struct StringImportPaths {
-    string[] paths;
+    string[] value;
 }
 
 struct SrcDirs {
-    string[] paths;
+    string[] value;
 }
 
 struct SrcFiles {
-    string[] paths;
+    string[] value;
 }
 
 struct ExcludeFiles {
-    string[] paths;
+    string[] value;
 }
 
 struct ExeName {
-    string name;
+    string value;
 }
 
 struct Configuration {
-    string config = "default";
+    string value = "default";
 }

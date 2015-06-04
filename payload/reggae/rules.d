@@ -197,13 +197,13 @@ Target dExe(in App app, in Flags flags,
             in StringImportPaths stringImportPaths,
             in Target[] linkWith) @trusted {
 
-    auto mainObj = dCompile(app.srcFileName, flags.flags, importPaths.paths, stringImportPaths.paths);
-    const output = runDCompiler(buildPath(projectPath, app.srcFileName), flags.flags,
-                                importPaths.paths, stringImportPaths.paths);
+    auto mainObj = dCompile(app.srcFileName, flags.value, importPaths.value, stringImportPaths.value);
+    const output = runDCompiler(buildPath(projectPath, app.srcFileName), flags.value,
+                                importPaths.value, stringImportPaths.value);
 
     const files = dMainDepSrcs(output).map!(a => a.removeProjectPath).array;
-    const dependencies = [mainObj] ~ dCompileGrouped(files, flags.flags,
-                                                     importPaths.paths, stringImportPaths.paths);
+    const dependencies = [mainObj] ~ dCompileGrouped(files, flags.value,
+                                                     importPaths.value, stringImportPaths.value);
 
     return dLink(app.exeFileName, dependencies ~ linkWith);
 }

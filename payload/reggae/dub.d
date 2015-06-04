@@ -12,7 +12,7 @@ import std.algorithm: map, filter;
 import std.array: array, join;
 import std.path: buildPath;
 import std.traits: isCallable;
-
+import std.range: chain;
 
 struct DubPackage {
     string name;
@@ -39,20 +39,19 @@ struct DubInfo {
         foreach(const i, const dubPackage; packages) {
             const importPaths = dubPackage.allOf!(a => a.packagePaths(a.importPaths))(packages);
             const stringImportPaths = dubPackage.allOf!(a => a.packagePaths(a.stringImportPaths))(packages);
-            const versions = dubPackage.allOf!(a => a.versions)(packages);
+            auto versions = dubPackage.allOf!(a => a.versions)(packages).map!(a => "-version=" ~ a);
             //the path must be explicit for the other packages, implicit for the "main"
             //package
             const projDir = i == 0 ? "" : dubPackage.path;
 
-            immutable flags = dubPackage.flags.join(" ") ~ dflags ~ " " ~
-                versions.map!(a => "-version=" ~ a).join(" ");
+            immutable flags = chain(dubPackage.flags, versions).join(" ") ~ " " ~ dflags;
 
-            auto files = dubPackage.
+            const files = dubPackage.
                 files.
                 filter!(a => includeMain || a != dubPackage.mainSourceFile).
-                map!(a => buildPath(dubPackage.path, a));
+                map!(a => buildPath(dubPackage.path, a)).array;
 
-            targets ~= dCompileGrouped(files.array, flags, importPaths, stringImportPaths, projDir);
+            targets ~= dCompileGrouped(files, flags, importPaths, stringImportPaths, projDir);
         }
 
         return targets;

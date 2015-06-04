@@ -43,3 +43,26 @@ void testSrcFileSelection() {
     selectSrcFiles(dirFiles, extraSrcs, excludeSrcs).shouldEqual(
         ["src/foo.d", "src/bar.d", "extra/toto.d", "extra/choochoo.d"]);
 }
+
+
+void testFlagsCompileC() {
+    const build = Build(cCompile("path/to/src/foo.c", "-m64 -fPIC -O3"));
+    const ninja = Ninja(build, "/tmp/myproject");
+    ninja.buildEntries.shouldEqual(
+        [NinjaEntry("build path/to/src/foo.o: _ccompile /tmp/myproject/path/to/src/foo.c",
+                    ["includes = ",
+                     "flags = -m64 -fPIC -O3",
+                     "DEPFILE = path/to/src/foo.o.d"]),
+            ]);
+}
+
+void testFlagsCompileCpp() {
+    const build = Build(cppCompile("path/to/src/foo.cpp", "-m64 -fPIC -O3"));
+    const ninja = Ninja(build, "/tmp/myproject");
+    ninja.buildEntries.shouldEqual(
+        [NinjaEntry("build path/to/src/foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",
+                    ["includes = ",
+                     "flags = -m64 -fPIC -O3",
+                     "DEPFILE = path/to/src/foo.o.d"]),
+            ]);
+}

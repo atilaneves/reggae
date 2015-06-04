@@ -11,9 +11,13 @@ import std.algorithm;
 
 
 Target cppCompile(in string srcFileName, in string flags = "",
-                  in string[] includePaths = []) @safe pure nothrow {
-    immutable includes = includePaths.map!(a => "-I$project/" ~ a).join(",");
-    return Target(srcFileName.objFileName, "_cppcompile includes=" ~ includes ~ " flags=" ~ flags,
+                  in string[] includePaths = [],
+                  in string projDir = "$project") @safe pure {
+
+    immutable includeParams = includePaths.map!(a => "-I" ~ buildPath(projDir, a)).join(",");
+    immutable flagParams = flags.splitter.join(",");
+    return Target(srcFileName.objFileName,
+                  ["_cppcompile ", "includes=" ~ includeParams, "flags=" ~ flagParams].join(" "),
                   [Target(srcFileName)]);
 }
 

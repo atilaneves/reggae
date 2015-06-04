@@ -93,7 +93,7 @@ struct Makefile {
 
         if(rule == "_dcompile") {
             immutable stringImports = rawCmdLine.getDefaultRuleParams("stringImports", []).join(" ");
-            immutable command = [".reggae/dcompile",
+            immutable command = [".reggae/reggaebin",
                                  "--objFile=" ~ target.outputs[0],
                                  "--depFile=" ~ depfile, dCompiler,
                                  flags, includes, stringImports,

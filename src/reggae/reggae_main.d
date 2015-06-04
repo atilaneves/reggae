@@ -47,8 +47,8 @@ private void createReggaefile(in Options options) {
 
 private void createBuild(in Options options) {
 
-    immutable buildFileName = getBuildFileName(options);
-    enforce(buildFileName.exists, text("Could not find ", buildFileName));
+    immutable reggaefilePath = getReggaefilePath(options);
+    enforce(reggaefilePath.exists, text("Could not find ", reggaefilePath));
 
     alias fileNames = TypeTuple!("buildgen_main.d",
                                  "build.d",
@@ -66,27 +66,20 @@ private void createBuild(in Options options) {
     }
 
     immutable reggaeDir = ".reggae";
-    immutable binName = buildPath(reggaeDir, "buildgen");
-    const compile = ["dmd", "-g", "-debug","-I" ~ options.projectPath,
-                     "-of" ~ binName] ~ reggaeSrcs ~ buildFileName;
+    immutable binName = buildPath(reggaeDir, "reggaebin");
+    const compileCmd = ["dmd", "-I" ~ options.projectPath,
+                        "-of" ~ binName] ~
+        reggaeSrcs ~ reggaefilePath;
 
-    immutable retCompBuildgen = execute(compile);
+
+    immutable retCompBuildgen = execute(compileCmd);
     enforce(retCompBuildgen.status == 0,
-            text("Couldn't execute ", compile.join(" "), ":\n", retCompBuildgen.output));
+            text("Couldn't execute ", compileCmd.join(" "), ":\n", retCompBuildgen.output));
 
-    immutable retRunBuildgen = execute([buildPath(".",  binName),
-                                        "-b", options.backend.to!string, options.projectPath]);
+    immutable retRunBuildgen = execute([buildPath(".",  binName)]);
     enforce(retRunBuildgen.status == 0,
             text("Couldn't execute the produced ", binName, " binary:\n", retRunBuildgen.output));
     writeln(retRunBuildgen.output);
-
-    immutable retCompDcompile = execute(["dmd",
-                                         "-O", "-release", "-inline",
-                                         "-of" ~ buildPath(reggaeDir, "dcompile"),
-                                         reggaeSrcFileName("dcompile.d"),
-                                         reggaeSrcFileName("dependencies.d")]);
-    enforce(retCompDcompile.status == 0, text("Couldn't compile dcompile.d:\n", retCompDcompile.output));
-
 }
 
 private bool isDubProject(in string projectPath) @safe {
@@ -129,7 +122,7 @@ private void writeConfig(in Options options) {
     file.writeln("enum backend = Backend.", options.backend, ";");
     file.writeln("enum dflags = `", options.dflags, "`;");
     file.writeln("enum reggaePath = `", options.reggaePath, "`;");
-    file.writeln("enum buildFilePath = `", options.getBuildFileName.absolutePath, "`;");
+    file.writeln("enum buildFilePath = `", options.getReggaefilePath.absolutePath, "`;");
     file.writeln("enum cCompiler = `", options.cCompiler, "`;");
     file.writeln("enum cppCompiler = `", options.cppCompiler, "`;");
     file.writeln("enum dCompiler = `", options.dCompiler, "`;");
@@ -205,7 +198,7 @@ private string projectBuildFile(in Options options) @safe pure nothrow {
     return buildPath(options.projectPath, "reggaefile.d");
 }
 
-private string getBuildFileName(in Options options) {
+private string getReggaefilePath(in Options options) {
     immutable regular = projectBuildFile(options);
     if(regular.exists) return regular;
     immutable path = isDubProject(options.projectPath) ? "" : options.projectPath;

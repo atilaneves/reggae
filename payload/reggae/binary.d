@@ -28,7 +28,6 @@ struct Binary {
                             immutable rawCmdLine = target.inOutCommand(projectPath);
                             immutable cmd = target.command(projectPath).splitter(" ").array;
                             execute(cmd);
-
                         }
                     }
                 }

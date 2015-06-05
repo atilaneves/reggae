@@ -73,3 +73,32 @@ Feature: Correct dependencies
       """
       Ninjas are people too
       """
+
+  Scenario: String import with binary
+    Given I successfully run `reggae -b binary proj`
+    When I successfully run `./build`
+    When I run `./leapp`
+    Then the output should contain:
+      """
+      Hello world!
+      """
+    And the output should not contain:
+      """
+      Ninjas are people too
+      """
+    Given I append to "proj/src/string.txt" with:
+      """
+      Ninjas are people too
+
+      """
+    When I run `cat proj/src/string.txt`
+    Then the output should contain:
+      """
+      Ninjas are people too
+      """
+    When I run `./build`
+    And I run `./leapp`
+    Then the output should contain:
+      """
+      Ninjas are people too
+      """

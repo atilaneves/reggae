@@ -78,7 +78,7 @@ void testByDepthLevelTwoDependencyLevels() {
     //level 2 doesn't show up since they're all leaves (fooC, barC, hdrI)
     rng.array.shouldEqual(
         [
-            [fooObj, barObj, header, impLeaf], //level 1
+            [fooObj, barObj, header], //level 1
             [target], //level 0
             ]);
 }

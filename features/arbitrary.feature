@@ -101,6 +101,28 @@ Feature: Arbritrary rules
       The product of 3 and 4 is 12
       """
 
+  Scenario: Binary backend for 1st example
+    When I successfully run `reggae -b binary path/to`
+    And the following files should exist:
+      |.reggae/reggaebin|
+    When I successfully run `.reggae/reggaegin`
+    And the following files should exist:
+      |objs/myapp.objs/main.o|
+      |objs/myapp.objs/maths.o|
+      |myapp|
+    When I run `./myapp 2 3`
+    Then the output should contain:
+      """
+      The sum     of 2 and 3 is 5
+      The product of 2 and 3 is 6
+      """
+    When I run `./myapp 3 4`
+    Then the output should contain:
+      """
+      The sum     of 3 and 4 is 7
+      The product of 3 and 4 is 12
+      """
+
   Scenario: Make backend for 2nd example
     When I successfully run `reggae -b make different/path`
     And a file named "Makefile" should exist

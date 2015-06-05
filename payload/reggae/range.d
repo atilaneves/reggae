@@ -40,7 +40,7 @@ struct DepthFirst {
 
 
 struct ByDepthLevel {
-    const(Target)[] targets;
+    const(Target)[][] targets;
 
     this(in Target target) pure nothrow {
         this.targets = sortTargets(target);
@@ -58,8 +58,8 @@ struct ByDepthLevel {
         return targets.empty;
     }
 
-    private const(Target)[] sortTargets(in Target target) pure nothrow {
-        return target.isLeaf ? [] : [target];
+    private const(Target)[][] sortTargets(in Target target) pure nothrow {
+        return target.isLeaf ? [] : [[target]];
     }
 
     static assert(isInputRange!ByDepthLevel);

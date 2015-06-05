@@ -54,5 +54,31 @@ void testByDepthLevelLeaf() {
 void testByDepthLevelOneLevel() {
     const target = Target("letarget", "lecmdfoo bar other", [Target("foo"), Target("bar")]);
     auto byLevel = ByDepthLevel(target);
-    byLevel.array.shouldEqual([target]);
+    byLevel.array.shouldEqual([[target]]);
+}
+
+void testByDepthLevelTwoDependencyLevels() {
+    auto fooC = Target("foo.c");
+    auto barC = Target("bar.c");
+    auto fooObj = Target("foo.o", "gcc -c -o foo.o foo.c", [fooC]);
+    auto barObj = Target("bar.o", "gcc -c -o bar.o bar.c", [barC]);
+    auto hdrI = Target("hdr.i");
+    auto header = Target("hdr.h", "genhdr $in", [hdrI]);
+    auto impLeaf = Target("leaf");
+
+    //implicit dependencies should show up, but only if they're not leaves
+    auto target = Target("app",
+                         "gcc -o letarget foo.o bar.o",
+                         [fooObj, barObj],
+                         [header, impLeaf]);
+
+    auto rng = ByDepthLevel(target);
+
+    //reverse order should show up: first level 1, then level 0
+    //level 2 doesn't show up since they're all leaves (fooC, barC, hdrI)
+    rng.array.shouldEqual(
+        [
+            [fooObj, barObj, header, impLeaf], //level 1
+            [target], //level 0
+            ]);
 }

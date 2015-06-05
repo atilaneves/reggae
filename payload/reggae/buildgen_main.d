@@ -48,6 +48,11 @@ private void generateBuild() {
 
             break;
 
+        case binary:
+            const binary = Binary(build, projectPath);
+            binary.run();
+            break;
+
         case none:
             throw new Exception("A backend must be specified with -b/--backend");
         }

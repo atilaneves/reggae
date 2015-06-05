@@ -52,7 +52,7 @@ private void createBuild(in Options options) {
 
     alias fileNames = TypeTuple!("buildgen_main.d",
                                  "build.d",
-                                 "makefile.d", "ninja.d",
+                                 "makefile.d", "ninja.d", "binary.d",
                                  "package.d", "range.d", "reflect.d",
                                  "dependencies.d", "types.d",
                                  "dub_info.d", "ctaa.d", "sorting.d",

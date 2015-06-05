@@ -104,8 +104,8 @@ Feature: Arbritrary rules
   Scenario: Binary backend for 1st example
     When I successfully run `reggae -b binary path/to`
     And the following files should exist:
-      |.reggae/reggaebin|
-    When I successfully run `.reggae/reggaebin`
+      |build|
+    When I successfully run `./build`
     And the following files should exist:
       |objs/myapp.objs/main.o|
       |objs/myapp.objs/maths.o|

@@ -65,8 +65,7 @@ private void createBuild(in Options options) {
         reggaeSrcs ~= reggaeSrcFileName(fileName);
     }
 
-    immutable reggaeDir = ".reggae";
-    immutable binName = buildPath(reggaeDir, "reggaebin");
+    immutable binName = getBinName(options);
     const compileCmd = ["dmd", "-I" ~ options.projectPath,
                         "-of" ~ binName] ~
         reggaeSrcs ~ reggaefilePath;
@@ -80,6 +79,11 @@ private void createBuild(in Options options) {
     enforce(retRunBuildgen.status == 0,
             text("Couldn't execute the produced ", binName, " binary:\n", retRunBuildgen.output));
     writeln(retRunBuildgen.output);
+}
+
+private string getBinName(in Options options) @safe pure nothrow {
+    immutable reggaeDir = ".reggae";
+    return options.backend == Backend.binary ? "build" : buildPath(reggaeDir, "reggaebin");
 }
 
 private bool isDubProject(in string projectPath) @safe {

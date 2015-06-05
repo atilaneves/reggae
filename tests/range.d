@@ -5,18 +5,18 @@ import unit_threaded;
 import std.array;
 
 
-void testLeaf() {
+void testDepFirstLeaf() {
     DepthFirst(Target("letarget")).array.shouldEqual([]);
 }
 
-void testOneDependencyLevel() {
+void testDepthFirstOneDependencyLevel() {
     auto target = Target("letarget", "lecmdfoo bar other", [Target("foo"), Target("bar")]);
     auto depth = DepthFirst(target);
     depth.array.shouldEqual([target]);
 }
 
 
-void testTwoDependencyLevels() {
+void testDepthFirstTwoDependencyLevels() {
     auto fooObj = Target("foo.o", "gcc -c -o foo.o foo.c", [Target("foo.c")]);
     auto barObj = Target("bar.o", "gcc -c -o bar.o bar.c", [Target("bar.c")]);
     auto header = Target("hdr.h", "genhdr $in", [Target("hdr.i")]);
@@ -28,7 +28,7 @@ void testTwoDependencyLevels() {
 }
 
 
-void testProtocolExample() {
+void testDepthFirstProtocolExample() {
     const protoSrcs = Target([`$builddir/gen/protocol.c`, `$builddir/gen/protocol.h`],
                              `./compiler $in`,
                              [Target(`protocol.proto`)]);
@@ -43,4 +43,16 @@ void testProtocolExample() {
                        [Target(`src/main.d`), protoObj, protoD]);
     DepthFirst(app).array.shouldEqual(
         [protoSrcs, protoObj, protoSrcs, protoD, app]);
+}
+
+
+void testByDepthLevelLeaf() {
+    ByDepthLevel(Target("letarget")).array.shouldEqual([]);
+}
+
+
+void testByDepthLevelOneLevel() {
+    const target = Target("letarget", "lecmdfoo bar other", [Target("foo"), Target("bar")]);
+    auto byLevel = ByDepthLevel(target);
+    byLevel.array.shouldEqual([target]);
 }

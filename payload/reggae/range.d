@@ -59,6 +59,8 @@ struct ByDepthLevel {
     }
 
     private const(Target)[][] sortTargets(in Target target) {//pure nothrow {
+        if(target.isLeaf) return [];
+
         const(Target)[][] targets = [[target]];
         rec(0, [target], targets);
         return targets.retro.array;

@@ -2,10 +2,11 @@ module reggae.binary;
 
 import reggae.build;
 import reggae.range;
-import std.algorithm: all;
+import std.algorithm: all, splitter;
 import std.range: chain;
 import std.file: timeLastModified;
 import std.process: execute;
+import std.path: absolutePath;
 
 @safe:
 
@@ -13,30 +14,26 @@ struct Binary {
     Build build;
     string projectPath;
 
-    void run() const {
-        foreach(topTarget; build.targets) {
-            auto allDeps = chain(topTarget.dependencies, topTarget.implicits);
-            // if(allDeps.all!(a => a.isLeaf)) {
-            //     foreach(dep; allDeps) {
-            //     }
-            // }
-            foreach(dep; allDeps) {
-                import std.stdio;
-                if(dep.outputs[0].newerThan(topTarget.outputs[0])) {
-                    writeln(dep.outputs[0], " is newer than ", topTarget.outputs[0]);
-                    execute(topTarget.command);
-                }
-            }
-            //recursive(topTarget);
-            foreach(target; DepthFirst(topTarget)) {
-            }
-        }
+    this(Build build, string projectPath) pure {
+        this.build = build;
+        this.projectPath = projectPath.absolutePath;
     }
 
-    private void recursive(in Target target) const {
-        if(target.isLeaf) return;
+    void run() const {
+        foreach(topTarget; build.targets) {
+            foreach(level; ByDepthLevel(topTarget)) {
+                foreach(target; level) {
+                    foreach(dep; chain(target.dependencies, target.implicits)) {
+                        if(dep.outputs[0].newerThan(target.outputs[0])) {
+                            immutable rawCmdLine = target.inOutCommand(projectPath);
+                            immutable cmd = target.command(projectPath).splitter(" ").array;
+                            execute(cmd);
 
-
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

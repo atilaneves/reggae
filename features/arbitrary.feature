@@ -105,7 +105,7 @@ Feature: Arbritrary rules
     When I successfully run `reggae -b binary path/to`
     And the following files should exist:
       |.reggae/reggaebin|
-    When I successfully run `.reggae/reggaegin`
+    When I successfully run `.reggae/reggaebin`
     And the following files should exist:
       |objs/myapp.objs/main.o|
       |objs/myapp.objs/maths.o|

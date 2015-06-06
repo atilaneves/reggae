@@ -36,13 +36,11 @@ int main(string[] args) {
 DubInfo[string] gDubInfos;
 
 private void createReggaefile(in Options options) {
-    const dubInfo = _getDubInfo(options);
-
     auto file = File("reggaefile.d", "w");
     file.writeln("import reggae;");
     file.writeln("mixin build!dubDefaultTarget;");
 
-    if(!options.noFetch) dubFetch(dubInfo);
+    if(!options.noFetch) dubFetch(_getDubInfo(options));
 }
 
 private void createBuild(in Options options) {
@@ -154,7 +152,6 @@ private void writeConfig(in Options options) {
         }
         file.writeln(`]);`);
         file.writeln;
-        file.writeln(`auto dubInfo() { return configToDubInfo["default"]; }`);
     } else {
         file.writeln("enum isDubProject = false;");
     }

@@ -74,7 +74,7 @@ struct DubInfo {
         return dLink(packages[0].targetFileName, toTargets(), flags.join(","));
     }
 
-    string[] targetImportPaths() @trusted nothrow const {
+    string[] mainTargetImportPaths() @trusted nothrow const {
         return packages[0].allOf!(a => a.packagePaths(a.importPaths))(packages);
     }
 

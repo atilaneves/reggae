@@ -1,9 +1,6 @@
 compiler stderr output
-get rid of dubInfo
 refactor range
 
-
-Code coverage, tests
 Refactoring:
   Type-safe dCompile, etc.
   Review all uses of @trusted

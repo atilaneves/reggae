@@ -48,7 +48,7 @@ Feature: User-defined variables
       import reggae;
       alias utObjs = dObjects!(SrcDirs([`tests`]),
                                Flags(`-unittest -main`),
-                               ImportPaths(dubInfo.targetImportPaths() ~ `source`));
+                               ImportPaths(configToDubInfo[`default`].mainTargetImportPaths() ~ `source`));
       alias ut = dubConfigurationTarget!(ExeName(`ut`), Configuration(), Flags(), No.main, utObjs);
       static if(userVars.get(`noUnitTests`, false)) {
           mixin build!dubDefaultTarget;

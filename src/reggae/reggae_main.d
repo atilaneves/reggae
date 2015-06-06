@@ -20,7 +20,7 @@ int main(string[] args) {
         if(options.help) return 0;
         enforce(options.projectPath != "", "A project path must be specified");
 
-        if(isDubProject(options.projectPath) && !projectBuildFile(options).exists) {
+        if(options.isDubProject && !projectBuildFile(options).exists) {
             createReggaefile(options);
         }
 
@@ -84,11 +84,6 @@ private string getBinName(in Options options) @safe pure nothrow {
     return options.backend == Backend.binary ? "build" : buildPath(reggaeDir, "reggaebin");
 }
 
-private bool isDubProject(in string projectPath) @safe {
-    return buildPath(projectPath, "dub.json").exists ||
-        buildPath(projectPath, "package.json").exists;
-}
-
 
 immutable reggaeSrcDirName = buildPath(".reggae", "src", "reggae");
 
@@ -139,7 +134,7 @@ private void writeConfig(in Options options) {
     }
     file.writeln("]);");
 
-    if(isDubProject(options.projectPath)) {
+    if(options.isDubProject) {
         file.writeln("enum isDubProject = true;");
         auto dubInfo = _getDubInfo(options);
         immutable targetType = dubInfo.packages[0].targetType;
@@ -206,7 +201,7 @@ private string projectBuildFile(in Options options) @safe pure nothrow {
 private string getReggaefilePath(in Options options) {
     immutable regular = projectBuildFile(options);
     if(regular.exists) return regular;
-    immutable path = isDubProject(options.projectPath) ? "" : options.projectPath;
+    immutable path = options.isDubProject ? "" : options.projectPath;
     return buildPath(path, "reggaefile.d");
 }
 

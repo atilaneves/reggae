@@ -26,12 +26,18 @@ struct Binary {
 
     //ugh, arrow anti-pattern
     void run() const @system { //@system due to parallel
+
+        bool didAnything;
+
         foreach(topTarget; build.targets) {
             foreach(level; ByDepthLevel(topTarget)) {
                 foreach(target; level.parallel) {
                     foreach(dep; chain(target.dependencies, target.implicits)) {
-                        if(cartesianProduct(dep.outputs, target.outputs).
+                        if(cartesianProduct(dep.outputsInProjectPath(projectPath),
+                                            target.outputsInProjectPath(projectPath)).
                            any!(a => a[0].newerThan(a[1]))) {
+
+                            didAnything = true;
                             mkDir(target);
                             immutable cmd = target.shellCommand(projectPath);
                             writeln("[build] " ~ cmd);
@@ -42,6 +48,8 @@ struct Binary {
                 }
             }
         }
+
+        if(!didAnything) writeln("Nothing to do");
     }
 }
 

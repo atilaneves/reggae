@@ -175,6 +175,11 @@ struct Target {
         }
     }
 
+    //
+    string[] outputsInProjectPath(in string projectPath) @safe pure nothrow const {
+        return outputs.map!(a => isLeaf ? buildPath(projectPath, a) : a).array;
+    }
+
 private:
 
     string _command;
@@ -185,7 +190,7 @@ private:
         string files;
         //join doesn't do const, resort to loops
         foreach(i, dep; deps) {
-            files ~= text(dep.outputs.map!(a => dep.isLeaf ? buildPath(projectPath, a) : a).join(" "));
+            files ~= text(dep.outputsInProjectPath(projectPath).join(" "));
             if(i != deps.length - 1) files ~= " ";
         }
         return files;

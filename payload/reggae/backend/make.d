@@ -39,9 +39,9 @@ struct Makefile {
                 mkDir(t);
 
                 ret ~= text(t.outputs.join(" "), ": ");
-                ret ~= t.dependencyFiles(projectPath);
-                immutable implicitFiles = t.implicitFiles(projectPath);
-                if(!implicitFiles.empty) ret ~= " " ~ t.implicitFiles(projectPath);
+                ret ~= t.dependencyFilesString(projectPath);
+                immutable implicitFiles = t.implicitFilesString(projectPath);
+                if(!implicitFiles.empty) ret ~= " " ~ t.implicitFilesString(projectPath);
                 ret ~= " Makefile\n";
 
                 ret ~= "\t" ~ command(t) ~ "\n";
@@ -90,7 +90,7 @@ struct Makefile {
         string ccCommand(in string compiler) {
             immutable command = [compiler, flags, includes, "-MMD", "-MT", target.outputs[0],
                                  "-MF", depfile, "-o", target.outputs[0], "-c",
-                                 target.dependencyFiles(projectPath)].join(" ");
+                                 target.dependencyFilesString(projectPath)].join(" ");
             return command ~ makeAutoDeps(depfile);
         }
 
@@ -102,7 +102,7 @@ struct Makefile {
                                  "--objFile=" ~ target.outputs[0],
                                  "--depFile=" ~ depfile, dCompiler,
                                  flags, includes, stringImports,
-                                 target.dependencyFiles(projectPath),
+                                 target.dependencyFilesString(projectPath),
                 ].join(" ");
 
             return command ~ makeAutoDeps(depfile);
@@ -111,7 +111,7 @@ struct Makefile {
         case "_ccompile":   return ccCommand(cCompiler);
         case "_dlink":
             return [dCompiler, "-of" ~ target.outputs[0],
-                    target.dependencyFiles(projectPath)].join(" ");
+                    target.dependencyFilesString(projectPath)].join(" ");
         default:
             throw new Exception("Unknown Makefile default rule " ~ rule);
         }

@@ -4,6 +4,7 @@ module reggae.backend.ninja;
 import reggae.build;
 import reggae.range;
 import reggae.rules;
+import reggae.config;
 import std.array;
 import std.range;
 import std.algorithm;
@@ -25,7 +26,6 @@ struct NinjaEntry {
  * Pre-built rules
  */
 NinjaEntry[] defaultRules() @safe pure nothrow {
-    import reggae.config: dCompiler, cppCompiler, cCompiler;
     return [NinjaEntry("rule _dcompile",
                        ["command = .reggae/reggaebin --objFile=$out --depFile=$DEPFILE " ~
                         dCompiler ~ " $flags $includes $stringImports $in",
@@ -62,7 +62,6 @@ struct Ninja {
     }
 
     const(NinjaEntry)[] allBuildEntries() @safe pure nothrow const {
-        import reggae.config;
         immutable files = [buildFilePath, reggaePath].join(" ");
         return buildEntries ~
             NinjaEntry("build build.ninja: _rerun | " ~ files,
@@ -70,7 +69,6 @@ struct Ninja {
     }
 
     const(NinjaEntry)[] allRuleEntries() @safe pure const {
-        import reggae.config;
         immutable _dflags = dflags == "" ? "" : " --dflags='" ~ dflags ~ "'";
 
         return ruleEntries ~ defaultRules ~
@@ -119,7 +117,7 @@ private:
         }
 
         buildEntries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~ rule ~ " " ~
-                                   target.dependencyFiles(_projectPath),
+                                   target.dependencyFilesString(_projectPath),
                                    paramLines);
     }
 
@@ -154,12 +152,12 @@ private:
         immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAdd);
 
         immutable deps = implicitInput.empty
-            ? target.dependencyFiles(_projectPath)
+            ? target.dependencyFilesString(_projectPath)
             : implicitInput;
 
         auto buildLine = "build " ~ target.outputs.join(" ") ~ ": " ~ ruleName ~
             " " ~ deps;
-        if(!target.implicits.empty) buildLine ~= " | " ~ target.implicitFiles(_projectPath);
+        if(!target.implicits.empty) buildLine ~= " | " ~  target.implicitFilesString(_projectPath);
 
         string[] buildParamLines;
         if(!before.empty)  buildParamLines ~= "before = "  ~ before;
@@ -179,7 +177,7 @@ private:
         immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAdd);
 
         immutable buildLine = "build " ~ target.outputs.join(" ") ~ ": " ~ ruleName ~
-            " " ~ target.dependencyFiles(_projectPath);
+            " " ~ target.dependencyFilesString(_projectPath);
         buildEntries ~= NinjaEntry(buildLine);
 
         if(haveToAdd) {
@@ -192,8 +190,8 @@ private:
 
         immutable cmdLine = () @trusted {
             string line = rawCmdLine;
-            auto allDeps = (target.dependencyFiles(_projectPath) ~ " " ~
-                            target.implicitFiles(_projectPath)).splitter(" ");
+            auto allDeps = (target.dependencyFilesString(_projectPath) ~ " " ~
+                            target.implicitFilesString(_projectPath)).splitter(" ");
             foreach(string dep; allDeps) {
                 if(line.canFind(dep)) {
                     line = line.replace(dep, "$in");

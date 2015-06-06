@@ -131,12 +131,12 @@ struct Target {
         this._command = command;
     }
 
-    @property string dependencyFiles(in string projectPath = "") @safe const nothrow {
-        return depFilesImpl(dependencies, projectPath);
+    @property string dependencyFilesString(in string projectPath = "") @safe const nothrow {
+        return depFilesStringImpl(dependencies, projectPath);
     }
 
-    @property string implicitFiles(in string projectPath = "") @safe const nothrow {
-        return depFilesImpl(implicits, projectPath);
+    @property string implicitFilesString(in string projectPath = "") @safe const nothrow {
+        return depFilesStringImpl(implicits, projectPath);
     }
 
     @property string command(in string projectPath = "") @trusted pure const nothrow {
@@ -166,7 +166,7 @@ private:
     string _command;
 
     //@trusted because of join
-    string depFilesImpl(in Target[] deps, in string projectPath) @trusted const nothrow {
+    string depFilesStringImpl(in Target[] deps, in string projectPath) @trusted const nothrow {
         import std.conv;
         string files;
         //join doesn't do const, resort to loops

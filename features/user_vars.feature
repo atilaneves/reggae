@@ -75,3 +75,22 @@ Feature: User-defined variables
         Numberisation: [0, 0, 0, 3]
         """
       When I successfully run `./ut`
+
+    Scenario: User-defined variabled with Make
+      Given I successfully run `reggae -b make -d noUnitTests=true dub_reggae_proj`
+      When I successfully run `make`
+      And I successfully run `./var_app 3`
+      Then the output should contain:
+        """
+        Numberisation: [0, 0, 0, 3]
+        """
+      And a file named "ut" should not exist
+
+      Given I successfully run `reggae -b make -d noUnitTests=false dub_reggae_proj`
+      When I successfully run `make`
+      And I successfully run `./var_app 3`
+      Then the output should contain:
+        """
+        Numberisation: [0, 0, 0, 3]
+        """
+      When I successfully run `./ut`

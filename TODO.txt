@@ -1,5 +1,3 @@
-compiler stderr output
-.reggae/reggaebin and build
 refactor range
 
 Refactoring:

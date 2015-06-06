@@ -15,9 +15,9 @@ configuration files in their own proprietary languages. The
 configuration files for Reggae are written in [D](http://dlang.org).
 
 From a build directory (usually not the same as the source one),
-type `reggae -b <ninja|make> </path/to/project>`. This will create the actual build system depending
-on the backend chosen, for [Ninja](http://martine.github.io/ninja/) or
-[GNU Make](https://www.gnu.org/software/make/).
+type `reggae -b <ninja|make|binary> </path/to/project>`. This will create the actual build system depending
+on the backend chosen, for [Ninja](http://martine.github.io/ninja/),
+[GNU Make](https://www.gnu.org/software/make/), or a runnable executable, respectively.
 The project path passed must either:
 
 1. Contain a a file named `reggaefile.d` with the build configuration
@@ -77,7 +77,7 @@ Building Reggae
 Reggae can build itself. To bootstrap, either use dub or the [included bootstrap script](bootstrap.sh).
 Call it without arguments for `make` or with one to choose another backend, such as `ninja`. This
 will create a `reggae` binary in a `bin` directory then call itself to generate the "real" build
-system with the requested backend.
+system with the requested backend. The reggae-enabled build includes a unit test binary.
 
 Goals
 -----

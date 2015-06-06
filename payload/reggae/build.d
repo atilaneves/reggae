@@ -230,9 +230,10 @@ private:
         case "_ccompile":   return ccCommand(cCompiler);
         case "_dlink":
             return [dCompiler, "-of" ~ outputs[0],
+                    flags,
                     dependencyFilesString(projectPath)].join(" ");
         default:
-            throw new Exception("Unknown default rule " ~ rule);
+            assert(0, "Unknown default rule " ~ rule);
         }
     }
 }

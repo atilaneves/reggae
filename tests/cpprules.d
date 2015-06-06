@@ -71,3 +71,8 @@ void testCppCompile() {
     const mathsObj = cppCompile(`src/cpp/maths.cpp`, `-m64 -fPIC -O3`, [`headers`]);
     mathsObj.shellCommand("/path/to").shouldEqual("g++ -m64 -fPIC -O3 -I/path/to/headers -MMD -MT src/cpp/maths.o -MF src/cpp/maths.o.d -o src/cpp/maths.o -c /path/to/src/cpp/maths.cpp");
 }
+
+void testCCompile() {
+    const mathsObj = cCompile(`src/c/maths.c`, `-m64 -fPIC -O3`, [`headers`]);
+    mathsObj.shellCommand("/path/to").shouldEqual("gcc -m64 -fPIC -O3 -I/path/to/headers -MMD -MT src/c/maths.o -MF src/c/maths.o.d -o src/c/maths.o -c /path/to/src/c/maths.c");
+}

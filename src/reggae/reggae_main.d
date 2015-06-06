@@ -68,10 +68,15 @@ private void createBuild(in Options options) {
                         "-of" ~ binName] ~
         reggaeSrcs ~ reggaefilePath;
 
-
     immutable retCompBuildgen = execute(compileCmd);
     enforce(retCompBuildgen.status == 0,
             text("Couldn't execute ", compileCmd.join(" "), ":\n", retCompBuildgen.output));
+
+    //hack
+    if(binName == "build") {
+        immutable res = execute(["cp", "build", ".reggae/reggaebin"]);
+        enforce(res.status == 0, "Failed to copy build");
+    }
 
     immutable retRunBuildgen = execute([buildPath(".",  binName)]);
     enforce(retRunBuildgen.status == 0,

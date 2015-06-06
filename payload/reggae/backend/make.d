@@ -70,6 +70,8 @@ struct Makefile {
         }
     }
 
+    //the only reason this is needed is to add auto dependency
+    //tracking
     string command(in Target target) @safe const {
         immutable cmd = target.shellCommand(projectPath);
         immutable depfile = target.outputs[0] ~ ".d";

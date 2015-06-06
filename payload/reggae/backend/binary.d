@@ -1,12 +1,17 @@
 module reggae.backend.binary;
 
+
 import reggae.build;
 import reggae.range;
-import std.algorithm: all, splitter;
+import std.algorithm: all, splitter, cartesianProduct, any;
 import std.range: chain;
 import std.file: timeLastModified;
-import std.process: execute;
+import std.process: executeShell;
 import std.path: absolutePath;
+import std.typecons: tuple;
+import std.exception: enforce;
+import std.stdio;
+import std.parallelism: parallel;
 
 @safe:
 
@@ -19,14 +24,18 @@ struct Binary {
         this.projectPath = projectPath;
     }
 
-    void run() const {
+    //ugh, arrow anti-pattern
+    void run() const @system { //@system due to parallel
         foreach(topTarget; build.targets) {
             foreach(level; ByDepthLevel(topTarget)) {
-                foreach(target; level) {
+                foreach(target; level.parallel) {
                     foreach(dep; chain(target.dependencies, target.implicits)) {
-                        if(dep.outputs[0].newerThan(target.outputs[0])) {
-                            immutable cmd = target.command(projectPath).splitter(" ").array;
-                            execute(cmd);
+                        if(cartesianProduct(dep.outputs, target.outputs).
+                           any!(a => a[0].newerThan(a[1]))) {
+                            immutable cmd = target.shellCommand(projectPath);
+                            writeln("[build] " ~ cmd);
+                            immutable res = executeShell(cmd);
+                            enforce(res.status == 0, "Could not execute " ~ cmd ~ ":\n" ~ res.output);
                         }
                     }
                 }

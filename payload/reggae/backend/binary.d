@@ -46,7 +46,6 @@ struct Binary {
                 }
             }
         }
-
         if(!didAnything) writeln("Nothing to do");
     }
 

@@ -31,28 +31,15 @@ private void dcompile(string[] args) {
         );
     enforce(args.length >= 2, "Usage: dcompile -o <objFile> -s <srcFile> -d <depFile> <compiler> <options>");
     enforce(!depFile.empty && !objFile.empty, "The -d and -o options are mandatory");
-    const compArgs = args[1 .. $] ~ ["-v", "-of" ~ objFile, "-c"];
+    const compArgs = args[1 .. $] ~ ["-of" ~ objFile, "-c", "-v"];
+    const fewerArgs = compArgs[0..$-1]; //non-verbose
     const compRes = execute(compArgs);
-    enforce(compRes.status == 0, text("Could not compile with args:\n", compArgs.join(" "), " :\n",
-                                      compRes.output.split("\n").
-                                      filter!isInterestingCompilerErrorLine.join("\n")));
+    enforce(compRes.status == 0,
+            text("Could not compile with args:\n", fewerArgs.join(" "), "\n",
+                 execute(fewerArgs).output));
 
     auto file = File(depFile, "w");
     file.write(objFile, ": \\\n");
     file.write(dMainDependencies(compRes.output).join(" "));
     file.writeln;
-}
-
-bool isInterestingCompilerErrorLine(in string line) @safe pure nothrow {
-    if(line.startsWith("binary ")) return false;
-    if(line.startsWith("version ")) return false;
-    if(line.startsWith("config ")) return false;
-    if(line.startsWith("parse ")) return false;
-    if(line.startsWith("importall ")) return false;
-    if(line.startsWith("import ")) return false;
-    if(line.startsWith("semantic")) return false;
-    if(line.startsWith("code ")) return false;
-    if(line.startsWith("function ")) return false;
-    if(line.startsWith("entry ")) return false;
-    return true;
 }

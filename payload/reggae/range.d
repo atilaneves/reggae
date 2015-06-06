@@ -42,7 +42,7 @@ struct DepthFirst {
 struct ByDepthLevel {
     const(Target)[][] targets;
 
-    this(in Target target) {//pure nothrow {
+    this(in Target target) pure nothrow {
         this.targets = sortTargets(target);
     }
 
@@ -67,12 +67,13 @@ struct ByDepthLevel {
     }
 
     private void rec(int level, in Target[] targets, ref const(Target)[][] soFar) @trusted pure nothrow {
-        auto notLeaves = targets.
+        const notLeaves = targets.
             map!(a => chain(a.dependencies, a.implicits)). //get all dependencies
             flatten. //flatten into a regular range
             filter!(a => !a.isLeaf). //don't care about leaves
             array;
         if(notLeaves.empty) return;
+
         soFar ~= notLeaves;
         rec(level + 1, notLeaves, soFar);
     }
@@ -81,6 +82,7 @@ struct ByDepthLevel {
 }
 
 
+//TODO: a non-allocating version with no arrays
 auto flatten(R)(R range) pure nothrow {
     alias rangeType = ElementType!R;
     alias T = ElementType!rangeType;

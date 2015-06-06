@@ -1,3 +1,8 @@
+/**
+ This module contains function for manipulating string representations
+ of default high-level rules.
+ */
+
 module reggae.rules.defaults;
 
 
@@ -6,6 +11,7 @@ import std.array: replace, array;
 
 
 private immutable defaultRules = ["_dcompile", "_ccompile", "_cppcompile", "_dlink"];
+
 
 private bool isDefaultRule(in string command) @safe pure nothrow {
     return defaultRules.canFind(command);

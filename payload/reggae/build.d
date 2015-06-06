@@ -175,7 +175,6 @@ struct Target {
         }
     }
 
-    //
     string[] outputsInProjectPath(in string projectPath) @safe pure nothrow const {
         return outputs.map!(a => isLeaf ? buildPath(projectPath, a) : a).array;
     }

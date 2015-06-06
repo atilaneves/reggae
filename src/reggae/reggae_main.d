@@ -43,6 +43,20 @@ private void createReggaefile(in Options options) {
     if(!options.noFetch) dubFetch(_getDubInfo(options));
 }
 
+string[] getReggaeSrcs(fileNames...)(in Options options) @safe pure nothrow {
+    string[] srcs = [reggaeSrcFileName("config.d")];
+    foreach(fileName; fileNames) {
+        srcs ~= reggaeSrcFileName(fileName);
+    }
+    return srcs;
+}
+
+string[] getCompileCommand(fileNames...)(in Options options) @safe nothrow {
+    return ["dmd", "-I" ~ options.projectPath,
+            "-of" ~ getBinName(options)] ~
+        getReggaeSrcs!(fileNames)(options) ~ getReggaefilePath(options);
+}
+
 private void createBuild(in Options options) {
 
     immutable reggaefilePath = getReggaefilePath(options);
@@ -58,20 +72,13 @@ private void createBuild(in Options options) {
                                  "rules/dub.d", "rules/defaults.d", "rules/common.d",
                                  "rules/d.d", "rules/cpp.d", "rules/c.d");
     writeSrcFiles!(fileNames)(options);
-    string[] reggaeSrcs = [reggaeSrcFileName("config.d")];
-    foreach(fileName; fileNames) {
-        reggaeSrcs ~= reggaeSrcFileName(fileName);
-    }
 
-    immutable binName = getBinName(options);
-    const compileCmd = ["dmd", "-I" ~ options.projectPath,
-                        "-of" ~ binName] ~
-        reggaeSrcs ~ reggaefilePath;
-
+    const compileCmd = getCompileCommand!(fileNames)(options);
     immutable retCompBuildgen = execute(compileCmd);
     enforce(retCompBuildgen.status == 0,
             text("Couldn't execute ", compileCmd.join(" "), ":\n", retCompBuildgen.output));
 
+    immutable binName = getBinName(options);
     //hack
     if(binName == "build") {
         immutable res = execute(["cp", "build", ".reggae/reggaebin"]);
@@ -203,7 +210,7 @@ private string projectBuildFile(in Options options) @safe pure nothrow {
     return buildPath(options.projectPath, "reggaefile.d");
 }
 
-private string getReggaefilePath(in Options options) {
+private string getReggaefilePath(in Options options) @safe nothrow {
     immutable regular = projectBuildFile(options);
     if(regular.exists) return regular;
     immutable path = options.isDubProject ? "" : options.projectPath;

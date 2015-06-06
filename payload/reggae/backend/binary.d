@@ -3,15 +3,17 @@ module reggae.backend.binary;
 
 import reggae.build;
 import reggae.range;
+import reggae.config;
 import std.algorithm: all, splitter, cartesianProduct, any;
 import std.range: chain;
-import std.file: timeLastModified;
-import std.process: executeShell;
+import std.file: timeLastModified, thisExePath, exists;
+import std.process: execute, executeShell;
 import std.path: absolutePath;
 import std.typecons: tuple;
 import std.exception: enforce;
 import std.stdio;
 import std.parallelism: parallel;
+import std.conv: text;
 
 @safe:
 
@@ -28,6 +30,8 @@ struct Binary {
     void run() const @system { //@system due to parallel
 
         bool didAnything;
+
+        checkReRun(); //1st check if we must rebuild ourselves
 
         foreach(topTarget; build.targets) {
             foreach(level; ByDepthLevel(topTarget)) {
@@ -50,6 +54,28 @@ struct Binary {
         }
 
         if(!didAnything) writeln("Nothing to do");
+    }
+
+private:
+
+    void checkReRun() @safe const {
+        immutable myPath = thisExePath;
+        if(reggaePath.newerThan(myPath) || buildFilePath.newerThan(myPath)) {
+            immutable reggaeRes = execute(reggaeCmd);
+            enforce(reggaeRes.status == 0,
+                    text("Could not run ", reggaeCmd.join(" "), " to regenerate build:\n",
+                         reggaeRes.output));
+
+            immutable buildRes = execute([myPath]);
+            enforce(buildRes.status == 0, "Could not redo the build:\n", buildRes.output);
+        }
+    }
+
+    string[] reggaeCmd() @safe pure nothrow const {
+        immutable _dflags = dflags == "" ? "" : " --dflags='" ~ dflags ~ "'";
+        auto mutCmd = [reggaePath, "-b", "binary"];
+        if(_dflags != "") mutCmd ~= _dflags;
+        return mutCmd ~ projectPath;
     }
 }
 

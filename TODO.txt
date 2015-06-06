@@ -1,4 +1,7 @@
-Code coverage, tests
+compiler stderr output
+.reggae/reggaebin and build
+refactor range
+
 Refactoring:
   Type-safe dCompile, etc.
   Review all uses of @trusted

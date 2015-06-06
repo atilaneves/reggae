@@ -48,7 +48,7 @@ Feature: User-defined variables
       import reggae;
       alias utObjs = dObjects!(SrcDirs([`tests`]),
                                Flags(`-unittest -main`),
-                               ImportPaths(dubInfo.targetImportPaths() ~ `source`));
+                               ImportPaths(configToDubInfo[`default`].mainTargetImportPaths() ~ `source`));
       alias ut = dubConfigurationTarget!(ExeName(`ut`), Configuration(), Flags(), No.main, utObjs);
       static if(userVars.get(`noUnitTests`, false)) {
           mixin build!dubDefaultTarget;
@@ -69,6 +69,44 @@ Feature: User-defined variables
 
       Given I successfully run `reggae -b ninja -d noUnitTests=false dub_reggae_proj`
       When I successfully run `ninja`
+      And I successfully run `./var_app 3`
+      Then the output should contain:
+        """
+        Numberisation: [0, 0, 0, 3]
+        """
+      When I successfully run `./ut`
+
+    Scenario: User-defined variabled with Make
+      Given I successfully run `reggae -b make -d noUnitTests=true dub_reggae_proj`
+      When I successfully run `make`
+      And I successfully run `./var_app 3`
+      Then the output should contain:
+        """
+        Numberisation: [0, 0, 0, 3]
+        """
+      And a file named "ut" should not exist
+
+      Given I successfully run `reggae -b make -d noUnitTests=false dub_reggae_proj`
+      When I successfully run `make`
+      And I successfully run `./var_app 3`
+      Then the output should contain:
+        """
+        Numberisation: [0, 0, 0, 3]
+        """
+      When I successfully run `./ut`
+
+    Scenario: User-defined variabled with Binary
+      Given I successfully run `reggae -b binary -d noUnitTests=true dub_reggae_proj`
+      When I successfully run `./build`
+      And I successfully run `./var_app 3`
+      Then the output should contain:
+        """
+        Numberisation: [0, 0, 0, 3]
+        """
+      And a file named "ut" should not exist
+
+      Given I successfully run `reggae -b binary -d noUnitTests=false dub_reggae_proj`
+      When I successfully run `./build`
       And I successfully run `./var_app 3`
       Then the output should contain:
         """

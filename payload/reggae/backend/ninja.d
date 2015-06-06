@@ -1,9 +1,10 @@
-module reggae.ninja;
+module reggae.backend.ninja;
 
 
 import reggae.build;
 import reggae.range;
 import reggae.rules;
+import reggae.config;
 import std.array;
 import std.range;
 import std.algorithm;
@@ -11,6 +12,7 @@ import std.exception: enforce;
 import std.conv: text;
 import std.string: strip;
 import std.path: defaultExtension, absolutePath;
+
 
 struct NinjaEntry {
     string mainLine;
@@ -25,7 +27,6 @@ struct NinjaEntry {
  * Pre-built rules
  */
 NinjaEntry[] defaultRules() @safe pure nothrow {
-    import reggae.config: dCompiler, cppCompiler, cCompiler;
     return [NinjaEntry("rule _dcompile",
                        ["command = .reggae/reggaebin --objFile=$out --depFile=$DEPFILE " ~
                         dCompiler ~ " $flags $includes $stringImports $in",
@@ -51,18 +52,17 @@ struct Ninja {
 
     this(Build build, in string projectPath = "") @safe {
         _build = build;
-        _projectPath = projectPath.absolutePath;
+        _projectPath = projectPath;
 
         foreach(topTarget; _build.targets) {
             foreach(target; DepthFirst(topTarget)) {
-                auto rawCmdLine = target.inOutCommand(_projectPath);
+                auto rawCmdLine = target.rawCmdString(_projectPath);
                 rawCmdLine.isDefaultCommand ? defaultRule(target, rawCmdLine) : customRule(target, rawCmdLine);
             }
         }
     }
 
     const(NinjaEntry)[] allBuildEntries() @safe pure nothrow const {
-        import reggae.config;
         immutable files = [buildFilePath, reggaePath].join(" ");
         return buildEntries ~
             NinjaEntry("build build.ninja: _rerun | " ~ files,
@@ -70,7 +70,6 @@ struct Ninja {
     }
 
     const(NinjaEntry)[] allRuleEntries() @safe pure const {
-        import reggae.config;
         immutable _dflags = dflags == "" ? "" : " --dflags='" ~ dflags ~ "'";
 
         return ruleEntries ~ defaultRules ~
@@ -107,7 +106,7 @@ private:
                 paramLines ~= param ~ " = " ~ value;
             }
 
-            paramLines ~= "DEPFILE = " ~ target.outputs[0] ~ ".d";
+            paramLines ~= "DEPFILE = " ~ target.outputs[0] ~ ".dep";
         } else {
             auto params = ["flags"];
 
@@ -119,7 +118,7 @@ private:
         }
 
         buildEntries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~ rule ~ " " ~
-                                   target.dependencyFiles(_projectPath),
+                                   target.dependencyFilesString(_projectPath),
                                    paramLines);
     }
 
@@ -154,12 +153,12 @@ private:
         immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAdd);
 
         immutable deps = implicitInput.empty
-            ? target.dependencyFiles(_projectPath)
+            ? target.dependencyFilesString(_projectPath)
             : implicitInput;
 
         auto buildLine = "build " ~ target.outputs.join(" ") ~ ": " ~ ruleName ~
             " " ~ deps;
-        if(!target.implicits.empty) buildLine ~= " | " ~ target.implicitFiles(_projectPath);
+        if(!target.implicits.empty) buildLine ~= " | " ~  target.implicitFilesString(_projectPath);
 
         string[] buildParamLines;
         if(!before.empty)  buildParamLines ~= "before = "  ~ before;
@@ -179,7 +178,7 @@ private:
         immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAdd);
 
         immutable buildLine = "build " ~ target.outputs.join(" ") ~ ": " ~ ruleName ~
-            " " ~ target.dependencyFiles(_projectPath);
+            " " ~ target.dependencyFilesString(_projectPath);
         buildEntries ~= NinjaEntry(buildLine);
 
         if(haveToAdd) {
@@ -192,8 +191,8 @@ private:
 
         immutable cmdLine = () @trusted {
             string line = rawCmdLine;
-            auto allDeps = (target.dependencyFiles(_projectPath) ~ " " ~
-                            target.implicitFiles(_projectPath)).splitter(" ");
+            auto allDeps = (target.dependencyFilesString(_projectPath) ~ " " ~
+                            target.implicitFilesString(_projectPath)).splitter(" ");
             foreach(string dep; allDeps) {
                 if(line.canFind(dep)) {
                     line = line.replace(dep, "$in");
@@ -266,7 +265,7 @@ private:
 
 //@trusted because of splitter
 private string targetCommand(in Target target) @trusted pure nothrow {
-    return target.command.splitter(" ").front.sanitizeCmd;
+    return targetRawCommand(target).sanitizeCmd;
 }
 
 //@trusted because of splitter
@@ -274,6 +273,7 @@ private string targetRawCommand(in Target target) @trusted pure nothrow {
     return target.command.splitter(" ").front;
 }
 
+//ninja doesn't like symbols in rule names
 //@trusted because of replace
 private string sanitizeCmd(in string cmd) @trusted pure nothrow {
     import std.path;

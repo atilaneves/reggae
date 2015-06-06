@@ -129,3 +129,23 @@ Feature: Augmenting dub projects with reggae builds
         Prod: 12
         [7]
         """
+
+    Scenario: Dub/Reggae build with Binary
+      Given I successfully run `reggae -b binary dub_reggae_proj`
+      When I successfully run `./build`
+      Then the output should not contain:
+        """
+        warning: ignoring old recipe for target
+        """
+      When I run `./ut`
+      Then it should fail with:
+        """
+        unittest failure
+        """
+      When I successfully run `./dub_reggae 3 4`
+      Then the output should contain:
+        """
+        Sum:  7
+        Prod: 12
+        [7]
+        """

@@ -14,7 +14,7 @@ Feature: Error messages
     When I run `reggae non/existent`
     Then it should fail with:
       """
-      Could not find non/existent/reggaefile.d
+      Could not find
       """
 
   Scenario: Non-existent build file
@@ -22,7 +22,7 @@ Feature: Error messages
     When I run `reggae path/to`
     Then it should fail with:
       """
-      Could not find path/to/reggaefile.d
+      Could not find
       """
 
   Scenario: Empty build file

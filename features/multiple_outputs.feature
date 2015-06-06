@@ -179,3 +179,47 @@ Feature: Multiple outputs
         """
         I call protoFunc(3) and get 9
         """
+
+    Scenario: Binary separate
+      Given I successfully run `cp proj/reggaefile_sep.d proj/reggaefile.d`
+      And I successfully run `reggae -b binary proj`
+      When I successfully run `./build`
+      And I successfully run `./app 2`
+      Then the output should contain:
+        """
+        I call protoFunc(2) and get 4
+        """
+
+      Given I successfully run `sleep 1` for up to 2 seconds
+      And I overwrite "proj/protocol.proto" with:
+        """
+        int protoFunc(int n) { return n * 3;}
+        """
+      When I successfully run `./build`
+      And I successfully run `./app 3`
+      Then the output should contain:
+        """
+        I call protoFunc(3) and get 9
+        """
+
+    Scenario: Binary together
+      Given I successfully run `cp proj/reggaefile_tog.d proj/reggaefile.d`
+      And I successfully run `reggae -b binary proj`
+      When I successfully run `./build`
+      And I successfully run `./app 2`
+      Then the output should contain:
+        """
+        I call protoFunc(2) and get 4
+        """
+
+      Given I successfully run `sleep 1` for up to 2 seconds
+      And I overwrite "proj/protocol.proto" with:
+        """
+        int protoFunc(int n) { return n * 3;}
+        """
+      When I successfully run `./build`
+      And I successfully run `./app 3`
+      Then the output should contain:
+        """
+        I call protoFunc(3) and get 9
+        """

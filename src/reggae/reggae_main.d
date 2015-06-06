@@ -20,7 +20,7 @@ int main(string[] args) {
         if(options.help) return 0;
         enforce(options.projectPath != "", "A project path must be specified");
 
-        if(isDubProject(options.projectPath) && !projectBuildFile(options).exists) {
+        if(options.isDubProject && !projectBuildFile(options).exists) {
             createReggaefile(options);
         }
 
@@ -36,13 +36,25 @@ int main(string[] args) {
 DubInfo[string] gDubInfos;
 
 private void createReggaefile(in Options options) {
-    const dubInfo = _getDubInfo(options);
-
     auto file = File("reggaefile.d", "w");
     file.writeln("import reggae;");
     file.writeln("mixin build!dubDefaultTarget;");
 
-    if(!options.noFetch) dubFetch(dubInfo);
+    if(!options.noFetch) dubFetch(_getDubInfo(options));
+}
+
+string[] getReggaeSrcs(fileNames...)(in Options options) @safe pure nothrow {
+    string[] srcs = [reggaeSrcFileName("config.d")];
+    foreach(fileName; fileNames) {
+        srcs ~= reggaeSrcFileName(fileName);
+    }
+    return srcs;
+}
+
+string[] getCompileCommand(fileNames...)(in Options options) @safe nothrow {
+    return ["dmd", "-I" ~ options.projectPath,
+            "-of" ~ getBinName(options)] ~
+        getReggaeSrcs!(fileNames)(options) ~ getReggaefilePath(options);
 }
 
 private void createBuild(in Options options) {
@@ -52,7 +64,7 @@ private void createBuild(in Options options) {
 
     alias fileNames = TypeTuple!("buildgen_main.d",
                                  "build.d",
-                                 "makefile.d", "ninja.d",
+                                 "backend/make.d", "backend/ninja.d", "backend/binary.d",
                                  "package.d", "range.d", "reflect.d",
                                  "dependencies.d", "types.d",
                                  "dub_info.d", "ctaa.d", "sorting.d",
@@ -60,21 +72,18 @@ private void createBuild(in Options options) {
                                  "rules/dub.d", "rules/defaults.d", "rules/common.d",
                                  "rules/d.d", "rules/cpp.d", "rules/c.d");
     writeSrcFiles!(fileNames)(options);
-    string[] reggaeSrcs = [reggaeSrcFileName("config.d")];
-    foreach(fileName; fileNames) {
-        reggaeSrcs ~= reggaeSrcFileName(fileName);
-    }
 
-    immutable reggaeDir = ".reggae";
-    immutable binName = buildPath(reggaeDir, "reggaebin");
-    const compileCmd = ["dmd", "-I" ~ options.projectPath,
-                        "-of" ~ binName] ~
-        reggaeSrcs ~ reggaefilePath;
-
-
+    const compileCmd = getCompileCommand!(fileNames)(options);
     immutable retCompBuildgen = execute(compileCmd);
     enforce(retCompBuildgen.status == 0,
             text("Couldn't execute ", compileCmd.join(" "), ":\n", retCompBuildgen.output));
+
+    immutable binName = getBinName(options);
+    //hack
+    if(binName == "build") {
+        immutable res = execute(["cp", "build", ".reggae/reggaebin"]);
+        enforce(res.status == 0, "Failed to copy build");
+    }
 
     immutable retRunBuildgen = execute([buildPath(".",  binName)]);
     enforce(retRunBuildgen.status == 0,
@@ -82,31 +91,31 @@ private void createBuild(in Options options) {
     writeln(retRunBuildgen.output);
 }
 
-private bool isDubProject(in string projectPath) @safe {
-    return buildPath(projectPath, "dub.json").exists ||
-        buildPath(projectPath, "package.json").exists;
+private string getBinName(in Options options) @safe pure nothrow {
+    immutable reggaeDir = ".reggae";
+    return options.backend == Backend.binary ? "build" : buildPath(reggaeDir, "reggaebin");
 }
 
 
 immutable reggaeSrcDirName = buildPath(".reggae", "src", "reggae");
-immutable reggaeRulesSrcDirName = buildPath(reggaeSrcDirName, "rules");
 
 
 private void writeSrcFiles(fileNames...)(in Options options) {
     import std.file: mkdirRecurse;
     if(!reggaeSrcDirName.exists) {
         mkdirRecurse(reggaeSrcDirName);
+
+        immutable reggaeRulesSrcDirName = buildPath(reggaeSrcDirName, "rules");
         mkdirRecurse(reggaeRulesSrcDirName);
+
+        immutable reggaeBackendSrcDirName = buildPath(reggaeSrcDirName, "backend");
+        mkdirRecurse(reggaeBackendSrcDirName);
     }
 
     foreach(fileName; fileNames) {
         auto file = File(reggaeSrcFileName(fileName), "w");
         file.write(import(fileName));
     }
-
-    //necessary due to dmd's lack of -MMD option
-    auto file = File(reggaeSrcFileName("dcompile.d"), "w");
-    file.write(import("dcompile.d"));
 
     writeConfig(options);
 }
@@ -133,7 +142,7 @@ private void writeConfig(in Options options) {
     }
     file.writeln("]);");
 
-    if(isDubProject(options.projectPath)) {
+    if(options.isDubProject) {
         file.writeln("enum isDubProject = true;");
         auto dubInfo = _getDubInfo(options);
         immutable targetType = dubInfo.packages[0].targetType;
@@ -146,7 +155,6 @@ private void writeConfig(in Options options) {
         }
         file.writeln(`]);`);
         file.writeln;
-        file.writeln(`auto dubInfo() { return configToDubInfo["default"]; }`);
     } else {
         file.writeln("enum isDubProject = false;");
     }
@@ -198,10 +206,10 @@ private string projectBuildFile(in Options options) @safe pure nothrow {
     return buildPath(options.projectPath, "reggaefile.d");
 }
 
-private string getReggaefilePath(in Options options) {
+private string getReggaefilePath(in Options options) @safe nothrow {
     immutable regular = projectBuildFile(options);
     if(regular.exists) return regular;
-    immutable path = isDubProject(options.projectPath) ? "" : options.projectPath;
+    immutable path = options.isDubProject ? "" : options.projectPath;
     return buildPath(path, "reggaefile.d");
 }
 

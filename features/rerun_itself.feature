@@ -103,3 +103,41 @@ Feature: Re-run reggae when dependencies deem it necessary
         """
         Lookee me!
         """
+
+    Scenario: Rerun with Binary
+      Given I successfully run `reggae -b binary proj`
+      And I successfully run `./build`
+      When I successfully run `./myapp`
+      Then the output should contain:
+        """
+        Mainymainy
+        """
+      And the output should not contain:
+        """
+        Lookee me!
+        """
+
+      Given I successfully run `sleep 1` for up to 2 seconds
+      And I overwrite "proj/reggaefile.d" with:
+        """
+        import reggae;
+        const mainObj  = Target(`main.o`,  `dmd -I$project/src -c $in -of$out`, Target(`src/main.d`));
+        const otherObj = Target(`other.o`, `dmd -I$project/src -c $in -of$out`, Target(`src/other.d`));
+        const app = Target(`myapp`,
+                         `dmd -of$out $in`,
+                         [mainObj, otherObj],
+                         );
+        mixin build!(app);
+        """
+      And I overwrite "proj/src/main.d" with:
+        """
+        import other;
+        void main() { myfunc();}
+        """
+
+      When I successfully run `./build`
+      And I successfully run `./myapp`
+      Then the output should contain:
+        """
+        Lookee me!
+        """

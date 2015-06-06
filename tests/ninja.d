@@ -1,7 +1,7 @@
 module tests.ninja;
 
 import unit_threaded;
-import reggae.ninja;
+import reggae.backend.ninja;
 import reggae.build;
 
 

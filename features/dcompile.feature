@@ -137,3 +137,50 @@ Feature: D compilation rule
       """
       output: The result of 7 is 42
       """
+
+  Scenario: Using dcompile for every object file with Binary
+    When I successfully run `reggae -b binary leproj`
+    And I successfully run `./build`
+    And I run `./calc 5`
+    Then the output should contain:
+      """
+      output: The result of 5 is 120
+      """
+    Given I successfully run `sleep 1` for up to 2 seconds
+    And I overwrite "leproj/source/constants.d" with:
+      """
+      immutable int leconst = 2;
+      """
+    When I successfully run `./build`
+    And I successfully run `./calc 5`
+    Then the output should contain:
+      """
+      output: The result of 5 is 10
+      """
+    Given I successfully run `sleep 1` for up to 2 seconds
+    And I overwrite "leproj/source/constants.d" with:
+      """
+      import generator;
+      immutable int leconst = constInt();
+      """
+    And a file named "leproj/source/generator.d" with:
+      """
+      int constInt() { return  5; }
+      """
+    When I successfully run `./build`
+    And I successfully run `./calc 5`
+    Then the output should contain:
+      """
+      output: The result of 5 is 25
+      """
+    Given I successfully run `sleep 1` for up to 2 seconds
+    And I overwrite "leproj/source/generator.d" with:
+      """
+      int constInt() { return 6; }
+      """
+    When I successfully run `./build`
+    And I successfully run `./calc 7`
+    Then the output should contain:
+      """
+      output: The result of 7 is 42
+      """

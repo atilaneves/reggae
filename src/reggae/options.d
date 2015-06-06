@@ -1,8 +1,11 @@
 module reggae.options;
+
 import reggae.types: Backend;
+
 import std.file: thisExePath;
 import std.conv: ConvException;
-
+import std.path: absolutePath, buildPath;
+import std.file: exists;
 
 struct Options {
     Backend backend;
@@ -16,6 +19,24 @@ struct Options {
     bool noFetch;
     bool help;
     bool perModule;
+    bool isDubProject;
+
+    //finished setup
+    void finalize() @safe{
+        reggaePath = thisExePath();
+
+        if(!cCompiler)   cCompiler   = "gcc";
+        if(!cppCompiler) cppCompiler = "g++";
+        if(!dCompiler)   dCompiler   = "dmd";
+
+        isDubProject = _isDubProject;
+    }
+
+    private bool _isDubProject() @safe nothrow {
+        return buildPath(projectPath, "dub.json").exists ||
+            buildPath(projectPath, "package.json").exists;
+    }
+
 }
 
 
@@ -48,12 +69,8 @@ Options getOptions(string[] args) @trusted {
         throw new Exception("Unsupported backend, -b must be make or ninja");
     }
 
-    options.reggaePath = thisExePath();
-    if(args.length > 1) options.projectPath = args[1];
-
-    if(!options.cCompiler)   options.cCompiler   = "gcc";
-    if(!options.cppCompiler) options.cppCompiler = "g++";
-    if(!options.dCompiler)   options.dCompiler   = "dmd";
+    if(args.length > 1) options.projectPath = args[1].absolutePath;
+    options.finalize();
 
     return options;
 }

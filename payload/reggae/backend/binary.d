@@ -26,13 +26,13 @@ struct Binary {
         this.projectPath = projectPath;
     }
 
-    //ugh, arrow anti-pattern
     void run() const @system { //@system due to parallel
 
         bool didAnything;
 
         checkReRun(); //1st check if we must rebuild ourselves
 
+        //ugh, arrow anti-pattern
         foreach(topTarget; build.targets) {
             foreach(level; ByDepthLevel(topTarget)) {
                 foreach(target; level.parallel) {
@@ -58,7 +58,7 @@ struct Binary {
 
 private:
 
-    void checkReRun() @safe const {
+    void checkReRun() const {
         immutable myPath = thisExePath;
         if(reggaePath.newerThan(myPath) || buildFilePath.newerThan(myPath)) {
             immutable reggaeRes = execute(reggaeCmd);
@@ -71,7 +71,7 @@ private:
         }
     }
 
-    string[] reggaeCmd() @safe pure nothrow const {
+    string[] reggaeCmd() pure nothrow const {
         immutable _dflags = dflags == "" ? "" : " --dflags='" ~ dflags ~ "'";
         auto mutCmd = [reggaePath, "-b", "binary"];
         if(_dflags != "") mutCmd ~= _dflags;
@@ -80,7 +80,7 @@ private:
 }
 
 
-bool newerThan(in string a, in string b) {
+bool newerThan(in string a, in string b) nothrow {
     try {
         return a.timeLastModified > b.timeLastModified;
     } catch(Exception) { //file not there, so newer
@@ -88,6 +88,7 @@ bool newerThan(in string a, in string b) {
     }
 }
 
+//@trusted because of mkdirRecurse
 private void mkDir(in Target target) @trusted {
     foreach(output; target.outputs) {
         import std.file: exists, mkdirRecurse;

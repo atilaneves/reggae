@@ -13,6 +13,7 @@ import std.conv: text;
 import std.string: strip;
 import std.path: defaultExtension, absolutePath;
 
+
 struct NinjaEntry {
     string mainLine;
     string[] paramLines;

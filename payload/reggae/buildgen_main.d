@@ -78,14 +78,9 @@ private void dcompile(string[] args) {
                                       filter!isInterestingCompilerErrorLine.join("\n")));
 
     auto file = File(depFile, "w");
-    file.write(objFile, ": ");
-
-    foreach(immutable dep; dMainDependencies(compRes.output)) {
-        file.write(dep, " ");
-    }
-
+    file.write(objFile, ": \\\n");
+    file.write(dMainDependencies(compRes.output).join(" "));
     file.writeln;
-
 }
 
 bool isInterestingCompilerErrorLine(in string line) @safe pure nothrow {

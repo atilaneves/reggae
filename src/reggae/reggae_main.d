@@ -117,10 +117,6 @@ private void writeSrcFiles(fileNames...)(in Options options) {
         file.write(import(fileName));
     }
 
-    //necessary due to dmd's lack of -MMD option
-    auto file = File(reggaeSrcFileName("dcompile.d"), "w");
-    file.write(import("dcompile.d"));
-
     writeConfig(options);
 }
 

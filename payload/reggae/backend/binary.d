@@ -99,6 +99,7 @@ private:
     bool checkDeps(in Target target, in string depFileName) const @trusted {
         auto file = File(depFileName);
         const dependencies = file.byLine.map!(a => a.to!string).dependenciesFromFile;
+
         if(dependencies.any!(a => a.newerThan(target.outputsInProjectPath(projectPath)[0]))) {
             mkDir(target);
             immutable cmd = target.shellCommand(projectPath);

@@ -183,7 +183,7 @@ Feature: Multiple outputs
     Scenario: Binary separate
       Given I successfully run `cp proj/reggaefile_sep.d proj/reggaefile.d`
       And I successfully run `reggae -b binary proj`
-      When I successfully run `./build -j8`
+      When I successfully run `./build`
       And I successfully run `./app 2`
       Then the output should contain:
         """
@@ -194,7 +194,7 @@ Feature: Multiple outputs
         """
         int protoFunc(int n) { return n * 3;}
         """
-      When I successfully run `./build -j8`
+      When I successfully run `./build`
       And I successfully run `./app 3`
       Then the output should contain:
         """
@@ -204,7 +204,7 @@ Feature: Multiple outputs
     Scenario: Binary together
       Given I successfully run `cp proj/reggaefile_tog.d proj/reggaefile.d`
       And I successfully run `reggae -b binary proj`
-      When I successfully run `./build -j8`
+      When I successfully run `./build`
       And I successfully run `./app 2`
       Then the output should contain:
         """
@@ -215,7 +215,7 @@ Feature: Multiple outputs
         """
         int protoFunc(int n) { return n * 3;}
         """
-      When I successfully run `./build -j8`
+      When I successfully run `./build`
       And I successfully run `./app 3`
       Then the output should contain:
         """

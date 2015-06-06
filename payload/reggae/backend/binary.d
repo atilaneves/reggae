@@ -32,6 +32,7 @@ struct Binary {
                     foreach(dep; chain(target.dependencies, target.implicits)) {
                         if(cartesianProduct(dep.outputs, target.outputs).
                            any!(a => a[0].newerThan(a[1]))) {
+                            mkDir(target);
                             immutable cmd = target.shellCommand(projectPath);
                             writeln("[build] " ~ cmd);
                             immutable res = executeShell(cmd);
@@ -50,5 +51,13 @@ bool newerThan(in string a, in string b) {
         return a.timeLastModified > b.timeLastModified;
     } catch(Exception) { //file not there, so newer
         return true;
+    }
+}
+
+private void mkDir(in Target target) @trusted {
+    foreach(output; target.outputs) {
+        import std.file: exists, mkdirRecurse;
+        import std.path: dirName;
+        if(!output.dirName.exists) mkdirRecurse(output.dirName);
     }
 }

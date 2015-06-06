@@ -1,5 +1,6 @@
 module reggae.build;
 
+import reggae.rules.defaults;
 import std.string: replace;
 import std.algorithm: map;
 import std.path: buildPath;
@@ -131,11 +132,11 @@ struct Target {
         this._command = command;
     }
 
-    @property string dependencyFilesString(in string projectPath = "") @safe const nothrow {
+    @property string dependencyFilesString(in string projectPath = "") @safe pure const nothrow {
         return depFilesStringImpl(dependencies, projectPath);
     }
 
-    @property string implicitFilesString(in string projectPath = "") @safe const nothrow {
+    @property string implicitFilesString(in string projectPath = "") @safe pure const nothrow {
         return depFilesStringImpl(implicits, projectPath);
     }
 
@@ -144,6 +145,9 @@ struct Target {
         string[] depOutputs;
         foreach(dep; dependencies) {
             foreach(output; dep.outputs) {
+                //leaf objects are references to source files in the project path
+                //those need their path built. Any other dependencies are in the
+                //build path, so they don't need the same treatment
                 depOutputs ~= dep.isLeaf ? buildPath(projectPath, output) : output;
             }
         }
@@ -157,8 +161,18 @@ struct Target {
     }
 
     //@trusted because of replace
-    package string rawCmdString(in string projectPath = "") @trusted pure nothrow const {
+    string rawCmdString(in string projectPath) @trusted pure nothrow const {
         return _command.replace("$project", projectPath);
+    }
+
+
+    string shellCommand(in string projectPath = "") @safe pure const {
+        immutable rawCmdLine = rawCmdString(projectPath);
+        if(rawCmdLine.isDefaultCommand) {
+            return defaultCommand(projectPath, rawCmdLine);
+        } else {
+            return command(projectPath);
+        }
     }
 
 private:
@@ -166,7 +180,7 @@ private:
     string _command;
 
     //@trusted because of join
-    string depFilesStringImpl(in Target[] deps, in string projectPath) @trusted const nothrow {
+    string depFilesStringImpl(in Target[] deps, in string projectPath) @trusted pure const nothrow {
         import std.conv;
         string files;
         //join doesn't do const, resort to loops
@@ -175,5 +189,50 @@ private:
             if(i != deps.length - 1) files ~= " ";
         }
         return files;
+    }
+
+    //this function returns a string to be run by the shell with `std.process.execute`
+    //it does 'normal' commands, not built-in rules
+    string defaultCommand(in string projectPath, in string rawCmdLine) @safe pure const {
+        import reggae.config: dCompiler, cppCompiler, cCompiler;
+
+        immutable flags = rawCmdLine.getDefaultRuleParams("flags", []).join(" ");
+        immutable includes = rawCmdLine.getDefaultRuleParams("includes", []).join(" ");
+        immutable depfile = outputs[0] ~ ".d";
+
+        string ccCommand(in string compiler) {
+            import std.stdio;
+            debug writeln("ccCommand with compiler ", compiler);
+            return [compiler, flags, includes, "-MMD", "-MT", outputs[0],
+                    "-MF", depfile, "-o", outputs[0], "-c",
+                    dependencyFilesString(projectPath)].join(" ");
+        }
+
+
+        immutable rule = rawCmdLine.getDefaultRule;
+        import std.stdio;
+        debug writeln("rule: ", rule);
+
+        switch(rule) {
+
+        case "_dcompile":
+            immutable stringImports = rawCmdLine.getDefaultRuleParams("stringImports", []).join(" ");
+            immutable command = [".reggae/reggaebin",
+                                 "--objFile=" ~ outputs[0],
+                                 "--depFile=" ~ depfile, dCompiler,
+                                 flags, includes, stringImports,
+                                 dependencyFilesString(projectPath),
+                ].join(" ");
+
+            return command;
+
+        case "_cppcompile": return ccCommand(cppCompiler);
+        case "_ccompile":   return ccCommand(cCompiler);
+        case "_dlink":
+            return [dCompiler, "-of" ~ outputs[0],
+                    dependencyFilesString(projectPath)].join(" ");
+        default:
+            throw new Exception("Unknown default rule " ~ rule);
+        }
     }
 }

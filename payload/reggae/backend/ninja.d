@@ -264,7 +264,7 @@ private:
 
 //@trusted because of splitter
 private string targetCommand(in Target target) @trusted pure nothrow {
-    return target.command.splitter(" ").front.sanitizeCmd;
+    return targetRawCommand(target).sanitizeCmd;
 }
 
 //@trusted because of splitter
@@ -272,6 +272,7 @@ private string targetRawCommand(in Target target) @trusted pure nothrow {
     return target.command.splitter(" ").front;
 }
 
+//ninja doesn't like symbols in rule names
 //@trusted because of replace
 private string sanitizeCmd(in string cmd) @trusted pure nothrow {
     import std.path;

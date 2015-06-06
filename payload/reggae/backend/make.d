@@ -3,6 +3,8 @@ module reggae.backend.make;
 import reggae.build;
 import reggae.range;
 import reggae.rules;
+import reggae.config;
+
 import std.conv;
 import std.array;
 import std.path;
@@ -53,8 +55,6 @@ struct Makefile {
 
     //includes rerunning reggae
     string output() @safe const {
-        import reggae.config;
-
         auto ret = simpleOutput;
         ret ~= "Makefile: " ~ buildFilePath ~ " " ~ reggaePath ~ "\n";
         immutable _dflags = dflags == "" ? "" : " --dflags='" ~ dflags ~ "'";
@@ -71,49 +71,16 @@ struct Makefile {
     }
 
     string command(in Target target) @safe const {
-        immutable rawCmdLine = target.rawCmdString(projectPath);
-        if(rawCmdLine.isDefaultCommand) {
-            return command(target, rawCmdLine);
-        } else {
-            return target.command(projectPath);
-        }
-    }
-
-    string command(in Target target, in string rawCmdLine) @safe const {
-        import reggae.config;
-
-        immutable rule = rawCmdLine.getDefaultRule;
-        immutable flags = rawCmdLine.getDefaultRuleParams("flags", []).join(" ");
-        immutable includes = rawCmdLine.getDefaultRuleParams("includes", []).join(" ");
+        immutable cmd = target.shellCommand(projectPath);
         immutable depfile = target.outputs[0] ~ ".d";
 
-        string ccCommand(in string compiler) {
-            immutable command = [compiler, flags, includes, "-MMD", "-MT", target.outputs[0],
-                                 "-MF", depfile, "-o", target.outputs[0], "-c",
-                                 target.dependencyFilesString(projectPath)].join(" ");
-            return command ~ makeAutoDeps(depfile);
-        }
+        immutable rawCmdLine = target.rawCmdString(projectPath);
 
-        switch(rule) {
-
-        case "_dcompile":
-            immutable stringImports = rawCmdLine.getDefaultRuleParams("stringImports", []).join(" ");
-            immutable command = [".reggae/reggaebin",
-                                 "--objFile=" ~ target.outputs[0],
-                                 "--depFile=" ~ depfile, dCompiler,
-                                 flags, includes, stringImports,
-                                 target.dependencyFilesString(projectPath),
-                ].join(" ");
-
-            return command ~ makeAutoDeps(depfile);
-
-        case "_cppcompile": return ccCommand(cppCompiler);
-        case "_ccompile":   return ccCommand(cCompiler);
-        case "_dlink":
-            return [dCompiler, "-of" ~ target.outputs[0],
-                    target.dependencyFilesString(projectPath)].join(" ");
-        default:
-            throw new Exception("Unknown Makefile default rule " ~ rule);
+        if(rawCmdLine.isDefaultCommand) {
+            immutable rule = rawCmdLine.getDefaultRule;
+            return rule.canFind("compile") ? cmd ~ makeAutoDeps(depfile) : cmd;
+        } else {
+            return cmd;
         }
     }
 }

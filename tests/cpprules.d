@@ -66,3 +66,8 @@ void testFlagsCompileCpp() {
                      "DEPFILE = path/to/src/foo.o.d"]),
             ]);
 }
+
+void testCppCompile() {
+    const mathsObj = cppCompile(`src/cpp/maths.cpp`, `-m64 -fPIC -O3`, [`headers`]);
+    mathsObj.shellCommand("/path/to").shouldEqual("g++ -m64 -fPIC -O3 -I/path/to/headers -MMD -MT src/cpp/maths.o -MF src/cpp/maths.o.d -o src/cpp/maths.o -c /path/to/src/cpp/maths.cpp");
+}

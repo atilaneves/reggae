@@ -31,8 +31,7 @@ void testDCompileIncludePathsNinja() {
 
 void testDCompileIncludePathsMake() {
     const build = Build(dCompile("path/to/src/foo.d", "-O", ["path/to/src", "other/path"]));
-    const make = Makefile(build, "/tmp/myproject");
-    make.command(build.targets[0]).startsWith(".reggae/reggaebin --objFile=path/to/src/foo.o --depFile=path/to/src/foo.o.d dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path  path/to/src/foo.d").shouldBeTrue;
+    build.targets[0].shellCommand("/tmp/myproject").shouldEqual(".reggae/reggaebin --objFile=path/to/src/foo.o --depFile=path/to/src/foo.o.d dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path  /tmp/myproject/path/to/src/foo.d");
 }
 
 
@@ -49,9 +48,9 @@ void testDCompileWithMultipleFilesMake() {
                                       "-O", ["path/to/src", "other/path"]));
     const make = Makefile(build, "/tmp/myproject");
 
-    make.command(build.targets[0]).startsWith(".reggae/reggaebin --objFile=other.o --depFile=other.o.d dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path  other/weird.d").shouldBeTrue;
+    build.targets[0].shellCommand("/tmp/myproject").shouldEqual(".reggae/reggaebin --objFile=other.o --depFile=other.o.d dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path  /tmp/myproject/other/weird.d");
 
-    make.command(build.targets[1]).startsWith(".reggae/reggaebin --objFile=path/to/src.o --depFile=path/to/src.o.d dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path  path/to/src/foo.d path/to/src/bar.d").shouldBeTrue;
+    build.targets[1].shellCommand("/tmp/myproject").shouldEqual(".reggae/reggaebin --objFile=path/to/src.o --depFile=path/to/src.o.d dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path  /tmp/myproject/path/to/src/foo.d /tmp/myproject/path/to/src/bar.d");
 
 }
 

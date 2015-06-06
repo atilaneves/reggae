@@ -1,4 +1,4 @@
-module reggae.binary;
+module reggae.backend.binary;
 
 import reggae.build;
 import reggae.range;

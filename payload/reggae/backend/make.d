@@ -1,4 +1,4 @@
-module reggae.makefile;
+module reggae.backend.make;
 
 import reggae.build;
 import reggae.range;
@@ -42,9 +42,7 @@ struct Makefile {
                 immutable implicitFiles = t.implicitFiles(projectPath);
                 if(!implicitFiles.empty) ret ~= " " ~ t.implicitFiles(projectPath);
                 ret ~= " Makefile\n";
-                ret ~= "\t";
-                ret ~= command(t);
-                ret ~= "\n";
+                ret ~= "\t" ~ command(t) ~ "\n";
             }
         }
 

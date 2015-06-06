@@ -1,4 +1,4 @@
-module reggae.ninja;
+module reggae.backend.ninja;
 
 
 import reggae.build;

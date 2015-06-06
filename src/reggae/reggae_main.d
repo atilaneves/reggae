@@ -52,7 +52,7 @@ private void createBuild(in Options options) {
 
     alias fileNames = TypeTuple!("buildgen_main.d",
                                  "build.d",
-                                 "makefile.d", "ninja.d", "binary.d",
+                                 "backend/make.d", "backend/ninja.d", "backend/binary.d",
                                  "package.d", "range.d", "reflect.d",
                                  "dependencies.d", "types.d",
                                  "dub_info.d", "ctaa.d", "sorting.d",
@@ -93,14 +93,18 @@ private bool isDubProject(in string projectPath) @safe {
 
 
 immutable reggaeSrcDirName = buildPath(".reggae", "src", "reggae");
-immutable reggaeRulesSrcDirName = buildPath(reggaeSrcDirName, "rules");
 
 
 private void writeSrcFiles(fileNames...)(in Options options) {
     import std.file: mkdirRecurse;
     if(!reggaeSrcDirName.exists) {
         mkdirRecurse(reggaeSrcDirName);
+
+        immutable reggaeRulesSrcDirName = buildPath(reggaeSrcDirName, "rules");
         mkdirRecurse(reggaeRulesSrcDirName);
+
+        immutable reggaeBackendSrcDirName = buildPath(reggaeSrcDirName, "backend");
+        mkdirRecurse(reggaeBackendSrcDirName);
     }
 
     foreach(fileName; fileNames) {

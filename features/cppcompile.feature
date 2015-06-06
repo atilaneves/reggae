@@ -74,3 +74,23 @@ Feature: C++ compilation rule
       """
       The result of calc(3) is 30
       """
+
+  Scenario: Mixing C++ and D files with binary
+    When I successfully run `reggae -b binary mixproj`
+    And I successfully run `./build`
+    And I successfully run `./calc 5`
+    Then the output should contain:
+      """
+      The result of calc(5) is 15
+      """
+    Given I successfully run `sleep 1` for up to 2 seconds
+    And I overwrite "mixproj/headers/maths.hpp" with:
+      """
+      const int factor = 10;
+      """
+    When I successfully run `./build`
+    And I successfully run `./calc 3`
+    Then the output should contain:
+      """
+      The result of calc(3) is 30
+      """

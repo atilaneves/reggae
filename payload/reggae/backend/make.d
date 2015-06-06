@@ -27,6 +27,7 @@ struct Makefile {
         return "Makefile";
     }
 
+    //only the main targets
     string simpleOutput() @safe const {
 
         const outputs = build.targets.map!(a => a.outputs[0]).join(" ");
@@ -50,12 +51,15 @@ struct Makefile {
         return ret;
     }
 
+    //includes rerunning reggae
     string output() @safe const {
         import reggae.config;
+
         auto ret = simpleOutput;
         ret ~= "Makefile: " ~ buildFilePath ~ " " ~ reggaePath ~ "\n";
         immutable _dflags = dflags == "" ? "" : " --dflags='" ~ dflags ~ "'";
         ret ~= "\t" ~ reggaePath ~ " -b make" ~ _dflags ~ " " ~ projectPath ~ "\n";
+
         return ret;
     }
 
@@ -90,7 +94,9 @@ struct Makefile {
             return command ~ makeAutoDeps(depfile);
         }
 
-        if(rule == "_dcompile") {
+        switch(rule) {
+
+        case "_dcompile":
             immutable stringImports = rawCmdLine.getDefaultRuleParams("stringImports", []).join(" ");
             immutable command = [".reggae/reggaebin",
                                  "--objFile=" ~ target.outputs[0],
@@ -101,13 +107,12 @@ struct Makefile {
 
             return command ~ makeAutoDeps(depfile);
 
-        } else if(rule == "_cppcompile") {
-            return ccCommand(cppCompiler);
-        } else if(rule == "_ccompile") {
-            return ccCommand(cCompiler);
-        } else if(rule == "_dlink") {
-            return [dCompiler, "-of" ~ target.outputs[0], target.dependencyFiles(projectPath)].join(" ");
-        } else {
+        case "_cppcompile": return ccCommand(cppCompiler);
+        case "_ccompile":   return ccCommand(cCompiler);
+        case "_dlink":
+            return [dCompiler, "-of" ~ target.outputs[0],
+                    target.dependencyFiles(projectPath)].join(" ");
+        default:
             throw new Exception("Unknown Makefile default rule " ~ rule);
         }
     }

@@ -116,15 +116,6 @@ struct Makefile {
             throw new Exception("Unknown Makefile default rule " ~ rule);
         }
     }
-
-private:
-
-    void addRerunBuild(ref string ret) @safe pure nothrow const {
-        import reggae.config;
-        ret ~= "Makefile: " ~ buildFilePath ~ " " ~ reggaePath ~ "\n";
-        immutable _dflags = dflags == "" ? "" : " --dflags='" ~ dflags ~ "'";
-        ret ~= "\t" ~ reggaePath ~ " -b make" ~ _dflags ~ " " ~ projectPath ~ "\n";
-    }
 }
 
 

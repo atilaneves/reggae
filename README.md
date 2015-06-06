@@ -66,6 +66,10 @@ example for building production and unittest binaries concurrently is this:
     alias ut = dubConfigurationTarget!(ExeName("ut"), Configuration("unittest"));
     mixin build!(main, ut);
 
+Depending on whether or not the dub project in questions uses configurations, reggae's dub
+support might not work before [this pull request](https://github.com/D-Programming-Language/dub/pull/577)
+is merged.
+
 
 Building Reggae
 ---------------

@@ -46,7 +46,7 @@ private void createReggaefile(in Options options) {
 string[] getReggaeSrcs(fileNames...)(in Options options) @safe pure nothrow {
     string[] srcs = [reggaeSrcFileName("config.d")];
     foreach(fileName; fileNames) {
-        srcs ~= reggaeSrcFileName(fileName);
+        static if(fileName != "dcompile.d") srcs ~= reggaeSrcFileName(fileName);
     }
     return srcs;
 }
@@ -57,6 +57,8 @@ string[] getCompileCommand(fileNames...)(in Options options) @safe nothrow {
         getReggaeSrcs!(fileNames)(options) ~ getReggaefilePath(options);
 }
 
+immutable hiddenDir = ".reggae";
+
 private void createBuild(in Options options) {
 
     immutable reggaefilePath = getReggaefilePath(options);
@@ -66,34 +68,48 @@ private void createBuild(in Options options) {
                                  "build.d",
                                  "backend/make.d", "backend/ninja.d", "backend/binary.d",
                                  "package.d", "range.d", "reflect.d",
-                                 "dependencies.d", "types.d",
+                                 "dependencies.d", "types.d", "dcompile.d",
                                  "dub_info.d", "ctaa.d", "sorting.d",
                                  "rules/package.d",
                                  "rules/dub.d", "rules/defaults.d", "rules/common.d",
                                  "rules/d.d", "rules/cpp.d", "rules/c.d");
     writeSrcFiles!(fileNames)(options);
 
-    const compileCmd = getCompileCommand!(fileNames)(options);
-    immutable retCompBuildgen = execute(compileCmd);
-    enforce(retCompBuildgen.status == 0,
-            text("Couldn't execute ", compileCmd.join(" "), ":\n", retCompBuildgen.output));
+    const reggaeSrcs = getReggaeSrcs!(fileNames)(options);
+    immutable buildGenName = compileBinaries(options, reggaeSrcs);
 
-    immutable binName = getBinName(options);
-    //hack
-    if(binName == "build") {
-        immutable res = execute(["cp", "build", ".reggae/reggaebin"]);
-        enforce(res.status == 0, "Failed to copy build");
-    }
-
-    immutable retRunBuildgen = execute([buildPath(".",  binName)]);
+    immutable retRunBuildgen = execute([buildPath(".", buildGenName)]);
     enforce(retRunBuildgen.status == 0,
-            text("Couldn't execute the produced ", binName, " binary:\n", retRunBuildgen.output));
+            text("Couldn't execute the produced ", buildGenName, " binary:\n", retRunBuildgen.output));
+
     writeln(retRunBuildgen.output);
 }
 
-private string getBinName(in Options options) @safe pure nothrow {
-    immutable reggaeDir = ".reggae";
-    return options.backend == Backend.binary ? "build" : buildPath(reggaeDir, "reggaebin");
+private auto compileBinaries(in Options options, in string[] reggaeSrcs) {
+    immutable buildGenName = getBuildBinName(options);
+    const compileBuildGenCmd = ["dmd",
+                                "-I" ~ options.projectPath,
+                                "-of" ~ buildGenName] ~
+        reggaeSrcs ~ getReggaefilePath(options);
+
+    immutable dcompileCmd = ["dmd",
+                             "-I.reggae/src",
+                             "-of" ~ buildPath(hiddenDir, "dcompile"),
+                             reggaeSrcFileName("dcompile.d"),
+                             reggaeSrcFileName("dependencies.d")];
+
+
+    import std.parallelism;
+    foreach(cmd; [compileBuildGenCmd, dcompileCmd].parallel) {
+        immutable res = execute(cmd);
+        enforce(res.status == 0, text("Couldn't execute ", cmd.join(" "), ":\n"), res.output);
+    }
+
+    return buildGenName;
+}
+
+private string getBuildBinName(in Options options) @safe pure nothrow {
+    return options.backend == Backend.binary ? "build" : buildPath(hiddenDir, "buildgen");
 }
 
 

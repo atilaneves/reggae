@@ -221,7 +221,7 @@ private:
 
         case "_dcompile":
             immutable stringImports = rawCmdLine.getDefaultRuleParams("stringImports", []).join(" ");
-            immutable command = [".reggae/reggaebin",
+            immutable command = [".reggae/dcompile",
                                  "--objFile=" ~ outputs[0],
                                  "--depFile=" ~ depfile, dCompiler,
                                  flags, includes, stringImports,

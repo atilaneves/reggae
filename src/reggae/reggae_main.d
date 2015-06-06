@@ -90,7 +90,7 @@ private auto compileBinaries(in Options options, in string[] reggaeSrcs) {
     const compileBuildGenCmd = ["dmd",
                                 "-I" ~ options.projectPath,
                                 "-of" ~ buildGenName] ~
-        reggaeSrcs ~ getReggaefilePath(options);
+        getBuildBinFlags(options) ~ reggaeSrcs ~ getReggaefilePath(options);
 
     immutable dcompileCmd = ["dmd",
                              "-I.reggae/src",
@@ -110,6 +110,10 @@ private auto compileBinaries(in Options options, in string[] reggaeSrcs) {
 
 private string getBuildBinName(in Options options) @safe pure nothrow {
     return options.backend == Backend.binary ? "build" : buildPath(hiddenDir, "buildgen");
+}
+
+private string[] getBuildBinFlags(in Options options) @safe pure nothrow {
+    return options.backend == Backend.binary ? ["-O", "-release", "-inline"] : [];
 }
 
 

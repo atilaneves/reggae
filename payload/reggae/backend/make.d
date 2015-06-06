@@ -20,7 +20,7 @@ struct Makefile {
 
     this(Build build, string projectPath) @safe pure {
         this.build = build;
-        this.projectPath = projectPath.absolutePath;
+        this.projectPath = projectPath;
     }
 
     string fileName() @safe pure nothrow const {
@@ -42,6 +42,7 @@ struct Makefile {
                 immutable implicitFiles = t.implicitFiles(projectPath);
                 if(!implicitFiles.empty) ret ~= " " ~ t.implicitFiles(projectPath);
                 ret ~= " Makefile\n";
+
                 ret ~= "\t" ~ command(t) ~ "\n";
             }
         }

@@ -16,7 +16,7 @@ struct Binary {
 
     this(Build build, string projectPath) pure {
         this.build = build;
-        this.projectPath = projectPath.absolutePath;
+        this.projectPath = projectPath;
     }
 
     void run() const {

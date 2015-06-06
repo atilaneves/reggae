@@ -2,7 +2,7 @@ module reggae.options;
 import reggae.types: Backend;
 import std.file: thisExePath;
 import std.conv: ConvException;
-
+import std.path: absolutePath;
 
 struct Options {
     Backend backend;
@@ -49,7 +49,7 @@ Options getOptions(string[] args) @trusted {
     }
 
     options.reggaePath = thisExePath();
-    if(args.length > 1) options.projectPath = args[1];
+    if(args.length > 1) options.projectPath = args[1].absolutePath;
 
     if(!options.cCompiler)   options.cCompiler   = "gcc";
     if(!options.cppCompiler) options.cppCompiler = "g++";

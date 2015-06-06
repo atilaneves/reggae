@@ -51,7 +51,7 @@ struct Ninja {
 
     this(Build build, in string projectPath = "") @safe {
         _build = build;
-        _projectPath = projectPath.absolutePath;
+        _projectPath = projectPath;
 
         foreach(topTarget; _build.targets) {
             foreach(target; DepthFirst(topTarget)) {

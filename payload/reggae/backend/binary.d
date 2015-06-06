@@ -25,7 +25,6 @@ struct Binary {
                 foreach(target; level) {
                     foreach(dep; chain(target.dependencies, target.implicits)) {
                         if(dep.outputs[0].newerThan(target.outputs[0])) {
-                            immutable rawCmdLine = target.inOutCommand(projectPath);
                             immutable cmd = target.command(projectPath).splitter(" ").array;
                             execute(cmd);
                         }

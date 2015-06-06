@@ -46,7 +46,7 @@ struct Binary {
                 }
             }
         }
-        if(!didAnything) writeln("Nothing to do");
+        if(!didAnything) writeln("[build] Nothing to do");
     }
 
 private:

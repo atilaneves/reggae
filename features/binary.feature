@@ -33,5 +33,5 @@ Feature: Binary backend
     When I run `./build`
     Then the output should contain:
       """
-      Nothing to do
+      [build] Nothing to do
       """

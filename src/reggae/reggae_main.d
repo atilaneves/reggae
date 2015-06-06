@@ -36,6 +36,7 @@ int main(string[] args) {
 DubInfo[string] gDubInfos;
 
 private void createReggaefile(in Options options) {
+    writeln("[Reggae] Creating reggaefile.d from dub information");
     auto file = File("reggaefile.d", "w");
     file.writeln("import reggae;");
     file.writeln("mixin build!dubDefaultTarget;");
@@ -78,6 +79,7 @@ private void createBuild(in Options options) {
     const reggaeSrcs = getReggaeSrcs!(fileNames)(options);
     immutable buildGenName = compileBinaries(options, reggaeSrcs);
 
+    writeln("[Reggae] Running the created binary to generate the build");
     immutable retRunBuildgen = execute([buildPath(".", buildGenName)]);
     enforce(retRunBuildgen.status == 0,
             text("Couldn't execute the produced ", buildGenName, " binary:\n", retRunBuildgen.output));
@@ -92,17 +94,22 @@ private auto compileBinaries(in Options options, in string[] reggaeSrcs) {
                                 "-of" ~ buildGenName] ~
         getBuildBinFlags(options) ~ reggaeSrcs ~ getReggaefilePath(options);
 
+    immutable dcompileName = buildPath(hiddenDir, "dcompile");
     immutable dcompileCmd = ["dmd",
                              "-I.reggae/src",
-                             "-of" ~ buildPath(hiddenDir, "dcompile"),
+                             "-of" ~ dcompileName,
                              reggaeSrcFileName("dcompile.d"),
                              reggaeSrcFileName("dependencies.d")];
 
 
+    static struct Binary { string name; const(string)[] cmd; }
+    const binaries = [Binary(buildGenName, compileBuildGenCmd), Binary(dcompileName, dcompileCmd)];
     import std.parallelism;
-    foreach(cmd; [compileBuildGenCmd, dcompileCmd].parallel) {
-        immutable res = execute(cmd);
-        enforce(res.status == 0, text("Couldn't execute ", cmd.join(" "), ":\n"), res.output);
+
+    foreach(bin; binaries.parallel) {
+        writeln("[Reggae] Compiling metabuild binary ", bin.name);
+        immutable res = execute(bin.cmd);
+        enforce(res.status == 0, text("Couldn't execute ", bin.cmd.join(" "), ":\n"), res.output);
     }
 
     return buildGenName;

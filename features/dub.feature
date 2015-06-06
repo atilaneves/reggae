@@ -73,3 +73,20 @@ Feature: Dub integration
         [0, 0, 0, 4]
         I'm immortal!
         """
+
+    Scenario: Dub/Reggae build with Binary
+      When I successfully run `reggae -b binary dub_proj --dflags="-g -debug"`
+      Then the file "dub_proj/reggaefile.d" should not exist
+      And a file named "reggaefile.d" should exist
+      When I successfully run `./build`
+      Then the output should contain:
+        """
+        -g -debug
+        """
+      When I successfully run `./atest`
+      Then the output should contain:
+        """
+        Why hello!
+        [0, 0, 0, 4]
+        I'm immortal!
+        """

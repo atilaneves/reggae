@@ -106,7 +106,7 @@ private:
                 paramLines ~= param ~ " = " ~ value;
             }
 
-            paramLines ~= "DEPFILE = " ~ target.outputs[0] ~ ".d";
+            paramLines ~= "DEPFILE = " ~ target.outputs[0] ~ ".dep";
         } else {
             auto params = ["flags"];
 

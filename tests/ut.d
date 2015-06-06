@@ -21,5 +21,6 @@ int main(string[] args) {
                           "tests.ctaa",
                           "tests.by_package",
                           "tests.dub_call",
+                          "tests.binary",
         );
 }

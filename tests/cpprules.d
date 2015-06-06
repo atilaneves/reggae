@@ -12,7 +12,7 @@ void testNoIncludePaths() {
         [NinjaEntry("build path/to/src/foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",
                     ["includes = ",
                      "flags = ",
-                     "DEPFILE = path/to/src/foo.o.d"]),
+                     "DEPFILE = path/to/src/foo.o.dep"]),
             ]);
 }
 
@@ -24,7 +24,7 @@ void testIncludePaths() {
         [NinjaEntry("build path/to/src/foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",
                     ["includes = -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path",
                      "flags = ",
-                     "DEPFILE = path/to/src/foo.o.d"]),
+                     "DEPFILE = path/to/src/foo.o.dep"]),
             ]);
 }
 
@@ -52,7 +52,7 @@ void testFlagsCompileC() {
         [NinjaEntry("build path/to/src/foo.o: _ccompile /tmp/myproject/path/to/src/foo.c",
                     ["includes = ",
                      "flags = -m64 -fPIC -O3",
-                     "DEPFILE = path/to/src/foo.o.d"]),
+                     "DEPFILE = path/to/src/foo.o.dep"]),
             ]);
 }
 
@@ -63,16 +63,16 @@ void testFlagsCompileCpp() {
         [NinjaEntry("build path/to/src/foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",
                     ["includes = ",
                      "flags = -m64 -fPIC -O3",
-                     "DEPFILE = path/to/src/foo.o.d"]),
+                     "DEPFILE = path/to/src/foo.o.dep"]),
             ]);
 }
 
 void testCppCompile() {
     const mathsObj = cppCompile(`src/cpp/maths.cpp`, `-m64 -fPIC -O3`, [`headers`]);
-    mathsObj.shellCommand("/path/to").shouldEqual("g++ -m64 -fPIC -O3 -I/path/to/headers -MMD -MT src/cpp/maths.o -MF src/cpp/maths.o.d -o src/cpp/maths.o -c /path/to/src/cpp/maths.cpp");
+    mathsObj.shellCommand("/path/to").shouldEqual("g++ -m64 -fPIC -O3 -I/path/to/headers -MMD -MT src/cpp/maths.o -MF src/cpp/maths.o.dep -o src/cpp/maths.o -c /path/to/src/cpp/maths.cpp");
 }
 
 void testCCompile() {
     const mathsObj = cCompile(`src/c/maths.c`, `-m64 -fPIC -O3`, [`headers`]);
-    mathsObj.shellCommand("/path/to").shouldEqual("gcc -m64 -fPIC -O3 -I/path/to/headers -MMD -MT src/c/maths.o -MF src/c/maths.o.d -o src/c/maths.o -c /path/to/src/c/maths.c");
+    mathsObj.shellCommand("/path/to").shouldEqual("gcc -m64 -fPIC -O3 -I/path/to/headers -MMD -MT src/c/maths.o -MF src/c/maths.o.dep -o src/c/maths.o -c /path/to/src/c/maths.c");
 }

@@ -202,7 +202,7 @@ private:
 
         immutable flags = rawCmdLine.getDefaultRuleParams("flags", []).join(" ");
         immutable includes = rawCmdLine.getDefaultRuleParams("includes", []).join(" ");
-        immutable depfile = outputs[0] ~ ".d";
+        immutable depfile = outputs[0] ~ ".dep";
 
         string ccCommand(in string compiler) {
             import std.stdio;

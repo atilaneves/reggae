@@ -71,7 +71,7 @@ struct Makefile {
     }
 
     string command(in Target target) @safe const {
-        immutable rawCmdLine = target.inOutCommand(projectPath);
+        immutable rawCmdLine = target.rawCmdString(projectPath);
         if(rawCmdLine.isDefaultCommand) {
             return command(target, rawCmdLine);
         } else {

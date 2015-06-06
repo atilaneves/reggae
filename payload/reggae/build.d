@@ -157,7 +157,7 @@ struct Target {
     }
 
     //@trusted because of replace
-    package string inOutCommand(in string projectPath = "") @trusted pure nothrow const {
+    package string rawCmdString(in string projectPath = "") @trusted pure nothrow const {
         return _command.replace("$project", projectPath);
     }
 

@@ -1,16 +1,32 @@
-refactor range
+Standard rules for compiled languages, automatically recognising extensions
+Target struct that instead of a string command takes any "commandable", allowing D code instead of `execute`
+  - default wraps a string and calls `execute`
+  - Only for binary backend? How would make and ninja deal with it?
+  - No more string serialisation of parameters like `includes=`, `flags=` and `stringImports=`
+Easier way to specify build parameters
+  - More typing to catch build description errors at compile-time (LinkFlags vs CompilerFlags?)
+  - Allow any order of parameters
+  - Like "commandable", allow "srcable" for things likke
+    * Directories with source files
+    * Files to include
+    * Files to exclude
+    * Directories to exclude
+    * Consider ranges
+
+Crazy idea: build server? In: list of changed files, out: build.
 
 Refactoring:
+  range.d
   Type-safe dCompile, etc.
   Review all uses of @trusted
   Use ranges instead of arrays where possible
 
+"Compile-time" dLink
+Compute dependencies for reggaefile.d itself - what if it imports other modules?
 Static libraries
-dub bugs
-Use CC, CXX environment variables
+Use CC, CXX, LD environment variables
 Optimise run-time
   Write source files once and create static library to link buildgen
 Tup backend
-Binary backend
 Automatic selection of files based on OS/arch/etc.
 Finding of C/C++ libraries (Qt, boost, libevent)

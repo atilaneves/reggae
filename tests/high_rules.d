@@ -30,5 +30,4 @@ void testDObjectFile() {
     immutable cmd = "_dcompile includes=-I$project/myhdrs,-I$project/otherhdrs flags=-g,-debug " ~
         "stringImports=-J$project/strings,-J$project/otherstrings";
     obj.shouldEqual(Target("foo.o", cmd, [Target("foo.d")]));
-    obj.shouldEqual(dCompile("foo.d", "-g -debug", ["myhdrs", "otherhdrs"], ["strings", "otherstrings"]));
 }

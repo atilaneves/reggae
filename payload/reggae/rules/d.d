@@ -51,18 +51,9 @@ Target[] dCompilePerModule(in string[] srcFiles, in string flags = "",
                            in string projDir = "$project") @safe {
 
     immutable command = dCompileCommand(flags, importPaths, stringImportPaths, projDir);
-    return srcFiles.map!(a => dCompile(a, flags, importPaths, stringImportPaths, projDir)).array;
+    return srcFiles.map!(a => objectFile(a, flags, importPaths, stringImportPaths, projDir)).array;
 }
 
-
-//@trusted because of join
-Target dCompile(in string srcFileName, in string flags = "",
-                in string[] importPaths = [], in string[] stringImportPaths = [],
-                in string projDir = "$project") @trusted pure {
-
-    immutable command = dCompileCommand(flags, importPaths, stringImportPaths, projDir);
-    return Target(srcFileName.objFileName, command, [Target(srcFileName)]);
-}
 
 /**
  * Compile-time function to that returns a list of Target objects
@@ -104,7 +95,7 @@ Target dExe(in App app, in Flags flags,
             in StringImportPaths stringImportPaths,
             in Target[] linkWith) @trusted {
 
-    auto mainObj = dCompile(app.srcFileName, flags.value, importPaths.value, stringImportPaths.value);
+    auto mainObj = objectFile(app.srcFileName, flags.value, importPaths.value, stringImportPaths.value);
     const output = runDCompiler(buildPath(projectPath, app.srcFileName), flags.value,
                                 importPaths.value, stringImportPaths.value);
 

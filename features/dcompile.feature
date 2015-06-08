@@ -38,9 +38,9 @@ Feature: D compilation rule
       //constants.d is never mentioned here but changes to it
       //should trigger recompilation
       import reggae;
-      const mainObj  = dCompile(`source/main.d`,  ``, [`source`]);
-      const mathsObj = dCompile(`source/maths.d`, ``, [`source`]);
-      const ioObj    = dCompile(`source/io.d`,    ``, [`source`]);
+      const mainObj  = objectFile(`source/main.d`,  ``, [`source`]);
+      const mathsObj = objectFile(`source/maths.d`, ``, [`source`]);
+      const ioObj    = objectFile(`source/io.d`,    ``, [`source`]);
       mixin build!(Target(`calc`, `dmd -of$out $in`, [mainObj, mathsObj, ioObj]));
       """
 

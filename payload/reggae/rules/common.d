@@ -72,6 +72,16 @@ Target objectFile(in string srcFileName, in string flags = "",
                   in string[] includePaths = [],
                   in string[] stringImportPaths = [],
                   in string projDir = "$project") pure {
+
+    immutable cmd = compileCommand(srcFileName, flags, includePaths, stringImportPaths, projDir);
+    return Target(srcFileName.objFileName, cmd, [Target(srcFileName)]);
+}
+
+string compileCommand(in string srcFileName,
+                      in string flags = "",
+                      in string[] includePaths = [],
+                      in string[] stringImportPaths = [],
+                      in string projDir = "$project") pure {
     immutable includeParams = includePaths.map!(a => "-I" ~ buildPath(projDir, a)).join(",");
     immutable flagParams = flags.splitter.join(",");
     immutable ruleName = getBuiltinRule(srcFileName);
@@ -79,7 +89,7 @@ Target objectFile(in string srcFileName, in string flags = "",
     if(ruleName == "_dcompile")
         cmd ~= "stringImports=" ~ stringImportPaths.map!(a => "-J" ~ buildPath(projDir, a)).join(",");
 
-    return Target(srcFileName.objFileName, cmd.join(" "), [Target(srcFileName)]);
+    return cmd.join(" ");
 }
 
 private string getBuiltinRule(in string srcFileName) pure {

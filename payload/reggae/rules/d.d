@@ -16,18 +16,6 @@ import std.algorithm;
 //command attribute. It's horrible, but it works with the original decision
 //of using strings as commands. Should be changed to be a sum type where
 //a string represents a shell command and other variants call D code.
-private string dCompileCommand(in string flags = "",
-                               in string[] importPaths = [], in string[] stringImportPaths = [],
-                               in string projDir = "$project") @safe pure {
-    immutable importParams = importPaths.map!(a => "-I" ~ buildPath(projDir, a)).join(",");
-    immutable stringParams = stringImportPaths.map!(a => "-J" ~ buildPath(projDir, a)).join(",");
-    immutable flagParams = flags.splitter.join(",");
-    return ["_dcompile",
-            "includes=" ~ importParams,
-            "flags=" ~ flagParams,
-            "stringImports=" ~ stringParams].join(" ");
-}
-
 Target[] dCompileGrouped(in string[] srcFiles, in string flags = "",
                          in string[] importPaths = [], in string[] stringImportPaths = [],
                          in string projDir = "$project") @safe {
@@ -40,7 +28,7 @@ Target[] dCompilePerPackage(in string[] srcFiles, in string flags = "",
                             in string[] importPaths = [], in string[] stringImportPaths = [],
                             in string projDir = "$project") @safe {
 
-    immutable command = dCompileCommand(flags, importPaths, stringImportPaths, projDir);
+    immutable command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
     return srcFiles.byPackage.map!(a => Target(a[0].packagePath.objFileName,
                                                command,
                                                a.map!(a => Target(a)).array)).array;
@@ -50,7 +38,7 @@ Target[] dCompilePerModule(in string[] srcFiles, in string flags = "",
                            in string[] importPaths = [], in string[] stringImportPaths = [],
                            in string projDir = "$project") @safe {
 
-    immutable command = dCompileCommand(flags, importPaths, stringImportPaths, projDir);
+    immutable command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
     return srcFiles.map!(a => objectFile(a, flags, importPaths, stringImportPaths, projDir)).array;
 }
 

@@ -87,6 +87,11 @@ private string getBuiltinRule(in string srcFileName) pure {
     case ".d":
         return "_dcompile";
     case ".cpp":
+    case ".CPP":
+    case ".C":
+    case ".cxx":
+    case ".c++":
+    case ".cc":
         return "_cppcompile";
     case ".c":
         return "_ccompile";

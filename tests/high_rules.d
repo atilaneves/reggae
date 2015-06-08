@@ -16,9 +16,12 @@ void testCObjectFile() {
 }
 
 void testCppObjectFile() {
-    const obj = objectFile("foo.cpp", "-g -O0", ["myhdrs", "otherhdrs"]);
-    immutable cmd = "_cppcompile includes=-I$project/myhdrs,-I$project/otherhdrs flags=-g,-O0";
-    obj.shouldEqual(Target("foo.o", cmd, [Target("foo.cpp")]));
+    foreach(ext; ["cpp", "CPP", "cc", "cxx", "C", "c++"]) {
+        immutable fileName = "foo." ~ ext;
+        const obj = objectFile(fileName, "-g -O0", ["myhdrs", "otherhdrs"]);
+        immutable cmd = "_cppcompile includes=-I$project/myhdrs,-I$project/otherhdrs flags=-g,-O0";
+        obj.shouldEqual(Target("foo.o", cmd, [Target(fileName)]));
+    }
 }
 
 

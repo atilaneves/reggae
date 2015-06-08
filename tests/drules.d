@@ -44,8 +44,8 @@ void testDLinkNinja() {
 }
 
 void testDCompileWithMultipleFilesMake() {
-    const build = Build(dCompilePerPackage(["path/to/src/foo.d", "path/to/src/bar.d", "other/weird.d"],
-                                      "-O", ["path/to/src", "other/path"]));
+    const build = Build(packageObjectSingle(["path/to/src/foo.d", "path/to/src/bar.d", "other/weird.d"],
+                                            "-O", ["path/to/src", "other/path"]));
     const make = Makefile(build, "/tmp/myproject");
 
     build.targets[0].shellCommand("/tmp/myproject").shouldEqual(".reggae/dcompile --objFile=other.o --depFile=other.o.dep dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path  /tmp/myproject/other/weird.d");
@@ -55,8 +55,8 @@ void testDCompileWithMultipleFilesMake() {
 }
 
 void testDCompileWithMultipleFilesNinja() {
-    const build = Build(dCompilePerPackage(["path/to/src/foo.d", "path/to/src/bar.d", "other/weird.d"],
-                                 "-O", ["path/to/src", "other/path"]));
+    const build = Build(packageObjectSingle(["path/to/src/foo.d", "path/to/src/bar.d", "other/weird.d"],
+                                            "-O", ["path/to/src", "other/path"]));
     const ninja = Ninja(build, "/tmp/myproject");
 
     ninja.buildEntries.shouldEqual(

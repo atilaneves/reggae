@@ -11,7 +11,7 @@ import reggae.dependencies: dMainDepSrcs;
 import reggae.rules.common;
 import std.algorithm;
 
-//dCompileCommand, cCompile, cppCompile and dLink are the only default rules
+//objectFile and dLink are the only default rules
 //They work by serialising the rule to use piggy-backing on Target's string
 //command attribute. It's horrible, but it works with the original decision
 //of using strings as commands. Should be changed to be a sum type where

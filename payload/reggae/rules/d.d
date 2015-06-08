@@ -22,7 +22,9 @@ private string dCompileCommand(in string flags = "",
     immutable importParams = importPaths.map!(a => "-I" ~ buildPath(projDir, a)).join(",");
     immutable stringParams = stringImportPaths.map!(a => "-J" ~ buildPath(projDir, a)).join(",");
     immutable flagParams = flags.splitter.join(",");
-    return ["_dcompile ", "includes=" ~ importParams, "flags=" ~ flagParams,
+    return ["_dcompile",
+            "includes=" ~ importParams,
+            "flags=" ~ flagParams,
             "stringImports=" ~ stringParams].join(" ");
 }
 

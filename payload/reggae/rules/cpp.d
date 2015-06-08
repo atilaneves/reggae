@@ -17,7 +17,7 @@ Target cppCompile(in string srcFileName, in string flags = "",
     immutable includeParams = includePaths.map!(a => "-I" ~ buildPath(projDir, a)).join(",");
     immutable flagParams = flags.splitter.join(",");
     return Target(srcFileName.objFileName,
-                  ["_cppcompile ", "includes=" ~ includeParams, "flags=" ~ flagParams].join(" "),
+                  ["_cppcompile", "includes=" ~ includeParams, "flags=" ~ flagParams].join(" "),
                   [Target(srcFileName)]);
 }
 

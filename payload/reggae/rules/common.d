@@ -4,7 +4,7 @@ module reggae.rules.common;
 import reggae.build;
 import reggae.config: projectPath;
 import std.algorithm;
-import std.path: buildPath;
+import std.path;
 import std.array: array;
 
 version(Windows) {
@@ -60,4 +60,37 @@ private string[] srcFilesInDirs(in string extension, in string[] dirs) {
 string removeProjectPath(in string path) @safe pure {
     import std.path: relativePath, absolutePath;
     return path.absolutePath.relativePath(projectPath.absolutePath);
+}
+
+@safe:
+/**
+ An object file, typically from one source file in a certain language
+ (although for D the default is a whole package. The language is determined
+ by the file extension of the file(s) passed in.
+*/
+Target objectFile(in string srcFileName, in string flags = "",
+                  in string[] includePaths = [],
+                  in string[] stringImportPaths = [],
+                  in string projDir = "$project") pure {
+    immutable includeParams = includePaths.map!(a => "-I" ~ buildPath(projDir, a)).join(",");
+    immutable flagParams = flags.splitter.join(",");
+    immutable ruleName = getBuiltinRule(srcFileName);
+    auto cmd = [ruleName, "includes=" ~ includeParams, "flags=" ~ flagParams];
+    if(ruleName == "_dcompile")
+        cmd ~= "stringImports=" ~ stringImportPaths.map!(a => "-J" ~ buildPath(projDir, a)).join(",");
+
+    return Target(srcFileName.objFileName, cmd.join(" "), [Target(srcFileName)]);
+}
+
+private string getBuiltinRule(in string srcFileName) pure {
+    switch(srcFileName.extension) {
+    case ".d":
+        return "_dcompile";
+    case ".cpp":
+        return "_cppcompile";
+    case ".c":
+        return "_ccompile";
+    default:
+        throw new Exception("Unknown file extension " ~ srcFileName.extension);
+    }
 }

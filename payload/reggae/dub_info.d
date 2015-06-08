@@ -1,7 +1,7 @@
 module reggae.dub_info;
 
 import reggae.build;
-import reggae.rules.d;
+import reggae.rules;
 import reggae.types;
 import reggae.config: dflags, perModule;
 import reggae.sorting;
@@ -52,7 +52,7 @@ struct DubInfo {
                 filter!(a => includeMain || a != dubPackage.mainSourceFile).
                 map!(a => buildPath(dubPackage.path, a)).array;
 
-            targets ~= packageObjectFile(files, flags, importPaths, stringImportPaths, projDir);
+            targets ~= objectFile(files, flags, importPaths, stringImportPaths, projDir);
         }
 
         return targets;

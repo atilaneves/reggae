@@ -21,7 +21,7 @@ import std.algorithm;
 //if reggae.config.perModule is true, generates one per module
 Target[] packageObjectFile(in string[] srcFiles, in string flags = "",
                            in string[] importPaths = [], in string[] stringImportPaths = [],
-                           in string projDir = "$project") @safe {
+                           in string projDir = "$project") @safe pure {
     import reggae.config;
     auto func = perModule ? &packageObjectMany : &packageObjectSingle;
     return func(srcFiles, flags, importPaths, stringImportPaths, projDir);
@@ -29,7 +29,7 @@ Target[] packageObjectFile(in string[] srcFiles, in string flags = "",
 
 Target[] packageObjectSingle(in string[] srcFiles, in string flags = "",
                              in string[] importPaths = [], in string[] stringImportPaths = [],
-                             in string projDir = "$project") @safe {
+                             in string projDir = "$project") @safe pure {
 
     immutable command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
     return srcFiles.byPackage.map!(a => Target(a[0].packagePath.objFileName,
@@ -39,7 +39,7 @@ Target[] packageObjectSingle(in string[] srcFiles, in string flags = "",
 
 Target[] packageObjectMany(in string[] srcFiles, in string flags = "",
                            in string[] importPaths = [], in string[] stringImportPaths = [],
-                           in string projDir = "$project") @safe {
+                           in string projDir = "$project") @safe pure {
 
     immutable command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
     return srcFiles.map!(a => objectFile(a, flags, importPaths, stringImportPaths, projDir)).array;

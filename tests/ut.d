@@ -22,5 +22,6 @@ int main(string[] args) {
                           "tests.by_package",
                           "tests.dub_call",
                           "tests.binary",
+                          "tests.high_rules",
         );
 }

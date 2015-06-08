@@ -7,7 +7,7 @@ import std.algorithm;
 
 
 void testDCompileNoIncludePathsNinja() {
-    const build = Build(dCompile("path/to/src/foo.d"));
+    const build = Build(objectFile("path/to/src/foo.d"));
     const ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build path/to/src/foo.o: _dcompile /tmp/myproject/path/to/src/foo.d",
@@ -19,7 +19,7 @@ void testDCompileNoIncludePathsNinja() {
 
 
 void testDCompileIncludePathsNinja() {
-    const build = Build(dCompile("path/to/src/foo.d", "-O", ["path/to/src", "other/path"]));
+    const build = Build(objectFile("path/to/src/foo.d", "-O", ["path/to/src", "other/path"]));
     const ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build path/to/src/foo.o: _dcompile /tmp/myproject/path/to/src/foo.d",
@@ -30,7 +30,7 @@ void testDCompileIncludePathsNinja() {
 }
 
 void testDCompileIncludePathsMake() {
-    const build = Build(dCompile("path/to/src/foo.d", "-O", ["path/to/src", "other/path"]));
+    const build = Build(objectFile("path/to/src/foo.d", "-O", ["path/to/src", "other/path"]));
     build.targets[0].shellCommand("/tmp/myproject").shouldEqual(".reggae/dcompile --objFile=path/to/src/foo.o --depFile=path/to/src/foo.o.dep dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path  /tmp/myproject/path/to/src/foo.d");
 }
 
@@ -44,8 +44,8 @@ void testDLinkNinja() {
 }
 
 void testDCompileWithMultipleFilesMake() {
-    const build = Build(dCompilePerPackage(["path/to/src/foo.d", "path/to/src/bar.d", "other/weird.d"],
-                                      "-O", ["path/to/src", "other/path"]));
+    const build = Build(packageObjectSingle(["path/to/src/foo.d", "path/to/src/bar.d", "other/weird.d"],
+                                            "-O", ["path/to/src", "other/path"]));
     const make = Makefile(build, "/tmp/myproject");
 
     build.targets[0].shellCommand("/tmp/myproject").shouldEqual(".reggae/dcompile --objFile=other.o --depFile=other.o.dep dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path  /tmp/myproject/other/weird.d");
@@ -55,8 +55,8 @@ void testDCompileWithMultipleFilesMake() {
 }
 
 void testDCompileWithMultipleFilesNinja() {
-    const build = Build(dCompilePerPackage(["path/to/src/foo.d", "path/to/src/bar.d", "other/weird.d"],
-                                 "-O", ["path/to/src", "other/path"]));
+    const build = Build(packageObjectSingle(["path/to/src/foo.d", "path/to/src/bar.d", "other/weird.d"],
+                                            "-O", ["path/to/src", "other/path"]));
     const ninja = Ninja(build, "/tmp/myproject");
 
     ninja.buildEntries.shouldEqual(

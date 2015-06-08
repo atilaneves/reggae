@@ -11,56 +11,40 @@ import reggae.dependencies: dMainDepSrcs;
 import reggae.rules.common;
 import std.algorithm;
 
-//dCompileCommand, cCompile, cppCompile and dLink are the only default rules
+//objectFile and dLink are the only default rules
 //They work by serialising the rule to use piggy-backing on Target's string
 //command attribute. It's horrible, but it works with the original decision
 //of using strings as commands. Should be changed to be a sum type where
 //a string represents a shell command and other variants call D code.
-private string dCompileCommand(in string flags = "",
-                               in string[] importPaths = [], in string[] stringImportPaths = [],
-                               in string projDir = "$project") @safe pure {
-    immutable importParams = importPaths.map!(a => "-I" ~ buildPath(projDir, a)).join(",");
-    immutable stringParams = stringImportPaths.map!(a => "-J" ~ buildPath(projDir, a)).join(",");
-    immutable flagParams = flags.splitter.join(",");
-    return ["_dcompile ", "includes=" ~ importParams, "flags=" ~ flagParams,
-            "stringImports=" ~ stringParams].join(" ");
-}
 
-Target[] dCompileGrouped(in string[] srcFiles, in string flags = "",
-                         in string[] importPaths = [], in string[] stringImportPaths = [],
-                         in string projDir = "$project") @safe {
+//generate object file(s) for a D package. By default generates one per package,
+//if reggae.config.perModule is true, generates one per module
+Target[] packageObjectFile(in string[] srcFiles, in string flags = "",
+                           in string[] importPaths = [], in string[] stringImportPaths = [],
+                           in string projDir = "$project") @safe pure {
     import reggae.config;
-    auto func = perModule ? &dCompilePerModule : &dCompilePerPackage;
+    auto func = perModule ? &packageObjectMany : &packageObjectSingle;
     return func(srcFiles, flags, importPaths, stringImportPaths, projDir);
 }
 
-Target[] dCompilePerPackage(in string[] srcFiles, in string flags = "",
-                            in string[] importPaths = [], in string[] stringImportPaths = [],
-                            in string projDir = "$project") @safe {
+Target[] packageObjectSingle(in string[] srcFiles, in string flags = "",
+                             in string[] importPaths = [], in string[] stringImportPaths = [],
+                             in string projDir = "$project") @safe pure {
 
-    immutable command = dCompileCommand(flags, importPaths, stringImportPaths, projDir);
+    immutable command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
     return srcFiles.byPackage.map!(a => Target(a[0].packagePath.objFileName,
                                                command,
                                                a.map!(a => Target(a)).array)).array;
 }
 
-Target[] dCompilePerModule(in string[] srcFiles, in string flags = "",
+Target[] packageObjectMany(in string[] srcFiles, in string flags = "",
                            in string[] importPaths = [], in string[] stringImportPaths = [],
-                           in string projDir = "$project") @safe {
+                           in string projDir = "$project") @safe pure {
 
-    immutable command = dCompileCommand(flags, importPaths, stringImportPaths, projDir);
-    return srcFiles.map!(a => dCompile(a, flags, importPaths, stringImportPaths, projDir)).array;
+    immutable command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
+    return srcFiles.map!(a => objectFile(a, flags, importPaths, stringImportPaths, projDir)).array;
 }
 
-
-//@trusted because of join
-Target dCompile(in string srcFileName, in string flags = "",
-                in string[] importPaths = [], in string[] stringImportPaths = [],
-                in string projDir = "$project") @trusted pure {
-
-    immutable command = dCompileCommand(flags, importPaths, stringImportPaths, projDir);
-    return Target(srcFileName.objFileName, command, [Target(srcFileName)]);
-}
 
 /**
  * Compile-time function to that returns a list of Target objects
@@ -75,7 +59,7 @@ Target[] dObjects(SrcDirs dirs = SrcDirs(),
     () {
 
     Target[] dCompileInner(in string[] files) {
-        return dCompileGrouped(files, flags.value, ["."] ~ includes.value, stringImports.value);
+        return packageObjectFile(files, flags.value, ["."] ~ includes.value, stringImports.value);
     }
 
     return srcObjects!dCompileInner("d", dirs.value, srcFiles.value, excludeFiles.value);
@@ -102,13 +86,13 @@ Target dExe(in App app, in Flags flags,
             in StringImportPaths stringImportPaths,
             in Target[] linkWith) @trusted {
 
-    auto mainObj = dCompile(app.srcFileName, flags.value, importPaths.value, stringImportPaths.value);
+    auto mainObj = objectFile(app.srcFileName, flags.value, importPaths.value, stringImportPaths.value);
     const output = runDCompiler(buildPath(projectPath, app.srcFileName), flags.value,
                                 importPaths.value, stringImportPaths.value);
 
     const files = dMainDepSrcs(output).map!(a => a.removeProjectPath).array;
-    const dependencies = [mainObj] ~ dCompileGrouped(files, flags.value,
-                                                     importPaths.value, stringImportPaths.value);
+    const dependencies = [mainObj] ~ packageObjectFile(files, flags.value,
+                                                       importPaths.value, stringImportPaths.value);
 
     return dLink(app.exeFileName, dependencies ~ linkWith);
 }

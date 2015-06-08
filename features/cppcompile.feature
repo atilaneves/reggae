@@ -30,8 +30,8 @@ Feature: C++ compilation rule
     And a file named "mixproj/reggaefile.d" with:
       """
       import reggae;
-      const mainObj  = dCompile(`src/d/main.d`);
-      const mathsObj = cppCompile(`src/cpp/maths.cpp`, ``, [`headers`]);
+      const mainObj  = objectFile(`src/d/main.d`);
+      const mathsObj = objectFile(`src/cpp/maths.cpp`, ``, [`headers`]);
       mixin build!(Target(`calc`, `dmd -of$out $in`, [mainObj, mathsObj]));
       """
 

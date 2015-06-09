@@ -94,21 +94,39 @@ string compileCommand(in string srcFileName,
     return cmd.join(" ");
 }
 
-private string getBuiltinRule(in string srcFileName) pure {
-    switch(srcFileName.extension) {
+enum Language {
+    C,
+    Cplusplus,
+    D,
+}
+
+private Language getLanguage(in string srcFileName) pure {
+    switch(srcFileName.extension) with(Language) {
     case ".d":
-        return "_dcompile";
+        return D;
     case ".cpp":
     case ".CPP":
     case ".C":
     case ".cxx":
     case ".c++":
     case ".cc":
-        return "_cppcompile";
+        return Cplusplus;
     case ".c":
-        return "_ccompile";
+        return C;
     default:
         throw new Exception("Unknown file extension " ~ srcFileName.extension);
+    }
+
+}
+
+private string getBuiltinRule(in string srcFileName) pure {
+    final switch(getLanguage(srcFileName)) with(Language) {
+        case D:
+            return "_dcompile";
+        case Cplusplus:
+            return "_cppcompile";
+        case C:
+            return "_ccompile";
     }
 }
 

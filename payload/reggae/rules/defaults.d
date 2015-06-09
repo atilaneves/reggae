@@ -10,7 +10,7 @@ import std.algorithm: find, canFind, splitter, startsWith;
 import std.array: replace, array;
 
 
-private immutable defaultRules = ["_dcompile", "_ccompile", "_cppcompile", "_dlink"];
+private immutable defaultRules = ["_dcompile", "_ccompile", "_cppcompile", "_link"];
 
 
 private bool isDefaultRule(in string command) @safe pure nothrow {

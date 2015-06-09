@@ -142,7 +142,7 @@ void testDefaultRules() {
                     ["command = .reggae/dcompile --objFile=$out --depFile=$DEPFILE dmd $flags $includes $stringImports $in",
                      "deps = gcc",
                      "depfile = $DEPFILE"]),
-         NinjaEntry("rule _dlink",
+         NinjaEntry("rule _link",
                     ["command = dmd $flags -of$out $in"]),
          NinjaEntry("rule _cppcompile",
                     ["command = g++ $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",

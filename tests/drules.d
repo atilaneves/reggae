@@ -36,10 +36,10 @@ void testDCompileIncludePathsMake() {
 
 
 void testDLinkNinja() {
-    const build = Build(dLink("bin/lefoo", [Target("leobj.o")], "-lib"));
+    const build = Build(link("bin/lefoo", [Target("leobj.o")], "-lib"));
     const ninja = Ninja(build, "/dir/stuff");
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build bin/lefoo: _dlink /dir/stuff/leobj.o",
+        [NinjaEntry("build bin/lefoo: _link /dir/stuff/leobj.o",
                     ["flags = -lib"])]);
 }
 
@@ -78,7 +78,7 @@ void testDCompileWithMultipleFilesNinja() {
 }
 
 
-void testDLink() {
-    const target = dLink("myapp", [Target("foo.o"), Target("bar.o")], "-L-L");
+void testLink() {
+    const target = link("myapp", [Target("foo.o"), Target("bar.o")], "-L-L");
     target.shellCommand("/path/to").shouldEqual("dmd -ofmyapp -L-L /path/to/foo.o /path/to/bar.o");
 }

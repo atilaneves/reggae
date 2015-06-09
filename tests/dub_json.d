@@ -164,7 +164,7 @@ void testDubInfoToTargets() {
 void testDubInfoToTargetsLib() {
     const info = getDubInfo(jsonString.replace("executable", "library"));
     info.mainTarget.shouldEqual(
-        Target("super_app", "_dlink flags=-lib,-L-lliblib,-L-lotherlib",
+        Target("super_app", "_link flags=-lib,-L-lliblib,-L-lotherlib",
                [Target("path/to/pkg1/src/foo.o",
                        "_dcompile "
                        "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
@@ -203,7 +203,7 @@ void testDubInfoToTargetsLib() {
 void testDubInfoWithLibs() {
     const info = getDubInfo(jsonString.dup);
     info.mainTarget.shouldEqual(
-        Target("super_app", "_dlink flags=-L-lliblib,-L-lotherlib",
+        Target("super_app", "_link flags=-L-lliblib,-L-lotherlib",
                [Target("path/to/pkg1/src/foo.o",
                        "_dcompile "
                        "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"

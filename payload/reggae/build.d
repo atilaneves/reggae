@@ -232,7 +232,7 @@ private:
 
         case "_cppcompile": return ccCommand(cppCompiler);
         case "_ccompile":   return ccCommand(cCompiler);
-        case "_dlink":
+        case "_link":
             return [dCompiler, "-of" ~ outputs[0],
                     flags,
                     dependencyFilesString(projectPath)].join(" ");

@@ -11,7 +11,7 @@ import reggae.dependencies: dMainDepSrcs;
 import reggae.rules.common;
 import std.algorithm;
 
-//objectFile and dLink are the only default rules
+//objectFile, objectFiles and link are the only default rules
 //They work by serialising the rule to use piggy-backing on Target's string
 //command attribute. It's horrible, but it works with the original decision
 //of using strings as commands. Should be changed to be a sum type where
@@ -94,17 +94,7 @@ Target dExe(in App app, in Flags flags,
     const dependencies = [mainObj] ~ objectFiles(files, flags.value,
                                                  importPaths.value, stringImportPaths.value);
 
-    return dLink(app.exeFileName, dependencies ~ linkWith);
-}
-
-
-/**
- Currently only supports linking with dmd
- */
-Target dLink(in string exeName, in Target[] dependencies, in string flags = "") @safe pure nothrow {
-    auto cmd = "_dlink";
-    if(flags != "") cmd ~= " flags=" ~ flags;
-    return Target(exeName, cmd, dependencies);
+    return link(app.exeFileName, dependencies ~ linkWith);
 }
 
 

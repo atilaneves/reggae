@@ -32,7 +32,7 @@ NinjaEntry[] defaultRules() @safe pure nothrow {
                         dCompiler ~ " $flags $includes $stringImports $in",
                         "deps = gcc",
                         "depfile = $DEPFILE"]),
-            NinjaEntry("rule _dlink",
+            NinjaEntry("rule _link",
                        ["command = " ~ dCompiler ~ " $flags -of$out $in"]),
             NinjaEntry("rule _cppcompile",
                        ["command = " ~ cppCompiler ~ " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
@@ -97,7 +97,7 @@ private:
 
         string[] paramLines;
 
-        if(rule != "_dlink") { //i.e. one of the compile rules
+        if(rule != "_link") { //i.e. one of the compile rules
             auto params = ["includes", "flags"];
             if(rule == "_dcompile") params ~= "stringImports";
 

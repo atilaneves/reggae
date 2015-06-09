@@ -12,7 +12,7 @@ void testGetDefaultRule() {
     "_dcompile foo=bar".getDefaultRule.shouldEqual("_dcompile");
     "_ccompile foo=bar".getDefaultRule.shouldEqual("_ccompile");
     "_cppcompile foo=bar".getDefaultRule.shouldEqual("_cppcompile");
-    "_dlink foo=bar".getDefaultRule.shouldEqual("_dlink");
+    "_link foo=bar".getDefaultRule.shouldEqual("_link");
 }
 
 void testGetDefaultRuleParams() {

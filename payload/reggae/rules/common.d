@@ -111,3 +111,15 @@ private string getBuiltinRule(in string srcFileName) pure {
         throw new Exception("Unknown file extension " ~ srcFileName.extension);
     }
 }
+
+
+/**
+ Should pull its weight more in the future by automatically figuring out what
+ to do. Right now only works for linking D applications using the configured
+ D compiler
+ */
+Target link(in string exeName, in Target[] dependencies, in string flags = "") @safe pure nothrow {
+    auto cmd = "_link";
+    if(flags != "") cmd ~= " flags=" ~ flags;
+    return Target(exeName, cmd, dependencies);
+}

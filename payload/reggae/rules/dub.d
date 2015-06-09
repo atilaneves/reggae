@@ -7,7 +7,7 @@ static if(isDubProject) {
     import reggae.dub_info;
     import reggae.types;
     import reggae.build;
-    import reggae.rules.d;
+    import reggae.rules.common;
 
 
     Target dubDefaultTarget() {
@@ -28,6 +28,6 @@ static if(isDubProject) {
         )() if(isCallable!objsFunction) {
 
             const dubObjs = configToDubInfo[config.value].toTargets(includeMain, compilerFlags.value);
-            return dLink(exeName.value, objsFunction() ~ dubObjs);
+            return link(exeName.value, objsFunction() ~ dubObjs);
         }
 }

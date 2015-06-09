@@ -19,17 +19,17 @@ import std.algorithm;
 
 //generate object file(s) for a D package. By default generates one per package,
 //if reggae.config.perModule is true, generates one per module
-Target[] packageObjectFile(in string[] srcFiles, in string flags = "",
-                           in string[] importPaths = [], in string[] stringImportPaths = [],
-                           in string projDir = "$project") @safe pure {
+Target[] objectFiles(in string[] srcFiles, in string flags = "",
+                     in string[] importPaths = [], in string[] stringImportPaths = [],
+                     in string projDir = "$project") @safe pure {
     import reggae.config;
-    auto func = perModule ? &packageObjectMany : &packageObjectSingle;
+    auto func = perModule ? &objectFilesPerModule : &objectFilesPerPackage;
     return func(srcFiles, flags, importPaths, stringImportPaths, projDir);
 }
 
-Target[] packageObjectSingle(in string[] srcFiles, in string flags = "",
-                             in string[] importPaths = [], in string[] stringImportPaths = [],
-                             in string projDir = "$project") @safe pure {
+Target[] objectFilesPerPackage(in string[] srcFiles, in string flags = "",
+                               in string[] importPaths = [], in string[] stringImportPaths = [],
+                               in string projDir = "$project") @safe pure {
 
     immutable command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
     return srcFiles.byPackage.map!(a => Target(a[0].packagePath.objFileName,
@@ -37,9 +37,9 @@ Target[] packageObjectSingle(in string[] srcFiles, in string flags = "",
                                                a.map!(a => Target(a)).array)).array;
 }
 
-Target[] packageObjectMany(in string[] srcFiles, in string flags = "",
-                           in string[] importPaths = [], in string[] stringImportPaths = [],
-                           in string projDir = "$project") @safe pure {
+Target[] objectFilesPerModule(in string[] srcFiles, in string flags = "",
+                              in string[] importPaths = [], in string[] stringImportPaths = [],
+                              in string projDir = "$project") @safe pure {
 
     immutable command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
     return srcFiles.map!(a => objectFile(a, flags, importPaths, stringImportPaths, projDir)).array;
@@ -59,7 +59,7 @@ Target[] dObjects(SrcDirs dirs = SrcDirs(),
     () {
 
     Target[] dCompileInner(in string[] files) {
-        return packageObjectFile(files, flags.value, ["."] ~ includes.value, stringImports.value);
+        return objectFiles(files, flags.value, ["."] ~ includes.value, stringImports.value);
     }
 
     return srcObjects!dCompileInner("d", dirs.value, srcFiles.value, excludeFiles.value);
@@ -91,13 +91,16 @@ Target dExe(in App app, in Flags flags,
                                 importPaths.value, stringImportPaths.value);
 
     const files = dMainDepSrcs(output).map!(a => a.removeProjectPath).array;
-    const dependencies = [mainObj] ~ packageObjectFile(files, flags.value,
-                                                       importPaths.value, stringImportPaths.value);
+    const dependencies = [mainObj] ~ objectFiles(files, flags.value,
+                                                 importPaths.value, stringImportPaths.value);
 
     return dLink(app.exeFileName, dependencies ~ linkWith);
 }
 
 
+/**
+ Currently only supports linking with dmd
+ */
 Target dLink(in string exeName, in Target[] dependencies, in string flags = "") @safe pure nothrow {
     auto cmd = "_dlink";
     if(flags != "") cmd ~= " flags=" ~ flags;

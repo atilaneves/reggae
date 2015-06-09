@@ -78,24 +78,6 @@ Target objectFile(in string srcFileName,
     return Target(srcFileName.objFileName, cmd, [Target(srcFileName)]);
 }
 
-/**
- An object file, typically from one source file in a certain language
- (although for D the default is a whole package. The language is determined
- by the file extension of the file(s) passed in.
-*/
-Target[] objectFile(in string[] srcFileNames,
-                    in string flags = "",
-                    in string[] includePaths = [],
-                    in string[] stringImportPaths = [],
-                    in string projDir = "$project") pure {
-
-    immutable rule = getBuiltinRule(srcFileNames[0]);
-    if(rule != "_dcompile") throw new Exception("objectFile for multiple files only available for D");
-
-    import reggae.rules.d: packageObjectFile;
-    return packageObjectFile(srcFileNames, flags, includePaths, stringImportPaths, projDir);
-}
-
 
 string compileCommand(in string srcFileName,
                       in string flags = "",

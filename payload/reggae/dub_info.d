@@ -52,7 +52,7 @@ struct DubInfo {
                 filter!(a => includeMain || a != dubPackage.mainSourceFile).
                 map!(a => buildPath(dubPackage.path, a)).array;
 
-            targets ~= objectFile(files, flags, importPaths, stringImportPaths, projDir);
+            targets ~= objectFiles(files, flags, importPaths, stringImportPaths, projDir);
         }
 
         return targets;

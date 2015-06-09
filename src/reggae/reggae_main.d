@@ -77,15 +77,27 @@ private void createBuild(in Options options) {
     immutable reggaefilePath = getReggaefilePath(options);
     enforce(reggaefilePath.exists, text("Could not find ", reggaefilePath));
 
-    alias fileNames = TypeTuple!("buildgen_main.d",
-                                 "build.d",
-                                 "backend/make.d", "backend/ninja.d", "backend/binary.d",
-                                 "package.d", "range.d", "reflect.d",
-                                 "dependencies.d", "types.d", "dcompile.d",
-                                 "dub_info.d", "ctaa.d", "sorting.d",
-                                 "rules/package.d",
-                                 "rules/dub.d", "rules/defaults.d", "rules/common.d",
-                                 "rules/d.d", "rules/cpp.d", "rules/c.d");
+    static if(allFeatures) {
+        alias fileNames = TypeTuple!("buildgen_main.d",
+                                     "build.d",
+                                     "backend/make.d", "backend/ninja.d", "backend/binary.d",
+                                     "package.d", "range.d", "reflect.d",
+                                     "dependencies.d", "types.d", "dcompile.d",
+                                     "dub_info.d", "ctaa.d", "sorting.d",
+                                     "rules/package.d",
+                                     "rules/dub.d", "rules/defaults.d", "rules/common.d",
+                                     "rules/d.d", "rules/cpp.d", "rules/c.d");
+    } else {
+        alias fileNames = TypeTuple!("buildgen_main.d",
+                                     "build.d",
+                                     "backend/binary.d",
+                                     "package.d", "range.d", "reflect.d",
+                                     "dependencies.d", "types.d", "dcompile.d",
+                                     "ctaa.d", "sorting.d",
+                                     "rules/package.d",
+                                     "rules/defaults.d", "rules/common.d",
+                                     "rules/d.d");
+    }
     writeSrcFiles!(fileNames)(options);
 
     const reggaeSrcs = getReggaeSrcs!(fileNames)(options);
@@ -101,10 +113,19 @@ private void createBuild(in Options options) {
 
 private auto compileBinaries(in Options options, in string[] reggaeSrcs) {
     immutable buildGenName = getBuildBinName(options);
+    version(minimal) {
+        const compileBuildGenCmd = ["dmd",
+                                    "-I" ~ options.projectPath,
+                                    "-of" ~ buildGenName,
+                                    "-version=minimal"] ~
+            getBuildBinFlags(options) ~ reggaeSrcs ~ getReggaefilePath(options);
+
+    } else {
     const compileBuildGenCmd = ["dmd",
                                 "-I" ~ options.projectPath,
                                 "-of" ~ buildGenName] ~
         getBuildBinFlags(options) ~ reggaeSrcs ~ getReggaefilePath(options);
+    }
 
     immutable dcompileName = buildPath(hiddenDir, "dcompile");
     immutable dcompileCmd = ["dmd",
@@ -163,7 +184,9 @@ private void writeSrcFiles(fileNames...)(in Options options) {
 private void writeConfig(in Options options) {
     auto file = File(reggaeSrcFileName("config.d"), "w");
     file.writeln("module reggae.config;");
+    static if(allFeatures) {
     file.writeln("import reggae.dub_info;");
+    }
     file.writeln("import reggae.ctaa;");
     file.writeln("import reggae.types: Backend;");
     file.writeln("enum projectPath = `", options.projectPath, "`;");

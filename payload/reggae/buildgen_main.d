@@ -22,23 +22,31 @@ private void generateBuild() {
 
     final switch(backend) with(Backend) {
 
-        case make:
-            const makefile = Makefile(build, projectPath);
-            auto file = File(makefile.fileName, "w");
-            file.write(makefile.output);
-            break;
+            version(minimal) {
+            case make:
+                throw new Exception("Make backend support not compiled in");
+            case ninja:
+                throw new Exception("Ninja backend support not compiled in");
+            }
+            else  {
+            case make:
+                const makefile = Makefile(build, projectPath);
+                auto file = File(makefile.fileName, "w");
+                file.write(makefile.output);
+                break;
 
-        case ninja:
-            const ninja = Ninja(build, projectPath);
+            case ninja:
+                const ninja = Ninja(build, projectPath);
 
-            auto buildNinja = File("build.ninja", "w");
-            buildNinja.writeln("include rules.ninja\n");
-            buildNinja.writeln(ninja.buildOutput);
+                auto buildNinja = File("build.ninja", "w");
+                buildNinja.writeln("include rules.ninja\n");
+                buildNinja.writeln(ninja.buildOutput);
 
-            auto rulesNinja = File("rules.ninja", "w");
-            rulesNinja.writeln(ninja.rulesOutput);
+                auto rulesNinja = File("rules.ninja", "w");
+                rulesNinja.writeln(ninja.rulesOutput);
 
-            break;
+                break;
+            }
 
         case binary:
             const binary = Binary(build, projectPath);

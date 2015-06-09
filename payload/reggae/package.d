@@ -23,6 +23,12 @@
  subpackages. There is also a $(D reggae.rules.dub) package for accessing
  targets defined in/by dub.
 
+ Right now the $(D objectFile) and $(D objectFiles) rules generate
+ the appropriate commands to build an object file (or object files
+ in the case of the latter) for a given source language. There is
+ no current mechanism to support other languages as plugins but
+ that's how it's planned to be in the future.
+
  Reggae works by using backends. Currently, there are three: the
  ninja, make and binary backends. The first two generate files for
  those two build systems in the same manner as CMake and Premake

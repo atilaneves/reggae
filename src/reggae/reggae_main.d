@@ -8,11 +8,22 @@ import std.conv: text;
 import std.exception: enforce;
 import std.conv: to;
 import reggae.options;
-import reggae.dub_json;
-import reggae.dub_info;
 import reggae.ctaa;
-import reggae.dub_call;
 
+version(minimal) {
+    enum allFeatures = false;
+} else {
+    enum allFeatures = true;
+}
+
+static if(allFeatures) {
+    pragma(msg, "Why hello!");
+    import reggae.dub_info;
+    import reggae.dub_call;
+    import reggae.dub_json;
+
+    DubInfo[string] gDubInfos;
+}
 
 int main(string[] args) {
     try {
@@ -33,7 +44,6 @@ int main(string[] args) {
     return 0;
 }
 
-DubInfo[string] gDubInfos;
 
 private void createReggaefile(in Options options) {
     writeln("[Reggae] Creating reggaefile.d from dub information");
@@ -41,7 +51,9 @@ private void createReggaefile(in Options options) {
     file.writeln("import reggae;");
     file.writeln("mixin build!dubDefaultTarget;");
 
-    if(!options.noFetch) dubFetch(_getDubInfo(options));
+    static if(allFeatures) {
+        if(!options.noFetch) dubFetch(_getDubInfo(options));
+    }
 }
 
 string[] getReggaeSrcs(fileNames...)(in Options options) @safe pure nothrow {
@@ -169,6 +181,7 @@ private void writeConfig(in Options options) {
     }
     file.writeln("]);");
 
+    static if(allFeatures) {
     if(options.isDubProject) {
         file.writeln("enum isDubProject = true;");
         auto dubInfo = _getDubInfo(options);
@@ -185,8 +198,10 @@ private void writeConfig(in Options options) {
     } else {
         file.writeln("enum isDubProject = false;");
     }
+    }
 }
 
+static if(allFeatures) {
 private DubInfo _getDubInfo(in Options options) {
 
     if("default" !in gDubInfos) {
@@ -209,6 +224,7 @@ private DubInfo _getDubInfo(in Options options) {
     }
 
     return gDubInfos["default"];
+}
 }
 
 private string _callDub(in Options options, in string[] args) {
@@ -240,6 +256,7 @@ private string getReggaefilePath(in Options options) @safe nothrow {
     return buildPath(path, "reggaefile.d");
 }
 
+static if(allFeatures) {
 //@trusted because of writeln
 private void dubFetch(in DubInfo dubInfo) @trusted {
     foreach(cmd; dubInfo.fetchCommands) {
@@ -251,4 +268,5 @@ private void dubFetch(in DubInfo dubInfo) @trusted {
                 ret.output);
         }
     }
+}
 }

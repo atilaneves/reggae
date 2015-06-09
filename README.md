@@ -27,7 +27,7 @@ Dub projects with no `reggaefile.d` will have one generated for them in the buil
 
 How to write build configurations
 ---------------------------------
-The best examples can be found in the [features directory](features) since they're executable.
+The best examples can be found in the [features directory](features).
 Each `reggaefile.d` must contain one and only one function with a return value of type
 [Build](payload/reggae/build.d). This function can be generated automatically with the
 [build template mixin](payload/reggae/build.d). The `Build` struct is a container for
@@ -50,7 +50,9 @@ That was just an example. To build D apps with no external dependencies, this wi
                       );
     mixin build!(app);
 
-There are also other functions and pre-built rules for C and C++ objects.
+There are also other functions and pre-built rules for C and C++ objects. There is no
+HTML documentation yet but the [package file](payload/reggae/package.d) contains the
+relevant DDoc with details.
 
 Dub integration
 ---------------

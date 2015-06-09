@@ -1,3 +1,9 @@
+/**
+ This module contains the core data definitions that allow a build
+ to be expressed in. $(D Build) is a container struct for top-level
+ targets, $(D Target) is the heart of the system.
+ */
+
 module reggae.build;
 
 import reggae.rules.defaults;
@@ -16,7 +22,9 @@ Target createTargetFromTarget(in Target target) {
                   target.implicits.map!(a => a.enclose(target)).array);
 }
 
-
+/**
+ Contains the top-level targets.
+ */
 struct Build {
     const(Target)[] targets;
 
@@ -105,6 +113,23 @@ unittest {
 }
 
 
+/**
+ The core of reggae's D-based DSL for describing build systems.
+ Targets contain outputs, a command to generate those outputs,
+ explicit dependencies and implicit dependencies. All dependencies
+ are themselves $(D Target) structs.
+
+ The command is given as a string. In this string, certain words
+ have special meaning: $(D $in), $(D $out), $(D $project) and $(D builddir).
+
+ $(D $in) gets expanded to all explicit dependencies.
+ $(D $out) gets expanded to all outputs.
+ $(D $project) gets expanded to the project directory (i.e. the directory including
+ the source files to build that was given as a command-line argument). This can be
+ useful when build outputs are to be placed in the source directory, such as
+ automatically generated source files.
+ $(D $builddir) expands to the build directory (i.e. where reggae was run from).
+ */
 struct Target {
     const(string)[] outputs;
     const(Target)[] dependencies;

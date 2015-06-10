@@ -1,10 +1,20 @@
 module reggae.buildgen;
 
 import reggae;
-import reggae.config;
 import std.stdio;
 
-mixin template ReggaeMain(string buildModule = "reggaefile") {
+/**
+ Creates a build generator out of a module and a list of top-level targets.
+ This will define a function with the signature $(D Build buildFunc()) in
+ the calling module and a $(D main) entry point function for a command-line
+ executable.
+ */
+mixin template buildGen(string buildModule, targets...) {
+    mixin buildImpl!targets;
+    mixin BuildGenMain!buildModule;
+}
+
+mixin template BuildGenMain(string buildModule = "reggaefile") {
     import std.stdio;
 
     int main(string[] args) {

@@ -11,30 +11,30 @@ import reggae.options;
 import reggae.ctaa;
 
 version(minimal) {
-    enum allFeatures = false;
+    //empty stubs for minimal version of reggae
+    void maybeCreateReggaefile(T...)(T) {}
+    void writeDubConfig(T...)(T) {}
 } else {
-    enum allFeatures = true;
-}
-
-static if(allFeatures) {
     import reggae.dub.interop;
 }
 
 int main(string[] args) {
     try {
-        const options = getOptions(args);
-        if(options.help) return 0;
-        enforce(options.projectPath != "", "A project path must be specified");
-
-        static if(allFeatures) maybeCreateReggaefile(options);
-
-        createBuild(options);
+        run(getOptions(args));
     } catch(Exception ex) {
         stderr.writeln(ex.msg);
         return 1;
     }
 
     return 0;
+}
+
+void run(in Options options) {
+    if(options.help) return;
+    enforce(options.projectPath != "", "A project path must be specified");
+
+    maybeCreateReggaefile(options);
+    createBuild(options);
 }
 
 
@@ -72,23 +72,18 @@ enum otherFiles = [
     "rules/cpp.d", "rules/c.d",
     ];
 
-private string coreFilesTupleString() {
-    import std.algorithm;
-    return "TypeTuple!(" ~ coreFiles.map!(a => `"` ~ a ~ `"`).join(",") ~ ")";
+private string[] fileNames() {
+    version(minimal) return coreFiles;
+    else return coreFiles ~ otherFiles;
 }
 
-private string allFilesTupleString() {
+private string filesTupleString() {
     import std.algorithm;
-    return "TypeTuple!(" ~ (coreFiles ~ otherFiles).map!(a => `"` ~ a ~ `"`).join(",") ~ ")";
+    return "TypeTuple!(" ~ fileNames.map!(a => `"` ~ a ~ `"`).join(",") ~ ")";
 }
-
 
 template FileNames() {
-    static if(allFeatures) {
-        mixin("alias FileNames = " ~ allFilesTupleString ~ ";");
-    } else {
-        mixin("alias FileNames = " ~ coreFilesTupleString ~ ";");
-    }
+    mixin("alias FileNames = " ~ filesTupleString ~ ";");
 }
 
 private void createBuild(in Options options) {
@@ -109,22 +104,11 @@ private void createBuild(in Options options) {
     writeln(retRunBuildgen.output);
 }
 
+
 private auto compileBinaries(in Options options, in string[] reggaeSrcs) {
-    immutable buildGenName = getBuildBinName(options);
-    version(minimal) {
-        const compileBuildGenCmd = ["dmd",
-                                    "-I" ~ options.projectPath,
-                                    "-of" ~ buildGenName,
-                                    "-version=minimal"] ~
-            getBuildBinFlags(options) ~ reggaeSrcs ~ getReggaefilePath(options);
 
-    } else {
-    const compileBuildGenCmd = ["dmd",
-                                "-I" ~ options.projectPath,
-                                "-of" ~ buildGenName] ~
-        getBuildBinFlags(options) ~ reggaeSrcs ~ getReggaefilePath(options);
-    }
-
+    immutable buildGenName = getBuildGenName(options);
+    const compileBuildGenCmd = getCompileBuildGenCmd(options, reggaeSrcs);
     immutable dcompileName = buildPath(hiddenDir, "dcompile");
     immutable dcompileCmd = ["dmd",
                              "-I.reggae/src",
@@ -134,6 +118,7 @@ private auto compileBinaries(in Options options, in string[] reggaeSrcs) {
 
 
     static struct Binary { string name; const(string)[] cmd; }
+
     const binaries = [Binary(buildGenName, compileBuildGenCmd), Binary(dcompileName, dcompileCmd)];
     import std.parallelism;
 
@@ -147,14 +132,21 @@ private auto compileBinaries(in Options options, in string[] reggaeSrcs) {
     return buildGenName;
 }
 
-private string getBuildBinName(in Options options) @safe pure nothrow {
+string[] getCompileBuildGenCmd(in Options options, in string[] reggaeSrcs) @safe nothrow {
+    immutable buildBinFlags = options.backend == Backend.binary
+        ? ["-O", "-release", "-inline"]
+        : [];
+    immutable commonBefore = ["dmd",
+                              "-I" ~ options.projectPath,
+                              "-of" ~ getBuildGenName(options)];
+    const commonAfter = buildBinFlags ~ reggaeSrcs ~ getReggaefilePath(options);
+    version(minimal) return commonBefore ~ "-version=minimal" ~ commonAfter;
+    else return commonBefore ~ commonAfter;
+}
+
+string getBuildGenName(in Options options) @safe pure nothrow {
     return options.backend == Backend.binary ? "build" : buildPath(hiddenDir, "buildgen");
 }
-
-private string[] getBuildBinFlags(in Options options) @safe pure nothrow {
-    return options.backend == Backend.binary ? ["-O", "-release", "-inline"] : [];
-}
-
 
 immutable reggaeSrcDirName = buildPath(".reggae", "src", "reggae");
 
@@ -198,9 +190,7 @@ private void writeConfig(in Options options) {
     }
     file.writeln("]);");
 
-    static if(allFeatures) {
-        writeDubConfig(options, file);
-    }
+    writeDubConfig(options, file);
 }
 
 

@@ -4,6 +4,7 @@ version(minimal) {
 
     //flags have to name $project explicitly since these are low-level build definitions,
     //not the high level ones that do this automatically
+    //This is a repetition in D of what's in minimal_bootstrap.sh
     enum flags = "-version=minimal -I$project/src -I$project/payload -J$project/payload/reggae";
     enum srcs = [Target("src/reggae/reggae_main.d"), Target("src/reggae/options.d"),
                 Target("payload/reggae/types.d"), Target("payload/reggae/build.d"),
@@ -14,13 +15,15 @@ version(minimal) {
     mixin build!(main);
 
 } else {
-    //fully feature build
+    //fully featured build
 
     //the actual reggae binary
     //could also be dubConfigurationTarget(ExeName("reggae"), Configuration("executable"))
+    //or use dExe to figure out dependencies itself
     alias main = dubDefaultTargetWithFlags!(Flags("-g -debug"));
 
     //the unit test binary
+    //since it depends on unit-threaded, must use a dub configuration
     alias ut = dubConfigurationTarget!(ExeName("ut"),
                                        Configuration("unittest"),
                                        Flags("-g -debug -cov"));

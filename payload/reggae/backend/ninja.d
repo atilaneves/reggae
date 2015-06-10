@@ -270,7 +270,7 @@ private string targetCommand(in Target target) @trusted pure nothrow {
 
 //@trusted because of splitter
 private string targetRawCommand(in Target target) @trusted pure nothrow {
-    return target.command.splitter(" ").front;
+    return target.expandCommand.splitter(" ").front;
 }
 
 //ninja doesn't like symbols in rule names

@@ -75,7 +75,6 @@ struct Makefile {
     string command(in Target target) @safe const {
         immutable cmd = target.shellCommand(projectPath);
         immutable depfile = target.outputs[0] ~ ".dep";
-
         immutable rawCmdLine = target.rawCmdString(projectPath);
 
         if(rawCmdLine.isDefaultCommand) {

@@ -183,7 +183,7 @@ struct Target {
         return depFilesStringImpl(implicits, projectPath);
     }
 
-    @property string command(in string projectPath = "") @trusted pure const nothrow {
+    @property string expandCommand(in string projectPath = "") @trusted pure const nothrow {
         //functional didn't work here, I don't know why so sticking with loops for now
         string[] depOutputs;
         foreach(dep; dependencies) {
@@ -208,7 +208,7 @@ struct Target {
 
 
     string shellCommand(in string projectPath = "") @safe pure const {
-        return _command.isDefaultCommand ? defaultCommand(projectPath) : command(projectPath);
+        return _command.isDefaultCommand ? defaultCommand(projectPath) : expandCommand(projectPath);
     }
 
     string[] outputsInProjectPath(in string projectPath) @safe pure nothrow const {

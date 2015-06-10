@@ -15,9 +15,12 @@ auto getBuild(alias Module)() if(is(typeof(Module)) && isSomeString!(typeof(Modu
 auto getBuild(alias Module)() if(!is(typeof(Module))) {
     mixin("import " ~ fullyQualifiedName!Module ~ ";");
     Build function()[] builds;
+
     foreach(moduleMember; __traits(allMembers, Module)) {
-        static if(isBuildFunction!(mixin(moduleMember))) {
-            builds ~= &mixin(moduleMember);
+        static if(__traits(compiles, isBuildFunction!(mixin(moduleMember)))) {
+            static if(isBuildFunction!(mixin(moduleMember))) {
+                builds ~= &mixin(moduleMember);
+            }
         }
     }
 

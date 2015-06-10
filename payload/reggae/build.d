@@ -238,8 +238,8 @@ private:
     string defaultCommand(in string projectPath) @safe pure const {
         import reggae.config: dCompiler, cppCompiler, cCompiler;
 
-        immutable flags = _command.getDefaultRuleParams(projectPath, "flags", []).join(" ");
-        immutable includes = _command.getDefaultRuleParams(projectPath, "includes", []).join(" ");
+        immutable flags = _command.getParams(projectPath, "flags", []).join(" ");
+        immutable includes = _command.getParams(projectPath, "includes", []).join(" ");
         immutable depfile = outputs[0] ~ ".dep";
 
         string ccCommand(in string compiler) {
@@ -258,7 +258,7 @@ private:
         switch(rule) {
 
         case "_dcompile":
-            immutable stringImports = _command.getDefaultRuleParams(projectPath, "stringImports", []).join(" ");
+            immutable stringImports = _command.getParams(projectPath, "stringImports", []).join(" ");
             immutable command = [".reggae/dcompile",
                                  "--objFile=" ~ outputs[0],
                                  "--depFile=" ~ depfile, dCompiler,
@@ -302,8 +302,8 @@ struct Command {
         return isDefaultRule(getRule);
     }
 
-    string[] getDefaultRuleParams(in string projectPath, in string key, string[] ifNotFound) @safe pure const {
-        return getDefaultRuleParams(projectPath, key, true, ifNotFound);
+    string[] getParams(in string projectPath, in string key, string[] ifNotFound) @safe pure const {
+        return getParams(projectPath, key, true, ifNotFound);
     }
 
     string removeBuilddir() @safe pure const {
@@ -323,7 +323,7 @@ struct Command {
     }
 
     //@trusted because of replace
-    private string[] getDefaultRuleParams(in string projectPath, in string key,
+    private string[] getParams(in string projectPath, in string key,
                                           bool useIfNotFound, string[] ifNotFound = []) @trusted pure const {
         import std.conv: text;
 

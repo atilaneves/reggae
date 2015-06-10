@@ -22,6 +22,6 @@ void testGetDefaultRule() {
 
 void testValueWhenKeyNotFound() {
     immutable command = Command("_dcompile foo=bar");
-    command.getDefaultRuleParams("", "foo", ["hahaha"]).shouldEqual(["bar"]);
-    command.getDefaultRuleParams("", "includes", ["hahaha"]).shouldEqual(["hahaha"]);
+    command.getParams("", "foo", ["hahaha"]).shouldEqual(["bar"]);
+    command.getParams("", "includes", ["hahaha"]).shouldEqual(["hahaha"]);
 }

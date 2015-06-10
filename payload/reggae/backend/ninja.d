@@ -101,7 +101,7 @@ private:
             if(rule == "_dcompile") params ~= "stringImports";
 
             foreach(immutable param; params) {
-                immutable value = target.command.getDefaultRuleParams(_projectPath, param, []).join(" ");
+                immutable value = target.command.getParams(_projectPath, param, []).join(" ");
                 paramLines ~= param ~ " = " ~ value;
             }
 
@@ -110,7 +110,7 @@ private:
             auto params = ["flags"];
 
             foreach(immutable param; params) {
-                immutable value = target.command.getDefaultRuleParams(_projectPath, param, []).join(" ");
+                immutable value = target.command.getParams(_projectPath, param, []).join(" ");
                 paramLines ~= param ~ " = " ~ value;
             }
 

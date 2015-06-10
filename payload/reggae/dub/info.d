@@ -1,4 +1,4 @@
-module reggae.dub_info;
+module reggae.dub.info;
 
 import reggae.build;
 import reggae.rules;

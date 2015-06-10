@@ -69,7 +69,7 @@ private void createBuild(in Options options) {
                                      "backend/make.d", "backend/ninja.d", "backend/binary.d",
                                      "package.d", "range.d", "reflect.d",
                                      "dependencies.d", "types.d", "dcompile.d",
-                                     "dub_info.d", "ctaa.d", "sorting.d",
+                                     "dub/info.d", "ctaa.d", "sorting.d",
                                      "rules/package.d",
                                      "rules/dub.d", "rules/defaults.d", "rules/common.d",
                                      "rules/d.d", "rules/cpp.d", "rules/c.d",
@@ -155,6 +155,7 @@ private void writeSrcFiles(fileNames...)(in Options options) {
     import std.file: mkdirRecurse;
     if(!reggaeSrcDirName.exists) {
         mkdirRecurse(reggaeSrcDirName);
+        mkdirRecurse(buildPath(reggaeSrcDirName, "dub"));
         mkdirRecurse(buildPath(reggaeSrcDirName, "rules"));
         mkdirRecurse(buildPath(reggaeSrcDirName, "backend"));
         mkdirRecurse(buildPath(reggaeSrcDirName, "core", "rules"));
@@ -172,9 +173,6 @@ private void writeSrcFiles(fileNames...)(in Options options) {
 private void writeConfig(in Options options) {
     auto file = File(reggaeSrcFileName("config.d"), "w");
     file.writeln("module reggae.config;");
-    static if(allFeatures) {
-    file.writeln("import reggae.dub_info;");
-    }
     file.writeln("import reggae.ctaa;");
     file.writeln("import reggae.types: Backend;");
     file.writeln("enum projectPath = `", options.projectPath, "`;");

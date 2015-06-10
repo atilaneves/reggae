@@ -5,9 +5,9 @@
 module reggae.dub.interop;
 
 import reggae.options;
-import reggae.dub_info;
-import reggae.dub_call;
-import reggae.dub_json;
+import reggae.dub.info;
+import reggae.dub.call;
+import reggae.dub.json;
 import std.stdio;
 import std.exception;
 import std.conv;
@@ -91,6 +91,7 @@ private void dubFetch(in DubInfo dubInfo) @trusted {
 }
 
 void writeDubConfig(in Options options, File file) {
+    file.writeln("import reggae.dub.info;");
     if(options.isDubProject) {
         file.writeln("enum isDubProject = true;");
         auto dubInfo = _getDubInfo(options);

@@ -52,5 +52,5 @@ version(minimal) {
     public import reggae.rules;
     public import reggae.backend.make;
     public import reggae.backend.ninja;
-    public import reggae.dub_info;
+    public import reggae.dub.info;
 }

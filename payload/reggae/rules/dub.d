@@ -4,7 +4,7 @@ import reggae.config;
 
 static if(isDubProject) {
 
-    import reggae.dub_info;
+    import reggae.dub.info;
     import reggae.types;
     import reggae.build;
     import reggae.rules.common;

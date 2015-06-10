@@ -14,7 +14,7 @@ immutable bool perModule = true; //only for UTs, false in the real world
 
 version(minimal) {}
 else {
-    import reggae.dub_info;
+    import reggae.dub.info;
 
     enum isDubProject = true;
     enum dubInfo = ["default": DubInfo() ];

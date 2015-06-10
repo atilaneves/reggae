@@ -19,6 +19,7 @@ string ruleToNinjaString(Rule rule) @safe pure nothrow {
         case compileCpp: return "_cppcompile";
         case compileC: return "_ccompile";
         case link: return "_link";
+        case shell: assert(0, "ruleToNinjaString doesn't work for shell");
     }
 }
 

@@ -280,6 +280,8 @@ private:
             return [dCompiler, "-of" ~ outputs[0],
                     flags,
                     dependencyFilesString(projectPath)].join(" ");
+        case shell:
+            assert(0, "defaultCommand cannot be shell");
         }
     }
 }
@@ -291,6 +293,7 @@ bool isDefaultRule(in string rule) @safe pure nothrow {
 }
 
 enum Rule {
+    shell,
     compileD,
     compileCpp,
     compileC,
@@ -308,32 +311,15 @@ struct Command {
     private string command;
     private Rule rule;
     private Params params;
-    private bool isDefault;
 
     this(string shellCommand) @safe pure nothrow {
         command = shellCommand;
-        isDefault = false;
     }
 
-    this(Rule rule, Params params) @safe pure nothrow {
+    this(Rule rule, Params params) @safe pure {
+        if(rule == Rule.shell) throw new Exception("Command rule cannot be shell");
         this.rule = rule;
-        final switch(rule) with(Rule) {
-            case compileD:
-                command = "_dcompile";
-                break;
-            case compileCpp:
-                command = "_cppcompile";
-                break;
-            case compileC:
-                command = "_ccompile";
-                break;
-            case link:
-                command = "_link";
-                break;
-        }
-
         this.params = params;
-        isDefault = true;
     }
 
     Rule getRule() @safe pure const {
@@ -341,7 +327,7 @@ struct Command {
     }
 
     bool isDefaultCommand() @safe pure const {
-        return isDefault; //return isDefaultRule(getRule);
+        return rule != Rule.shell;
     }
 
     string[] getParams(in string projectPath, in string key, string[] ifNotFound) @safe pure const {
@@ -355,7 +341,6 @@ struct Command {
         () @trusted {
             cmd.params = cast()this.params;
         }();
-        cmd.isDefault = this.isDefault;
         return cmd;
     }
 

@@ -17,14 +17,6 @@ void testGetDefaultRule() {
     Command("_link foo=bar").getDefaultRule.shouldEqual("_link");
 }
 
-void testGetDefaultRuleParams() {
-    immutable command = Command("_dcompile foo=bar includes=boo,looloo,bearhugs");
-    command.getDefaultRuleParams("", "foo").shouldEqual(["bar"]);
-    command.getDefaultRuleParams("", "includes").shouldEqual(["boo", "looloo", "bearhugs"]);
-    command.getDefaultRuleParams("", "nonexistent").shouldThrow!Exception;
-
-    Command("_madeup includes=boo,bar").getDefaultRuleParams("", "includes").shouldThrow!Exception;
-}
 
 void testValueWhenKeyNotFound() {
     immutable command = Command("_dcompile foo=bar");

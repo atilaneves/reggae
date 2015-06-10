@@ -183,6 +183,7 @@ struct Target {
         return depFilesStringImpl(implicits, projectPath);
     }
 
+    ///replace all special variables with their expansion
     @property string expandCommand(in string projectPath = "") @trusted pure const nothrow {
         //functional didn't work here, I don't know why so sticking with loops for now
         string[] depOutputs;
@@ -309,12 +310,6 @@ struct Command {
 
         return rule;
     }
-
-
-    string[] getDefaultRuleParams(in string projectPath, in string key) @safe pure const {
-        return getDefaultRuleParams(projectPath, key, false);
-    }
-
 
     string[] getDefaultRuleParams(in string projectPath, in string key, string[] ifNotFound) @safe pure const {
         return getDefaultRuleParams(projectPath, key, true, ifNotFound);

@@ -17,7 +17,6 @@ version(minimal) {
 }
 
 static if(allFeatures) {
-    pragma(msg, "Why hello!");
     import reggae.dub_info;
     import reggae.dub_call;
     import reggae.dub_json;

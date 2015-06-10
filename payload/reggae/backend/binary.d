@@ -29,7 +29,6 @@ struct Binary {
     }
 
     void run() const @system { //@system due to parallel
-
         bool didAnything = checkReRun();
 
         foreach(topTarget; build.targets) {

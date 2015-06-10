@@ -4,7 +4,12 @@ import reggae;
 import reggae.config;
 import std.stdio;
 
-mixin template ReggaeMain(string buildModule = "reggaefile") {
+mixin template buildGen(string buildModule = __MODULE__, targets...) {
+    mixin build!targets;
+    mixin BuildGenMain!buildModule;
+}
+
+mixin template BuildGenMain(string buildModule = "reggaefile") {
     import std.stdio;
 
     int main(string[] args) {

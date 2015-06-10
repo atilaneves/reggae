@@ -5,4 +5,4 @@
 
 import reggae;
 
-mixin ReggaeMain;
+mixin BuildGenMain;

@@ -3,6 +3,7 @@
  $(UL
    $(LI Verify that a $(D reggafile.d) exists in the selected directory)
    $(LI Generate a $(D reggaefile.d) for dub projects)
+   $(LI Write out the reggae library files and $(D config.d))
    $(LI Compile the build description with the reggae library files to produce $(D buildgen))
    $(LI Produce $(D dcompile), a binary to call the D compiler to obtain dependencies during compilation)
    $(LI Call the produced $(D buildgen) binary)

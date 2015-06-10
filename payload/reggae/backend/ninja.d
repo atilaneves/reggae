@@ -9,10 +9,18 @@ import std.array;
 import std.range;
 import std.algorithm;
 import std.exception: enforce;
-import std.conv: text;
+import std.conv;
 import std.string: strip;
 import std.path: defaultExtension, absolutePath;
 
+string ruleToNinjaString(Rule rule) @safe pure nothrow {
+    final switch(rule) with(Rule) {
+        case compileD: return "_dcompile";
+        case compileCpp: return "_cppcompile";
+        case compileC: return "_ccompile";
+        case link: return "_link";
+    }
+}
 
 struct NinjaEntry {
     string mainLine;
@@ -96,9 +104,9 @@ private:
 
         string[] paramLines;
 
-        if(rule != "_link") { //i.e. one of the compile rules
+        if(rule != Rule.link) { //i.e. one of the compile rules
             auto params = ["includes", "flags"];
-            if(rule == "_dcompile") params ~= "stringImports";
+            if(rule == Rule.compileD) params ~= "stringImports";
 
             foreach(immutable param; params) {
                 import std.stdio;
@@ -119,7 +127,7 @@ private:
 
         }
 
-        buildEntries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~ rule ~ " " ~
+        buildEntries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~ ruleToNinjaString(rule) ~ " " ~
                                    target.dependencyFilesString(_projectPath),
                                    paramLines);
     }

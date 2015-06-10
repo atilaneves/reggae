@@ -6,20 +6,18 @@ import unit_threaded;
 
 
 void testNoDefaultRule() {
-    Command("doStuff foo=bar").getRule.shouldEqual("doStuff");
-    Command("_foo foo=bar").getRule.shouldEqual("_foo");
     Command("doStuff foo=bar").isDefaultCommand.shouldBeFalse;
 }
 
 void testGetRuleD() {
     const command = Command(Rule.compileD, assocList([assocEntry("foo", ["bar"])]));
-    command.getRule.shouldEqual("_dcompile");
+    command.getRule.shouldEqual(Rule.compileD);
     command.isDefaultCommand.shouldBeTrue;
 }
 
 void testGetRuleCpp() {
     const command = Command(Rule.compileCpp, assocList([assocEntry("includes", ["src", "other"])]));
-    command.getRule.shouldEqual("_cppcompile");
+    command.getRule.shouldEqual(Rule.compileCpp);
     command.isDefaultCommand.shouldBeTrue;
 }
 

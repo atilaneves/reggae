@@ -261,11 +261,9 @@ private:
         }
 
 
-        immutable rule = _command.getRule;
+        final switch(_command.rule) with(Rule) {
 
-        switch(rule) {
-
-        case "_dcompile":
+        case compileD:
             immutable stringImports = _command.getParams(projectPath, "stringImports", []).join(" ");
             immutable command = [".reggae/dcompile",
                                  "--objFile=" ~ outputs[0],
@@ -276,14 +274,12 @@ private:
 
             return command;
 
-        case "_cppcompile": return ccCommand(cppCompiler);
-        case "_ccompile":   return ccCommand(cCompiler);
-        case "_link":
+        case compileCpp: return ccCommand(cppCompiler);
+        case compileC:   return ccCommand(cCompiler);
+        case link:
             return [dCompiler, "-of" ~ outputs[0],
                     flags,
                     dependencyFilesString(projectPath)].join(" ");
-        default:
-            assert(0, "Unknown default rule " ~ rule);
         }
     }
 }
@@ -298,7 +294,7 @@ enum Rule {
     compileD,
     compileCpp,
     compileC,
-    link
+    link,
 }
 
 /**
@@ -340,8 +336,8 @@ struct Command {
         isDefault = true;
     }
 
-    string getRule() @safe pure const {
-        return command.splitter.front;
+    Rule getRule() @safe pure const {
+        return rule;
     }
 
     bool isDefaultCommand() @safe pure const {

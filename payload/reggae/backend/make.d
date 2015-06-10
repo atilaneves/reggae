@@ -75,8 +75,11 @@ struct Makefile {
     string command(in Target target) @safe const {
         immutable cmd = target.shellCommand(projectPath);
         immutable depfile = target.outputs[0] ~ ".dep";
-        immutable rule = target.command.getRule;
-        return rule.canFind("compile") ? cmd ~ makeAutoDeps(depfile) : cmd;
+        if(target.command.isDefaultCommand) {
+            return target.command.getRule == Rule.link ? cmd : cmd ~ makeAutoDeps(depfile);
+        } else {
+            return cmd;
+        }
     }
 }
 

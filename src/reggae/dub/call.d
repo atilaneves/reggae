@@ -1,4 +1,4 @@
-module reggae.dub_call;
+module reggae.dub.call;
 
 import std.algorithm: splitter, find, map, canFind, until;
 import std.array: array, front, replace, empty;

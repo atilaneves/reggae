@@ -1,7 +1,6 @@
 module reggae.buildgen;
 
 import reggae;
-import reggae.config;
 import std.stdio;
 
 /**

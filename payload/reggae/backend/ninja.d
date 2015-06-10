@@ -56,6 +56,11 @@ struct Ninja {
 
         foreach(topTarget; _build.targets) {
             foreach(target; DepthFirst(topTarget)) {
+                import std.stdio;
+                () @trusted {
+                debug writeln("target: ", target);
+                debug writeln("default ? ", target.command.isDefaultCommand);
+                }();
                 target.command.isDefaultCommand ? defaultRule(target) : customRule(target);
             }
         }
@@ -101,7 +106,10 @@ private:
             if(rule == "_dcompile") params ~= "stringImports";
 
             foreach(immutable param; params) {
+                import std.stdio;
+                debug writeln("param is ", param);
                 immutable value = target.command.getParams(_projectPath, param, []).join(" ");
+                debug writeln("value is ", value);
                 paramLines ~= param ~ " = " ~ value;
             }
 

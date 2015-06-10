@@ -83,7 +83,7 @@ struct ByDepthLevel {
 
 
 //TODO: a non-allocating version with no arrays
-auto flatten(R)(R range) pure nothrow {
+auto flatten(R)(R range) @trusted pure nothrow {
     alias rangeType = ElementType!R;
     alias T = ElementType!rangeType;
     T[] res;

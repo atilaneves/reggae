@@ -5,6 +5,7 @@
  */
 
 module reggae.build;
+import reggae.ctaa;
 
 import std.string: replace;
 import std.algorithm;
@@ -154,25 +155,36 @@ struct Target {
     const(Target)[] implicits;
 
     this(in string output) @safe pure nothrow {
-        this(output, null, null);
+        this(output, "", null);
     }
 
-    this(in string output, string command, in Target dependency,
-         in Target[] implicits = []) @safe pure nothrow {
+    this(C)(in string output,
+            in C command,
+            in Target dependency,
+            in Target[] implicits = []) @safe pure nothrow {
         this([output], command, [dependency], implicits);
     }
 
-    this(in string output, string command,
-         in Target[] dependencies, in Target[] implicits = []) @safe pure nothrow {
+    this(C)(in string output,
+            in C command,
+            in Target[] dependencies,
+            in Target[] implicits = []) @safe pure nothrow {
         this([output], command, dependencies, implicits);
     }
 
-    this(in string[] outputs, string command,
-         in Target[] dependencies, in Target[] implicits = []) @safe pure nothrow {
+    this(C)(in string[] outputs,
+            in C command,
+            in Target[] dependencies,
+            in Target[] implicits = []) @safe pure nothrow {
+
         this.outputs = outputs;
         this.dependencies = dependencies;
         this.implicits = implicits;
-        this._command = Command(command);
+
+        static if(is(C == Command))
+            this._command = command;
+        else
+            this._command = Command(command);
     }
 
     @property string dependencyFilesString(in string projectPath = "") @safe pure const nothrow {
@@ -215,11 +227,11 @@ struct Target {
         return outputs.map!(a => isLeaf ? buildPath(projectPath, a) : a).array;
     }
 
-    @property Command command() @safe const pure nothrow { return _command; }
+    @property const(Command) command() @safe const pure nothrow { return _command; }
 
 private:
 
-    Command _command;
+    const(Command) _command;
 
     //@trusted because of join
     string depFilesStringImpl(in Target[] deps, in string projectPath) @trusted pure const nothrow {
@@ -243,8 +255,6 @@ private:
         immutable depfile = outputs[0] ~ ".dep";
 
         string ccCommand(in string compiler) {
-            import std.stdio;
-            debug writeln("ccCommand with compiler ", compiler);
             return [compiler, flags, includes, "-MMD", "-MT", outputs[0],
                     "-MF", depfile, "-o", outputs[0], "-c",
                     dependencyFilesString(projectPath)].join(" ");
@@ -252,8 +262,6 @@ private:
 
 
         immutable rule = _command.getRule;
-        import std.stdio;
-        debug writeln("rule: ", rule);
 
         switch(rule) {
 
@@ -286,28 +294,73 @@ bool isDefaultRule(in string rule) @safe pure nothrow {
     return allDefaultRules.canFind(rule);
 }
 
+enum Rule {
+    compileD,
+    compileCpp,
+    compileC,
+    link
+}
+
 /**
  A command to be execute to produce a targets outputs from its inputs.
  In general this will be a shell command, but the high-level rules
  use commands with known semantics (compilation, linking, etc)
 */
 struct Command {
-    string command;
+    alias Params = AssocList!(string, string[]);
+
+    private string command;
+    private Rule rule;
+    private Params params;
+    private bool isDefault;
+
+    this(string shellCommand) @safe pure nothrow {
+        command = shellCommand;
+        isDefault = false;
+    }
+
+    this(Rule rule, Params params) @safe pure nothrow {
+        this.rule = rule;
+        final switch(rule) with(Rule) {
+            case compileD:
+                command = "_dcompile";
+                break;
+            case compileCpp:
+                command = "_cppcompile";
+                break;
+            case compileC:
+                command = "_ccompile";
+                break;
+            case link:
+                command = "_link";
+                break;
+        }
+
+        this.params = params;
+        isDefault = true;
+    }
 
     string getRule() @safe pure const {
         return command.splitter.front;
     }
 
     bool isDefaultCommand() @safe pure const {
-        return isDefaultRule(getRule);
+        return isDefault; //return isDefaultRule(getRule);
     }
 
     string[] getParams(in string projectPath, in string key, string[] ifNotFound) @safe pure const {
         return getParams(projectPath, key, true, ifNotFound);
     }
 
-    string removeBuilddir() @safe pure const {
-        return _removeBuilddir(command);
+    Command removeBuilddir() @safe pure const {
+        auto cmd = Command(_removeBuilddir(command));
+        cmd.rule = this.rule;
+        //FIXME
+        () @trusted {
+            cmd.params = cast()this.params;
+        }();
+        cmd.isDefault = this.isDefault;
+        return cmd;
     }
 
     ///Replace $in, $out, $project with values
@@ -324,27 +377,7 @@ struct Command {
 
     //@trusted because of replace
     private string[] getParams(in string projectPath, in string key,
-                                          bool useIfNotFound, string[] ifNotFound = []) @trusted pure const {
-        import std.conv: text;
-
-        auto parts = rawCmdString(projectPath).splitter;
-        immutable cmd = parts.front;
-        if(!isDefaultRule(cmd)) {
-            throw new Exception("Cannot get defaultRule from " ~ command);
-        }
-
-        auto fromParamPart = parts.find!(a => a.startsWith(key ~ "="));
-        if(fromParamPart.empty) {
-            if(useIfNotFound) {
-                return ifNotFound;
-            } else {
-                throw new Exception ("Cannot get default rule from " ~ command);
-            }
-        }
-
-        auto paramPart = fromParamPart.front;
-        auto removeKey = paramPart.replace(key ~ "=", "");
-
-        return removeKey.splitter(",").array;
+                               bool useIfNotFound, string[] ifNotFound = []) @safe pure const {
+        return params.get(key, ifNotFound).map!(a => a.replace("$project", projectPath)).array;
     }
 }

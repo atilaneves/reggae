@@ -3,6 +3,7 @@ module reggae.rules.common;
 
 import reggae.build;
 import reggae.config: projectPath;
+import reggae.ctaa;
 import std.algorithm;
 import std.path;
 import std.array: array;
@@ -74,24 +75,31 @@ Target objectFile(in string srcFileName,
                   in string[] stringImportPaths = [],
                   in string projDir = "$project") pure {
 
-    immutable cmd = compileCommand(srcFileName, flags, includePaths, stringImportPaths, projDir);
+    const cmd = compileCommand(srcFileName, flags, includePaths, stringImportPaths, projDir);
     return Target(srcFileName.objFileName, cmd, [Target(srcFileName)]);
 }
 
 
-string compileCommand(in string srcFileName,
-                      in string flags = "",
-                      in string[] includePaths = [],
-                      in string[] stringImportPaths = [],
-                      in string projDir = "$project") pure {
-    immutable includeParams = includePaths.map!(a => "-I" ~ buildPath(projDir, a)).join(",");
-    immutable flagParams = flags.splitter.join(",");
-    immutable ruleName = getBuiltinRule(srcFileName);
-    auto cmd = [ruleName, "includes=" ~ includeParams, "flags=" ~ flagParams];
-    if(ruleName == "_dcompile")
-        cmd ~= "stringImports=" ~ stringImportPaths.map!(a => "-J" ~ buildPath(projDir, a)).join(",");
+Command compileCommand(in string srcFileName,
+                       in string flags = "",
+                       in string[] includePaths = [],
+                       in string[] stringImportPaths = [],
+                       in string projDir = "$project") pure {
+    auto includeParams = includePaths.map!(a => "-I" ~ buildPath(projDir, a)).array;
+    auto flagParams = flags.splitter.array;
+    immutable rule = getBuiltinRule(srcFileName);
 
-    return cmd.join(" ");
+
+    auto params = [assocEntry("includes", includeParams),
+                   assocEntry("flags", flagParams)];
+
+    import std.stdio;
+    debug writeln("params: ", params);
+
+    if(rule == Rule.compileD)
+        params ~= assocEntry("stringImports", stringImportPaths.map!(a => "-J" ~ buildPath(projDir, a)).array);
+
+    return Command(rule, assocList(params));
 }
 
 enum Language {
@@ -119,14 +127,14 @@ private Language getLanguage(in string srcFileName) pure {
 
 }
 
-private string getBuiltinRule(in string srcFileName) pure {
+private Rule getBuiltinRule(in string srcFileName) pure {
     final switch(getLanguage(srcFileName)) with(Language) {
         case D:
-            return "_dcompile";
+            return Rule.compileD;
         case Cplusplus:
-            return "_cppcompile";
+            return Rule.compileCpp;
         case C:
-            return "_ccompile";
+            return Rule.compileC;
     }
 }
 
@@ -136,8 +144,7 @@ private string getBuiltinRule(in string srcFileName) pure {
  to do. Right now only works for linking D applications using the configured
  D compiler
  */
-Target link(in string exeName, in Target[] dependencies, in string flags = "") @safe pure nothrow {
-    auto cmd = "_link";
-    if(flags != "") cmd ~= " flags=" ~ flags;
-    return Target(exeName, cmd, dependencies);
+Target link(in string exeName, in Target[] dependencies, in string flags = "") @safe pure {
+    const command = Command(Rule.link, assocList([assocEntry("flags", flags.splitter.array)]));
+    return Target(exeName, command, dependencies);
 }

@@ -22,3 +22,13 @@ void testOpIndex() {
     aa["one"].shouldEqual(MyInt(1));
     aa["two"].shouldEqual(MyInt(2));
 }
+
+
+void testStringToStrings() {
+    auto aa = assocList([assocEntry("includes", ["-I$project/headers"]),
+                         assocEntry("flags", ["-m64", "-fPIC", "-O3"])]);
+    aa["flags"].shouldEqual(["-m64", "-fPIC", "-O3"]);
+    string[] emp;
+    aa.get("flags", emp).shouldEqual(["-m64", "-fPIC", "-O3"]);
+
+}

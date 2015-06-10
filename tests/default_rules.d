@@ -11,17 +11,30 @@ void testNoDefaultRule() {
     Command("doStuff foo=bar").isDefaultCommand.shouldBeFalse;
 }
 
-void testGetDefaultRule() {
-    Command("_dcompile foo=bar").getRule.shouldEqual("_dcompile");
-    Command("_ccompile foo=bar").getRule.shouldEqual("_ccompile");
-    Command("_cppcompile foo=bar").getRule.shouldEqual("_cppcompile");
-    Command("_link foo=bar").getRule.shouldEqual("_link");
-    Command("_link foo=bar").isDefaultCommand.shouldBeTrue;
+void testGetRuleD() {
+    const command = Command(Rule.compileD, assocList([assocEntry("foo", ["bar"])]));
+    command.getRule.shouldEqual("_dcompile");
+    command.isDefaultCommand.shouldBeTrue;
+}
+
+void testGetRuleCpp() {
+    const command = Command(Rule.compileCpp, assocList([assocEntry("includes", ["src", "other"])]));
+    command.getRule.shouldEqual("_cppcompile");
+    command.isDefaultCommand.shouldBeTrue;
 }
 
 
 void testValueWhenKeyNotFound() {
-    immutable command = Command("_dcompile foo=bar");
+    const command = Command(Rule.compileD, assocList([assocEntry("foo", ["bar"])]));
     command.getParams("", "foo", ["hahaha"]).shouldEqual(["bar"]);
     command.getParams("", "includes", ["hahaha"]).shouldEqual(["hahaha"]);
+}
+
+
+void testObjectFile() {
+    const obj = objectFile("path/to/src/foo.c", "-m64 -fPIC -O3");
+    obj.command.isDefaultCommand.shouldBeTrue;
+
+    const build = Build(objectFile("path/to/src/foo.c", "-m64 -fPIC -O3"));
+    build.targets[0].command.isDefaultCommand.shouldBeTrue;
 }

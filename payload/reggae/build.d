@@ -285,3 +285,73 @@ private:
         }
     }
 }
+
+immutable allDefaultRules = ["_dcompile", "_ccompile", "_cppcompile", "_link"];
+
+bool isDefaultRule(in string rule) @safe pure nothrow {
+    return allDefaultRules.canFind(rule);
+}
+
+/**
+ A command to be execute to produce a targets outputs from its inputs.
+ In general this will be a shell command, but the high-level rules
+ use commands with known semantics (compilation, linking, etc)
+*/
+struct Command {
+    string command;
+
+    private string getRule() @safe pure const {
+        return command.splitter.front;
+    }
+
+    bool isDefaultCommand() @safe pure const {
+        return isDefaultRule(getRule);
+    }
+
+    string getDefaultRule() @safe pure const {
+        immutable rule = getRule;
+        if(!isDefaultRule(rule)) {
+            throw new Exception("Cannot get defaultRule from " ~ command);
+        }
+
+        return rule;
+    }
+
+
+    string[] getDefaultRuleParams(in string key) @safe pure const {
+        return getDefaultRuleParams(key, false);
+    }
+
+
+    string[] getDefaultRuleParams(in string key, string[] ifNotFound) @safe pure const {
+        return getDefaultRuleParams(key, true, ifNotFound);
+    }
+
+
+//@trusted because of replace
+    private string[] getDefaultRuleParams(in string key,
+                                          bool useIfNotFound, string[] ifNotFound = []) @trusted pure const {
+        import std.conv: text;
+
+        auto parts = command.splitter;
+        immutable cmd = parts.front;
+        if(!isDefaultRule(cmd)) {
+            throw new Exception("Cannot get defaultRule from " ~ command);
+        }
+
+        auto fromParamPart = parts.find!(a => a.startsWith(key ~ "="));
+        if(fromParamPart.empty) {
+            if(useIfNotFound) {
+                return ifNotFound;
+            } else {
+                throw new Exception ("Cannot get default rule from " ~ command);
+            }
+        }
+
+        auto paramPart = fromParamPart.front;
+        auto removeKey = paramPart.replace(key ~ "=", "");
+
+        return removeKey.splitter(",").array;
+    }
+
+}

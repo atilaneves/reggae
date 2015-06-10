@@ -92,7 +92,7 @@ private:
 
     //@trusted because of join
     void defaultRule(in Target target) @trusted {
-        immutable rule = target.command.getDefaultRule;
+        immutable rule = target.command.getRule;
 
         string[] paramLines;
 

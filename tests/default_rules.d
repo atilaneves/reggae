@@ -6,15 +6,17 @@ import unit_threaded;
 
 
 void testNoDefaultRule() {
-    Command("doStuff foo=bar").getDefaultRule.shouldThrow;
-    Command("_foo foo=bar").getDefaultRule.shouldThrow;
+    Command("doStuff foo=bar").getRule.shouldEqual("doStuff");
+    Command("_foo foo=bar").getRule.shouldEqual("_foo");
+    Command("doStuff foo=bar").isDefaultCommand.shouldBeFalse;
 }
 
 void testGetDefaultRule() {
-    Command("_dcompile foo=bar").getDefaultRule.shouldEqual("_dcompile");
-    Command("_ccompile foo=bar").getDefaultRule.shouldEqual("_ccompile");
-    Command("_cppcompile foo=bar").getDefaultRule.shouldEqual("_cppcompile");
-    Command("_link foo=bar").getDefaultRule.shouldEqual("_link");
+    Command("_dcompile foo=bar").getRule.shouldEqual("_dcompile");
+    Command("_ccompile foo=bar").getRule.shouldEqual("_ccompile");
+    Command("_cppcompile foo=bar").getRule.shouldEqual("_cppcompile");
+    Command("_link foo=bar").getRule.shouldEqual("_link");
+    Command("_link foo=bar").isDefaultCommand.shouldBeTrue;
 }
 
 

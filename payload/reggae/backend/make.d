@@ -75,13 +75,8 @@ struct Makefile {
     string command(in Target target) @safe const {
         immutable cmd = target.shellCommand(projectPath);
         immutable depfile = target.outputs[0] ~ ".dep";
-
-        if(target.command.isDefaultCommand) {
-            immutable rule = target.command.getDefaultRule;
-            return rule.canFind("compile") ? cmd ~ makeAutoDeps(depfile) : cmd;
-        } else {
-            return cmd;
-        }
+        immutable rule = target.command.getRule;
+        return rule.canFind("compile") ? cmd ~ makeAutoDeps(depfile) : cmd;
     }
 }
 

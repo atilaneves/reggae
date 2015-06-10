@@ -251,7 +251,7 @@ private:
         }
 
 
-        immutable rule = _command.getDefaultRule;
+        immutable rule = _command.getRule;
         import std.stdio;
         debug writeln("rule: ", rule);
 
@@ -294,21 +294,12 @@ bool isDefaultRule(in string rule) @safe pure nothrow {
 struct Command {
     string command;
 
-    private string getRule() @safe pure const {
+    string getRule() @safe pure const {
         return command.splitter.front;
     }
 
     bool isDefaultCommand() @safe pure const {
         return isDefaultRule(getRule);
-    }
-
-    string getDefaultRule() @safe pure const {
-        immutable rule = getRule;
-        if(!isDefaultRule(rule)) {
-            throw new Exception("Cannot get defaultRule from " ~ command);
-        }
-
-        return rule;
     }
 
     string[] getDefaultRuleParams(in string projectPath, in string key, string[] ifNotFound) @safe pure const {

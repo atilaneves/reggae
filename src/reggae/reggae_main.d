@@ -7,8 +7,11 @@ import std.file: exists;
 import std.conv: text;
 import std.exception: enforce;
 import std.conv: to;
+import std.algorithm;
+
 import reggae.options;
 import reggae.ctaa;
+
 
 version(minimal) {
     //empty stubs for minimal version of reggae
@@ -38,18 +41,6 @@ void run(in Options options) {
 }
 
 
-//add config.d, subtract dcompile.d
-string[] getReggaeSrcs(fileNames...)(in Options options) @safe pure nothrow {
-    string[] srcs = [reggaeSrcFileName("config.d")];
-    foreach(fileName; fileNames) {
-        static if(fileName != "dcompile.d") srcs ~= reggaeSrcFileName(fileName);
-    }
-    return srcs;
-}
-
-
-immutable hiddenDir = ".reggae";
-
 enum coreFiles = [
     "buildgen_main.d",
     "build.d",
@@ -68,13 +59,12 @@ enum otherFiles = [
     "rules/cpp.d", "rules/c.d",
     ];
 
-private string[] fileNames() {
+private string[] fileNames() @safe pure nothrow {
     version(minimal) return coreFiles;
     else return coreFiles ~ otherFiles;
 }
 
-private string filesTupleString() {
-    import std.algorithm;
+private string filesTupleString() @safe pure nothrow {
     return "TypeTuple!(" ~ fileNames.map!(a => `"` ~ a ~ `"`).join(",") ~ ")";
 }
 
@@ -87,11 +77,14 @@ private void createBuild(in Options options) {
     immutable reggaefilePath = getReggaefilePath(options);
     enforce(reggaefilePath.exists, text("Could not find ", reggaefilePath));
 
-    writeSrcFiles!(FileNames!())(options);
+    //write out the library source files to be compiled with the user's
+    //build description
+    writeSrcFiles(options);
 
-    const reggaeSrcs = getReggaeSrcs!(FileNames!())(options);
-    immutable buildGenName = compileBinaries(options, reggaeSrcs);
+    //compile the binaries (the build generator and dcompile)
+    immutable buildGenName = compileBinaries(options);
 
+    //actually run the build generator
     writeln("[Reggae] Running the created binary to generate the build");
     immutable retRunBuildgen = execute([buildPath(".", buildGenName)]);
     enforce(retRunBuildgen.status == 0,
@@ -100,11 +93,13 @@ private void createBuild(in Options options) {
     writeln(retRunBuildgen.output);
 }
 
+private immutable hiddenDir = ".reggae";
 
-private auto compileBinaries(in Options options, in string[] reggaeSrcs) {
 
+private auto compileBinaries(in Options options) {
     immutable buildGenName = getBuildGenName(options);
-    const compileBuildGenCmd = getCompileBuildGenCmd(options, reggaeSrcs);
+    const compileBuildGenCmd = getCompileBuildGenCmd(options);
+
     immutable dcompileName = buildPath(hiddenDir, "dcompile");
     immutable dcompileCmd = ["dmd",
                              "-I.reggae/src",
@@ -128,7 +123,11 @@ private auto compileBinaries(in Options options, in string[] reggaeSrcs) {
     return buildGenName;
 }
 
-string[] getCompileBuildGenCmd(in Options options, in string[] reggaeSrcs) @safe nothrow {
+string[] getCompileBuildGenCmd(in Options options) @safe nothrow {
+    const reggaeSrcs = ("config.d" ~ fileNames).
+        filter!(a => a != "dcompile.d").
+        map!(a => a.reggaeSrcFileName).array;
+
     immutable buildBinFlags = options.backend == Backend.binary
         ? ["-O", "-release", "-inline"]
         : [];
@@ -147,7 +146,7 @@ string getBuildGenName(in Options options) @safe pure nothrow {
 immutable reggaeSrcDirName = buildPath(".reggae", "src", "reggae");
 
 
-private void writeSrcFiles(fileNames...)(in Options options) {
+private void writeSrcFiles(in Options options) {
     import std.file: mkdirRecurse;
     if(!reggaeSrcDirName.exists) {
         mkdirRecurse(reggaeSrcDirName);
@@ -157,7 +156,7 @@ private void writeSrcFiles(fileNames...)(in Options options) {
         mkdirRecurse(buildPath(reggaeSrcDirName, "core", "rules"));
     }
 
-    foreach(fileName; fileNames) {
+    foreach(fileName; FileNames!()) {
         auto file = File(reggaeSrcFileName(fileName), "w");
         file.write(import(fileName));
     }

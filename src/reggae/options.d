@@ -74,3 +74,7 @@ Options getOptions(string[] args) @trusted {
 
     return options;
 }
+
+string projectBuildFile(in Options options) @safe pure nothrow {
+    return buildPath(options.projectPath, "reggaefile.d");
+}

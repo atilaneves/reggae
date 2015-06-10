@@ -26,11 +26,7 @@ int main(string[] args) {
         if(options.help) return 0;
         enforce(options.projectPath != "", "A project path must be specified");
 
-        static if(allFeatures) {
-        if(options.isDubProject && !projectBuildFile(options).exists) {
-            createReggaefile(options);
-        }
-        }
+        static if(allFeatures) maybeCreateReggaefile(options);
 
         createBuild(options);
     } catch(Exception ex) {
@@ -199,10 +195,6 @@ private void writeConfig(in Options options) {
 
 private string reggaeSrcFileName(in string fileName) @safe pure nothrow {
     return buildPath(reggaeSrcDirName, fileName);
-}
-
-private string projectBuildFile(in Options options) @safe pure nothrow {
-    return buildPath(options.projectPath, "reggaefile.d");
 }
 
 private string getReggaefilePath(in Options options) @safe nothrow {

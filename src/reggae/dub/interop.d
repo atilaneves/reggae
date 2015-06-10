@@ -1,6 +1,6 @@
 /**
- A module for providing interop between reggae and dub
- */
+   A module for providing interop between reggae and dub
+*/
 
 module reggae.dub.interop;
 
@@ -18,10 +18,10 @@ DubInfo[string] gDubInfos;
 
 @safe:
 
-version(minimal) {
-    enum allFeatures = false;
-} else {
-    enum allFeatures = true;
+void maybeCreateReggaefile(in Options options) {
+    if(options.isDubProject && !projectBuildFile(options).exists) {
+        createReggaefile(options);
+    }
 }
 
 void createReggaefile(in Options options) {
@@ -30,13 +30,10 @@ void createReggaefile(in Options options) {
     file.writeln("import reggae;");
     file.writeln("mixin build!dubDefaultTarget;");
 
-    static if(allFeatures) {
-        if(!options.noFetch) dubFetch(_getDubInfo(options));
-    }
+    if(!options.noFetch) dubFetch(_getDubInfo(options));
 }
 
 
-static if(allFeatures) {
 private DubInfo _getDubInfo(in Options options) {
 
     if("default" !in gDubInfos) {
@@ -60,7 +57,7 @@ private DubInfo _getDubInfo(in Options options) {
 
     return gDubInfos["default"];
 }
-}
+
 
 private string _callDub(in Options options, in string[] args) {
     import std.process;
@@ -75,20 +72,20 @@ private string _callDub(in Options options, in string[] args) {
     return ret.output;
 }
 
-static if(allFeatures) {
-//@trusted because of writeln
-private void dubFetch(in DubInfo dubInfo) @trusted {
+private void dubFetch(in DubInfo dubInfo) {
     foreach(cmd; dubInfo.fetchCommands) {
         immutable cmdStr = "'" ~ cmd.join(" ") ~ "'";
         writeln("Fetching package with cmd ", cmdStr);
         immutable ret = execute(cmd);
         if(ret.status) {
-            stderr.writeln("Could not execute dub fetch with:\n", cmd.join(" "), "\n",
-                ret.output);
+            () @trusted {
+                stderr.writeln("Could not execute dub fetch with:\n", cmd.join(" "), "\n",
+                               ret.output);
+            }();
         }
     }
 }
-}
+
 
 void writeDubConfig(in Options options, File file) {
     file.writeln("import reggae.dub.info;");
@@ -110,5 +107,4 @@ void writeDubConfig(in Options options, File file) {
     } else {
         file.writeln("enum isDubProject = false;");
     }
-
 }

@@ -38,6 +38,7 @@ void run(in Options options) {
 }
 
 
+//add config.d, subtract dcompile.d
 string[] getReggaeSrcs(fileNames...)(in Options options) @safe pure nothrow {
     string[] srcs = [reggaeSrcFileName("config.d")];
     foreach(fileName; fileNames) {
@@ -46,11 +47,6 @@ string[] getReggaeSrcs(fileNames...)(in Options options) @safe pure nothrow {
     return srcs;
 }
 
-string[] getCompileCommand(fileNames...)(in Options options) @safe nothrow {
-    return ["dmd", "-I" ~ options.projectPath,
-            "-of" ~ getBinName(options)] ~
-        getReggaeSrcs!(fileNames)(options) ~ getReggaefilePath(options);
-}
 
 immutable hiddenDir = ".reggae";
 

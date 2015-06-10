@@ -85,7 +85,9 @@ private void createBuild(in Options options) {
                                      "dub_info.d", "ctaa.d", "sorting.d",
                                      "rules/package.d",
                                      "rules/dub.d", "rules/defaults.d", "rules/common.d",
-                                     "rules/d.d", "rules/cpp.d", "rules/c.d");
+                                     "rules/d.d", "rules/cpp.d", "rules/c.d",
+                                     "core/package.d", "core/rules/package.d",
+            );
     } else {
         alias fileNames = TypeTuple!("buildgen_main.d",
                                      "build.d",
@@ -95,7 +97,9 @@ private void createBuild(in Options options) {
                                      "ctaa.d", "sorting.d",
                                      "rules/package.d",
                                      "rules/defaults.d", "rules/common.d",
-                                     "rules/d.d");
+                                     "rules/d.d",
+                                     "core/package.d", "core/rules/package.d",
+            );
     }
     writeSrcFiles!(fileNames)(options);
 
@@ -141,7 +145,8 @@ private auto compileBinaries(in Options options, in string[] reggaeSrcs) {
     foreach(bin; binaries.parallel) {
         writeln("[Reggae] Compiling metabuild binary ", bin.name);
         immutable res = execute(bin.cmd);
-        enforce(res.status == 0, text("Couldn't execute ", bin.cmd.join(" "), ":\n"), res.output);
+        enforce(res.status == 0, text("Couldn't execute ", bin.cmd.join(" "), ":\n", res.output,
+                                      "\n", "bin.name: ", bin.name, ", bin.cmd: ", bin.cmd.join(" ")));
     }
 
     return buildGenName;
@@ -163,12 +168,9 @@ private void writeSrcFiles(fileNames...)(in Options options) {
     import std.file: mkdirRecurse;
     if(!reggaeSrcDirName.exists) {
         mkdirRecurse(reggaeSrcDirName);
-
-        immutable reggaeRulesSrcDirName = buildPath(reggaeSrcDirName, "rules");
-        mkdirRecurse(reggaeRulesSrcDirName);
-
-        immutable reggaeBackendSrcDirName = buildPath(reggaeSrcDirName, "backend");
-        mkdirRecurse(reggaeBackendSrcDirName);
+        mkdirRecurse(buildPath(reggaeSrcDirName, "rules"));
+        mkdirRecurse(buildPath(reggaeSrcDirName, "backend"));
+        mkdirRecurse(buildPath(reggaeSrcDirName, "core", "rules"));
     }
 
     foreach(fileName; fileNames) {

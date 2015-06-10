@@ -209,12 +209,7 @@ struct Target {
 
 
     string shellCommand(in string projectPath = "") @safe pure const {
-        immutable rawCmdLine = rawCmdString(projectPath);
-        if(rawCmdLine.isDefaultCommand) {
-            return defaultCommand(projectPath, rawCmdLine);
-        } else {
-            return command(projectPath);
-        }
+        return _command.isDefaultCommand ? defaultCommand(projectPath) : command(projectPath);
     }
 
     string[] outputsInProjectPath(in string projectPath) @safe pure nothrow const {
@@ -239,9 +234,10 @@ private:
 
     //this function returns a string to be run by the shell with `std.process.execute`
     //it does 'normal' commands, not built-in rules
-    string defaultCommand(in string projectPath, in string rawCmdLine) @safe pure const {
+    string defaultCommand(in string projectPath) @safe pure const {
         import reggae.config: dCompiler, cppCompiler, cCompiler;
 
+        immutable rawCmdLine = _command.rawCmdString(projectPath);
         immutable flags = rawCmdLine.getDefaultRuleParams("flags", []).join(" ");
         immutable includes = rawCmdLine.getDefaultRuleParams("includes", []).join(" ");
         immutable depfile = outputs[0] ~ ".dep";

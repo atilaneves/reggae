@@ -54,39 +54,51 @@ string[] getCompileCommand(fileNames...)(in Options options) @safe nothrow {
 
 immutable hiddenDir = ".reggae";
 
+enum coreFiles = [
+    "buildgen_main.d",
+    "build.d",
+    "backend/binary.d",
+    "package.d", "range.d", "reflect.d",
+    "dependencies.d", "types.d", "dcompile.d",
+    "ctaa.d", "sorting.d",
+    "rules/package.d",
+    "rules/defaults.d", "rules/common.d",
+    "rules/d.d",
+    "core/package.d", "core/rules/package.d",
+    ];
+enum otherFiles = [
+    "backend/ninja.d", "backend/make.d",
+    "dub/info.d", "rules/dub.d",
+    "rules/cpp.d", "rules/c.d",
+    ];
+
+private string coreFilesTupleString() {
+    import std.algorithm;
+    return "TypeTuple!(" ~ coreFiles.map!(a => `"` ~ a ~ `"`).join(",") ~ ")";
+}
+
+private string allFilesTupleString() {
+    import std.algorithm;
+    return "TypeTuple!(" ~ (coreFiles ~ otherFiles).map!(a => `"` ~ a ~ `"`).join(",") ~ ")";
+}
+
+
+template FileNames() {
+    static if(allFeatures) {
+        mixin("alias FileNames = " ~ allFilesTupleString ~ ";");
+    } else {
+        mixin("alias FileNames = " ~ coreFilesTupleString ~ ";");
+    }
+}
+
 private void createBuild(in Options options) {
 
     immutable reggaefilePath = getReggaefilePath(options);
     enforce(reggaefilePath.exists, text("Could not find ", reggaefilePath));
 
-    static if(allFeatures) {
-        alias fileNames = TypeTuple!("buildgen_main.d",
-                                     "build.d",
-                                     "backend/make.d", "backend/ninja.d", "backend/binary.d",
-                                     "package.d", "range.d", "reflect.d",
-                                     "dependencies.d", "types.d", "dcompile.d",
-                                     "dub/info.d", "ctaa.d", "sorting.d",
-                                     "rules/package.d",
-                                     "rules/dub.d", "rules/defaults.d", "rules/common.d",
-                                     "rules/d.d", "rules/cpp.d", "rules/c.d",
-                                     "core/package.d", "core/rules/package.d",
-            );
-    } else {
-        alias fileNames = TypeTuple!("buildgen_main.d",
-                                     "build.d",
-                                     "backend/binary.d",
-                                     "package.d", "range.d", "reflect.d",
-                                     "dependencies.d", "types.d", "dcompile.d",
-                                     "ctaa.d", "sorting.d",
-                                     "rules/package.d",
-                                     "rules/defaults.d", "rules/common.d",
-                                     "rules/d.d",
-                                     "core/package.d", "core/rules/package.d",
-            );
-    }
-    writeSrcFiles!(fileNames)(options);
+    writeSrcFiles!(FileNames!())(options);
 
-    const reggaeSrcs = getReggaeSrcs!(fileNames)(options);
+    const reggaeSrcs = getReggaeSrcs!(FileNames!())(options);
     immutable buildGenName = compileBinaries(options, reggaeSrcs);
 
     writeln("[Reggae] Running the created binary to generate the build");

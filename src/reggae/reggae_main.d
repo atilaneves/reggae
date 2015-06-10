@@ -184,9 +184,14 @@ private void writeSrcFiles(in Options options) {
 
 private void writeConfig(in Options options) {
     auto file = File(reggaeSrcFileName("config.d"), "w");
-    file.writeln("module reggae.config;");
-    file.writeln("import reggae.ctaa;");
-    file.writeln("import reggae.types: Backend;");
+
+    file.writeln(q{
+        module reggae.config;
+        import reggae.ctaa;
+        import reggae.types: Backend;
+
+    });
+
     file.writeln("enum projectPath = `", options.projectPath, "`;");
     file.writeln("enum backend = Backend.", options.backend, ";");
     file.writeln("enum dflags = `", options.dflags, "`;");
@@ -196,6 +201,7 @@ private void writeConfig(in Options options) {
     file.writeln("enum cppCompiler = `", options.cppCompiler, "`;");
     file.writeln("enum dCompiler = `", options.dCompiler, "`;");
     file.writeln("enum perModule = ", options.perModule, ";");
+
     file.writeln("enum userVars = AssocList!(string, string)([");
     foreach(key, value; options.userVars) {
         file.writeln("assocEntry(`", key, "`, `", value, "`), ");

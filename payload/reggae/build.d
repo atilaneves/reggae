@@ -48,7 +48,7 @@ struct Build {
 //a directory for each top-level target no avoid name clashes
 //@trusted because of map -> buildPath -> array
 Target enclose(in Target target, in Target topLevel) @trusted {
-    if(target.isLeaf) return Target(target.outputs.map!(a => a.removeBuilddir).array,
+    if(target.isLeaf) return Target(target.outputs.map!(a => a._removeBuilddir).array,
                                     target._command.removeBuilddir,
                                     target.dependencies,
                                     target.implicits);
@@ -67,11 +67,11 @@ private string realTargetPath(in string dirName, in string output) @trusted pure
     import std.algorithm: canFind;
 
     return output.canFind(gBuilddir)
-        ? output.removeBuilddir
+        ? output._removeBuilddir
         : buildPath(dirName, output);
 }
 
-private string removeBuilddir(in string output) @trusted pure {
+private string _removeBuilddir(in string output) @trusted pure {
     import std.path: buildNormalizedPath;
     import std.algorithm;
     return output.
@@ -173,7 +173,7 @@ struct Target {
         this.outputs = outputs;
         this.dependencies = dependencies;
         this.implicits = implicits;
-        this._command = command;
+        this._command = Command(command);
     }
 
     @property string dependencyFilesString(in string projectPath = "") @safe pure const nothrow {
@@ -195,9 +195,7 @@ struct Target {
                 depOutputs ~= dep.isLeaf ? buildPath(projectPath, output) : output;
             }
         }
-        auto replaceIn = _command.replace("$in", depOutputs.join(" "));
-        auto replaceOut = replaceIn.replace("$out", outputs.join(" "));
-        return replaceOut.replace("$project", projectPath);
+        return _command.expand(projectPath, outputs.join(" "), depOutputs.join(" "));
     }
 
     bool isLeaf() @safe pure const nothrow {
@@ -206,7 +204,7 @@ struct Target {
 
     //@trusted because of replace
     string rawCmdString(in string projectPath) @trusted pure nothrow const {
-        return _command.replace("$project", projectPath);
+        return _command.rawCmdString(projectPath);
     }
 
 
@@ -225,7 +223,7 @@ struct Target {
 
 private:
 
-    string _command;
+    Command _command;
 
     //@trusted because of join
     string depFilesStringImpl(in Target[] deps, in string projectPath) @trusted pure const nothrow {
@@ -327,8 +325,23 @@ struct Command {
         return getDefaultRuleParams(key, true, ifNotFound);
     }
 
+    string removeBuilddir() @safe pure const {
+        return _removeBuilddir(command);
+    }
 
-//@trusted because of replace
+    ///Replace $in, $out, $project with values
+    string expand(in string projectPath, in string outputs, in string depOutputs) @safe pure nothrow const {
+        auto replaceIn = command.dup.replace("$in", depOutputs);
+        auto replaceOut = replaceIn.replace("$out", outputs);
+        return replaceOut.replace("$project", projectPath);
+    }
+
+    //@trusted because of replace
+    string rawCmdString(in string projectPath) @trusted pure nothrow const {
+        return command.replace("$project", projectPath);
+    }
+
+    //@trusted because of replace
     private string[] getDefaultRuleParams(in string key,
                                           bool useIfNotFound, string[] ifNotFound = []) @trusted pure const {
         import std.conv: text;
@@ -353,5 +366,4 @@ struct Command {
 
         return removeKey.splitter(",").array;
     }
-
 }

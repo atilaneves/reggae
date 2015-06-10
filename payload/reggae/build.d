@@ -6,9 +6,8 @@
 
 module reggae.build;
 
-import reggae.rules.defaults;
 import std.string: replace;
-import std.algorithm: map;
+import std.algorithm;
 import std.path: buildPath;
 import std.typetuple: allSatisfy;
 import std.traits: Unqual, isSomeFunction, ReturnType, arity;
@@ -237,9 +236,8 @@ private:
     string defaultCommand(in string projectPath) @safe pure const {
         import reggae.config: dCompiler, cppCompiler, cCompiler;
 
-        immutable rawCmdLine = _command.rawCmdString(projectPath);
-        immutable flags = rawCmdLine.getDefaultRuleParams("flags", []).join(" ");
-        immutable includes = rawCmdLine.getDefaultRuleParams("includes", []).join(" ");
+        immutable flags = _command.getDefaultRuleParams(projectPath, "flags", []).join(" ");
+        immutable includes = _command.getDefaultRuleParams(projectPath, "includes", []).join(" ");
         immutable depfile = outputs[0] ~ ".dep";
 
         string ccCommand(in string compiler) {
@@ -251,14 +249,14 @@ private:
         }
 
 
-        immutable rule = rawCmdLine.getDefaultRule;
+        immutable rule = _command.getDefaultRule;
         import std.stdio;
         debug writeln("rule: ", rule);
 
         switch(rule) {
 
         case "_dcompile":
-            immutable stringImports = rawCmdLine.getDefaultRuleParams("stringImports", []).join(" ");
+            immutable stringImports = _command.getDefaultRuleParams(projectPath, "stringImports", []).join(" ");
             immutable command = [".reggae/dcompile",
                                  "--objFile=" ~ outputs[0],
                                  "--depFile=" ~ depfile, dCompiler,
@@ -312,13 +310,13 @@ struct Command {
     }
 
 
-    string[] getDefaultRuleParams(in string key) @safe pure const {
-        return getDefaultRuleParams(key, false);
+    string[] getDefaultRuleParams(in string projectPath, in string key) @safe pure const {
+        return getDefaultRuleParams(projectPath, key, false);
     }
 
 
-    string[] getDefaultRuleParams(in string key, string[] ifNotFound) @safe pure const {
-        return getDefaultRuleParams(key, true, ifNotFound);
+    string[] getDefaultRuleParams(in string projectPath, in string key, string[] ifNotFound) @safe pure const {
+        return getDefaultRuleParams(projectPath, key, true, ifNotFound);
     }
 
     string removeBuilddir() @safe pure const {
@@ -338,11 +336,11 @@ struct Command {
     }
 
     //@trusted because of replace
-    private string[] getDefaultRuleParams(in string key,
+    private string[] getDefaultRuleParams(in string projectPath, in string key,
                                           bool useIfNotFound, string[] ifNotFound = []) @trusted pure const {
         import std.conv: text;
 
-        auto parts = command.splitter;
+        auto parts = rawCmdString(projectPath).splitter;
         immutable cmd = parts.front;
         if(!isDefaultRule(cmd)) {
             throw new Exception("Cannot get defaultRule from " ~ command);

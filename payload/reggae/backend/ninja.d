@@ -56,11 +56,6 @@ struct Ninja {
 
         foreach(topTarget; _build.targets) {
             foreach(target; DepthFirst(topTarget)) {
-                import std.stdio;
-                () @trusted {
-                debug writeln("target: ", target);
-                debug writeln("default ? ", target.command.isDefaultCommand);
-                }();
                 target.command.isDefaultCommand ? defaultRule(target) : customRule(target);
             }
         }

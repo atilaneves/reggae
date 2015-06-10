@@ -93,9 +93,6 @@ Command compileCommand(in string srcFileName,
     auto params = [assocEntry("includes", includeParams),
                    assocEntry("flags", flagParams)];
 
-    import std.stdio;
-    debug writeln("params: ", params);
-
     if(rule == Rule.compileD)
         params ~= assocEntry("stringImports", stringImportPaths.map!(a => "-J" ~ buildPath(projDir, a)).array);
 

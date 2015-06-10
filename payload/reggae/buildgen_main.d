@@ -1,11 +1,10 @@
-import reggaefile; //the user's build description
 import reggae;
 import std.stdio;
 
 
 int main(string[] args) {
     try {
-        generateBuild;
+        generateBuildFor!("reggaefile"); //the user's build description
     } catch(Exception ex) {
         stderr.writeln(ex.msg);
         return 1;
@@ -14,11 +13,20 @@ int main(string[] args) {
     return 0;
 }
 
+private void generateBuildFor(alias moduleOrString)() {
+    static if(is(moduleOrString == string)) {
+        mixin("import " ~ moduleOrString ~ ";");
+        mixin("alias module_ = " ~ moduleOrString);
+    } else {
+        alias module_ = moduleOrString;
+    }
 
-private void generateBuild() {
-    const buildFunc = getBuild!(reggaefile); //get the function to call by CT reflection
+    const buildFunc = getBuild!(module_); //get the function to call by CT reflection
     const build = buildFunc(); //actually call the function to get the build description
+    generateBuild(build);
+}
 
+private void generateBuild(in Build build) {
     final switch(backend) with(Backend) {
 
         case make:

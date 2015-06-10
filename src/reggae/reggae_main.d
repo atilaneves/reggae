@@ -171,6 +171,8 @@ private void writeSrcFiles(in Options options) {
     }
 
 
+    //this foreach has to happen at compile time due
+    //to the string import below.
     foreach(fileName; FileNames!()) {
         auto file = File(reggaeSrcFileName(fileName), "w");
         file.write(import(fileName));

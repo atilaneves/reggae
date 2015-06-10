@@ -14,6 +14,16 @@ version(minimal) {
     enum main = Target("bin/reggae", cmd, srcs);
     mixin build!(main);
 
+    /* It's also possible for reggae to build itself with the build description below, but
+      it's so ourobouros that it's always rebuilt. It works, though.
+
+      alias main = dExe!(App("src/reggae/reggae_main.d", "bin/reggae"),
+                         Flags("-version=minimal"),
+                         ImportPaths(["src", "payload"]),
+                         StringImportPaths(["payload/reggae"]));
+    */
+
+
 } else {
     //fully featured build
 

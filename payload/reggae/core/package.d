@@ -7,9 +7,10 @@ module reggae.core;
 
 public import reggae.build;
 public import reggae.reflect;
-public import reggae.range;
-public import reggae.backend.binary;
-public import reggae.ctaa;
-public import reggae.core.rules;
+public import reggae.buildgen;
 public import reggae.types;
 public import reggae.config;
+public import reggae.ctaa;
+public import reggae.range;
+public import reggae.backend.binary;
+public import reggae.core.rules;

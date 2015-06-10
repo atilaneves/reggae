@@ -53,7 +53,7 @@ void run(in Options options) {
 
 
 enum coreFiles = [
-    "buildgen_main.d",
+    "buildgen_main.d", "buildgen.d",
     "build.d",
     "backend/binary.d",
     "package.d", "range.d", "reflect.d",

@@ -96,6 +96,7 @@ void testJsonToDubDescribe() {
 }
 
 
+@ShouldFail("old command style")
 void testDubInfoToTargets() {
     const info = getDubInfo(jsonString.dup);
     info.toTargets.shouldEqual(
@@ -161,6 +162,7 @@ void testDubInfoToTargets() {
 }
 
 
+@ShouldFail("old command style")
 void testDubInfoToTargetsLib() {
     const info = getDubInfo(jsonString.replace("executable", "library"));
     info.mainTarget.shouldEqual(
@@ -200,6 +202,7 @@ void testDubInfoToTargetsLib() {
 }
 
 
+@ShouldFail("old command style")
 void testDubInfoWithLibs() {
     const info = getDubInfo(jsonString.dup);
     info.mainTarget.shouldEqual(

@@ -5,10 +5,10 @@
  */
 
 module reggae.build;
+import reggae.ctaa;
 
-import reggae.rules.defaults;
 import std.string: replace;
-import std.algorithm: map;
+import std.algorithm;
 import std.path: buildPath;
 import std.typetuple: allSatisfy;
 import std.traits: Unqual, isSomeFunction, ReturnType, arity;
@@ -48,7 +48,7 @@ struct Build {
 //a directory for each top-level target no avoid name clashes
 //@trusted because of map -> buildPath -> array
 Target enclose(in Target target, in Target topLevel) @trusted {
-    if(target.isLeaf) return Target(target.outputs.map!(a => a.removeBuilddir).array,
+    if(target.isLeaf) return Target(target.outputs.map!(a => a._removeBuilddir).array,
                                     target._command.removeBuilddir,
                                     target.dependencies,
                                     target.implicits);
@@ -67,11 +67,11 @@ private string realTargetPath(in string dirName, in string output) @trusted pure
     import std.algorithm: canFind;
 
     return output.canFind(gBuilddir)
-        ? output.removeBuilddir
+        ? output._removeBuilddir
         : buildPath(dirName, output);
 }
 
-private string removeBuilddir(in string output) @trusted pure {
+private string _removeBuilddir(in string output) @trusted pure {
     import std.path: buildNormalizedPath;
     import std.algorithm;
     return output.
@@ -155,25 +155,36 @@ struct Target {
     const(Target)[] implicits;
 
     this(in string output) @safe pure nothrow {
-        this(output, null, null);
+        this(output, "", null);
     }
 
-    this(in string output, string command, in Target dependency,
-         in Target[] implicits = []) @safe pure nothrow {
+    this(C)(in string output,
+            in C command,
+            in Target dependency,
+            in Target[] implicits = []) @safe pure nothrow {
         this([output], command, [dependency], implicits);
     }
 
-    this(in string output, string command,
-         in Target[] dependencies, in Target[] implicits = []) @safe pure nothrow {
+    this(C)(in string output,
+            in C command,
+            in Target[] dependencies,
+            in Target[] implicits = []) @safe pure nothrow {
         this([output], command, dependencies, implicits);
     }
 
-    this(in string[] outputs, string command,
-         in Target[] dependencies, in Target[] implicits = []) @safe pure nothrow {
+    this(C)(in string[] outputs,
+            in C command,
+            in Target[] dependencies,
+            in Target[] implicits = []) @safe pure nothrow {
+
         this.outputs = outputs;
         this.dependencies = dependencies;
         this.implicits = implicits;
-        this._command = command;
+
+        static if(is(C == Command))
+            this._command = command;
+        else
+            this._command = Command(command);
     }
 
     @property string dependencyFilesString(in string projectPath = "") @safe pure const nothrow {
@@ -184,7 +195,8 @@ struct Target {
         return depFilesStringImpl(implicits, projectPath);
     }
 
-    @property string command(in string projectPath = "") @trusted pure const nothrow {
+    ///replace all special variables with their expansion
+    @property string expandCommand(in string projectPath = "") @trusted pure const nothrow {
         //functional didn't work here, I don't know why so sticking with loops for now
         string[] depOutputs;
         foreach(dep; dependencies) {
@@ -195,9 +207,7 @@ struct Target {
                 depOutputs ~= dep.isLeaf ? buildPath(projectPath, output) : output;
             }
         }
-        auto replaceIn = _command.replace("$in", depOutputs.join(" "));
-        auto replaceOut = replaceIn.replace("$out", outputs.join(" "));
-        return replaceOut.replace("$project", projectPath);
+        return _command.expand(projectPath, outputs.join(" "), depOutputs.join(" "));
     }
 
     bool isLeaf() @safe pure const nothrow {
@@ -206,26 +216,22 @@ struct Target {
 
     //@trusted because of replace
     string rawCmdString(in string projectPath) @trusted pure nothrow const {
-        return _command.replace("$project", projectPath);
+        return _command.rawCmdString(projectPath);
     }
 
-
     string shellCommand(in string projectPath = "") @safe pure const {
-        immutable rawCmdLine = rawCmdString(projectPath);
-        if(rawCmdLine.isDefaultCommand) {
-            return defaultCommand(projectPath, rawCmdLine);
-        } else {
-            return command(projectPath);
-        }
+        return _command.isDefaultCommand ? defaultCommand(projectPath) : expandCommand(projectPath);
     }
 
     string[] outputsInProjectPath(in string projectPath) @safe pure nothrow const {
         return outputs.map!(a => isLeaf ? buildPath(projectPath, a) : a).array;
     }
 
+    @property const(Command) command() @safe const pure nothrow { return _command; }
+
 private:
 
-    string _command;
+    const(Command) _command;
 
     //@trusted because of join
     string depFilesStringImpl(in Target[] deps, in string projectPath) @trusted pure const nothrow {
@@ -241,30 +247,24 @@ private:
 
     //this function returns a string to be run by the shell with `std.process.execute`
     //it does 'normal' commands, not built-in rules
-    string defaultCommand(in string projectPath, in string rawCmdLine) @safe pure const {
+    string defaultCommand(in string projectPath) @safe pure const {
         import reggae.config: dCompiler, cppCompiler, cCompiler;
 
-        immutable flags = rawCmdLine.getDefaultRuleParams("flags", []).join(" ");
-        immutable includes = rawCmdLine.getDefaultRuleParams("includes", []).join(" ");
+        immutable flags = _command.getParams(projectPath, "flags", []).join(" ");
+        immutable includes = _command.getParams(projectPath, "includes", []).join(" ");
         immutable depfile = outputs[0] ~ ".dep";
 
         string ccCommand(in string compiler) {
-            import std.stdio;
-            debug writeln("ccCommand with compiler ", compiler);
             return [compiler, flags, includes, "-MMD", "-MT", outputs[0],
                     "-MF", depfile, "-o", outputs[0], "-c",
                     dependencyFilesString(projectPath)].join(" ");
         }
 
 
-        immutable rule = rawCmdLine.getDefaultRule;
-        import std.stdio;
-        debug writeln("rule: ", rule);
+        final switch(_command.rule) with(Rule) {
 
-        switch(rule) {
-
-        case "_dcompile":
-            immutable stringImports = rawCmdLine.getDefaultRuleParams("stringImports", []).join(" ");
+        case compileD:
+            immutable stringImports = _command.getParams(projectPath, "stringImports", []).join(" ");
             immutable command = [".reggae/dcompile",
                                  "--objFile=" ~ outputs[0],
                                  "--depFile=" ~ depfile, dCompiler,
@@ -274,14 +274,91 @@ private:
 
             return command;
 
-        case "_cppcompile": return ccCommand(cppCompiler);
-        case "_ccompile":   return ccCommand(cCompiler);
-        case "_link":
+        case compileCpp: return ccCommand(cppCompiler);
+        case compileC:   return ccCommand(cCompiler);
+        case link:
             return [dCompiler, "-of" ~ outputs[0],
                     flags,
                     dependencyFilesString(projectPath)].join(" ");
-        default:
-            assert(0, "Unknown default rule " ~ rule);
+        case shell:
+            assert(0, "defaultCommand cannot be shell");
         }
+    }
+}
+
+immutable allDefaultRules = ["_dcompile", "_ccompile", "_cppcompile", "_link"];
+
+bool isDefaultRule(in string rule) @safe pure nothrow {
+    return allDefaultRules.canFind(rule);
+}
+
+enum Rule {
+    shell,
+    compileD,
+    compileCpp,
+    compileC,
+    link,
+}
+
+/**
+ A command to be execute to produce a targets outputs from its inputs.
+ In general this will be a shell command, but the high-level rules
+ use commands with known semantics (compilation, linking, etc)
+*/
+struct Command {
+    alias Params = AssocList!(string, string[]);
+
+    private string command;
+    private Rule rule;
+    private Params params;
+
+    this(string shellCommand) @safe pure nothrow {
+        command = shellCommand;
+    }
+
+    this(Rule rule, Params params) @safe pure {
+        if(rule == Rule.shell) throw new Exception("Command rule cannot be shell");
+        this.rule = rule;
+        this.params = params;
+    }
+
+    Rule getRule() @safe pure const {
+        return rule;
+    }
+
+    bool isDefaultCommand() @safe pure const {
+        return rule != Rule.shell;
+    }
+
+    string[] getParams(in string projectPath, in string key, string[] ifNotFound) @safe pure const {
+        return getParams(projectPath, key, true, ifNotFound);
+    }
+
+    Command removeBuilddir() @safe pure const {
+        auto cmd = Command(_removeBuilddir(command));
+        cmd.rule = this.rule;
+        //FIXME
+        () @trusted {
+            cmd.params = cast()this.params;
+        }();
+        return cmd;
+    }
+
+    ///Replace $in, $out, $project with values
+    string expand(in string projectPath, in string outputs, in string depOutputs) @safe pure nothrow const {
+        auto replaceIn = command.dup.replace("$in", depOutputs);
+        auto replaceOut = replaceIn.replace("$out", outputs);
+        return replaceOut.replace("$project", projectPath);
+    }
+
+    //@trusted because of replace
+    string rawCmdString(in string projectPath) @trusted pure nothrow const {
+        return command.replace("$project", projectPath);
+    }
+
+    //@trusted because of replace
+    private string[] getParams(in string projectPath, in string key,
+                               bool useIfNotFound, string[] ifNotFound = []) @safe pure const {
+        return params.get(key, ifNotFound).map!(a => a.replace("$project", projectPath)).array;
     }
 }

@@ -4,7 +4,7 @@ module reggae.backend.binary;
 import reggae.build;
 import reggae.range;
 import reggae.config;
-import std.algorithm: all, splitter, cartesianProduct, any, filter;
+import std.algorithm;
 import std.range;
 import std.file: timeLastModified, thisExePath, exists;
 import std.process: execute, executeShell;

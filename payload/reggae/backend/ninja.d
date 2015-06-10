@@ -9,10 +9,19 @@ import std.array;
 import std.range;
 import std.algorithm;
 import std.exception: enforce;
-import std.conv: text;
+import std.conv;
 import std.string: strip;
 import std.path: defaultExtension, absolutePath;
 
+string ruleToNinjaString(Rule rule) @safe pure nothrow {
+    final switch(rule) with(Rule) {
+        case compileD: return "_dcompile";
+        case compileCpp: return "_cppcompile";
+        case compileC: return "_ccompile";
+        case link: return "_link";
+        case shell: assert(0, "ruleToNinjaString doesn't work for shell");
+    }
+}
 
 struct NinjaEntry {
     string mainLine;
@@ -56,8 +65,7 @@ struct Ninja {
 
         foreach(topTarget; _build.targets) {
             foreach(target; DepthFirst(topTarget)) {
-                auto rawCmdLine = target.rawCmdString(_projectPath);
-                rawCmdLine.isDefaultCommand ? defaultRule(target, rawCmdLine) : customRule(target, rawCmdLine);
+                target.command.isDefaultCommand ? defaultRule(target) : customRule(target);
             }
         }
     }
@@ -92,17 +100,20 @@ private:
     int _counter = 1;
 
     //@trusted because of join
-    void defaultRule(in Target target, in string rawCmdLine) @trusted {
-        immutable rule = rawCmdLine.getDefaultRule;
+    void defaultRule(in Target target) @trusted {
+        immutable rule = target.command.getRule;
 
         string[] paramLines;
 
-        if(rule != "_link") { //i.e. one of the compile rules
+        if(rule != Rule.link) { //i.e. one of the compile rules
             auto params = ["includes", "flags"];
-            if(rule == "_dcompile") params ~= "stringImports";
+            if(rule == Rule.compileD) params ~= "stringImports";
 
             foreach(immutable param; params) {
-                immutable value = rawCmdLine.getDefaultRuleParams(param, []).join(" ");
+                import std.stdio;
+                debug writeln("param is ", param);
+                immutable value = target.command.getParams(_projectPath, param, []).join(" ");
+                debug writeln("value is ", value);
                 paramLines ~= param ~ " = " ~ value;
             }
 
@@ -111,44 +122,47 @@ private:
             auto params = ["flags"];
 
             foreach(immutable param; params) {
-                immutable value = rawCmdLine.getDefaultRuleParams(param, []).join(" ");
+                immutable value = target.command.getParams(_projectPath, param, []).join(" ");
                 paramLines ~= param ~ " = " ~ value;
             }
 
         }
 
-        buildEntries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~ rule ~ " " ~
+        buildEntries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~ ruleToNinjaString(rule) ~ " " ~
                                    target.dependencyFilesString(_projectPath),
                                    paramLines);
     }
 
-    void customRule(in Target target, in string rawCmdLine) @safe {
-        immutable implicitInput =  () @trusted { return !rawCmdLine.canFind("$in");  }();
-        immutable implicitOutput = () @trusted { return !rawCmdLine.canFind("$out"); }();
+    void customRule(in Target target) @safe {
+        //rawCmdString is used because ninja needs to find where $in and $out are,
+        //so shellCommand wouldn't work
+        immutable shellCommand = target.rawCmdString(_projectPath);
+        immutable implicitInput =  () @trusted { return !shellCommand.canFind("$in");  }();
+        immutable implicitOutput = () @trusted { return !shellCommand.canFind("$out"); }();
 
         if(implicitOutput) {
-            implicitOutputRule(target, rawCmdLine);
+            implicitOutputRule(target, shellCommand);
         } else if(implicitInput) {
-            implicitInputRule(target, rawCmdLine);
+            implicitInputRule(target, shellCommand);
         } else {
-            explicitInOutRule(target, rawCmdLine);
+            explicitInOutRule(target, shellCommand);
         }
     }
 
-    void explicitInOutRule(in Target target, in string rawCmdLine, in string implicitInput = "") @safe {
+    void explicitInOutRule(in Target target, in string shellCommand, in string implicitInput = "") @safe {
         import std.regex;
         auto reg = regex(`^[^ ]+ +(.*?)(\$in|\$out)(.*?)(\$in|\$out)(.*?)$`);
 
-        auto mat = rawCmdLine.match(reg);
+        auto mat = shellCommand.match(reg);
         enforce(!mat.captures.empty, text("Could not find both $in and $out.\nCommand: ",
-                                          rawCmdLine, "\nCaptures: ", mat.captures));
+                                          shellCommand, "\nCaptures: ", mat.captures));
         immutable before  = mat.captures[1].strip;
         immutable first   = mat.captures[2];
         immutable between = mat.captures[3].strip;
         immutable last    = mat.captures[4];
         immutable after   = mat.captures[5].strip;
 
-        immutable ruleCmdLine = getRuleCommandLine(target, rawCmdLine, before, first, between, last, after);
+        immutable ruleCmdLine = getRuleCommandLine(target, shellCommand, before, first, between, last, after);
         bool haveToAdd;
         immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAdd);
 
@@ -172,9 +186,9 @@ private:
         }
     }
 
-    void implicitOutputRule(in Target target, in string rawCmdLine) @safe nothrow {
+    void implicitOutputRule(in Target target, in string shellCommand) @safe nothrow {
         bool haveToAdd;
-        immutable ruleCmdLine = getRuleCommandLine(target, rawCmdLine, "" /*before*/, "$in");
+        immutable ruleCmdLine = getRuleCommandLine(target, shellCommand, "" /*before*/, "$in");
         immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAdd);
 
         immutable buildLine = "build " ~ target.outputs.join(" ") ~ ": " ~ ruleName ~
@@ -186,11 +200,11 @@ private:
         }
     }
 
-    void implicitInputRule(in Target target, in string rawCmdLine) @safe {
+    void implicitInputRule(in Target target, in string shellCommand) @safe {
         string input;
 
         immutable cmdLine = () @trusted {
-            string line = rawCmdLine;
+            string line = shellCommand;
             auto allDeps = (target.dependencyFilesString(_projectPath) ~ " " ~
                             target.implicitFilesString(_projectPath)).splitter(" ");
             foreach(string dep; allDeps) {
@@ -206,16 +220,16 @@ private:
     }
 
     //@trusted because of canFind
-    string getRuleCommandLine(in Target target, in string rawCmdLine,
+    string getRuleCommandLine(in Target target, in string shellCommand,
                               in string before = "", in string first = "",
                               in string between = "",
                               in string last = "", in string after = "") @trusted pure nothrow const {
 
         auto cmdLine = "command = " ~ targetRawCommand(target);
         if(!before.empty) cmdLine ~= " $before";
-        cmdLine ~= rawCmdLine.canFind(" " ~ first) ? " " ~ first : first;
+        cmdLine ~= shellCommand.canFind(" " ~ first) ? " " ~ first : first;
         if(!between.empty) cmdLine ~= " $between";
-        cmdLine ~= rawCmdLine.canFind(" " ~ last) ? " " ~ last : last;
+        cmdLine ~= shellCommand.canFind(" " ~ last) ? " " ~ last : last;
         if(!after.empty) cmdLine ~= " $after";
         return cmdLine;
     }
@@ -270,7 +284,7 @@ private string targetCommand(in Target target) @trusted pure nothrow {
 
 //@trusted because of splitter
 private string targetRawCommand(in Target target) @trusted pure nothrow {
-    return target.command.splitter(" ").front;
+    return target.expandCommand.splitter(" ").front;
 }
 
 //ninja doesn't like symbols in rule names

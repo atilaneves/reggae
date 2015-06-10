@@ -71,7 +71,7 @@ struct DubInfo {
         //hacky hack for dub describe on vibe.d projects
         flags ~= libs.filter!(a => a != "ev").map!(a => "-L-l" ~ a).array;
         if(packages[0].targetType == "staticLibrary") flags ~= "-lib";
-        return link(packages[0].targetFileName, toTargets(), flags.join(","));
+        return link(packages[0].targetFileName, toTargets(), flags.join(" "));
     }
 
     string[] mainTargetImportPaths() @trusted nothrow const {

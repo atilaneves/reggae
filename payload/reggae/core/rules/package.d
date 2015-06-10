@@ -5,6 +5,5 @@
 
 module reggae.core.rules;
 
-public import reggae.rules.defaults;
 public import reggae.rules.common;
 public import reggae.rules.d;

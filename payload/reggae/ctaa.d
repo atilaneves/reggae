@@ -21,12 +21,11 @@ struct AssocList(K, V) {
         return res.front.value;
     }
 
-    T get(T)(in K key, T defaultValue) pure {
+    T get(T)(in K key, T defaultValue) pure const {
         import std.conv: to;
         auto res = entries.find!(a => a.key == key);
-        return res.empty ? defaultValue : entries.front.value.to!T;
+        return res.empty ? defaultValue : res.front.value.to!T;
     }
-
 }
 
 struct AssocEntry(K, V) {

@@ -1,31 +1,38 @@
 module tests.default_rules;
 
-import reggae.rules.defaults;
+
+import reggae;
 import unit_threaded;
 
+
 void testNoDefaultRule() {
-    "doStuff foo=bar".getDefaultRule.shouldThrow!Exception;
-    "_foo foo=bar".getDefaultRule.shouldThrow!Exception;
+    Command("doStuff foo=bar").isDefaultCommand.shouldBeFalse;
 }
 
-void testGetDefaultRule() {
-    "_dcompile foo=bar".getDefaultRule.shouldEqual("_dcompile");
-    "_ccompile foo=bar".getDefaultRule.shouldEqual("_ccompile");
-    "_cppcompile foo=bar".getDefaultRule.shouldEqual("_cppcompile");
-    "_link foo=bar".getDefaultRule.shouldEqual("_link");
+void testGetRuleD() {
+    const command = Command(Rule.compileD, assocList([assocEntry("foo", ["bar"])]));
+    command.getRule.shouldEqual(Rule.compileD);
+    command.isDefaultCommand.shouldBeTrue;
 }
 
-void testGetDefaultRuleParams() {
-    immutable command = "_dcompile foo=bar includes=boo,looloo,bearhugs";
-    command.getDefaultRuleParams("foo").shouldEqual(["bar"]);
-    command.getDefaultRuleParams("includes").shouldEqual(["boo", "looloo", "bearhugs"]);
-    command.getDefaultRuleParams("nonexistent").shouldThrow!Exception;
-
-    "_madeup includes=boo,bar".getDefaultRuleParams("includes").shouldThrow!Exception;
+void testGetRuleCpp() {
+    const command = Command(Rule.compileCpp, assocList([assocEntry("includes", ["src", "other"])]));
+    command.getRule.shouldEqual(Rule.compileCpp);
+    command.isDefaultCommand.shouldBeTrue;
 }
+
 
 void testValueWhenKeyNotFound() {
-    immutable command = "_dcompile foo=bar";
-    command.getDefaultRuleParams("foo", ["hahaha"]).shouldEqual(["bar"]);
-    command.getDefaultRuleParams("includes", ["hahaha"]).shouldEqual(["hahaha"]);
+    const command = Command(Rule.compileD, assocList([assocEntry("foo", ["bar"])]));
+    command.getParams("", "foo", ["hahaha"]).shouldEqual(["bar"]);
+    command.getParams("", "includes", ["hahaha"]).shouldEqual(["hahaha"]);
+}
+
+
+void testObjectFile() {
+    const obj = objectFile("path/to/src/foo.c", "-m64 -fPIC -O3");
+    obj.command.isDefaultCommand.shouldBeTrue;
+
+    const build = Build(objectFile("path/to/src/foo.c", "-m64 -fPIC -O3"));
+    build.targets[0].command.isDefaultCommand.shouldBeTrue;
 }

@@ -15,7 +15,7 @@ struct DepthFirst {
 
     const(Target)[] depthFirstTargets(in Target target) pure nothrow {
         //if leaf, return
-        if(target.isLeaf) return target.command is null ? [] : [target];
+        if(target.isLeaf) return target.expandCommand is null ? [] : [target];
 
         //if not, add ourselves to the end to get depth-first
         return reduce!((a, b) => a ~ depthFirstTargets(b))(typeof(return).init, target.dependencies) ~
@@ -83,7 +83,7 @@ struct ByDepthLevel {
 
 
 //TODO: a non-allocating version with no arrays
-auto flatten(R)(R range) pure nothrow {
+auto flatten(R)(R range) @trusted pure nothrow {
     alias rangeType = ElementType!R;
     alias T = ElementType!rangeType;
     T[] res;

@@ -29,9 +29,9 @@ Target[] objectFiles(in string[] srcFiles, in string flags = "",
 
 Target[] objectFilesPerPackage(in string[] srcFiles, in string flags = "",
                                in string[] importPaths = [], in string[] stringImportPaths = [],
-                               in string projDir = "$project") @safe pure {
+                               in string projDir = "$project") @trusted pure {
 
-    immutable command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
+    const command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
     return srcFiles.byPackage.map!(a => Target(a[0].packagePath.objFileName,
                                                command,
                                                a.map!(a => Target(a)).array)).array;
@@ -39,9 +39,9 @@ Target[] objectFilesPerPackage(in string[] srcFiles, in string flags = "",
 
 Target[] objectFilesPerModule(in string[] srcFiles, in string flags = "",
                               in string[] importPaths = [], in string[] stringImportPaths = [],
-                              in string projDir = "$project") @safe pure {
+                              in string projDir = "$project") @trusted pure {
 
-    immutable command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
+    const command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
     return srcFiles.map!(a => objectFile(a, flags, importPaths, stringImportPaths, projDir)).array;
 }
 

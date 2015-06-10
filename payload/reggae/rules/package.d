@@ -4,7 +4,6 @@ public import reggae.core.rules;
 
 version(minimal) {
 } else {
-    public import reggae.rules.defaults;
     public import reggae.rules.common;
     public import reggae.rules.d;
     public import reggae.rules.dub;

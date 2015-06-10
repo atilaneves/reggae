@@ -74,7 +74,7 @@ enum coreFiles = [
     "dependencies.d", "types.d", "dcompile.d",
     "ctaa.d", "sorting.d",
     "rules/package.d",
-    "rules/defaults.d", "rules/common.d",
+    "rules/common.d",
     "rules/d.d",
     "core/package.d", "core/rules/package.d",
     ];

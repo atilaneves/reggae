@@ -57,7 +57,8 @@ struct Ninja {
         foreach(topTarget; _build.targets) {
             foreach(target; DepthFirst(topTarget)) {
                 auto rawCmdLine = target.rawCmdString(_projectPath);
-                rawCmdLine.isDefaultCommand ? defaultRule(target, rawCmdLine) : customRule(target, rawCmdLine);
+
+                target.command.isDefaultCommand ? defaultRule(target, rawCmdLine) : customRule(target, rawCmdLine);
             }
         }
     }
@@ -93,7 +94,7 @@ private:
 
     //@trusted because of join
     void defaultRule(in Target target, in string rawCmdLine) @trusted {
-        immutable rule = rawCmdLine.getDefaultRule;
+        immutable rule = target.command.getDefaultRule;
 
         string[] paramLines;
 
@@ -102,7 +103,7 @@ private:
             if(rule == "_dcompile") params ~= "stringImports";
 
             foreach(immutable param; params) {
-                immutable value = rawCmdLine.getDefaultRuleParams(param, []).join(" ");
+                immutable value = target.command.getDefaultRuleParams(_projectPath, param, []).join(" ");
                 paramLines ~= param ~ " = " ~ value;
             }
 
@@ -111,7 +112,7 @@ private:
             auto params = ["flags"];
 
             foreach(immutable param; params) {
-                immutable value = rawCmdLine.getDefaultRuleParams(param, []).join(" ");
+                immutable value = target.command.getDefaultRuleParams(_projectPath, param, []).join(" ");
                 paramLines ~= param ~ " = " ~ value;
             }
 

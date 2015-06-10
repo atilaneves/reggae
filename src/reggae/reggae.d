@@ -36,6 +36,11 @@ version(minimal) {
     import reggae.dub.interop;
 }
 
+mixin template reggaeGen(targets...) {
+    mixin buildImpl!targets;
+    mixin ReggaeMain;
+}
+
 mixin template ReggaeMain() {
     import reggae.options: getOptions;
     import std.stdio: stderr;

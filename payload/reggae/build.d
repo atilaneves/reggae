@@ -98,10 +98,7 @@ mixin template buildImpl(targets...) if(allSatisfy!(isTarget, targets)) {
 
 /**
  Two variations on a template mixin. When reggae is used as a library,
- the build description file must be called $(D reggaefile.d). This file
- will then have generated for it a main function for a command-line executable
- that can generate a build. It also declares a function returning a $(Build)
- struct for the user
+ this will essentially build reggae itself as part of the build description.
 
  When reggae is used as a command-line tool to generate builds, it simply
  declares the build function that will be called at run-time. The tool
@@ -113,7 +110,7 @@ mixin template buildImpl(targets...) if(allSatisfy!(isTarget, targets)) {
  */
 version(reggaelib) {
     mixin template build(targets...) if(allSatisfy!(isTarget, targets)) {
-        mixin buildGen!("reggaefile", targets);
+        mixin reggaeGen!(targets);
     }
 } else {
     alias build = buildImpl;

@@ -71,18 +71,12 @@ enum otherFiles = [
     "rules/cpp.d", "rules/c.d",
     ];
 
+//all files that need to be written out and compiled
 private string[] fileNames() @safe pure nothrow {
     version(minimal) return coreFiles;
     else return coreFiles ~ otherFiles;
 }
 
-private string filesTupleString() @safe pure nothrow {
-    return "TypeTuple!(" ~ fileNames.map!(a => `"` ~ a ~ `"`).join(",") ~ ")";
-}
-
-template FileNames() {
-    mixin("alias FileNames = " ~ filesTupleString ~ ";");
-}
 
 private void createBuild(in Options options) {
 
@@ -157,6 +151,14 @@ string getBuildGenName(in Options options) @safe pure nothrow {
 
 immutable reggaeSrcDirName = buildPath(".reggae", "src", "reggae");
 
+private string filesTupleString() @safe pure nothrow {
+    return "TypeTuple!(" ~ fileNames.map!(a => `"` ~ a ~ `"`).join(",") ~ ")";
+}
+
+template FileNames() {
+    mixin("alias FileNames = " ~ filesTupleString ~ ";");
+}
+
 
 private void writeSrcFiles(in Options options) {
     import std.file: mkdirRecurse;
@@ -167,6 +169,7 @@ private void writeSrcFiles(in Options options) {
         mkdirRecurse(buildPath(reggaeSrcDirName, "backend"));
         mkdirRecurse(buildPath(reggaeSrcDirName, "core", "rules"));
     }
+
 
     foreach(fileName; FileNames!()) {
         auto file = File(reggaeSrcFileName(fileName), "w");

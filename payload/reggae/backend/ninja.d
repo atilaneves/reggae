@@ -56,9 +56,7 @@ struct Ninja {
 
         foreach(topTarget; _build.targets) {
             foreach(target; DepthFirst(topTarget)) {
-                auto rawCmdLine = target.rawCmdString(_projectPath);
-
-                target.command.isDefaultCommand ? defaultRule(target, rawCmdLine) : customRule(target, rawCmdLine);
+                target.command.isDefaultCommand ? defaultRule(target) : customRule(target);
             }
         }
     }
@@ -93,7 +91,7 @@ private:
     int _counter = 1;
 
     //@trusted because of join
-    void defaultRule(in Target target, in string rawCmdLine) @trusted {
+    void defaultRule(in Target target) @trusted {
         immutable rule = target.command.getDefaultRule;
 
         string[] paramLines;
@@ -123,33 +121,36 @@ private:
                                    paramLines);
     }
 
-    void customRule(in Target target, in string rawCmdLine) @safe {
-        immutable implicitInput =  () @trusted { return !rawCmdLine.canFind("$in");  }();
-        immutable implicitOutput = () @trusted { return !rawCmdLine.canFind("$out"); }();
+    void customRule(in Target target) @safe {
+        //rawCmdString is used because ninja needs to find where $in and $out are,
+        //so shellCommand wouldn't work
+        immutable shellCommand = target.rawCmdString(_projectPath);
+        immutable implicitInput =  () @trusted { return !shellCommand.canFind("$in");  }();
+        immutable implicitOutput = () @trusted { return !shellCommand.canFind("$out"); }();
 
         if(implicitOutput) {
-            implicitOutputRule(target, rawCmdLine);
+            implicitOutputRule(target, shellCommand);
         } else if(implicitInput) {
-            implicitInputRule(target, rawCmdLine);
+            implicitInputRule(target, shellCommand);
         } else {
-            explicitInOutRule(target, rawCmdLine);
+            explicitInOutRule(target, shellCommand);
         }
     }
 
-    void explicitInOutRule(in Target target, in string rawCmdLine, in string implicitInput = "") @safe {
+    void explicitInOutRule(in Target target, in string shellCommand, in string implicitInput = "") @safe {
         import std.regex;
         auto reg = regex(`^[^ ]+ +(.*?)(\$in|\$out)(.*?)(\$in|\$out)(.*?)$`);
 
-        auto mat = rawCmdLine.match(reg);
+        auto mat = shellCommand.match(reg);
         enforce(!mat.captures.empty, text("Could not find both $in and $out.\nCommand: ",
-                                          rawCmdLine, "\nCaptures: ", mat.captures));
+                                          shellCommand, "\nCaptures: ", mat.captures));
         immutable before  = mat.captures[1].strip;
         immutable first   = mat.captures[2];
         immutable between = mat.captures[3].strip;
         immutable last    = mat.captures[4];
         immutable after   = mat.captures[5].strip;
 
-        immutable ruleCmdLine = getRuleCommandLine(target, rawCmdLine, before, first, between, last, after);
+        immutable ruleCmdLine = getRuleCommandLine(target, shellCommand, before, first, between, last, after);
         bool haveToAdd;
         immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAdd);
 
@@ -173,9 +174,9 @@ private:
         }
     }
 
-    void implicitOutputRule(in Target target, in string rawCmdLine) @safe nothrow {
+    void implicitOutputRule(in Target target, in string shellCommand) @safe nothrow {
         bool haveToAdd;
-        immutable ruleCmdLine = getRuleCommandLine(target, rawCmdLine, "" /*before*/, "$in");
+        immutable ruleCmdLine = getRuleCommandLine(target, shellCommand, "" /*before*/, "$in");
         immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAdd);
 
         immutable buildLine = "build " ~ target.outputs.join(" ") ~ ": " ~ ruleName ~
@@ -187,11 +188,11 @@ private:
         }
     }
 
-    void implicitInputRule(in Target target, in string rawCmdLine) @safe {
+    void implicitInputRule(in Target target, in string shellCommand) @safe {
         string input;
 
         immutable cmdLine = () @trusted {
-            string line = rawCmdLine;
+            string line = shellCommand;
             auto allDeps = (target.dependencyFilesString(_projectPath) ~ " " ~
                             target.implicitFilesString(_projectPath)).splitter(" ");
             foreach(string dep; allDeps) {
@@ -207,16 +208,16 @@ private:
     }
 
     //@trusted because of canFind
-    string getRuleCommandLine(in Target target, in string rawCmdLine,
+    string getRuleCommandLine(in Target target, in string shellCommand,
                               in string before = "", in string first = "",
                               in string between = "",
                               in string last = "", in string after = "") @trusted pure nothrow const {
 
         auto cmdLine = "command = " ~ targetRawCommand(target);
         if(!before.empty) cmdLine ~= " $before";
-        cmdLine ~= rawCmdLine.canFind(" " ~ first) ? " " ~ first : first;
+        cmdLine ~= shellCommand.canFind(" " ~ first) ? " " ~ first : first;
         if(!between.empty) cmdLine ~= " $between";
-        cmdLine ~= rawCmdLine.canFind(" " ~ last) ? " " ~ last : last;
+        cmdLine ~= shellCommand.canFind(" " ~ last) ? " " ~ last : last;
         if(!after.empty) cmdLine ~= " $after";
         return cmdLine;
     }

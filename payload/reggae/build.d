@@ -206,7 +206,6 @@ struct Target {
         return _command.rawCmdString(projectPath);
     }
 
-
     string shellCommand(in string projectPath = "") @safe pure const {
         return _command.isDefaultCommand ? defaultCommand(projectPath) : expandCommand(projectPath);
     }

@@ -215,6 +215,8 @@ struct Target {
         return outputs.map!(a => isLeaf ? buildPath(projectPath, a) : a).array;
     }
 
+    @property Command command() @safe const pure nothrow { return _command; }
+
 private:
 
     Command _command;

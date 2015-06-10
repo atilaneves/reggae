@@ -90,12 +90,34 @@ unittest {
     static assert(isTarget!t2);
 }
 
-mixin template build(T...) if(allSatisfy!(isTarget, T)) {
+mixin template buildImpl(targets...) if(allSatisfy!(isTarget, targets)) {
     Build buildFunc() {
-        return Build(T);
+        return Build(targets);
     }
 }
 
+/**
+ Two variations on a template mixin. When reggae is used as a library,
+ the build description file must be called $(D reggaefile.d). This file
+ will then have generated for it a main function for a command-line executable
+ that can generate a build. It also declares a function returning a $(Build)
+ struct for the user
+
+ When reggae is used as a command-line tool to generate builds, it simply
+ declares the build function that will be called at run-time. The tool
+ will then compile the user's reggaefile.d with the reggae libraries,
+ resulting in a buildgen executable.
+
+ In either case, the compile-time parameters of $(D build) are the
+ build's top-level targets.
+ */
+version(reggaelib) {
+    mixin template build(targets...) if(allSatisfy!(isTarget, targets)) {
+        mixin buildGen!("reggaefile", targets);
+    }
+} else {
+    alias build = buildImpl;
+}
 
 package template isBuildFunction(alias T) {
     static if(!isSomeFunction!T) {

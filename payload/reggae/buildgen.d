@@ -4,8 +4,14 @@ import reggae;
 import reggae.config;
 import std.stdio;
 
-mixin template buildGen(string buildModule = __MODULE__, targets...) {
-    mixin build!targets;
+/**
+ Creates a build generator out of a module and a list of top-level targets.
+ This will define a function with the signature $(D Build buildFunc()) in
+ the calling module and a $(D main) entry point function for a command-line
+ executable.
+ */
+mixin template buildGen(string buildModule, targets...) {
+    mixin buildImpl!targets;
     mixin BuildGenMain!buildModule;
 }
 

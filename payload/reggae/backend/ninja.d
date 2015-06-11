@@ -105,26 +105,14 @@ private:
 
         string[] paramLines;
 
-        if(rule != Rule.link) { //i.e. one of the compile rules
-            auto params = ["includes", "flags"];
-            if(rule == Rule.compileD) params ~= "stringImports";
-
-            foreach(immutable param; params) {
-                immutable value = target.command.getParams(_projectPath, param, []).join(" ");
-                if(value == "") continue;
-                paramLines ~= param ~ " = " ~ value;
-            }
-
-            paramLines ~= "DEPFILE = " ~ target.outputs[0] ~ ".dep";
-        } else {
-            auto params = ["flags"];
-
-            foreach(immutable param; params) {
-                immutable value = target.command.getParams(_projectPath, param, []).join(" ");
-                paramLines ~= param ~ " = " ~ value;
-            }
-
+        foreach(immutable param; target.command.paramNames) {
+            immutable value = target.command.getParams(_projectPath, param, []).join(" ");
+            if(value == "") continue;
+            paramLines ~= param ~ " = " ~ value;
         }
+
+        if(rule != Rule.link) //i.e. one of the compile rules
+            paramLines ~= "DEPFILE = " ~ target.outputs[0] ~ ".dep";
 
         buildEntries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~ ruleToNinjaString(rule) ~ " " ~
                                    target.dependencyFilesString(_projectPath),

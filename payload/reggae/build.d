@@ -322,6 +322,10 @@ struct Command {
         this.params = params;
     }
 
+    const(string)[] paramNames() @safe pure nothrow const {
+        return params.keys;
+    }
+
     Rule getRule() @safe pure const {
         return rule;
     }

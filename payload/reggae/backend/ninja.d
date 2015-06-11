@@ -108,9 +108,8 @@ private:
             paramLines ~= param ~ " = " ~ value;
         }
 
-        immutable cmdType = target.command.getType;
-
-        buildEntries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~ cmdTypeToNinjaString(cmdType) ~ " " ~
+        buildEntries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~
+                                   cmdTypeToNinjaString(target.command.getType) ~ " " ~
                                    target.dependencyFilesString(_projectPath),
                                    paramLines);
     }

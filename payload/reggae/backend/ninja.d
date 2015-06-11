@@ -110,10 +110,7 @@ private:
             if(rule == Rule.compileD) params ~= "stringImports";
 
             foreach(immutable param; params) {
-                import std.stdio;
-                debug writeln("param is ", param);
                 immutable value = target.command.getParams(_projectPath, param, []).join(" ");
-                debug writeln("value is ", value);
                 paramLines ~= param ~ " = " ~ value;
             }
 

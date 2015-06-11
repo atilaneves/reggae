@@ -286,11 +286,6 @@ private:
     }
 }
 
-immutable allDefaultRules = ["_dcompile", "_ccompile", "_cppcompile", "_link"];
-
-bool isDefaultRule(in string rule) @safe pure nothrow {
-    return allDefaultRules.canFind(rule);
-}
 
 enum CommandType {
     shell,

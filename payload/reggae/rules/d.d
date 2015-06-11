@@ -41,7 +41,6 @@ Target[] objectFilesPerModule(in string[] srcFiles, in string flags = "",
                               in string[] importPaths = [], in string[] stringImportPaths = [],
                               in string projDir = "$project") @trusted pure {
 
-    const command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
     return srcFiles.map!(a => objectFile(a, flags, importPaths, stringImportPaths, projDir)).array;
 }
 

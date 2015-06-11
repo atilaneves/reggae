@@ -30,5 +30,10 @@ void testStringToStrings() {
     aa["flags"].shouldEqual(["-m64", "-fPIC", "-O3"]);
     string[] emp;
     aa.get("flags", emp).shouldEqual(["-m64", "-fPIC", "-O3"]);
+}
 
+void testKeys() {
+    auto aa = assocListT("includes", ["-I$project/headers"],
+                         "flags", ["-m64", "-fPIC", "-O3"]);
+    aa.keys.shouldEqual(["includes", "flags"]);
 }

@@ -111,6 +111,7 @@ private:
 
             foreach(immutable param; params) {
                 immutable value = target.command.getParams(_projectPath, param, []).join(" ");
+                if(value == "") continue;
                 paramLines ~= param ~ " = " ~ value;
             }
 

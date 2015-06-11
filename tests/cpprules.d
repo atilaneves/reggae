@@ -10,9 +10,7 @@ void testNoIncludePaths() {
     const ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build path/to/src/foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",
-                    ["includes = ",
-                     "flags = ",
-                     "DEPFILE = path/to/src/foo.o.dep"]),
+                    ["DEPFILE = path/to/src/foo.o.dep"]),
             ]);
 }
 
@@ -23,7 +21,6 @@ void testIncludePaths() {
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build path/to/src/foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",
                     ["includes = -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path",
-                     "flags = ",
                      "DEPFILE = path/to/src/foo.o.dep"]),
             ]);
 }
@@ -50,8 +47,7 @@ void testFlagsCompileC() {
     const ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build path/to/src/foo.o: _ccompile /tmp/myproject/path/to/src/foo.c",
-                    ["includes = ",
-                     "flags = -m64 -fPIC -O3",
+                    ["flags = -m64 -fPIC -O3",
                      "DEPFILE = path/to/src/foo.o.dep"]),
             ]);
 }
@@ -61,8 +57,7 @@ void testFlagsCompileCpp() {
     const ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build path/to/src/foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",
-                    ["includes = ",
-                     "flags = -m64 -fPIC -O3",
+                    ["flags = -m64 -fPIC -O3",
                      "DEPFILE = path/to/src/foo.o.dep"]),
             ]);
 }

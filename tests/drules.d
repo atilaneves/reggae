@@ -11,10 +11,7 @@ void testDCompileNoIncludePathsNinja() {
     const ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build path/to/src/foo.o: _dcompile /tmp/myproject/path/to/src/foo.d",
-                    ["includes = ",
-                     "flags = ",
-                     "stringImports = ",
-                     "DEPFILE = path/to/src/foo.o.dep"])]);
+                    ["DEPFILE = path/to/src/foo.o.dep"])]);
 }
 
 
@@ -25,7 +22,6 @@ void testDCompileIncludePathsNinja() {
         [NinjaEntry("build path/to/src/foo.o: _dcompile /tmp/myproject/path/to/src/foo.d",
                     ["includes = -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path",
                      "flags = -O",
-                     "stringImports = ",
                      "DEPFILE = path/to/src/foo.o.dep"])]);
 }
 
@@ -65,13 +61,11 @@ void testDCompileWithMultipleFilesNinja() {
             NinjaEntry("build other.o: _dcompile /tmp/myproject/other/weird.d",
                        ["includes = -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path",
                         "flags = -O",
-                        "stringImports = ",
                         "DEPFILE = other.o.dep"]),
 
             NinjaEntry("build path/to/src.o: _dcompile /tmp/myproject/path/to/src/foo.d /tmp/myproject/path/to/src/bar.d",
                        ["includes = -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path",
                         "flags = -O",
-                        "stringImports = ",
                         "DEPFILE = path/to/src.o.dep"]),
 
             ]);

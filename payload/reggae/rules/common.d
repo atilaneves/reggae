@@ -95,6 +95,8 @@ Command compileCommand(in string srcFileName,
     if(commandType == CommandType.compileD)
         params ~= assocEntry("stringImports", stringImportPaths.map!(a => "-J" ~ buildPath(projDir, a)).array);
 
+    params ~= assocEntry("DEPFILE", ["$out.dep"]);
+
     return Command(commandType, assocList(params));
 }
 

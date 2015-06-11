@@ -253,9 +253,7 @@ private:
     //this function returns a string to be run by the shell with `std.process.execute`
     //it does 'normal' commands, not built-in rules
     string defaultCommand(in string projectPath) @safe pure const {
-        auto cmd = _command.defaultCommand(projectPath, outputs.join(" "), depOutputs(projectPath));
-        cmd = cmd.replace("$DEPFILE", outputs[0] ~ ".dep");
-        return cmd;
+        return _command.defaultCommand(projectPath, outputs.join(" "), depOutputs(projectPath));
     }
 }
 

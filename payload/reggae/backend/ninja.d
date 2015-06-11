@@ -109,8 +109,6 @@ private:
         }
 
         immutable cmdType = target.command.getType;
-        if(cmdType != CommandType.link) //i.e. one of the compile rules
-            paramLines ~= "DEPFILE = " ~ target.outputs[0] ~ ".dep";
 
         buildEntries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~ cmdTypeToNinjaString(cmdType) ~ " " ~
                                    target.dependencyFilesString(_projectPath),

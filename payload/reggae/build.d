@@ -290,9 +290,9 @@ private:
 enum CommandType {
     shell,
     compileD,
+    link,
     compileCpp,
     compileC,
-    link,
 }
 
 /**
@@ -360,5 +360,28 @@ struct Command {
     private string[] getParams(in string projectPath, in string key,
                                bool useIfNotFound, string[] ifNotFound = []) @safe pure const {
         return params.get(key, ifNotFound).map!(a => a.replace("$project", projectPath)).array;
+    }
+
+    static string builtinTemplate(CommandType type) @safe pure nothrow {
+        import reggae.config: dCompiler, cppCompiler, cCompiler;
+
+        string ccCommand(in string compiler) @safe pure nothrow {
+            return compiler ~ " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in";
+        }
+
+        final switch(type) with(CommandType) {
+            case compileD:
+                return ".reggae/dcompile --objFile=$out --depFile=$DEPFILE " ~
+                    dCompiler ~ " $flags $includes $stringImports $in";
+            case compileCpp:
+                return ccCommand(cppCompiler);
+            case compileC:
+                return ccCommand(cCompiler);
+            case link:
+                return dCompiler ~ " $flags -of$out $in";
+            case shell:
+                assert(0, "builtinTemplate cannot be shell");
+
+        }
     }
 }

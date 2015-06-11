@@ -32,26 +32,25 @@ struct NinjaEntry {
 }
 
 
+private bool hasDepFile(in CommandType type) @safe pure nothrow {
+    return type != CommandType.link && type != CommandType.shell;
+}
+
 /**
  * Pre-built rules
  */
 NinjaEntry[] defaultRules() @safe pure nothrow {
-    return [NinjaEntry("rule _dcompile",
-                       ["command = .reggae/dcompile --objFile=$out --depFile=$DEPFILE " ~
-                        dCompiler ~ " $flags $includes $stringImports $in",
-                        "deps = gcc",
-                        "depfile = $DEPFILE"]),
-            NinjaEntry("rule _link",
-                       ["command = " ~ dCompiler ~ " $flags -of$out $in"]),
-            NinjaEntry("rule _cppcompile",
-                       ["command = " ~ cppCompiler ~ " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
-                        "deps = gcc",
-                        "depfile = $DEPFILE"]),
-            NinjaEntry("rule _ccompile",
-                       ["command = " ~ cCompiler ~ " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
-                        "deps = gcc",
-                        "depfile = $DEPFILE"]),
-        ];
+
+    NinjaEntry createNinjaEntry(in CommandType type) @safe pure nothrow {
+        string[] paramLines = ["command = " ~ Command.builtinTemplate(type)];
+        if(hasDepFile(type)) paramLines ~= ["deps = gcc", "depfile = $DEPFILE"];
+        return NinjaEntry("rule " ~ cmdTypeToNinjaString(type), paramLines);
+    }
+
+    return iota(CommandType.min, CommandType.max + 1).
+        filter!(a => a != CommandType.shell).
+        map!(a => createNinjaEntry(cast(CommandType)a)).
+        array;
 }
 
 

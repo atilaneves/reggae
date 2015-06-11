@@ -33,7 +33,7 @@
  are higher level rules for compiling all or nearly all source
  files in a directory and its subdirectories. For D there is even
  a rule to compile, link and find all dependencies for a D executable
- called $(D dExe). There are many examples in the Cucumber tests.
+ called $(D executable). There are many examples in the Cucumber tests.
 
  Reggae works by using backends. Currently, there are three: the
  ninja, make and binary backends. The first two generate files for

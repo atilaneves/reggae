@@ -44,10 +44,10 @@ Arbritrary build rules can be used. Here is an example of a simple D build `regg
 That was just an example. To build D apps with no external dependencies, this will suffice:
 
     import reggae;
-    alias app = dExe!(App("src/main.d", "myapp"),
-                      Flags("-g -debug"),
-                      ImportPaths(["/path/to/imports"])
-                      );
+    alias app = executable!(App("src/main.d", "myapp"),
+                            Flags("-g -debug"),
+                            ImportPaths(["/path/to/imports"])
+                            );
     mixin build!(app);
 
 There are also other functions and pre-built rules for C and C++ objects. There is no

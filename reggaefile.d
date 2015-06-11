@@ -17,10 +17,10 @@ version(minimal) {
     /* It's also possible for reggae to build itself with the build description below, but
       it's so ourobouros that it's always rebuilt. It works, though.
 
-      alias main = dExe!(App("src/reggae/reggae_main.d", "bin/reggae"),
-                         Flags("-version=minimal"),
-                         ImportPaths(["src", "payload"]),
-                         StringImportPaths(["payload/reggae"]));
+      alias main = executable!(App("src/reggae/reggae_main.d", "bin/reggae"),
+                               Flags("-version=minimal"),
+                               ImportPaths(["src", "payload"]),
+                               StringImportPaths(["payload/reggae"]));
     */
 
 
@@ -29,7 +29,7 @@ version(minimal) {
 
     //the actual reggae binary
     //could also be dubConfigurationTarget(ExeName("reggae"), Configuration("executable"))
-    //or use dExe to figure out dependencies itself
+    //or use executable to figure out dependencies itself
     alias main = dubDefaultTargetWithFlags!(Flags("-g -debug"));
 
     //the unit test binary

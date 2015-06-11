@@ -201,7 +201,7 @@ struct Target {
         string[] depOutputs;
         foreach(dep; dependencies) {
             foreach(output; dep.outputs) {
-                //leaf objects are references to source files in the project path
+                //leaf objects are references to source files in the project path,
                 //those need their path built. Any other dependencies are in the
                 //build path, so they don't need the same treatment
                 depOutputs ~= dep.isLeaf ? buildPath(projectPath, output) : output;

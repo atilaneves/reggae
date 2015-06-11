@@ -65,23 +65,38 @@ Target[] dObjects(SrcDirs dirs = SrcDirs(),
     return srcObjects!dCompileInner("d", dirs.value, srcFiles.value, excludeFiles.value);
 }
 
-//compile-time verson of dExe, to be used with alias
-//all paths relative to projectPath
-Target dExe(App app,
+/**
+ Currently only works for D. This convenience rule builds a D executable, automatically
+ calculating which files must be compiled in a similar way to rdmd.
+ All paths are relative to projectPath.
+ This template function is provided as a wrapper around the regular runtime version
+ below so it can be aliased without trying to call it at runtime. Basically, it's a
+ way to use the runtime executable without having define a function in reggaefile.d,
+ i.e.:
+ $(D
+ alias myApp = executable!(...);
+ mixin build!(myApp);
+ )
+ vs.
+ $(D
+ Build myBuld() { return executable(..); }
+ )
+ */
+Target executable(App app,
             Flags flags = Flags(),
             ImportPaths importPaths = ImportPaths(),
             StringImportPaths stringImportPaths = StringImportPaths(),
             alias linkWithFunction = () { return cast(Target[])[];})
     () {
     auto linkWith = linkWithFunction();
-    return dExe(app, flags, importPaths, stringImportPaths, linkWith);
+    return executable(app, flags, importPaths, stringImportPaths, linkWith);
 }
 
 
-//regular runtime version of dExe
+//regular runtime version of executable
 //all paths relative to projectPath
 //@trusted because of .array
-Target dExe(in App app, in Flags flags,
+Target executable(in App app, in Flags flags,
             in ImportPaths importPaths,
             in StringImportPaths stringImportPaths,
             in Target[] linkWith) @trusted {
@@ -112,6 +127,6 @@ private auto runDCompiler(in string srcFileName, in string flags,
         stringImportPaths.map!(a => "-J" ~ buildPath(projectPath, a)).array ~
         ["-o-", "-v", "-c", srcFileName];
     const compRes = execute(compArgs);
-    enforce(compRes.status == 0, text("dExe could not run ", compArgs.join(" "), ":\n", compRes.output));
+    enforce(compRes.status == 0, text("executable could not run ", compArgs.join(" "), ":\n", compRes.output));
     return compRes.output;
 }

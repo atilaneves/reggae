@@ -57,12 +57,12 @@ Feature: Linking a D executable
                                   ImportPaths(),
                                   SrcFiles([`extra/constants.cpp`]),
                                   ExcludeFiles([`cpp/extra_main.cpp`]));
-      alias app = dExe!(App(`d/main.d`, `calc`),
-                        Flags(`-debug -O`),
-                        ImportPaths([`d`]),
-                        StringImportPaths([`resources/text`]),
-                        cppObjs,
-                        );
+      alias app = executable!(App(`d/main.d`, `calc`),
+                              Flags(`-debug -O`),
+                              ImportPaths([`d`]),
+                              StringImportPaths([`resources/text`]),
+                              cppObjs,
+                              );
       mixin build!(app);
       """
 

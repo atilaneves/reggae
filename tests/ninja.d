@@ -143,7 +143,7 @@ void testDefaultRules() {
                      "deps = gcc",
                      "depfile = $DEPFILE"]),
          NinjaEntry("rule _link",
-                    ["command = dmd $flags -of$out $in"]),
+                    ["command = dmd -of$out $flags $in"]),
          NinjaEntry("rule _cppcompile",
                     ["command = g++ $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
                      "deps = gcc",

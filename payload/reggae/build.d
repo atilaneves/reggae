@@ -197,17 +197,7 @@ struct Target {
 
     ///replace all special variables with their expansion
     @property string expandCommand(in string projectPath = "") @trusted pure const nothrow {
-        //functional didn't work here, I don't know why so sticking with loops for now
-        string[] depOutputs;
-        foreach(dep; dependencies) {
-            foreach(output; dep.outputs) {
-                //leaf objects are references to source files in the project path,
-                //those need their path built. Any other dependencies are in the
-                //build path, so they don't need the same treatment
-                depOutputs ~= dep.isLeaf ? buildPath(projectPath, output) : output;
-            }
-        }
-        return _command.expand(projectPath, outputs.join(" "), depOutputs.join(" "));
+        return _command.expand(projectPath, outputs.join(" "), depOutputs(projectPath));
     }
 
     bool isLeaf() @safe pure const nothrow {
@@ -245,44 +235,27 @@ private:
         return files;
     }
 
+    string depOutputs(in string projectPath) @safe pure nothrow const {
+        //functional didn't work here, I don't know why so sticking with loops for now
+        string[] depOutputs;
+        foreach(dep; dependencies) {
+            foreach(output; dep.outputs) {
+                //leaf objects are references to source files in the project path,
+                //those need their path built. Any other dependencies are in the
+                //build path, so they don't need the same treatment
+                depOutputs ~= dep.isLeaf ? buildPath(projectPath, output) : output;
+            }
+        }
+        return depOutputs.join(" ");
+    }
+
+
     //this function returns a string to be run by the shell with `std.process.execute`
     //it does 'normal' commands, not built-in rules
     string defaultCommand(in string projectPath) @safe pure const {
-        import reggae.config: dCompiler, cppCompiler, cCompiler;
-
-        immutable flags = _command.getParams(projectPath, "flags", []).join(" ");
-        immutable includes = _command.getParams(projectPath, "includes", []).join(" ");
-        immutable depfile = outputs[0] ~ ".dep";
-
-        string ccCommand(in string compiler) {
-            return [compiler, flags, includes, "-MMD", "-MT", outputs[0],
-                    "-MF", depfile, "-o", outputs[0], "-c",
-                    dependencyFilesString(projectPath)].join(" ");
-        }
-
-
-        final switch(_command.type) with(CommandType) {
-
-        case compileD:
-            immutable stringImports = _command.getParams(projectPath, "stringImports", []).join(" ");
-            immutable command = [".reggae/dcompile",
-                                 "--objFile=" ~ outputs[0],
-                                 "--depFile=" ~ depfile, dCompiler,
-                                 flags, includes, stringImports,
-                                 dependencyFilesString(projectPath),
-                ].join(" ");
-
-            return command;
-
-        case compileCpp: return ccCommand(cppCompiler);
-        case compileC:   return ccCommand(cCompiler);
-        case link:
-            return [dCompiler, "-of" ~ outputs[0],
-                    flags,
-                    dependencyFilesString(projectPath)].join(" ");
-        case shell:
-            assert(0, "defaultCommand cannot be shell");
-        }
+        auto cmd = _command.defaultCommand(projectPath, outputs.join(" "), depOutputs(projectPath));
+        cmd = cmd.replace("$DEPFILE", outputs[0] ~ ".dep");
+        return cmd;
     }
 }
 
@@ -346,7 +319,12 @@ struct Command {
 
     ///Replace $in, $out, $project with values
     string expand(in string projectPath, in string outputs, in string depOutputs) @safe pure nothrow const {
-        auto replaceIn = command.dup.replace("$in", depOutputs);
+        return expandCmd(command, projectPath, outputs, depOutputs);
+    }
+
+    private static string expandCmd(in string cmd, in string projectPath,
+                                    in string outputs, in string depOutputs) @safe pure nothrow {
+        auto replaceIn = cmd.dup.replace("$in", depOutputs);
         auto replaceOut = replaceIn.replace("$out", outputs);
         return replaceOut.replace("$project", projectPath);
     }
@@ -378,10 +356,20 @@ struct Command {
             case compileC:
                 return ccCommand(cCompiler);
             case link:
-                return dCompiler ~ " $flags -of$out $in";
+                return dCompiler ~ " -of$out $flags $in";
             case shell:
                 assert(0, "builtinTemplate cannot be shell");
 
         }
+    }
+
+    string defaultCommand(in string projectPath, in string outputs, in string depOutputs) @safe pure const {
+        auto cmd = builtinTemplate(type);
+        foreach(key; params.keys) {
+            immutable var = "$" ~ key;
+            immutable value = getParams(projectPath, key, []).join(" ");
+            cmd = cmd.replace(var, value);
+        }
+        return expandCmd(cmd, projectPath, outputs, depOutputs);
     }
 }

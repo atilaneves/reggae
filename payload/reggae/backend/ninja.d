@@ -13,13 +13,13 @@ import std.conv;
 import std.string: strip;
 import std.path: defaultExtension, absolutePath;
 
-string ruleToNinjaString(Rule rule) @safe pure nothrow {
-    final switch(rule) with(Rule) {
+string cmdTypeToNinjaString(CommandType commandType) @safe pure nothrow {
+    final switch(commandType) with(CommandType) {
         case compileD: return "_dcompile";
         case compileCpp: return "_cppcompile";
         case compileC: return "_ccompile";
         case link: return "_link";
-        case shell: assert(0, "ruleToNinjaString doesn't work for shell");
+        case shell: assert(0, "cmdTypeToNinjaString doesn't work for shell");
     }
 }
 
@@ -101,8 +101,6 @@ private:
 
     //@trusted because of join
     void defaultRule(in Target target) @trusted {
-        immutable rule = target.command.getRule;
-
         string[] paramLines;
 
         foreach(immutable param; target.command.paramNames) {
@@ -111,10 +109,11 @@ private:
             paramLines ~= param ~ " = " ~ value;
         }
 
-        if(rule != Rule.link) //i.e. one of the compile rules
+        immutable cmdType = target.command.getType;
+        if(cmdType != CommandType.link) //i.e. one of the compile rules
             paramLines ~= "DEPFILE = " ~ target.outputs[0] ~ ".dep";
 
-        buildEntries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~ ruleToNinjaString(rule) ~ " " ~
+        buildEntries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~ cmdTypeToNinjaString(cmdType) ~ " " ~
                                    target.dependencyFilesString(_projectPath),
                                    paramLines);
     }

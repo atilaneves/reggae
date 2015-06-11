@@ -10,20 +10,20 @@ void testNoDefaultRule() {
 }
 
 void testGetRuleD() {
-    const command = Command(Rule.compileD, assocList([assocEntry("foo", ["bar"])]));
-    command.getRule.shouldEqual(Rule.compileD);
+    const command = Command(CommandType.compileD, assocList([assocEntry("foo", ["bar"])]));
+    command.getType.shouldEqual(CommandType.compileD);
     command.isDefaultCommand.shouldBeTrue;
 }
 
 void testGetRuleCpp() {
-    const command = Command(Rule.compileCpp, assocList([assocEntry("includes", ["src", "other"])]));
-    command.getRule.shouldEqual(Rule.compileCpp);
+    const command = Command(CommandType.compileCpp, assocList([assocEntry("includes", ["src", "other"])]));
+    command.getType.shouldEqual(CommandType.compileCpp);
     command.isDefaultCommand.shouldBeTrue;
 }
 
 
 void testValueWhenKeyNotFound() {
-    const command = Command(Rule.compileD, assocList([assocEntry("foo", ["bar"])]));
+    const command = Command(CommandType.compileD, assocList([assocEntry("foo", ["bar"])]));
     command.getParams("", "foo", ["hahaha"]).shouldEqual(["bar"]);
     command.getParams("", "includes", ["hahaha"]).shouldEqual(["hahaha"]);
 }

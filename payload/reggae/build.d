@@ -261,7 +261,7 @@ private:
         }
 
 
-        final switch(_command.rule) with(Rule) {
+        final switch(_command.type) with(CommandType) {
 
         case compileD:
             immutable stringImports = _command.getParams(projectPath, "stringImports", []).join(" ");
@@ -292,7 +292,7 @@ bool isDefaultRule(in string rule) @safe pure nothrow {
     return allDefaultRules.canFind(rule);
 }
 
-enum Rule {
+enum CommandType {
     shell,
     compileD,
     compileCpp,
@@ -309,16 +309,17 @@ struct Command {
     alias Params = AssocList!(string, string[]);
 
     private string command;
-    private Rule rule;
+    private CommandType type;
     private Params params;
 
     this(string shellCommand) @safe pure nothrow {
         command = shellCommand;
+        type = CommandType.shell;
     }
 
-    this(Rule rule, Params params) @safe pure {
-        if(rule == Rule.shell) throw new Exception("Command rule cannot be shell");
-        this.rule = rule;
+    this(CommandType type, Params params) @safe pure {
+        if(type == CommandType.shell) throw new Exception("Command rule cannot be shell");
+        this.type = type;
         this.params = params;
     }
 
@@ -326,12 +327,12 @@ struct Command {
         return params.keys;
     }
 
-    Rule getRule() @safe pure const {
-        return rule;
+    CommandType getType() @safe pure const {
+        return type;
     }
 
     bool isDefaultCommand() @safe pure const {
-        return rule != Rule.shell;
+        return type != CommandType.shell;
     }
 
     string[] getParams(in string projectPath, in string key, string[] ifNotFound) @safe pure const {
@@ -340,7 +341,7 @@ struct Command {
 
     Command removeBuilddir() @safe pure const {
         auto cmd = Command(_removeBuilddir(command));
-        cmd.rule = this.rule;
+        cmd.type = this.type;
         //FIXME
         () @trusted {
             cmd.params = cast()this.params;

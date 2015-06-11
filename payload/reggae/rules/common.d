@@ -87,16 +87,15 @@ Command compileCommand(in string srcFileName,
                        in string projDir = "$project") pure {
     auto includeParams = includePaths.map!(a => "-I" ~ buildPath(projDir, a)).array;
     auto flagParams = flags.splitter.array;
-    immutable rule = getBuiltinRule(srcFileName);
-
+    immutable commandType = getCommandType(srcFileName);
 
     auto params = [assocEntry("includes", includeParams),
                    assocEntry("flags", flagParams)];
 
-    if(rule == Rule.compileD)
+    if(commandType == CommandType.compileD)
         params ~= assocEntry("stringImports", stringImportPaths.map!(a => "-J" ~ buildPath(projDir, a)).array);
 
-    return Command(rule, assocList(params));
+    return Command(commandType, assocList(params));
 }
 
 enum Language {
@@ -124,14 +123,14 @@ private Language getLanguage(in string srcFileName) pure {
 
 }
 
-private Rule getBuiltinRule(in string srcFileName) pure {
+private CommandType getCommandType(in string srcFileName) pure {
     final switch(getLanguage(srcFileName)) with(Language) {
         case D:
-            return Rule.compileD;
+            return CommandType.compileD;
         case Cplusplus:
-            return Rule.compileCpp;
+            return CommandType.compileCpp;
         case C:
-            return Rule.compileC;
+            return CommandType.compileC;
     }
 }
 
@@ -142,6 +141,6 @@ private Rule getBuiltinRule(in string srcFileName) pure {
  D compiler
  */
 Target link(in string exeName, in Target[] dependencies, in string flags = "") @safe pure {
-    const command = Command(Rule.link, assocList([assocEntry("flags", flags.splitter.array)]));
+    const command = Command(CommandType.link, assocList([assocEntry("flags", flags.splitter.array)]));
     return Target(exeName, command, dependencies);
 }

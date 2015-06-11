@@ -76,7 +76,7 @@ struct Makefile {
         immutable cmd = target.shellCommand(projectPath);
         immutable depfile = target.outputs[0] ~ ".dep";
         if(target.command.isDefaultCommand) {
-            return target.command.getRule == Rule.link ? cmd : cmd ~ makeAutoDeps(depfile);
+            return target.command.getType == CommandType.link ? cmd : cmd ~ makeAutoDeps(depfile);
         } else {
             return cmd;
         }

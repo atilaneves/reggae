@@ -152,6 +152,7 @@ string[] getCompileBuildGenCmd(in Options options) @safe nothrow {
         : [];
     immutable commonBefore = ["dmd",
                               "-I" ~ options.projectPath,
+                              "-g", "-debug",
                               "-of" ~ getBuildGenName(options)];
     const commonAfter = buildBinFlags ~ reggaeSrcs ~ getReggaefilePath(options);
     version(minimal) return commonBefore ~ "-version=minimal" ~ commonAfter;

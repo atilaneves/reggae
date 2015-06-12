@@ -400,7 +400,7 @@ struct Command {
     }
 
 
-    void execute(in string projectPath, in string[] outputs, in string[] inputs) const @safe {
+    void execute(in string projectPath, in string[] outputs, in string[] inputs) const @trusted {
         import std.process;
         import std.stdio;
 
@@ -409,6 +409,10 @@ struct Command {
                 immutable cmd = shellCommand(projectPath, outputs, inputs);
                 immutable res = executeShell(cmd);
                 enforce(res.status == 0, "Could not execute" ~ cmd ~ ":\n" ~ res.output);
+                break;
+            case code:
+                assert(func !is null, "Command of type code with null function");
+                func();
                 break;
             default:
                 throw new Exception(text("Cannot execute unsupported command type ", type));

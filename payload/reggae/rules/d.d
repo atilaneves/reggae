@@ -1,5 +1,7 @@
 /**
-High-level rules for compiling D files
+High-level rules for compiling D files. For a D-only application with
+no dub dependencies, $(D executable) should suffice. If the app depends
+on dub packages, consult the reggae.rules.dub module instead.
  */
 
 module reggae.rules.d;
@@ -10,6 +12,7 @@ import reggae.sorting;
 import reggae.dependencies: dMainDepSrcs;
 import reggae.rules.common;
 import std.algorithm;
+import std.array;
 
 //objectFile, objectFiles and link are the only default rules
 //They work by serialising the rule to use piggy-backing on Target's string
@@ -31,6 +34,7 @@ Target[] objectFilesPerPackage(in string[] srcFiles, in string flags = "",
                                in string[] importPaths = [], in string[] stringImportPaths = [],
                                in string projDir = "$project") @trusted pure {
 
+    if(srcFiles.empty) return [];
     const command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
     return srcFiles.byPackage.map!(a => Target(a[0].packagePath.objFileName,
                                                command,
@@ -44,25 +48,6 @@ Target[] objectFilesPerModule(in string[] srcFiles, in string flags = "",
     return srcFiles.map!(a => objectFile(a, flags, importPaths, stringImportPaths, projDir)).array;
 }
 
-
-/**
- * Compile-time function to that returns a list of Target objects
- * corresponding to D source files from a particular directory
- */
-Target[] dObjects(SrcDirs dirs = SrcDirs(),
-                  Flags flags = Flags(),
-                  ImportPaths includes = ImportPaths(),
-                  StringImportPaths stringImports = StringImportPaths(),
-                  SrcFiles srcFiles = SrcFiles(),
-                  ExcludeFiles excludeFiles = ExcludeFiles())
-    () {
-
-    Target[] dCompileInner(in string[] files) {
-        return objectFiles(files, flags.value, ["."] ~ includes.value, stringImports.value);
-    }
-
-    return srcObjects!dCompileInner("d", dirs.value, srcFiles.value, excludeFiles.value);
-}
 
 /**
  Currently only works for D. This convenience rule builds a D executable, automatically

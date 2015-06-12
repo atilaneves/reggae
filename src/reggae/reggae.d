@@ -81,7 +81,6 @@ enum coreFiles = [
 enum otherFiles = [
     "backend/ninja.d", "backend/make.d",
     "dub/info.d", "rules/dub.d",
-    "rules/cpp.d", "rules/c.d",
     ];
 
 //all files that need to be written out and compiled

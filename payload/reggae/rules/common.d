@@ -4,6 +4,7 @@ module reggae.rules.common;
 import reggae.build;
 import reggae.config: projectPath;
 import reggae.ctaa;
+import reggae.types;
 import std.algorithm;
 import std.path;
 import std.array: array;
@@ -16,7 +17,6 @@ version(Windows) {
     immutable exeExt = "";
 }
 
-
 package string objFileName(in string srcFileName) @safe pure nothrow {
     import std.path: stripExtension, defaultExtension, isRooted, stripDrive;
     immutable localFileName = srcFileName.isRooted
@@ -26,44 +26,67 @@ package string objFileName(in string srcFileName) @safe pure nothrow {
 }
 
 
-Target[] srcObjects(alias func)(in string extension,
-                                string[] dirs,
-                                string[] srcFiles,
-                                in string[] excludeFiles) {
-    auto files = selectSrcFiles(srcFilesInDirs(extension, dirs), srcFiles, excludeFiles);
-    return func(files);
-}
+/**
+ This template function exists so as to be referenced in a reggaefile.d
+ at top-level without being called via $(D alias). That way it can be
+ named and used in a further $(D Target) definition without the need to
+ define a function returning $(D Build).
+ This function gets the source files to be compiled at runtime by searching
+ for source files in the given directories, adding files and filtering
+ as appropriate by the parameters given in $(D sources), its first compile-time
+ parameter. The other parameters are self-explanatory.
 
-//The parameters would be "in" except that "remove" doesn't like that...
-string[] selectSrcFiles(string[] dirFiles,
-                        string[] srcFiles,
-                        in string[] excludeFiles) @safe pure nothrow {
-    return (dirFiles ~ srcFiles).remove!(a => excludeFiles.canFind(a)).array;
-}
+ This function returns a list of targets that are the result of compiling
+ source files written in the supported languages. The $(Sources) function
+ can be used to specify source directories and source files, as well as
+ a filter function to select those files that are actually wanted.
+ */
+Target[] targetsFromSources(alias sourcesFunc = Sources!(),
+                            Flags flags = Flags(),
+                            ImportPaths includes = ImportPaths(),
+                            StringImportPaths stringImports = StringImportPaths(),
+    )() {
 
-private string[] srcFilesInDirs(in string extension, in string[] dirs) {
     import std.exception: enforce;
     import std.file;
     import std.path: buildNormalizedPath, buildPath;
     import std.array: array;
+    import std.traits: isCallable;
+
+    auto srcs = sourcesFunc();
 
     DirEntry[] modules;
-    foreach(dir; dirs.map!(a => buildPath(projectPath, a))) {
+    foreach(dir; srcs.dirs.value.map!(a => buildPath(projectPath, a))) {
         enforce(isDir(dir), dir ~ " is not a directory name");
-        auto entries = dirEntries(dir, "*." ~ extension, SpanMode.depth);
+        auto entries = dirEntries(dir, SpanMode.depth);
         auto normalised = entries.map!(a => DirEntry(buildNormalizedPath(a)));
-        modules ~= array(normalised);
+
+        modules ~= normalised.filter!(a => !a.isDir).array;
     }
 
-    return modules.map!(a => a.name.removeProjectPath).array;
+    foreach(module_; srcs.files.value)
+        modules ~= DirEntry(buildNormalizedPath(buildPath(projectPath, module_)));
+
+    const srcFiles = modules.
+        map!(a => a.name.removeProjectPath).
+        filter!(srcs.filterFunc).
+        array;
+
+    const dSrcs = srcFiles.filter!(a => a.getLanguage == Language.D).array;
+    auto otherSrcs = srcFiles.filter!(a => a.getLanguage != Language.D);
+
+    import reggae.rules.d: objectFiles;
+    return objectFiles(dSrcs, flags.value, ["."] ~ includes.value, stringImports.value) ~
+        otherSrcs.map!(a => objectFile(a, flags.value, includes.value)).array;
 }
 
-string removeProjectPath(in string path) @safe pure {
+@safe:
+
+string removeProjectPath(in string path) pure {
     import std.path: relativePath, absolutePath;
     return path.absolutePath.relativePath(projectPath.absolutePath);
 }
 
-@safe:
 /**
  An object file, typically from one source file in a certain language
  (although for D the default is a whole package. The language is determined
@@ -120,9 +143,8 @@ private Language getLanguage(in string srcFileName) pure {
     case ".c":
         return C;
     default:
-        throw new Exception("Unknown file extension " ~ srcFileName.extension);
+        throw new Exception("Unknown file extension for file " ~ srcFileName);
     }
-
 }
 
 private CommandType getCommandType(in string srcFileName) pure {

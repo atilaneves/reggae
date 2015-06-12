@@ -46,9 +46,10 @@ Feature: User-defined variables
     And a file named "dub_reggae_proj/reggaefile.d" with:
       """
       import reggae;
-      alias utObjs = dObjects!(SrcDirs([`tests`]),
-                               Flags(`-unittest -main`),
-                               ImportPaths(configToDubInfo[`default`].mainTargetImportPaths() ~ `source`));
+      alias utObjs = targetsFromSources!(Sources!([`tests`]),
+                                         Flags(`-unittest -main`),
+                                         ImportPaths(configToDubInfo[`default`].mainTargetImportPaths() ~
+                                                     `source`));
       alias ut = dubConfigurationTarget!(ExeName(`ut`), Configuration(), Flags(), No.main, utObjs);
       static if(userVars.get(`noUnitTests`, false)) {
           mixin build!dubDefaultTarget;

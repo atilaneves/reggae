@@ -76,3 +76,9 @@ void testLink() {
     const target = link("myapp", [Target("foo.o"), Target("bar.o")], "-L-L");
     target.shellCommand("/path/to").shouldEqual("dmd -ofmyapp -L-L /path/to/foo.o /path/to/bar.o");
 }
+
+
+void testObjectFilesEmpty() {
+    objectFilesPerPackage([]).shouldEqual([]);
+    objectFilesPerModule([]).shouldEqual([]);
+}

@@ -15,7 +15,7 @@ import std.typetuple: allSatisfy;
 import std.traits: Unqual, isSomeFunction, ReturnType, arity;
 import std.array: array, join;
 import std.conv;
-
+import std.exception;
 
 Target createTargetFromTarget(in Target target) {
     return Target(target.outputs,
@@ -213,7 +213,7 @@ struct Target {
 
     ///returns a command string to be run by the shell
     string shellCommand(in string projectPath = "") @safe pure const {
-        return _command.isDefaultCommand ? defaultCommand(projectPath) : expandCommand(projectPath);
+        return _command.shellCommand(projectPath, outputs, inputs(projectPath));
     }
 
     string[] outputsInProjectPath(in string projectPath) @safe pure nothrow const {
@@ -225,6 +225,11 @@ struct Target {
     Language getLanguage() @safe pure nothrow const {
         return reggae.rules.common.getLanguage(inputs("")[0]);
     }
+
+    void execute(in string projectPath = "") @safe const {
+        _command.execute(projectPath, outputs, inputs(projectPath));
+    }
+
 
 private:
 
@@ -254,13 +259,6 @@ private:
             }
         }
         return inputs;
-    }
-
-
-    //this function returns a string to be run by the shell with `std.process.execute`
-    //it does 'normal' commands, not built-in rules
-    string defaultCommand(in string projectPath) @safe pure const {
-        return _command.defaultCommand(projectPath, outputs, inputs(projectPath));
     }
 }
 
@@ -381,4 +379,28 @@ struct Command {
         }
         return expandCmd(cmd, projectPath, outputs, inputs);
     }
+
+    ///returns a command string to be run by the shell
+    string shellCommand(in string projectPath, in string[] outputs, in string[] inputs) @safe pure const {
+        return isDefaultCommand
+            ? defaultCommand(projectPath, outputs, inputs)
+            : expand(projectPath, outputs, inputs);
+    }
+
+
+    void execute(in string projectPath, in string[] outputs, in string[] inputs) const @safe {
+        import std.process;
+        import std.stdio;
+
+        switch(type) with(CommandType) {
+            case shell:
+                immutable cmd = shellCommand(projectPath, outputs, inputs);
+                immutable res = executeShell(cmd);
+                enforce(res.status == 0, "Could not execute" ~ cmd ~ ":\n" ~ res.output);
+                break;
+            default:
+                throw new Exception(text("Cannot execute unsupported command type ", type));
+        }
+    }
+
 }

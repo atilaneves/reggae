@@ -85,8 +85,7 @@ private:
                 mkDir(target);
                 immutable cmd = target.shellCommand(projectPath);
                 writeln("[build] " ~ cmd);
-                immutable res = executeShell(cmd);
-                enforce(res.status == 0, "Could not execute " ~ cmd ~ ":\n" ~ res.output);
+                target.execute(projectPath);
                 return true;
             }
         }

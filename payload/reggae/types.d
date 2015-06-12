@@ -71,22 +71,22 @@ struct Files {
     string[] value;
 }
 
+struct Filter(alias F) {
+    alias func = F;
+}
 
-struct SourcesImpl(alias F = a => a) {
+struct SourcesImpl(alias F) {
     Dirs dirs;
     Files files;
+    Filter!F filter;
 
     alias filterFunc = F;
 }
 
-auto Sources(Dirs dirs = Dirs(["."]), Files files = Files()) {
-    return SourcesImpl!(a => true)(dirs, files);
+auto Sources(Dirs dirs = Dirs(), Files files = Files(), F = Filter!(a => true))() {
+    return SourcesImpl!(F.func)(dirs, files);
 }
 
-auto Sources(alias F)(Dirs dirs = Dirs(), Files files = Files()) {
-    return SourcesImpl!F(dirs, files);
-}
-
-auto Sources(string[] dirs) {
-    return SourcesImpl!(a => true)(Dirs(dirs));
+auto Sources(string[] dirs, Files files = Files(), F = Filter!(a => true))() {
+    return Sources!(Dirs(dirs), files, F)();
 }

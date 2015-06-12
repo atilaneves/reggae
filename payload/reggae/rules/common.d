@@ -37,7 +37,7 @@ package string objFileName(in string srcFileName) @safe pure nothrow {
  as appropriate by the parameters given in $(D sources), its first compile-time
  parameter. The other parameters are self-explanatory.
  */
-Target[] targetsFromSources(alias sources = Sources(),
+Target[] targetsFromSources(alias sourcesFunc = Sources!(),
                             Flags flags = Flags(),
                             ImportPaths includes = ImportPaths(),
                             StringImportPaths stringImports = StringImportPaths(),
@@ -47,9 +47,12 @@ Target[] targetsFromSources(alias sources = Sources(),
     import std.file;
     import std.path: buildNormalizedPath, buildPath;
     import std.array: array;
+    import std.traits: isCallable;
+
+    auto srcs = sourcesFunc();
 
     DirEntry[] modules;
-    foreach(dir; sources.dirs.value.map!(a => buildPath(projectPath, a))) {
+    foreach(dir; srcs.dirs.value.map!(a => buildPath(projectPath, a))) {
         enforce(isDir(dir), dir ~ " is not a directory name");
         auto entries = dirEntries(dir, SpanMode.depth);
         auto normalised = entries.map!(a => DirEntry(buildNormalizedPath(a)));
@@ -57,12 +60,12 @@ Target[] targetsFromSources(alias sources = Sources(),
         modules ~= array(normalised);
     }
 
-    foreach(module_; sources.files.value)
+    foreach(module_; srcs.files.value)
         modules ~= DirEntry(buildNormalizedPath(buildPath(projectPath, module_)));
 
     const srcFiles = modules.
         map!(a => a.name.removeProjectPath).
-        filter!(sources.filterFunc).
+        filter!(srcs.filterFunc).
         array;
 
     const dSrcs = srcFiles.filter!(a => a.getLanguage == Language.D).array;

@@ -1,5 +1,7 @@
 /**
-High-level rules for compiling D files
+High-level rules for compiling D files. For a D-only application with
+no dub dependencies, $(D executable) should suffice. If the app depends
+on dub packages, consult the reggae.rules.dub module instead.
  */
 
 module reggae.rules.d;

@@ -36,6 +36,11 @@ package string objFileName(in string srcFileName) @safe pure nothrow {
  for source files in the given directories, adding files and filtering
  as appropriate by the parameters given in $(D sources), its first compile-time
  parameter. The other parameters are self-explanatory.
+
+ This function returns a list of targets that are the result of compiling
+ source files written in the supported languages. The $(Sources) function
+ can be used to specify source directories and source files, as well as
+ a filter function to select those files that are actually wanted.
  */
 Target[] targetsFromSources(alias sourcesFunc = Sources!(),
                             Flags flags = Flags(),

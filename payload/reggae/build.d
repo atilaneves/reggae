@@ -6,6 +6,7 @@
 
 module reggae.build;
 import reggae.ctaa;
+import reggae.rules.common: Language, getLanguage;
 
 import std.string: replace;
 import std.algorithm;
@@ -13,6 +14,7 @@ import std.path: buildPath;
 import std.typetuple: allSatisfy;
 import std.traits: Unqual, isSomeFunction, ReturnType, arity;
 import std.array: array, join;
+import std.conv;
 
 
 Target createTargetFromTarget(in Target target) {
@@ -197,7 +199,7 @@ struct Target {
 
     ///replace all special variables with their expansion
     @property string expandCommand(in string projectPath = "") @trusted pure const nothrow {
-        return _command.expand(projectPath, outputs.join(" "), inputs(projectPath));
+        return _command.expand(projectPath, outputs, inputs(projectPath));
     }
 
     bool isLeaf() @safe pure const nothrow {
@@ -209,6 +211,7 @@ struct Target {
         return _command.rawCmdString(projectPath);
     }
 
+    ///returns a command string to be run by the shell
     string shellCommand(in string projectPath = "") @safe pure const {
         return _command.isDefaultCommand ? defaultCommand(projectPath) : expandCommand(projectPath);
     }
@@ -218,6 +221,10 @@ struct Target {
     }
 
     @property const(Command) command() @safe const pure nothrow { return _command; }
+
+    Language getLanguage() @safe pure nothrow const {
+        return reggae.rules.common.getLanguage(inputs("")[0]);
+    }
 
 private:
 
@@ -235,7 +242,7 @@ private:
         return files;
     }
 
-    string inputs(in string projectPath) @safe pure nothrow const {
+    string[] inputs(in string projectPath) @safe pure nothrow const {
         //functional didn't work here, I don't know why so sticking with loops for now
         string[] inputs;
         foreach(dep; dependencies) {
@@ -246,24 +253,22 @@ private:
                 inputs ~= dep.isLeaf ? buildPath(projectPath, output) : output;
             }
         }
-        return inputs.join(" ");
+        return inputs;
     }
 
 
     //this function returns a string to be run by the shell with `std.process.execute`
     //it does 'normal' commands, not built-in rules
     string defaultCommand(in string projectPath) @safe pure const {
-        return _command.defaultCommand(projectPath, outputs.join(" "), inputs(projectPath));
+        return _command.defaultCommand(projectPath, outputs, inputs(projectPath));
     }
 }
 
 
 enum CommandType {
     shell,
-    compileD,
+    compile,
     link,
-    compileCpp,
-    compileC,
 }
 
 /**
@@ -316,14 +321,14 @@ struct Command {
     }
 
     ///Replace $in, $out, $project with values
-    string expand(in string projectPath, in string outputs, in string inputs) @safe pure nothrow const {
+    string expand(in string projectPath, in string[] outputs, in string[] inputs) @safe pure nothrow const {
         return expandCmd(command, projectPath, outputs, inputs);
     }
 
     private static string expandCmd(in string cmd, in string projectPath,
-                                    in string outputs, in string inputs) @safe pure nothrow {
-        auto replaceIn = cmd.dup.replace("$in", inputs);
-        auto replaceOut = replaceIn.replace("$out", outputs);
+                                    in string[] outputs, in string[] inputs) @safe pure nothrow {
+        auto replaceIn = cmd.dup.replace("$in", inputs.join(" "));
+        auto replaceOut = replaceIn.replace("$out", outputs.join(" "));
         return replaceOut.replace("$project", projectPath);
     }
 
@@ -338,29 +343,37 @@ struct Command {
         return params.get(key, ifNotFound).map!(a => a.replace("$project", projectPath)).array;
     }
 
-    static string builtinTemplate(CommandType type) @safe pure nothrow {
+    static string builtinTemplate(CommandType type, Language language) @safe pure {
         import reggae.config: dCompiler, cppCompiler, cCompiler;
 
         immutable ccParams = " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in";
 
         final switch(type) with(CommandType) {
-            case compileD:
-                return ".reggae/dcompile --objFile=$out --depFile=$DEPFILE " ~
-                    dCompiler ~ " $flags $includes $stringImports $in";
-            case compileCpp:
-                return cppCompiler ~ ccParams;
-            case compileC:
-                return cCompiler ~ ccParams;
-            case link:
-                return dCompiler ~ " -of$out $flags $in";
             case shell:
                 assert(0, "builtinTemplate cannot be shell");
 
+            case link:
+                return dCompiler ~ " -of$out $flags $in";
+
+            case compile:
+                final switch(language) with(Language) {
+                    case D:
+                        return ".reggae/dcompile --objFile=$out --depFile=$DEPFILE " ~
+                            dCompiler ~ " $flags $includes $stringImports $in";
+                    case Cplusplus:
+                        return cppCompiler ~ ccParams;
+                    case C:
+                        return cCompiler ~ ccParams;
+                    case unknown:
+                        throw new Exception("Unsupported language");
+                }
         }
     }
 
-    string defaultCommand(in string projectPath, in string outputs, in string inputs) @safe pure const {
-        auto cmd = builtinTemplate(type);
+    string defaultCommand(in string projectPath, in string[] outputs, in string[] inputs) @safe pure const {
+        assert(isDefaultCommand, text("This command is not a default command: ", this));
+        immutable language = getLanguage(inputs[0]);
+        auto cmd = builtinTemplate(type, language);
         foreach(key; params.keys) {
             immutable var = "$" ~ key;
             immutable value = getParams(projectPath, key, []).join(" ");

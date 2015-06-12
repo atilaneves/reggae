@@ -110,26 +110,27 @@ Command compileCommand(in string srcFileName,
                        in string projDir = "$project") pure {
     auto includeParams = includePaths.map!(a => "-I" ~ buildPath(projDir, a)).array;
     auto flagParams = flags.splitter.array;
-    immutable commandType = getCommandType(srcFileName);
+    immutable language = getLanguage(srcFileName);
 
     auto params = [assocEntry("includes", includeParams),
                    assocEntry("flags", flagParams)];
 
-    if(commandType == CommandType.compileD)
+    if(language == Language.D)
         params ~= assocEntry("stringImports", stringImportPaths.map!(a => "-J" ~ buildPath(projDir, a)).array);
 
     params ~= assocEntry("DEPFILE", ["$out.dep"]);
 
-    return Command(commandType, assocList(params));
+    return Command(CommandType.compile, assocList(params));
 }
 
 enum Language {
     C,
     Cplusplus,
     D,
+    unknown,
 }
 
-private Language getLanguage(in string srcFileName) pure {
+Language getLanguage(in string srcFileName) pure nothrow {
     switch(srcFileName.extension) with(Language) {
     case ".d":
         return D;
@@ -143,21 +144,9 @@ private Language getLanguage(in string srcFileName) pure {
     case ".c":
         return C;
     default:
-        throw new Exception("Unknown file extension for file " ~ srcFileName);
+        return unknown;
     }
 }
-
-private CommandType getCommandType(in string srcFileName) pure {
-    final switch(getLanguage(srcFileName)) with(Language) {
-        case D:
-            return CommandType.compileD;
-        case Cplusplus:
-            return CommandType.compileCpp;
-        case C:
-            return CommandType.compileC;
-    }
-}
-
 
 /**
  Should pull its weight more in the future by automatically figuring out what

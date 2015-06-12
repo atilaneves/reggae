@@ -13,13 +13,17 @@ import std.conv;
 import std.string: strip;
 import std.path: defaultExtension, absolutePath;
 
-string cmdTypeToNinjaString(CommandType commandType) @safe pure nothrow {
+string cmdTypeToNinjaString(CommandType commandType, Language language) @safe pure {
     final switch(commandType) with(CommandType) {
-        case compileD: return "_dcompile";
-        case compileCpp: return "_cppcompile";
-        case compileC: return "_ccompile";
-        case link: return "_link";
         case shell: assert(0, "cmdTypeToNinjaString doesn't work for shell");
+        case link: return "_link";
+        case compile:
+            final switch(language) with(Language) {
+                case D: return "_dcompile";
+                case Cplusplus: return "_cppcompile";
+                case C: return "_ccompile";
+                case unknown: throw new Exception("Unsupported language");
+            }
     }
 }
 
@@ -33,24 +37,33 @@ struct NinjaEntry {
 
 
 private bool hasDepFile(in CommandType type) @safe pure nothrow {
-    return type != CommandType.link && type != CommandType.shell;
+    return type == CommandType.compile;
 }
 
 /**
  * Pre-built rules
  */
-NinjaEntry[] defaultRules() @safe pure nothrow {
+NinjaEntry[] defaultRules() @safe pure {
 
-    NinjaEntry createNinjaEntry(in CommandType type) @safe pure nothrow {
-        string[] paramLines = ["command = " ~ Command.builtinTemplate(type)];
+    NinjaEntry createNinjaEntry(in CommandType type, in Language language) @safe pure {
+        string[] paramLines = ["command = " ~ Command.builtinTemplate(type, language)];
         if(hasDepFile(type)) paramLines ~= ["deps = gcc", "depfile = $DEPFILE"];
-        return NinjaEntry("rule " ~ cmdTypeToNinjaString(type), paramLines);
+        return NinjaEntry("rule " ~ cmdTypeToNinjaString(type, language), paramLines);
     }
 
-    return iota(CommandType.min, CommandType.max + 1).
-        filter!(a => a != CommandType.shell).
-        map!(a => createNinjaEntry(cast(CommandType)a)).
-        array;
+    NinjaEntry[] entries;
+    for(CommandType type = CommandType.min; type <= CommandType.max; ++type) {
+        if(type == CommandType.shell) continue;
+        if(type == CommandType.compile) {
+            for(Language language = Language.min; language <= Language.max; ++language) {
+                if(language == Language.unknown) continue;
+                entries ~= createNinjaEntry(type, language);
+            }
+        } else {
+            entries ~= createNinjaEntry(type, Language.unknown);
+        }
+    }
+    return entries;
 }
 
 
@@ -108,9 +121,10 @@ private:
             paramLines ~= param ~ " = " ~ value;
         }
 
+        immutable language = target.getLanguage;
         buildEntries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~
-                                   cmdTypeToNinjaString(target.command.getType) ~ " " ~
-                                   target.dependencyFilesString(_projectPath),
+                                   cmdTypeToNinjaString(target.command.getType, language) ~
+                                   " " ~ target.dependencyFilesString(_projectPath),
                                    paramLines);
     }
 

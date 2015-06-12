@@ -5,6 +5,17 @@ Reggae
 
 A build system in D. This is alpha software, only tested on Linux and likely to have breaking changes made.
 
+Features
+--------
+* Write readable build descriptions in D
+* Out-of-tree builds
+* Backends for GNU make, ninja and a binary executable backend.
+* User-defined variables like CMake in order to choose features before compile-time
+* Low-level DAG build descriptions + high-level convenience rules to build C, C++ and D
+* Automatic header dependency detection for C, C++ and D
+* Automatically runs itself if the build description changes
+* Rules for using dub build targets in your own build decription - use dub with ninja, add to it, ...
+
 Usage
 -----
 
@@ -14,11 +25,12 @@ Reggae is actually a meta build system and works similarly to
 configuration files in their own proprietary languages. The
 configuration files for Reggae are written in [D](http://dlang.org).
 
-From a build directory (usually not the same as the source one),
-type `reggae -b <ninja|make|binary> </path/to/project>`. This will create the actual build system depending
-on the backend chosen, for [Ninja](http://martine.github.io/ninja/),
-[GNU Make](https://www.gnu.org/software/make/), or a runnable executable, respectively.
-The project path passed must either:
+From a build directory (usually not the same as the source one), type
+`reggae -b <ninja|make|binary> </path/to/project>`. This will create
+the actual build system depending on the backend chosen, for
+[Ninja](http://martine.github.io/ninja/),
+[GNU Make](https://www.gnu.org/software/make/), or a runnable
+executable, respectively.  The project path passed must either:
 
 1. Contain a a file named `reggaefile.d` with the build configuration
 2. Be a [dub](http://code.dlang.org/about) project
@@ -52,7 +64,7 @@ That was just an example. To build D apps with no external dependencies, this wi
 
 There are also other functions and pre-built rules for C and C++ objects. There is no
 HTML documentation yet but the [package file](payload/reggae/package.d) contains the
-relevant DDoc with details.
+relevant DDoc with details. Other subpackages might contain DDoc of their own.
 
 Dub integration
 ---------------

@@ -57,7 +57,7 @@ Target[] targetsFromSources(alias sourcesFunc = Sources!(),
         auto entries = dirEntries(dir, SpanMode.depth);
         auto normalised = entries.map!(a => DirEntry(buildNormalizedPath(a)));
 
-        modules ~= array(normalised);
+        modules ~= normalised.filter!(a => !a.isDir).array;
     }
 
     foreach(module_; srcs.files.value)
@@ -171,7 +171,7 @@ private Language getLanguage(in string srcFileName) pure {
     case ".c":
         return C;
     default:
-        throw new Exception("Unknown file extension " ~ srcFileName.extension);
+        throw new Exception("Unknown file extension for file " ~ srcFileName);
     }
 }
 

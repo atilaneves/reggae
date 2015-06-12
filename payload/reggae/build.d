@@ -197,7 +197,7 @@ struct Target {
 
     ///replace all special variables with their expansion
     @property string expandCommand(in string projectPath = "") @trusted pure const nothrow {
-        return _command.expand(projectPath, outputs.join(" "), depOutputs(projectPath));
+        return _command.expand(projectPath, outputs.join(" "), inputs(projectPath));
     }
 
     bool isLeaf() @safe pure const nothrow {
@@ -235,25 +235,25 @@ private:
         return files;
     }
 
-    string depOutputs(in string projectPath) @safe pure nothrow const {
+    string inputs(in string projectPath) @safe pure nothrow const {
         //functional didn't work here, I don't know why so sticking with loops for now
-        string[] depOutputs;
+        string[] inputs;
         foreach(dep; dependencies) {
             foreach(output; dep.outputs) {
                 //leaf objects are references to source files in the project path,
                 //those need their path built. Any other dependencies are in the
                 //build path, so they don't need the same treatment
-                depOutputs ~= dep.isLeaf ? buildPath(projectPath, output) : output;
+                inputs ~= dep.isLeaf ? buildPath(projectPath, output) : output;
             }
         }
-        return depOutputs.join(" ");
+        return inputs.join(" ");
     }
 
 
     //this function returns a string to be run by the shell with `std.process.execute`
     //it does 'normal' commands, not built-in rules
     string defaultCommand(in string projectPath) @safe pure const {
-        return _command.defaultCommand(projectPath, outputs.join(" "), depOutputs(projectPath));
+        return _command.defaultCommand(projectPath, outputs.join(" "), inputs(projectPath));
     }
 }
 
@@ -316,13 +316,13 @@ struct Command {
     }
 
     ///Replace $in, $out, $project with values
-    string expand(in string projectPath, in string outputs, in string depOutputs) @safe pure nothrow const {
-        return expandCmd(command, projectPath, outputs, depOutputs);
+    string expand(in string projectPath, in string outputs, in string inputs) @safe pure nothrow const {
+        return expandCmd(command, projectPath, outputs, inputs);
     }
 
     private static string expandCmd(in string cmd, in string projectPath,
-                                    in string outputs, in string depOutputs) @safe pure nothrow {
-        auto replaceIn = cmd.dup.replace("$in", depOutputs);
+                                    in string outputs, in string inputs) @safe pure nothrow {
+        auto replaceIn = cmd.dup.replace("$in", inputs);
         auto replaceOut = replaceIn.replace("$out", outputs);
         return replaceOut.replace("$project", projectPath);
     }
@@ -359,13 +359,13 @@ struct Command {
         }
     }
 
-    string defaultCommand(in string projectPath, in string outputs, in string depOutputs) @safe pure const {
+    string defaultCommand(in string projectPath, in string outputs, in string inputs) @safe pure const {
         auto cmd = builtinTemplate(type);
         foreach(key; params.keys) {
             immutable var = "$" ~ key;
             immutable value = getParams(projectPath, key, []).join(" ");
             cmd = cmd.replace(var, value);
         }
-        return expandCmd(cmd, projectPath, outputs, depOutputs);
+        return expandCmd(cmd, projectPath, outputs, inputs);
     }
 }

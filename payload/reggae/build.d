@@ -267,7 +267,10 @@ enum CommandType {
     shell,
     compile,
     link,
+    code,
 }
+
+alias CommandFunction = void function();
 
 /**
  A command to be execute to produce a targets outputs from its inputs.
@@ -280,6 +283,7 @@ struct Command {
     private string command;
     private CommandType type;
     private Params params;
+    private CommandFunction func;
 
     this(string shellCommand) @safe pure nothrow {
         command = shellCommand;
@@ -290,6 +294,11 @@ struct Command {
         if(type == CommandType.shell) throw new Exception("Command rule cannot be shell");
         this.type = type;
         this.params = params;
+    }
+
+    this(CommandFunction func) @safe pure nothrow {
+        type = CommandType.code;
+        this.func = func;
     }
 
     const(string)[] paramNames() @safe pure nothrow const {
@@ -352,6 +361,9 @@ struct Command {
 
             case link:
                 return dCompiler ~ " -of$out $flags $in";
+
+            case code:
+                throw new Exception("Command type 'code' has no built-in template");
 
             case compile:
                 final switch(language) with(Language) {

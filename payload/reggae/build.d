@@ -341,18 +341,16 @@ struct Command {
     static string builtinTemplate(CommandType type) @safe pure nothrow {
         import reggae.config: dCompiler, cppCompiler, cCompiler;
 
-        string ccCommand(in string compiler) @safe pure nothrow {
-            return compiler ~ " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in";
-        }
+        immutable ccParams = " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in";
 
         final switch(type) with(CommandType) {
             case compileD:
                 return ".reggae/dcompile --objFile=$out --depFile=$DEPFILE " ~
                     dCompiler ~ " $flags $includes $stringImports $in";
             case compileCpp:
-                return ccCommand(cppCompiler);
+                return cppCompiler ~ ccParams;
             case compileC:
-                return ccCommand(cCompiler);
+                return cCompiler ~ ccParams;
             case link:
                 return dCompiler ~ " -of$out $flags $in";
             case shell:

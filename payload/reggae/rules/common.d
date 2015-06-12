@@ -51,15 +51,20 @@ Target[] targetsFromSources(alias sources = Sources(),
     DirEntry[] modules;
     foreach(dir; sources.dirs.value.map!(a => buildPath(projectPath, a))) {
         enforce(isDir(dir), dir ~ " is not a directory name");
-        auto entries = dirEntries(dir, "*.d", SpanMode.depth);
+        auto entries = dirEntries(dir, SpanMode.depth);
         auto normalised = entries.map!(a => DirEntry(buildNormalizedPath(a)));
+
         modules ~= array(normalised);
     }
 
     foreach(module_; sources.files.value)
-        modules ~= DirEntry(buildNormalizedPath(module_));
+        modules ~= DirEntry(buildNormalizedPath(buildPath(projectPath, module_)));
 
-    const srcFiles = modules.map!(a => a.name.removeProjectPath).array;
+    const srcFiles = modules.
+        map!(a => a.name.removeProjectPath).
+        filter!(sources.filterFunc).
+        array;
+
     const dSrcs = srcFiles.filter!(a => a.getLanguage == Language.D).array;
     auto otherSrcs = srcFiles.filter!(a => a.getLanguage != Language.D);
 

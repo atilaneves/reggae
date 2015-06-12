@@ -75,6 +75,8 @@ struct Files {
 struct SourcesImpl(alias F = a => a) {
     Dirs dirs;
     Files files;
+
+    alias filterFunc = F;
 }
 
 auto Sources(Dirs dirs = Dirs(["."]), Files files = Files()) {

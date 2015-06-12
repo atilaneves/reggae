@@ -10,6 +10,7 @@ import reggae.sorting;
 import reggae.dependencies: dMainDepSrcs;
 import reggae.rules.common;
 import std.algorithm;
+import std.array;
 
 //objectFile, objectFiles and link are the only default rules
 //They work by serialising the rule to use piggy-backing on Target's string
@@ -31,6 +32,7 @@ Target[] objectFilesPerPackage(in string[] srcFiles, in string flags = "",
                                in string[] importPaths = [], in string[] stringImportPaths = [],
                                in string projDir = "$project") @trusted pure {
 
+    if(srcFiles.empty) return [];
     const command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
     return srcFiles.byPackage.map!(a => Target(a[0].packagePath.objFileName,
                                                command,

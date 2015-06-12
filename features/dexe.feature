@@ -52,15 +52,8 @@ Feature: Linking a D executable
     And a file named "linkproj/reggaefile.d" with:
       """
       import reggae;
-      alias cppObjs = cppObjects!(SourcesImpl!(a => a != `cpp/extra_main.cpp`)
-                                         (Dirs([`cpp`]),
-                                          Files([`extra/constants.cpp`]),
-
-                                          )),
-                                  Flags(`-pg`),
-                                  ImportPaths(),
-                                  SrcFiles([`extra/constants.cpp`]),
-                                  ExcludeFiles([`cpp/extra_main.cpp`]));
+      enum cppSrcs = SourcesImpl!(a => a != `cpp/extra_main.cpp`)(Dirs([`cpp`]), Files([`extra/constants.cpp`]));
+      alias cppObjs = targetsFromSources!(cppSrcs, Flags(`-pg`));
       alias app = executable!(App(`d/main.d`, `calc`),
                               Flags(`-debug -O`),
                               ImportPaths([`d`]),

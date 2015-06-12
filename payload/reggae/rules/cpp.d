@@ -14,7 +14,7 @@ import std.algorithm;
  * Compile-time function to that returns a list of Target objects
  * corresponding to C++ source files from a particular directory
  */
-Target[] cppObjects(SrcDirs dirs = SrcDirs(),
+Target[] cppObjectss(SrcDirs dirs = SrcDirs(),
                     Flags flags = Flags(),
                     ImportPaths includes = ImportPaths(),
                     SrcFiles srcFiles = SrcFiles(),
@@ -27,3 +27,6 @@ Target[] cppObjects(SrcDirs dirs = SrcDirs(),
 
     return srcObjects!cppCompileInner("cpp", dirs.value, srcFiles.value, excludeFiles.value);
 }
+
+
+alias cppObjects = targetsFromSources;

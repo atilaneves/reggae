@@ -45,11 +45,12 @@ Target[] objectFilesPerModule(in string[] srcFiles, in string flags = "",
 }
 
 
+alias dObjects = targetsFromSources;
 /**
  * Compile-time function to that returns a list of Target objects
  * corresponding to D source files from a particular directory
  */
-Target[] dObjects(SrcDirs dirs = SrcDirs(),
+Target[] dObjectss(SrcDirs dirs = SrcDirs(),
                   Flags flags = Flags(),
                   ImportPaths includes = ImportPaths(),
                   StringImportPaths stringImports = StringImportPaths(),
@@ -63,6 +64,7 @@ Target[] dObjects(SrcDirs dirs = SrcDirs(),
 
     return srcObjects!dCompileInner("d", dirs.value, srcFiles.value, excludeFiles.value);
 }
+
 
 /**
  Currently only works for D. This convenience rule builds a D executable, automatically

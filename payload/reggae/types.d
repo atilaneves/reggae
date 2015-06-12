@@ -61,3 +61,30 @@ enum Backend {
     ninja,
     binary,
 }
+
+
+struct Dirs {
+    string[] value = ["."];
+}
+
+struct Files {
+    string[] value;
+}
+
+
+struct SourcesImpl(alias F = a => a) {
+    Dirs dirs;
+    Files files;
+}
+
+auto Sources(Dirs dirs = Dirs(["."]), Files files = Files()) {
+    return SourcesImpl!(a => true)(dirs, files);
+}
+
+auto Sources(alias F)(Dirs dirs = Dirs(), Files files = Files()) {
+    return SourcesImpl!F(dirs, files);
+}
+
+auto Sources(string[] dirs) {
+    return SourcesImpl!(a => true)(Dirs(dirs));
+}

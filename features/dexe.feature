@@ -52,7 +52,11 @@ Feature: Linking a D executable
     And a file named "linkproj/reggaefile.d" with:
       """
       import reggae;
-      alias cppObjs = cppObjects!(SrcDirs([`cpp`]),
+      alias cppObjs = cppObjects!(SourcesImpl!(a => a != `cpp/extra_main.cpp`)
+                                         (Dirs([`cpp`]),
+                                          Files([`extra/constants.cpp`]),
+
+                                          )),
                                   Flags(`-pg`),
                                   ImportPaths(),
                                   SrcFiles([`extra/constants.cpp`]),

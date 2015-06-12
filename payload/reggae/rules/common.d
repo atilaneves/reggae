@@ -4,6 +4,7 @@ module reggae.rules.common;
 import reggae.build;
 import reggae.config: projectPath;
 import reggae.ctaa;
+import reggae.types;
 import std.algorithm;
 import std.path;
 import std.array: array;
@@ -23,6 +24,48 @@ package string objFileName(in string srcFileName) @safe pure nothrow {
         ? srcFileName.stripDrive[1..$]
         : srcFileName;
     return localFileName.stripExtension.defaultExtension(objExt);
+}
+
+
+/**
+ This template function exists so as to be referenced in a reggaefile.d
+ at top-level without being called via $(D alias). That way it can be
+ named and used in a further $(D Target) definition without the need to
+ define a function returning $(D Build).
+ This function gets the source files to be compiled at runtime by searching
+ for source files in the given directories, adding files and filtering
+ as appropriate by the parameters given in $(D sources), its first compile-time
+ parameter. The other parameters are self-explanatory.
+ */
+Target[] targetsFromSources(alias sources = Sources(),
+                            Flags flags = Flags(),
+                            ImportPaths includes = ImportPaths(),
+                            StringImportPaths stringImports = StringImportPaths(),
+    )() {
+
+    import std.exception: enforce;
+    import std.file;
+    import std.path: buildNormalizedPath, buildPath;
+    import std.array: array;
+
+    DirEntry[] modules;
+    foreach(dir; sources.dirs.value.map!(a => buildPath(projectPath, a))) {
+        enforce(isDir(dir), dir ~ " is not a directory name");
+        auto entries = dirEntries(dir, "*.d", SpanMode.depth);
+        auto normalised = entries.map!(a => DirEntry(buildNormalizedPath(a)));
+        modules ~= array(normalised);
+    }
+
+    foreach(module_; sources.files.value)
+        modules ~= DirEntry(buildNormalizedPath(module_));
+
+    const srcFiles = modules.map!(a => a.name.removeProjectPath).array;
+    const dSrcs = srcFiles.filter!(a => a.getLanguage == Language.D).array;
+    auto otherSrcs = srcFiles.filter!(a => a.getLanguage != Language.D);
+
+    import reggae.rules.d: objectFiles;
+    return objectFiles(dSrcs, flags.value, ["."] ~ includes.value, stringImports.value) ~
+        otherSrcs.map!(a => objectFile(a, flags.value, includes.value)).array;
 }
 
 
@@ -122,7 +165,6 @@ private Language getLanguage(in string srcFileName) pure {
     default:
         throw new Exception("Unknown file extension " ~ srcFileName.extension);
     }
-
 }
 
 private CommandType getCommandType(in string srcFileName) pure {

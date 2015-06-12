@@ -138,20 +138,21 @@ void testImplicitDependenciesMoreThanOne() {
 
 void testDefaultRules() {
     defaultRules().shouldEqual(
-        [NinjaEntry("rule _dcompile",
+        [
+            NinjaEntry("rule _ccompile",
+                       ["command = gcc $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
+                        "deps = gcc",
+                        "depfile = $DEPFILE"]),
+            NinjaEntry("rule _cppcompile",
+                       ["command = g++ $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
+                        "deps = gcc",
+                        "depfile = $DEPFILE"]),
+            NinjaEntry("rule _dcompile",
                     ["command = .reggae/dcompile --objFile=$out --depFile=$DEPFILE dmd $flags $includes $stringImports $in",
                      "deps = gcc",
                      "depfile = $DEPFILE"]),
          NinjaEntry("rule _link",
                     ["command = dmd -of$out $flags $in"]),
-         NinjaEntry("rule _cppcompile",
-                    ["command = g++ $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
-                     "deps = gcc",
-                     "depfile = $DEPFILE"]),
-         NinjaEntry("rule _ccompile",
-                    ["command = gcc $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in",
-                     "deps = gcc",
-                     "depfile = $DEPFILE"]),
             ]);
 }
 

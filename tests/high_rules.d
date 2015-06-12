@@ -5,10 +5,6 @@ import reggae;
 import unit_threaded;
 
 
-void testWeirdFile() {
-    objectFile("foo.weird").shouldThrow;
-}
-
 void testCObjectFile() {
     immutable fileName = "foo.c";
     const obj = objectFile(fileName, "-g -O0", ["myhdrs", "otherhdrs"]);

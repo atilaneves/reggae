@@ -49,27 +49,6 @@ Target[] objectFilesPerModule(in string[] srcFiles, in string flags = "",
 }
 
 
-alias dObjects = targetsFromSources;
-/**
- * Compile-time function to that returns a list of Target objects
- * corresponding to D source files from a particular directory
- */
-Target[] dObjectss(SrcDirs dirs = SrcDirs(),
-                  Flags flags = Flags(),
-                  ImportPaths includes = ImportPaths(),
-                  StringImportPaths stringImports = StringImportPaths(),
-                  SrcFiles srcFiles = SrcFiles(),
-                  ExcludeFiles excludeFiles = ExcludeFiles())
-    () {
-
-    Target[] dCompileInner(in string[] files) {
-        return objectFiles(files, flags.value, ["."] ~ includes.value, stringImports.value);
-    }
-
-    return srcObjects!dCompileInner("d", dirs.value, srcFiles.value, excludeFiles.value);
-}
-
-
 /**
  Currently only works for D. This convenience rule builds a D executable, automatically
  calculating which files must be compiled in a similar way to rdmd.

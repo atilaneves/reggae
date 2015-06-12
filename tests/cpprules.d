@@ -26,22 +26,6 @@ void testIncludePaths() {
 }
 
 
-
-void testNoSrcFileSelection() {
-    selectSrcFiles([], [], []).shouldEqual([]);
-}
-
-
-void testSrcFileSelection() {
-    auto dirFiles = ["src/foo.d", "src/bar.d", "weird/peculiar.d"];
-    auto extraSrcs = ["extra/toto.d", "extra/choochoo.d"];
-    auto excludeSrcs = ["weird/peculiar.d"];
-
-    selectSrcFiles(dirFiles, extraSrcs, excludeSrcs).shouldEqual(
-        ["src/foo.d", "src/bar.d", "extra/toto.d", "extra/choochoo.d"]);
-}
-
-
 void testFlagsCompileC() {
     const build = Build(objectFile("path/to/src/foo.c", "-m64 -fPIC -O3"));
     const ninja = Ninja(build, "/tmp/myproject");

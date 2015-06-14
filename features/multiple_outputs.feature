@@ -94,6 +94,7 @@ Feature: Multiple outputs
       int protoFunc(int n) { return n * 2; }
       """
 
+  @ninja
   Scenario: Ninja separate
       Given I successfully run `cp proj/reggaefile_sep.d proj/reggaefile.d`
       And I successfully run `reggae -b ninja proj`
@@ -115,6 +116,7 @@ Feature: Multiple outputs
         I call protoFunc(3) and get 9
         """
 
+    @ninja
     Scenario: Ninja together
       Given I successfully run `cp proj/reggaefile_tog.d proj/reggaefile.d`
       And I successfully run `reggae -b ninja proj`
@@ -137,7 +139,7 @@ Feature: Multiple outputs
         I call protoFunc(3) and get 9
         """
 
-
+    @make
     Scenario: Make separate
       Given I successfully run `cp proj/reggaefile_sep.d proj/reggaefile.d`
       And I successfully run `reggae -b make proj`
@@ -159,6 +161,7 @@ Feature: Multiple outputs
         I call protoFunc(3) and get 9
         """
 
+    @make
     Scenario: Make together
       Given I successfully run `cp proj/reggaefile_tog.d proj/reggaefile.d`
       And I successfully run `reggae -b make proj`
@@ -179,7 +182,7 @@ Feature: Multiple outputs
         """
         I call protoFunc(3) and get 9
         """
-
+    @binary
     Scenario: Binary separate
       Given I successfully run `cp proj/reggaefile_sep.d proj/reggaefile.d`
       And I successfully run `reggae -b binary proj`
@@ -202,6 +205,7 @@ Feature: Multiple outputs
         I call protoFunc(3) and get 9
         """
 
+    @binary
     Scenario: Binary together
       Given I successfully run `cp proj/reggaefile_tog.d proj/reggaefile.d`
       And I successfully run `reggae -b binary proj`

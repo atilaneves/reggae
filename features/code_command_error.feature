@@ -12,6 +12,7 @@ Feature: D code as a target command
       mixin build!(Target(`copy.txt`, &func, Target(`original.txt`)));
       """
 
+  @ninja
   Scenario: Ninja
     When I run `reggae -b ninja proj`
     Then it should fail with:
@@ -19,6 +20,7 @@ Feature: D code as a target command
       Command type 'code' not supported for ninja backend
       """
 
+  @make
   Scenario: Make
     When I run `reggae -b make proj`
     Then it should fail with:

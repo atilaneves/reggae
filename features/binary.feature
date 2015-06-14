@@ -1,3 +1,4 @@
+@binary
 Feature: Binary backend
   As a reggae user
   I want to be able to have a binary backend

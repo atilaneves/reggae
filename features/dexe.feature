@@ -67,6 +67,7 @@ Feature: Linking a D executable
       mixin build!(app);
       """
 
+  @ninja
   Scenario: Ninja backend
     When I successfully run `reggae -b ninja linkproj`
     And I successfully run `ninja`
@@ -97,6 +98,7 @@ Feature: Linking a D executable
       Logger says... ohnoes The result of feeding 7 and 10 to C++ is 24
       """
 
+  @make
   Scenario: Make backend
     When I successfully run `reggae -b make linkproj`
     And I successfully run `make`
@@ -127,6 +129,7 @@ Feature: Linking a D executable
       Logger says... ohnoes The result of feeding 7 and 10 to C++ is 24
       """
 
+  @binary
   Scenario: Binary backend
     When I successfully run `reggae -b binary linkproj`
     And I successfully run `./build`

@@ -44,6 +44,7 @@ Feature: D compilation rule
       mixin build!(Target(`calc`, `dmd -of$out $in`, [mainObj, mathsObj, ioObj]));
       """
 
+  @ninja
   Scenario: Using dcompile for every object file with Ninja
     When I successfully run `reggae -b ninja leproj`
     And I successfully run `ninja`
@@ -91,6 +92,7 @@ Feature: D compilation rule
       output: The result of 7 is 42
       """
 
+  @make
   Scenario: Using dcompile for every object file with Make
     When I successfully run `reggae -b make leproj`
     And I successfully run `make`
@@ -138,6 +140,7 @@ Feature: D compilation rule
       output: The result of 7 is 42
       """
 
+  @binary
   Scenario: Using dcompile for every object file with Binary
     When I successfully run `reggae -b binary leproj`
     And I successfully run `./build`

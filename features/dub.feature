@@ -40,6 +40,7 @@ Feature: Dub integration
       enum string1 = `I'm immortal!`;
       """
 
+    @ninja
     Scenario: Dub/Reggae build with Ninja
       When I successfully run `reggae -b ninja --dflags="-g -debug" dub_proj`
       Then the file "dub_proj/reggaefile.d" should not exist
@@ -57,6 +58,7 @@ Feature: Dub integration
         I'm immortal!
         """
 
+    @make
     Scenario: Dub/Reggae build with Make
       When I successfully run `reggae -b make dub_proj --dflags="-g -debug"`
       Then the file "dub_proj/reggaefile.d" should not exist
@@ -74,6 +76,7 @@ Feature: Dub integration
         I'm immortal!
         """
 
+    @binary
     Scenario: Dub/Reggae build with Binary
       When I successfully run `reggae -b binary dub_proj --dflags="-g -debug"`
       Then the file "dub_proj/reggaefile.d" should not exist

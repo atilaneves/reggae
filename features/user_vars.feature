@@ -58,6 +58,7 @@ Feature: User-defined variables
       }
       """
 
+    @ninja
     Scenario: User-defined variabled with Ninja
       Given I successfully run `reggae -b ninja -d noUnitTests=true dub_reggae_proj`
       When I successfully run `ninja`
@@ -77,6 +78,7 @@ Feature: User-defined variables
         """
       When I successfully run `./ut`
 
+    @make
     Scenario: User-defined variabled with Make
       Given I successfully run `reggae -b make -d noUnitTests=true dub_reggae_proj`
       When I successfully run `make`
@@ -96,6 +98,7 @@ Feature: User-defined variables
         """
       When I successfully run `./ut`
 
+    @binary
     Scenario: User-defined variabled with Binary
       Given I successfully run `reggae -b binary -d noUnitTests=true dub_reggae_proj`
       When I successfully run `./build`

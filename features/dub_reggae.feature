@@ -90,6 +90,7 @@ Feature: Augmenting dub projects with reggae builds
       mixin build!(dubDefaultTarget, ut);
       """
 
+    @ninja
     Scenario: Dub/Reggae build with Ninja
       Given I successfully run `reggae -b ninja dub_reggae_proj`
       When I successfully run `ninja`
@@ -110,6 +111,7 @@ Feature: Augmenting dub projects with reggae builds
         [5]
         """
 
+    @make
     Scenario: Dub/Reggae build with Make
       Given I successfully run `reggae -b make dub_reggae_proj`
       When I successfully run `make -j8`
@@ -130,6 +132,7 @@ Feature: Augmenting dub projects with reggae builds
         [7]
         """
 
+    @binary
     Scenario: Dub/Reggae build with Binary
       Given I successfully run `reggae -b binary dub_reggae_proj`
       When I successfully run `./build`

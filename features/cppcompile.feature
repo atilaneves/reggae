@@ -35,6 +35,7 @@ Feature: C++ compilation rule
       mixin build!(Target(`calc`, `dmd -of$out $in`, [mainObj, mathsObj]));
       """
 
+  @ninja
   Scenario: Mixing C++ and D files with Ninja
     When I successfully run `reggae -b ninja mixproj`
     And I successfully run `ninja`
@@ -55,6 +56,7 @@ Feature: C++ compilation rule
       The result of calc(3) is 30
       """
 
+  @make
   Scenario: Mixing C++ and D files with Make
     When I successfully run `reggae -b make mixproj`
     And I successfully run `make`
@@ -75,6 +77,7 @@ Feature: C++ compilation rule
       The result of calc(3) is 30
       """
 
+  @binary
   Scenario: Mixing C++ and D files with binary
     When I successfully run `reggae -b binary mixproj`
     And I successfully run `./build`

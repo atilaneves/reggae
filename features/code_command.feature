@@ -1,3 +1,4 @@
+@binary
 Feature: D code as a target command
   As a reggae user
   I want to be able to specify D code instead of a shell command

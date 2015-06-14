@@ -57,6 +57,7 @@ Feature: Arbritrary rules
       string appender(string str) { return str ~ ` appended!`; }
       """
 
+  @make
   Scenario: Make backend for 1st example
     When I successfully run `reggae -b make path/to`
     And a file named "Makefile" should exist
@@ -78,6 +79,7 @@ Feature: Arbritrary rules
       The product of 3 and 4 is 12
       """
 
+  @ninja
   Scenario: Ninja backend for 1st example
     When I successfully run `reggae -b ninja path/to`
     And the following files should exist:
@@ -101,6 +103,7 @@ Feature: Arbritrary rules
       The product of 3 and 4 is 12
       """
 
+  @binary
   Scenario: Binary backend for 1st example
     When I successfully run `reggae -b binary path/to`
     And the following files should exist:
@@ -123,6 +126,7 @@ Feature: Arbritrary rules
       The product of 3 and 4 is 12
       """
 
+  @make
   Scenario: Make backend for 2nd example
     When I successfully run `reggae -b make different/path`
     And a file named "Makefile" should exist
@@ -142,6 +146,7 @@ Feature: Arbritrary rules
       Appending to ohnoes yields ohnoes appended!
       """
 
+  @ninja
   Scenario: Ninja backend for 2nd example
     When I successfully run `reggae -b ninja different/path`
     When I successfully run `ninja`
@@ -163,6 +168,7 @@ Feature: Arbritrary rules
       Appending to ohnoes yields ohnoes appended!
       """
 
+  @binary
   Scenario: Binary backend for 2nd example
     When I successfully run `reggae -b binary different/path`
     When I successfully run `./build`

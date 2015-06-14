@@ -1,8 +1,9 @@
-Feature: Dub arget type
+Feature: Dub target type
   As a user of reggae
   I want to have an error message when using it on unsupported project types
   So I can diagnose what's going on
 
+  @ninja
   Scenario: None target type
     Given a file named "proj/dub.json" with:
       """

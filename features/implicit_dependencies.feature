@@ -26,6 +26,7 @@ Feature: Correct dependencies
       """
 
 
+  @make
   Scenario: String import with make
     Given I successfully run `reggae -b make proj`
     When I successfully run `make`
@@ -45,6 +46,7 @@ Feature: Correct dependencies
       Goodbye!
       """
 
+  @ninja
   Scenario: String import with ninja
     Given I successfully run `reggae -b ninja proj`
     When I successfully run `ninja`
@@ -74,6 +76,7 @@ Feature: Correct dependencies
       Ninjas are people too
       """
 
+  @binary
   Scenario: String import with binary
     Given I successfully run `reggae -b binary proj`
     When I successfully run `./build`

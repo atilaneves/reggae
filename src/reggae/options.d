@@ -66,7 +66,7 @@ Options getOptions(string[] args) @trusted {
         }
 
     } catch(ConvException ex) {
-        throw new Exception("Unsupported backend, -b must be make or ninja");
+        throw new Exception("Unsupported backend, -b must be one of: make|ninja|tup|binary");
     }
 
     if(args.length > 1) options.projectPath = args[1].absolutePath;

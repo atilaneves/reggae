@@ -270,7 +270,7 @@ enum CommandType {
     code,
 }
 
-alias CommandFunction = void function();
+alias CommandFunction = void function(in string[], in string[]);
 
 /**
  A command to be execute to produce a targets outputs from its inputs.
@@ -412,7 +412,7 @@ struct Command {
                 break;
             case code:
                 assert(func !is null, "Command of type code with null function");
-                func();
+                func(inputs, outputs);
                 break;
             default:
                 throw new Exception(text("Cannot execute unsupported command type ", type));

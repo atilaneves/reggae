@@ -5,7 +5,9 @@ import unit_threaded;
 
 int counter;
 
-private void incr() {
+private void incr(in string[] inputs, in string[] outputs) {
+    inputs.shouldEqual(["no input"]);
+    outputs.shouldEqual(["no output"]);
     counter++;
 }
 

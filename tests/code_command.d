@@ -3,17 +3,29 @@ module tests.code_command;
 import reggae;
 import unit_threaded;
 
-int counter;
+int gCounter;
+string[] gInputs;
+string[] gOutputs;
 
 private void incr(in string[] inputs, in string[] outputs) {
-    inputs.shouldEqual(["no input"]);
-    outputs.shouldEqual(["no output"]);
-    counter++;
+    gInputs = inputs.dup;
+    gOutputs = outputs.dup;
+    gCounter++;
 }
 
 void testSimpleCommand() {
-    counter.shouldEqual(0);
+    gCounter = 0;
     const tgt = Target("no output", &incr, Target("no input"));
     tgt.execute();
-    counter.shouldEqual(1);
+    gCounter.shouldEqual(1);
+    gInputs.shouldEqual(["no input"]);
+    gOutputs.shouldEqual(["no output"]);
+}
+
+
+void testRemoveBuildDir() {
+    gCounter = 0;
+    const cmd = Command(&incr).removeBuilddir;
+    cmd.execute("", [], []);
+    gCounter.shouldEqual(1);
 }

@@ -83,8 +83,6 @@ private:
                any!(a => a[0].newerThan(a[1]))) {
 
                 mkDir(target);
-                immutable cmd = target.shellCommand(projectPath);
-                writeln("[build] " ~ cmd);
                 target.execute(projectPath);
                 return true;
             }

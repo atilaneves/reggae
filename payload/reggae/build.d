@@ -318,13 +318,25 @@ struct Command {
     }
 
     Command removeBuilddir() @safe pure const {
-        auto cmd = Command(_removeBuilddir(command));
-        cmd.type = this.type;
-        //FIXME
-        () @trusted {
-            cmd.params = cast()this.params;
-        }();
-        return cmd;
+        switch(type) with(CommandType) {
+        case shell:
+            auto cmd = Command(_removeBuilddir(command));
+            cmd.type = this.type;
+            //FIXME
+            () @trusted {
+                cmd.params = cast()this.params;
+            }();
+            return cmd;
+        default:
+            auto cmd = Command();
+            cmd.type = this.type;
+            //FIXME
+            () @trusted {
+                cmd.params = cast()this.params;
+            }();
+            cmd.func = this.func;
+            return cmd;
+        }
     }
 
     ///Replace $in, $out, $project with values
@@ -404,9 +416,12 @@ struct Command {
         import std.process;
         import std.stdio;
 
-        switch(type) with(CommandType) {
+        final switch(type) with(CommandType) {
             case shell:
+            case compile:
+            case link:
                 immutable cmd = shellCommand(projectPath, outputs, inputs);
+                writeln("[build] " ~ cmd);
                 immutable res = executeShell(cmd);
                 enforce(res.status == 0, "Could not execute" ~ cmd ~ ":\n" ~ res.output);
                 break;
@@ -414,8 +429,6 @@ struct Command {
                 assert(func !is null, "Command of type code with null function");
                 func(inputs, outputs);
                 break;
-            default:
-                throw new Exception(text("Cannot execute unsupported command type ", type));
         }
     }
 

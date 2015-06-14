@@ -73,10 +73,14 @@ struct Makefile {
     //the only reason this is needed is to add auto dependency
     //tracking
     string command(in Target target) @safe const {
+        immutable cmdType = target.command.getType;
+        if(cmdType == CommandType.code)
+            throw new Exception("Command type 'code' not supported for make backend");
+
         immutable cmd = target.shellCommand(projectPath);
         immutable depfile = target.outputs[0] ~ ".dep";
         if(target.command.isDefaultCommand) {
-            return target.command.getType == CommandType.link ? cmd : cmd ~ makeAutoDeps(depfile);
+            return cmdType == CommandType.link ? cmd : cmd ~ makeAutoDeps(depfile);
         } else {
             return cmd;
         }

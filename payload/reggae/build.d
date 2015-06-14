@@ -159,6 +159,7 @@ unittest {
  */
 struct Target {
     const(string)[] outputs;
+    private const(Command) _command; ///see $(D Command) struct
     const(Target)[] dependencies;
     const(Target)[] implicits;
 
@@ -239,8 +240,6 @@ struct Target {
 
 private:
 
-    const(Command) _command;
-
     //@trusted because of join
     string depFilesStringImpl(in Target[] deps, in string projectPath) @trusted pure const nothrow {
         import std.conv;
@@ -291,17 +290,21 @@ struct Command {
     private Params params;
     private CommandFunction func;
 
+    ///If constructed with a string, it's a shell command
     this(string shellCommand) @safe pure nothrow {
         command = shellCommand;
         type = CommandType.shell;
     }
 
+    /**Explicitly request a command of this type with these parameters
+       In general to create one of the builtin high level rules*/
     this(CommandType type, Params params) @safe pure {
         if(type == CommandType.shell) throw new Exception("Command rule cannot be shell");
         this.type = type;
         this.params = params;
     }
 
+    ///A D function call command
     this(CommandFunction func) @safe pure nothrow {
         type = CommandType.code;
         this.func = func;

@@ -17,9 +17,9 @@ import std.array: array, join;
 import std.conv;
 import std.exception;
 
-Target createTargetFromTarget(in Target target) {
+Target createTopLevelTarget(in Target target) {
     return Target(target.outputs,
-                  target._command.removeBuilddir,
+                  target._command.expandBuildDir,
                   target.dependencies.map!(a => a.enclose(target)).array,
                   target.implicits.map!(a => a.enclose(target)).array);
 }
@@ -31,7 +31,7 @@ struct Build {
     const(Target)[] targets;
 
     this(in Target[] targets) {
-        this.targets = targets.map!createTargetFromTarget.array;
+        this.targets = targets.map!createTopLevelTarget.array;
     }
 
     this(T...)(in T targets) {
@@ -42,7 +42,7 @@ struct Build {
                 const target = t;
             }
 
-            this.targets ~= createTargetFromTarget(target);
+            this.targets ~= createTopLevelTarget(target);
         }
     }
 }
@@ -50,14 +50,14 @@ struct Build {
 //a directory for each top-level target no avoid name clashes
 //@trusted because of map -> buildPath -> array
 Target enclose(in Target target, in Target topLevel) @trusted {
-    if(target.isLeaf) return Target(target.outputs.map!(a => a._removeBuilddir).array,
-                                    target._command.removeBuilddir,
+    if(target.isLeaf) return Target(target.outputs.map!(a => a._expandBuildDir).array,
+                                    target._command.expandBuildDir,
                                     target.dependencies,
                                     target.implicits);
 
     immutable dirName = buildPath("objs", topLevel.outputs[0] ~ ".objs");
     return Target(target.outputs.map!(a => realTargetPath(dirName, a)).array,
-                  target._command.removeBuilddir,
+                  target._command.expandBuildDir,
                   target.dependencies.map!(a => a.enclose(topLevel)).array,
                   target.implicits.map!(a => a.enclose(topLevel)).array);
 }
@@ -69,11 +69,11 @@ private string realTargetPath(in string dirName, in string output) @trusted pure
     import std.algorithm: canFind;
 
     return output.canFind(gBuilddir)
-        ? output._removeBuilddir
+        ? output._expandBuildDir
         : buildPath(dirName, output);
 }
 
-private string _removeBuilddir(in string output) @trusted pure {
+private string _expandBuildDir(in string output) @trusted pure {
     import std.path: buildNormalizedPath;
     import std.algorithm;
     return output.
@@ -317,10 +317,10 @@ struct Command {
         return getParams(projectPath, key, true, ifNotFound);
     }
 
-    Command removeBuilddir() @safe pure const {
+    Command expandBuildDir() @safe pure const {
         switch(type) with(CommandType) {
         case shell:
-            auto cmd = Command(_removeBuilddir(command));
+            auto cmd = Command(_expandBuildDir(command));
             cmd.type = this.type;
             //FIXME
             () @trusted {

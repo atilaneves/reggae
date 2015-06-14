@@ -18,3 +18,31 @@ Feature: D code as a target command
       """
       func was called
       """
+
+  Scenario: Generation of outputs
+    Given a file named "proj/reggaefile.d" with:
+      """
+      import reggae;
+      import std.process;
+      import std.exception;
+      import std.array;
+      void func(in string[] inputs, in string[] outputs) {
+          immutable cmd = [`cp`, inputs[0], outputs[0]];
+          immutable res = execute(cmd);
+          enforce(res.status == 0, `Could not execute ` ~ cmd.join(` `) ~ `\n` ~ res.output);
+      }
+      mixin build!(Target(`copy.txt`, &func, Target(`original.txt`)));
+      """
+
+    And a file named "proj/original.txt" with:
+      """
+      Originalis
+      """
+
+    When I successfully run `reggae -b binary proj`
+    And I run `./build`
+    And I run `cat copy.txt`
+    Then the output should contain:
+      """
+      Originalis
+      """

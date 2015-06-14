@@ -50,11 +50,14 @@ struct Build {
 //a directory for each top-level target no avoid name clashes
 //@trusted because of map -> buildPath -> array
 Target enclose(in Target target, in Target topLevel) @trusted {
+    //leaf targets only get the $builddir expansion, nothing else
     if(target.isLeaf) return Target(target.outputs.map!(a => a._expandBuildDir).array,
                                     target._command.expandBuildDir,
                                     target.dependencies,
                                     target.implicits);
 
+    //every other non-top-level target gets its outputs placed in a directory
+    //specific to its top-level parent
     immutable dirName = buildPath("objs", topLevel.outputs[0] ~ ".objs");
     return Target(target.outputs.map!(a => realTargetPath(dirName, a)).array,
                   target._command.expandBuildDir,
@@ -65,6 +68,9 @@ Target enclose(in Target target, in Target topLevel) @trusted {
 immutable gBuilddir = "$builddir";
 
 
+//targets that have outputs with $builddir in them want to be placed
+//in a specific place. Those don't get touched. Other targets get
+//placed in their top-level parent's object directory
 private string realTargetPath(in string dirName, in string output) @trusted pure {
     import std.algorithm: canFind;
 
@@ -317,25 +323,14 @@ struct Command {
         return getParams(projectPath, key, true, ifNotFound);
     }
 
-    Command expandBuildDir() @safe pure const {
+    const(Command) expandBuildDir() @safe pure const {
         switch(type) with(CommandType) {
         case shell:
             auto cmd = Command(_expandBuildDir(command));
             cmd.type = this.type;
-            //FIXME
-            () @trusted {
-                cmd.params = cast()this.params;
-            }();
             return cmd;
         default:
-            auto cmd = Command();
-            cmd.type = this.type;
-            //FIXME
-            () @trusted {
-                cmd.params = cast()this.params;
-            }();
-            cmd.func = this.func;
-            return cmd;
+            return this;
         }
     }
 

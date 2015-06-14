@@ -126,6 +126,27 @@ Feature: Arbritrary rules
       The product of 3 and 4 is 12
       """
 
+  @tup
+  Scenario: Tup backend for 1st example
+    When I successfully run `reggae -b tup path/to`
+    When I successfully run `tup upd`
+    And the following files should exist:
+      |objs/myapp.objs/main.o|
+      |objs/myapp.objs/maths.o|
+      |myapp|
+    When I run `./myapp 2 3`
+    Then the output should contain:
+      """
+      The sum     of 2 and 3 is 5
+      The product of 2 and 3 is 6
+      """
+    When I run `./myapp 3 4`
+    Then the output should contain:
+      """
+      The sum     of 3 and 4 is 7
+      The product of 3 and 4 is 12
+      """
+
   @make
   Scenario: Make backend for 2nd example
     When I successfully run `reggae -b make different/path`
@@ -193,8 +214,6 @@ Feature: Arbritrary rules
   Scenario: Tup backend for 2nd example
     When I successfully run `reggae -b tup different/path`
     When I successfully run `tup upd`
-    And the following files should exist:
-      |build|
     And the following files should exist:
       |objs/appp.objs/main.o|
       |objs/appp.objs/foo.o|

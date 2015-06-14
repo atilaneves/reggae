@@ -16,6 +16,7 @@ import std.path: defaultExtension, absolutePath;
 string cmdTypeToNinjaString(CommandType commandType, Language language) @safe pure {
     final switch(commandType) with(CommandType) {
         case shell: assert(0, "cmdTypeToNinjaString doesn't work for shell");
+        case code: throw new Exception("Command type 'code' not supported for ninja backend");
         case link: return "_link";
         case compile:
             final switch(language) with(Language) {
@@ -53,7 +54,7 @@ NinjaEntry[] defaultRules() @safe pure {
 
     NinjaEntry[] entries;
     for(CommandType type = CommandType.min; type <= CommandType.max; ++type) {
-        if(type == CommandType.shell) continue;
+        if(type == CommandType.shell || type == CommandType.code) continue;
         if(type == CommandType.compile) {
             for(Language language = Language.min; language <= Language.max; ++language) {
                 if(language == Language.unknown) continue;

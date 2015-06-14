@@ -15,11 +15,11 @@ import std.typetuple: allSatisfy;
 import std.traits: Unqual, isSomeFunction, ReturnType, arity;
 import std.array: array, join;
 import std.conv;
+import std.exception;
 
-
-Target createTargetFromTarget(in Target target) {
+Target createTopLevelTarget(in Target target) {
     return Target(target.outputs,
-                  target._command.removeBuilddir,
+                  target._command.expandBuildDir,
                   target.dependencies.map!(a => a.enclose(target)).array,
                   target.implicits.map!(a => a.enclose(target)).array);
 }
@@ -31,7 +31,7 @@ struct Build {
     const(Target)[] targets;
 
     this(in Target[] targets) {
-        this.targets = targets.map!createTargetFromTarget.array;
+        this.targets = targets.map!createTopLevelTarget.array;
     }
 
     this(T...)(in T targets) {
@@ -42,7 +42,7 @@ struct Build {
                 const target = t;
             }
 
-            this.targets ~= createTargetFromTarget(target);
+            this.targets ~= createTopLevelTarget(target);
         }
     }
 }
@@ -50,14 +50,17 @@ struct Build {
 //a directory for each top-level target no avoid name clashes
 //@trusted because of map -> buildPath -> array
 Target enclose(in Target target, in Target topLevel) @trusted {
-    if(target.isLeaf) return Target(target.outputs.map!(a => a._removeBuilddir).array,
-                                    target._command.removeBuilddir,
+    //leaf targets only get the $builddir expansion, nothing else
+    if(target.isLeaf) return Target(target.outputs.map!(a => a._expandBuildDir).array,
+                                    target._command.expandBuildDir,
                                     target.dependencies,
                                     target.implicits);
 
+    //every other non-top-level target gets its outputs placed in a directory
+    //specific to its top-level parent
     immutable dirName = buildPath("objs", topLevel.outputs[0] ~ ".objs");
     return Target(target.outputs.map!(a => realTargetPath(dirName, a)).array,
-                  target._command.removeBuilddir,
+                  target._command.expandBuildDir,
                   target.dependencies.map!(a => a.enclose(topLevel)).array,
                   target.implicits.map!(a => a.enclose(topLevel)).array);
 }
@@ -65,15 +68,18 @@ Target enclose(in Target target, in Target topLevel) @trusted {
 immutable gBuilddir = "$builddir";
 
 
+//targets that have outputs with $builddir in them want to be placed
+//in a specific place. Those don't get touched. Other targets get
+//placed in their top-level parent's object directory
 private string realTargetPath(in string dirName, in string output) @trusted pure {
     import std.algorithm: canFind;
 
     return output.canFind(gBuilddir)
-        ? output._removeBuilddir
+        ? output._expandBuildDir
         : buildPath(dirName, output);
 }
 
-private string _removeBuilddir(in string output) @trusted pure {
+private string _expandBuildDir(in string output) @trusted pure {
     import std.path: buildNormalizedPath;
     import std.algorithm;
     return output.
@@ -213,7 +219,7 @@ struct Target {
 
     ///returns a command string to be run by the shell
     string shellCommand(in string projectPath = "") @safe pure const {
-        return _command.isDefaultCommand ? defaultCommand(projectPath) : expandCommand(projectPath);
+        return _command.shellCommand(projectPath, outputs, inputs(projectPath));
     }
 
     string[] outputsInProjectPath(in string projectPath) @safe pure nothrow const {
@@ -225,6 +231,11 @@ struct Target {
     Language getLanguage() @safe pure nothrow const {
         return reggae.rules.common.getLanguage(inputs("")[0]);
     }
+
+    void execute(in string projectPath = "") @safe const {
+        _command.execute(projectPath, outputs, inputs(projectPath));
+    }
+
 
 private:
 
@@ -255,13 +266,6 @@ private:
         }
         return inputs;
     }
-
-
-    //this function returns a string to be run by the shell with `std.process.execute`
-    //it does 'normal' commands, not built-in rules
-    string defaultCommand(in string projectPath) @safe pure const {
-        return _command.defaultCommand(projectPath, outputs, inputs(projectPath));
-    }
 }
 
 
@@ -269,7 +273,10 @@ enum CommandType {
     shell,
     compile,
     link,
+    code,
 }
+
+alias CommandFunction = void function(in string[], in string[]);
 
 /**
  A command to be execute to produce a targets outputs from its inputs.
@@ -282,6 +289,7 @@ struct Command {
     private string command;
     private CommandType type;
     private Params params;
+    private CommandFunction func;
 
     this(string shellCommand) @safe pure nothrow {
         command = shellCommand;
@@ -292,6 +300,11 @@ struct Command {
         if(type == CommandType.shell) throw new Exception("Command rule cannot be shell");
         this.type = type;
         this.params = params;
+    }
+
+    this(CommandFunction func) @safe pure nothrow {
+        type = CommandType.code;
+        this.func = func;
     }
 
     const(string)[] paramNames() @safe pure nothrow const {
@@ -310,14 +323,15 @@ struct Command {
         return getParams(projectPath, key, true, ifNotFound);
     }
 
-    Command removeBuilddir() @safe pure const {
-        auto cmd = Command(_removeBuilddir(command));
-        cmd.type = this.type;
-        //FIXME
-        () @trusted {
-            cmd.params = cast()this.params;
-        }();
-        return cmd;
+    const(Command) expandBuildDir() @safe pure const {
+        switch(type) with(CommandType) {
+        case shell:
+            auto cmd = Command(_expandBuildDir(command));
+            cmd.type = this.type;
+            return cmd;
+        default:
+            return this;
+        }
     }
 
     ///Replace $in, $out, $project with values
@@ -355,6 +369,9 @@ struct Command {
             case link:
                 return dCompiler ~ " -of$out $flags $in";
 
+            case code:
+                throw new Exception("Command type 'code' has no built-in template");
+
             case compile:
                 final switch(language) with(Language) {
                     case D:
@@ -381,4 +398,33 @@ struct Command {
         }
         return expandCmd(cmd, projectPath, outputs, inputs);
     }
+
+    ///returns a command string to be run by the shell
+    string shellCommand(in string projectPath, in string[] outputs, in string[] inputs) @safe pure const {
+        return isDefaultCommand
+            ? defaultCommand(projectPath, outputs, inputs)
+            : expand(projectPath, outputs, inputs);
+    }
+
+
+    void execute(in string projectPath, in string[] outputs, in string[] inputs) const @trusted {
+        import std.process;
+        import std.stdio;
+
+        final switch(type) with(CommandType) {
+            case shell:
+            case compile:
+            case link:
+                immutable cmd = shellCommand(projectPath, outputs, inputs);
+                writeln("[build] " ~ cmd);
+                immutable res = executeShell(cmd);
+                enforce(res.status == 0, "Could not execute" ~ cmd ~ ":\n" ~ res.output);
+                break;
+            case code:
+                assert(func !is null, "Command of type code with null function");
+                func(inputs, outputs);
+                break;
+        }
+    }
+
 }

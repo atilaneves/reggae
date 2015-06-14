@@ -188,3 +188,24 @@ Feature: Arbritrary rules
       """
       Appending to ohnoes yields ohnoes appended!
       """
+
+  @tup
+  Scenario: Tup backend for 2nd example
+    When I successfully run `reggae -b tup different/path`
+    When I successfully run `tup upd`
+    And the following files should exist:
+      |build|
+    And the following files should exist:
+      |objs/appp.objs/main.o|
+      |objs/appp.objs/foo.o|
+      |appp|
+    When I run `./appp hello`
+    Then the output should contain:
+      """
+      Appending to hello yields hello appended!
+      """
+    When I run `./appp ohnoes`
+    Then the output should contain:
+      """
+      Appending to ohnoes yields ohnoes appended!
+      """

@@ -46,6 +46,10 @@ void generateBuild(in Build build) {
             handleNinja(build);
             break;
 
+        case tup:
+            handleTup(build);
+            break;
+
         case binary:
             Binary(build, projectPath).run();
             break;
@@ -80,5 +84,16 @@ private void handleMake(in Build build) {
         const makefile = Makefile(build, projectPath);
         auto file = File(makefile.fileName, "w");
         file.write(makefile.output);
+    }
+}
+
+private void handleTup(in Build build) {
+    version(minimal) {
+        throw new Exception("Tup backend support not compiled in");
+    } else {
+        if(!".tup".exists) execute(["tup", "init"]);
+        const tup = Tup(build, projectPath);
+        auto file = File(tup.fileName, "w");
+        file.write(tup.output);
     }
 }

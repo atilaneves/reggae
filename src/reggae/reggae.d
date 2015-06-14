@@ -79,7 +79,7 @@ enum coreFiles = [
     "core/package.d", "core/rules/package.d",
     ];
 enum otherFiles = [
-    "backend/ninja.d", "backend/make.d",
+    "backend/ninja.d", "backend/make.d", "backend/tup.d",
     "dub/info.d", "rules/dub.d",
     ];
 

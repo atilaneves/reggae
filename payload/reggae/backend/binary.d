@@ -82,8 +82,7 @@ private:
                                 target.outputsInProjectPath(projectPath)).
                any!(a => a[0].newerThan(a[1]))) {
 
-                mkDir(target);
-                target.execute(projectPath);
+                executeCommand(target);
                 return true;
             }
         }
@@ -91,23 +90,24 @@ private:
         return false;
     }
 
+    //Checks dependencies listed in the .dep file created by the compiler
     bool checkDeps(in Target target, in string depFileName) const @trusted {
         auto file = File(depFileName);
         const dependencies = file.byLine.map!(a => a.to!string).dependenciesFromFile;
 
         if(dependencies.any!(a => a.newerThan(target.outputsInProjectPath(projectPath)[0]))) {
-            mkDir(target);
-            immutable cmd = target.shellCommand(projectPath);
-            writeln("[build] " ~ cmd);
-            immutable res = executeShell(cmd);
-            enforce(res.status == 0, "Could not execute " ~ cmd ~ ":\n" ~ res.output);
-
+            executeCommand(target);
             return true;
         }
         return false;
     }
-}
 
+    void executeCommand(in Target target) const @trusted {
+        mkDir(target);
+        target.execute(projectPath);
+    }
+
+}
 
 bool newerThan(in string a, in string b) nothrow {
     try {

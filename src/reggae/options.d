@@ -30,6 +30,10 @@ struct Options {
         if(!dCompiler)   dCompiler   = "dmd";
 
         isDubProject = _isDubProject;
+
+        if(isDubProject && backend == Backend.tup) {
+            throw new Exception("dub integration not supported with the tup backend");
+        }
     }
 
     private bool _isDubProject() @safe nothrow {

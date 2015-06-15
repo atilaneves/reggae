@@ -93,3 +93,11 @@ Feature: Dub integration
         [0, 0, 0, 4]
         I'm immortal!
         """
+
+    @tup
+    Scenario: Dub/Reggae build with Tup
+      When I run `reggae -b tup dub_proj`
+      Then it should fail with:
+        """
+        dub integration not supported with the tup backend
+        """

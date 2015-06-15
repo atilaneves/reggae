@@ -23,6 +23,9 @@ struct Tup {
         string[] lines;
         foreach(topTarget; build.targets) {
             foreach(target; DepthFirst(topTarget)) {
+                if(target.command.getType == CommandType.code)
+                    throw new Exception("Command type 'code' not supported for tup backend");
+
                 //tup does its own dependency detection, trying to output
                 //dependency files actually causes an error, so we request
                 //none to be generated

@@ -27,3 +27,11 @@ Feature: D code as a target command
       """
       Command type 'code' not supported for make backend
       """
+
+  @tup
+  Scenario: Tup
+    When I run `reggae -b tup proj`
+    Then it should fail with:
+      """
+      Command type 'code' not supported for tup backend
+      """

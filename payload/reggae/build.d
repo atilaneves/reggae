@@ -16,6 +16,7 @@ import std.traits: Unqual, isSomeFunction, ReturnType, arity;
 import std.array: array, join;
 import std.conv;
 import std.exception;
+import std.typecons;
 
 Target createTopLevelTarget(in Target target) {
     return Target(target.outputs,
@@ -360,7 +361,9 @@ struct Command {
         return params.get(key, ifNotFound).map!(a => a.replace("$project", projectPath)).array;
     }
 
-    static string builtinTemplate(CommandType type, Language language) @safe pure {
+    static string builtinTemplate(CommandType type,
+                                  Language language,
+                                  Flag!"dependencies" = Yes.dependencies) @safe pure {
         import reggae.config: dCompiler, cppCompiler, cCompiler;
 
         immutable ccParams = " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in";

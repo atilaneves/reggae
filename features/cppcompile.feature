@@ -97,3 +97,13 @@ Feature: C++ compilation rule
       """
       The result of calc(3) is 30
       """
+
+  @tup
+  Scenario: Mixing C++ and D files with tup
+    When I successfully run `reggae -b tup mixproj`
+    And I successfully run `tup`
+    And I successfully run `./calc 5`
+    Then the output should contain:
+      """
+      The result of calc(5) is 15
+      """

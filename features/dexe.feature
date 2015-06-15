@@ -163,7 +163,7 @@ Feature: Linking a D executable
   @tup
   Scenario: Tup backend
     When I successfully run `reggae -b tup linkproj`
-    And I successfully run `tup upd`
+    And I successfully run `tup`
     Then the output should contain:
       """
       -debug -O
@@ -177,16 +177,4 @@ Feature: Linking a D executable
       """
       Bannerarama!
       Logger says... woohoo The result of feeding 2 and 3 to C++ is 7
-      """
-
-    Given I successfully run `sleep 1` for up to 2 seconds
-    And I overwrite "linkproj/d/constants.d" with:
-      """
-      immutable myconst = `ohnoes`;
-      """
-    When I successfully run `tup upd`
-    And I successfully run `./calc 7 10`
-    Then the output should contain:
-      """
-      Logger says... ohnoes The result of feeding 7 and 10 to C++ is 24
       """

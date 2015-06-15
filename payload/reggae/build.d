@@ -220,8 +220,9 @@ struct Target {
     }
 
     ///returns a command string to be run by the shell
-    string shellCommand(in string projectPath = "") @safe pure const {
-        return _command.shellCommand(projectPath, outputs, inputs(projectPath));
+    string shellCommand(in string projectPath = "",
+                        Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
+        return _command.shellCommand(projectPath, outputs, inputs(projectPath), deps);
     }
 
     string[] outputsInProjectPath(in string projectPath) @safe pure nothrow const {
@@ -397,10 +398,13 @@ struct Command {
         }
     }
 
-    string defaultCommand(in string projectPath, in string[] outputs, in string[] inputs) @safe pure const {
+    string defaultCommand(in string projectPath,
+                          in string[] outputs,
+                          in string[] inputs,
+                          Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
         assert(isDefaultCommand, text("This command is not a default command: ", this));
         immutable language = getLanguage(inputs[0]);
-        auto cmd = builtinTemplate(type, language);
+        auto cmd = builtinTemplate(type, language, deps);
         foreach(key; params.keys) {
             immutable var = "$" ~ key;
             immutable value = getParams(projectPath, key, []).join(" ");
@@ -410,9 +414,12 @@ struct Command {
     }
 
     ///returns a command string to be run by the shell
-    string shellCommand(in string projectPath, in string[] outputs, in string[] inputs) @safe pure const {
+    string shellCommand(in string projectPath,
+                        in string[] outputs,
+                        in string[] inputs,
+                        Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
         return isDefaultCommand
-            ? defaultCommand(projectPath, outputs, inputs)
+            ? defaultCommand(projectPath, outputs, inputs, deps)
             : expand(projectPath, outputs, inputs);
     }
 

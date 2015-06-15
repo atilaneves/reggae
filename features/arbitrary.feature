@@ -129,7 +129,7 @@ Feature: Arbritrary rules
   @tup
   Scenario: Tup backend for 1st example
     When I successfully run `reggae -b tup path/to`
-    When I successfully run `tup upd`
+    When I successfully run `tup`
     And the following files should exist:
       |objs/myapp.objs/main.o|
       |objs/myapp.objs/maths.o|
@@ -213,7 +213,7 @@ Feature: Arbritrary rules
   @tup
   Scenario: Tup backend for 2nd example
     When I successfully run `reggae -b tup different/path`
-    When I successfully run `tup upd`
+    When I successfully run `tup`
     And the following files should exist:
       |objs/appp.objs/main.o|
       |objs/appp.objs/foo.o|

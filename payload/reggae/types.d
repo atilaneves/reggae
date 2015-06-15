@@ -59,6 +59,7 @@ enum Backend {
     none,
     make,
     ninja,
+    tup,
     binary,
 }
 

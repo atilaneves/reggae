@@ -187,3 +187,13 @@ Feature: D compilation rule
       """
       output: The result of 7 is 42
       """
+
+  @tup
+  Scenario: Using dcompile for every object file with Tup
+    When I successfully run `reggae -b tup leproj`
+    And I successfully run `tup`
+    And I run `./calc 5`
+    Then the output should contain:
+      """
+      output: The result of 5 is 120
+      """

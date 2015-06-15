@@ -159,3 +159,22 @@ Feature: Linking a D executable
       """
       Logger says... ohnoes The result of feeding 7 and 10 to C++ is 24
       """
+
+  @tup
+  Scenario: Tup backend
+    When I successfully run `reggae -b tup linkproj`
+    And I successfully run `tup`
+    Then the output should contain:
+      """
+      -debug -O
+      """
+    And the output should contain:
+      """
+      -pg
+      """
+    When I successfully run `./calc 2 3`
+    Then the output should contain:
+      """
+      Bannerarama!
+      Logger says... woohoo The result of feeding 2 and 3 to C++ is 7
+      """

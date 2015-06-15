@@ -24,5 +24,6 @@ int main(string[] args) {
                           "tests.binary",
                           "tests.high_rules",
                           "tests.code_command",
+                          "tests.tup",
         );
 }

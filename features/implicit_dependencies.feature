@@ -105,3 +105,33 @@ Feature: Correct dependencies
       """
       Ninjas are people too
       """
+
+  @tup
+  Scenario: String import with tup
+    Given I successfully run `reggae -b tup proj`
+    When I successfully run `tup`
+    When I run `./leapp`
+    Then the output should contain:
+      """
+      Hello world!
+      """
+    And the output should not contain:
+      """
+      Tups are people too
+      """
+    Given I append to "proj/src/string.txt" with:
+      """
+      Tups are people too
+
+      """
+    When I run `cat proj/src/string.txt`
+    Then the output should contain:
+      """
+      Tups are people too
+      """
+    When I run `tup`
+    And I run `./leapp`
+    Then the output should contain:
+      """
+      Tups are people too
+      """

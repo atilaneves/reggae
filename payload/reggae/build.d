@@ -16,6 +16,7 @@ import std.traits: Unqual, isSomeFunction, ReturnType, arity;
 import std.array: array, join;
 import std.conv;
 import std.exception;
+import std.typecons;
 
 Target createTopLevelTarget(in Target target) {
     return Target(target.outputs,
@@ -219,8 +220,9 @@ struct Target {
     }
 
     ///returns a command string to be run by the shell
-    string shellCommand(in string projectPath = "") @safe pure const {
-        return _command.shellCommand(projectPath, outputs, inputs(projectPath));
+    string shellCommand(in string projectPath = "",
+                        Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
+        return _command.shellCommand(projectPath, outputs, inputs(projectPath), deps);
     }
 
     string[] outputsInProjectPath(in string projectPath) @safe pure nothrow const {
@@ -360,10 +362,10 @@ struct Command {
         return params.get(key, ifNotFound).map!(a => a.replace("$project", projectPath)).array;
     }
 
-    static string builtinTemplate(CommandType type, Language language) @safe pure {
+    static string builtinTemplate(CommandType type,
+                                  Language language,
+                                  Flag!"dependencies" deps = Yes.dependencies) @safe pure {
         import reggae.config: dCompiler, cppCompiler, cCompiler;
-
-        immutable ccParams = " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in";
 
         final switch(type) with(CommandType) {
             case shell:
@@ -376,10 +378,16 @@ struct Command {
                 throw new Exception("Command type 'code' has no built-in template");
 
             case compile:
+                immutable ccParams = deps
+                    ? " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in"
+                    : " $flags $includes -o $out -c $in";
+
                 final switch(language) with(Language) {
                     case D:
-                        return ".reggae/dcompile --objFile=$out --depFile=$DEPFILE " ~
-                            dCompiler ~ " $flags $includes $stringImports $in";
+                        return deps
+                            ? ".reggae/dcompile --objFile=$out --depFile=$DEPFILE " ~
+                            dCompiler ~ " $flags $includes $stringImports $in"
+                            : dCompiler ~ " $flags $includes $stringImports -of$out -c $in";
                     case Cplusplus:
                         return cppCompiler ~ ccParams;
                     case C:
@@ -390,10 +398,13 @@ struct Command {
         }
     }
 
-    string defaultCommand(in string projectPath, in string[] outputs, in string[] inputs) @safe pure const {
+    string defaultCommand(in string projectPath,
+                          in string[] outputs,
+                          in string[] inputs,
+                          Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
         assert(isDefaultCommand, text("This command is not a default command: ", this));
         immutable language = getLanguage(inputs[0]);
-        auto cmd = builtinTemplate(type, language);
+        auto cmd = builtinTemplate(type, language, deps);
         foreach(key; params.keys) {
             immutable var = "$" ~ key;
             immutable value = getParams(projectPath, key, []).join(" ");
@@ -403,9 +414,12 @@ struct Command {
     }
 
     ///returns a command string to be run by the shell
-    string shellCommand(in string projectPath, in string[] outputs, in string[] inputs) @safe pure const {
+    string shellCommand(in string projectPath,
+                        in string[] outputs,
+                        in string[] inputs,
+                        Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
         return isDefaultCommand
-            ? defaultCommand(projectPath, outputs, inputs)
+            ? defaultCommand(projectPath, outputs, inputs, deps)
             : expand(projectPath, outputs, inputs);
     }
 

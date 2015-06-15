@@ -152,3 +152,11 @@ Feature: Augmenting dub projects with reggae builds
         Prod: 12
         [7]
         """
+
+    @tup
+    Scenario: Dub/Reggae build with Tup
+      When I run `reggae -b tup dub_reggae_proj`
+      Then it should fail with:
+        """
+        dub integration not supported with the tup backend
+        """

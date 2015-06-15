@@ -55,7 +55,7 @@ void testBuiltinTemplateDeps() {
 
 void testBuiltinTemplateNoDeps() {
     Command.builtinTemplate(CommandType.compile, Language.C, No.dependencies).shouldEqual(
-        "gcc $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in");
+        "gcc $flags $includes -o $out -c $in");
 
     Command.builtinTemplate(CommandType.compile, Language.D, No.dependencies).shouldEqual(
         "dmd $flags $includes $stringImports -of$out -c $in");

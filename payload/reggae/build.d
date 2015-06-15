@@ -363,10 +363,8 @@ struct Command {
 
     static string builtinTemplate(CommandType type,
                                   Language language,
-                                  Flag!"dependencies" = Yes.dependencies) @safe pure {
+                                  Flag!"dependencies" deps = Yes.dependencies) @safe pure {
         import reggae.config: dCompiler, cppCompiler, cCompiler;
-
-        immutable ccParams = " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in";
 
         final switch(type) with(CommandType) {
             case shell:
@@ -379,10 +377,16 @@ struct Command {
                 throw new Exception("Command type 'code' has no built-in template");
 
             case compile:
+                immutable ccParams = deps
+                    ? " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in"
+                    : " $flags $includes -o $out -c $in";
+
                 final switch(language) with(Language) {
                     case D:
-                        return ".reggae/dcompile --objFile=$out --depFile=$DEPFILE " ~
-                            dCompiler ~ " $flags $includes $stringImports $in";
+                        return deps
+                            ? ".reggae/dcompile --objFile=$out --depFile=$DEPFILE " ~
+                            dCompiler ~ " $flags $includes $stringImports $in"
+                            : dCompiler ~ " $flags $includes $stringImports -of$out -c $in";
                     case Cplusplus:
                         return cppCompiler ~ ccParams;
                     case C:

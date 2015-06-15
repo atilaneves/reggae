@@ -26,10 +26,11 @@ configuration files in their own proprietary languages. The
 configuration files for Reggae are written in [D](http://dlang.org).
 
 From a build directory (usually not the same as the source one), type
-`reggae -b <ninja|make|binary> </path/to/project>`. This will create
+`reggae -b <ninja|make|tup|binary> </path/to/project>`. This will create
 the actual build system depending on the backend chosen, for
 [Ninja](http://martine.github.io/ninja/),
-[GNU Make](https://www.gnu.org/software/make/), or a runnable
+[GNU Make](https://www.gnu.org/software/make/),
+[tup](http://gittup.org/tup/), or a runnable
 executable, respectively.  The project path passed must either:
 
 1. Contain a a file named `reggaefile.d` with the build configuration

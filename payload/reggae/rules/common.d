@@ -17,7 +17,7 @@ version(Windows) {
     immutable exeExt = "";
 }
 
-package string objFileName(in string srcFileName) @safe pure nothrow {
+package string objFileName(in string srcFileName) @safe pure {
     import std.path: stripExtension, defaultExtension, isRooted, stripDrive;
     immutable localFileName = srcFileName.isRooted
         ? srcFileName.stripDrive[1..$]
@@ -84,7 +84,8 @@ Target[] targetsFromSources(alias sourcesFunc = Sources!(),
 
 string removeProjectPath(in string path) pure {
     import std.path: relativePath, absolutePath;
-    return path.absolutePath.relativePath(projectPath.absolutePath);
+    //relativePath is @system
+    return () @trusted { return path.absolutePath.relativePath(projectPath.absolutePath); }();
 }
 
 /**

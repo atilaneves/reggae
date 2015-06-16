@@ -42,20 +42,20 @@ void testDLinkNinja() {
 void testDCompileWithMultipleFilesMake() {
     const build = Build(objectFilesPerPackage(["path/to/src/foo.d", "path/to/src/bar.d", "other/weird.d"],
                                               "-O", ["path/to/src", "other/path"]));
-    const make = Makefile(build, "/tmp/myproject");
-
-    build.targets[0].shellCommand("/tmp/myproject").shouldEqual(".reggae/dcompile --objFile=other.o --depFile=other.o.dep dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path  /tmp/myproject/other/weird.d");
-
-    build.targets[1].shellCommand("/tmp/myproject").shouldEqual(".reggae/dcompile --objFile=path/to/src.o --depFile=path/to/src.o.dep dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path  /tmp/myproject/path/to/src/foo.d /tmp/myproject/path/to/src/bar.d");
-
+    build.targets.map!(a => a.shellCommand("/tmp/myproject")).array.sort.shouldEqual(
+        [".reggae/dcompile --objFile=other.o --depFile=other.o.dep dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path  /tmp/myproject/other/weird.d",
+         ".reggae/dcompile --objFile=path/to/src.o --depFile=path/to/src.o.dep dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path  /tmp/myproject/path/to/src/foo.d /tmp/myproject/path/to/src/bar.d"
+            ]
+        );
 }
 
 void testDCompileWithMultipleFilesNinja() {
     const build = Build(objectFilesPerPackage(["path/to/src/foo.d", "path/to/src/bar.d", "other/weird.d"],
                                               "-O", ["path/to/src", "other/path"]));
-    const ninja = Ninja(build, "/tmp/myproject");
+    auto ninja = Ninja(build, "/tmp/myproject"); //can't be const because of `sort` below
+    NinjaEntry[] entries;
 
-    ninja.buildEntries.shouldEqual(
+    ninja.buildEntries.sort.shouldEqual(
         [
 
             NinjaEntry("build other.o: _dcompile /tmp/myproject/other/weird.d",

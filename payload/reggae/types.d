@@ -9,7 +9,7 @@ struct App {
     string srcFileName;
     string exeFileName;
 
-    this(string srcFileName) @safe pure nothrow {
+    this(string srcFileName) @safe pure {
         immutable stripped = srcFileName.baseName.stripExtension;
         immutable exeFileName =  exeExt == "" ? stripped : stripped.defaultExtension(exeExt);
 

@@ -67,10 +67,10 @@ Target[] objectFilesPerModule(in string[] srcFiles, in string flags = "",
  )
  */
 Target executable(App app,
-            Flags flags = Flags(),
-            ImportPaths importPaths = ImportPaths(),
-            StringImportPaths stringImportPaths = StringImportPaths(),
-            alias linkWithFunction = () { return cast(Target[])[];})
+                  Flags flags = Flags(),
+                  ImportPaths importPaths = ImportPaths(),
+                  StringImportPaths stringImportPaths = StringImportPaths(),
+                  alias linkWithFunction = () { return cast(Target[])[];})
     () {
     auto linkWith = linkWithFunction();
     return executable(app, flags, importPaths, stringImportPaths, linkWith);

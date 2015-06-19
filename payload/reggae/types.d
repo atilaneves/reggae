@@ -31,6 +31,8 @@ struct ImportPaths {
     string[] value;
 }
 
+alias IncludePaths = ImportPaths;
+
 struct StringImportPaths {
     string[] value;
 }

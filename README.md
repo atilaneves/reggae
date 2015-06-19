@@ -9,7 +9,7 @@ Features
 --------
 * Write readable build descriptions in D
 * Out-of-tree builds
-* Backends for GNU make, ninja and a binary executable backend.
+* Backends for GNU make, ninja, tup and a binary executable backend.
 * User-defined variables like CMake in order to choose features before compile-time
 * Low-level DAG build descriptions + high-level convenience rules to build C, C++ and D
 * Automatic header dependency detection for C, C++ and D

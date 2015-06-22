@@ -40,11 +40,8 @@ Feature: Using executable for a C++ project
 
     @ninja
     Scenario: Ninja
-      Given I successfully run `reggae -b ninja proj`
-      And I successfully run `ninja`
-      When I successfully run `./app`
-      Then the output should contain:
+      Given I run `reggae -b ninja proj`
+      Then it should fail with:
         """
-        3 times two is 6
-        42
+        'executable' rule only works with D files
         """

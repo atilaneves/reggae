@@ -26,6 +26,6 @@ void testSimpleCommand() {
 void testRemoveBuildDir() {
     gCounter = 0;
     const cmd = Command(&incr).expandBuildDir;
-    cmd.execute("", [], []);
+    cmd.execute("", Language.unknown, [], []);
     gCounter.shouldEqual(1);
 }

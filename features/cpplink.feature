@@ -33,12 +33,8 @@ Feature: Using executable for a C++ project
       """
       import reggae;
       alias objs = targetsFromSources!(Sources!(), Flags(`-g -O0`));
-      //enum app = link(`app`, objs);
-      //mixin build!app;
-      Build b() {
-          //return Build(link(`app`, objs));
-          return Build(Target(`app`, `g++ -o$out $in`, objs()));
-      }
+      alias app = link!(ExeName(`app`), objs);
+      mixin build!app;
       """
 
     @ninja

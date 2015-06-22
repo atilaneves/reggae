@@ -45,6 +45,6 @@ static if(isDubProject) {
         )() if(isCallable!objsFunction) {
 
         const dubObjs = configToDubInfo[config.value].toTargets(includeMain, compilerFlags.value);
-        return link(exeName.value, objsFunction() ~ dubObjs);
+        return link(exeName, objsFunction() ~ dubObjs);
     }
 }

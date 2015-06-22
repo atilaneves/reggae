@@ -23,7 +23,7 @@ struct DepthFirst {
             target;
     }
 
-    auto front() pure nothrow {
+    Target front() pure nothrow {
         return targets.front;
     }
 
@@ -79,6 +79,46 @@ struct ByDepthLevel {
     }
 
     static assert(isInputRange!ByDepthLevel);
+}
+
+struct Leaves {
+    this(in Target target) pure nothrow {
+        recurse(target);
+    }
+
+    Target front() pure nothrow {
+        return targets.front;
+    }
+
+    void popFront() pure nothrow {
+        targets.popFront;
+    }
+
+    bool empty() pure nothrow {
+        return targets.empty;
+    }
+
+
+private:
+
+    const(Target)[] targets;
+
+    void recurse(in Target target) pure nothrow {
+        if(target.isLeaf) {
+            targets ~= target;
+            return;
+        }
+
+        foreach(dep; target.dependencies ~ target.implicits) {
+            if(dep.isLeaf) {
+                targets ~= dep;
+            } else {
+                recurse(dep);
+            }
+        }
+    }
+
+    static assert(isInputRange!Leaves);
 }
 
 

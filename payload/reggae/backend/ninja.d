@@ -17,7 +17,13 @@ string cmdTypeToNinjaString(CommandType commandType, Language language) @safe pu
     final switch(commandType) with(CommandType) {
         case shell: assert(0, "cmdTypeToNinjaString doesn't work for shell");
         case code: throw new Exception("Command type 'code' not supported for ninja backend");
-        case link: return "_link";
+        case link:
+            final switch(language) with(Language) {
+                case D: return "_dlink";
+                case Cplusplus: return "_cpplink";
+                case C: return "_clink";
+                case unknown: return "_ulink";
+            }
         case compile:
             final switch(language) with(Language) {
                 case D: return "_dcompile";
@@ -55,13 +61,9 @@ NinjaEntry[] defaultRules() @safe pure {
     NinjaEntry[] entries;
     for(CommandType type = CommandType.min; type <= CommandType.max; ++type) {
         if(type == CommandType.shell || type == CommandType.code) continue;
-        if(type == CommandType.compile) {
-            for(Language language = Language.min; language <= Language.max; ++language) {
-                if(language == Language.unknown) continue;
-                entries ~= createNinjaEntry(type, language);
-            }
-        } else {
-            entries ~= createNinjaEntry(type, Language.unknown);
+        for(Language language = Language.min; language <= Language.max; ++language) {
+            if(type == CommandType.compile && language == Language.unknown) continue;
+            entries ~= createNinjaEntry(type, language);
         }
     }
     return entries;

@@ -45,7 +45,7 @@ Target[] targetsFromSources(alias sourcesFunc = Sources!(),
                             Flags flags = Flags(),
                             ImportPaths includes = ImportPaths(),
                             StringImportPaths stringImports = StringImportPaths(),
-    )() {
+    )() @trusted {
 
     import std.exception: enforce;
     import std.file;
@@ -77,7 +77,7 @@ Target[] targetsFromSources(alias sourcesFunc = Sources!(),
     auto otherSrcs = srcFiles.filter!(a => a.getLanguage != Language.D && a.getLanguage != Language.unknown);
     import reggae.rules.d: objectFiles;
     return objectFiles(dSrcs, flags.value, ["."] ~ includes.value, stringImports.value) ~
-        otherSrcs.map!(a => objectFile(a, flags.value, includes.value)).array;
+        otherSrcs.map!(a => objectFile(SourceFile(a), flags, includes)).array;
 }
 
 @safe:
@@ -91,16 +91,19 @@ string removeProjectPath(in string path) pure {
 /**
  An object file, typically from one source file in a certain language
  (although for D the default is a whole package. The language is determined
- by the file extension of the file(s) passed in.
+ by the file extension of the file passed in.
+ The $(D projDir) variable is best left alone; right now only the dub targets
+ make use of it (since dub packages are by definition outside of the project
+ source tree).
 */
-Target objectFile(in string srcFileName,
-                  in string flags = "",
-                  in string[] includePaths = [],
-                  in string[] stringImportPaths = [],
+Target objectFile(in SourceFile srcFile,
+                  in Flags flags = Flags(),
+                  in ImportPaths includePaths = ImportPaths(),
+                  in StringImportPaths stringImportPaths = StringImportPaths(),
                   in string projDir = "$project") pure {
 
-    const cmd = compileCommand(srcFileName, flags, includePaths, stringImportPaths, projDir);
-    return Target(srcFileName.objFileName, cmd, [Target(srcFileName)]);
+    const cmd = compileCommand(srcFile.value, flags.value, includePaths.value, stringImportPaths.value, projDir);
+    return Target(srcFile.value.objFileName, cmd, [Target(srcFile.value)]);
 }
 
 
@@ -150,11 +153,27 @@ Language getLanguage(in string srcFileName) pure nothrow {
 }
 
 /**
- Should pull its weight more in the future by automatically figuring out what
- to do. Right now only works for linking D applications using the configured
- D compiler
+ "Compile-time" link function.
+ Its parameters are compile-time so that it can be aliased and used
+ at global scope in a reggafile.
+ Links an executable from the given dependency targets. The linker used
+ depends on the file extension of the leaf nodes of the passed-in targets.
+ If any D files are found, the linker is the D compiler, and so on with
+ C++ and C. If none of those apply, the D compiler is used.
  */
-Target link(in string exeName, in Target[] dependencies, in string flags = "") @safe pure {
-    const command = Command(CommandType.link, assocList([assocEntry("flags", flags.splitter.array)]));
-    return Target(exeName, command, dependencies);
+Target link(ExeName exeName, alias dependenciesFunc, Flags flags = Flags())() @safe {
+    auto dependencies = dependenciesFunc();
+    return link(exeName, dependencies, flags);
+}
+
+/**
+ Regular run-time link function.
+ Links an executable from the given dependency targets. The linker used
+ depends on the file extension of the leaf nodes of the passed-in targets.
+ If any D files are found, the linker is the D compiler, and so on with
+ C++ and C. If none of those apply, the D compiler is used.
+ */
+Target link(in ExeName exeName, in Target[] dependencies, in Flags flags = Flags()) @safe pure {
+    const command = Command(CommandType.link, assocList([assocEntry("flags", flags.value.splitter.array)]));
+    return Target(exeName.value, command, dependencies);
 }

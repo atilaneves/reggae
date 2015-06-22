@@ -222,7 +222,7 @@ struct Target {
     ///returns a command string to be run by the shell
     string shellCommand(in string projectPath = "",
                         Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
-        return _command.shellCommand(projectPath, outputs, inputs(projectPath), deps);
+        return _command.shellCommand(projectPath, getLanguage(), outputs, inputs(projectPath), deps);
     }
 
     string[] outputsInProjectPath(in string projectPath) @safe pure nothrow const {
@@ -232,11 +232,17 @@ struct Target {
     @property const(Command) command() @safe const pure nothrow { return _command; }
 
     Language getLanguage() @safe pure nothrow const {
-        return reggae.rules.common.getLanguage(inputs("")[0]);
+        import reggae.range: Leaves;
+        const leaves = () @trusted { return Leaves(this).array; }();
+        foreach(language; [Language.D, Language.Cplusplus, Language.C]) {
+            if(leaves.any!(a => reggae.rules.common.getLanguage(a.outputs[0]) == language)) return language;
+        }
+
+        return Language.unknown;
     }
 
     void execute(in string projectPath = "") @safe const {
-        _command.execute(projectPath, outputs, inputs(projectPath));
+        _command.execute(projectPath, getLanguage(), outputs, inputs(projectPath));
     }
 
 
@@ -372,7 +378,17 @@ struct Command {
                 assert(0, "builtinTemplate cannot be shell");
 
             case link:
-                return dCompiler ~ " -of$out $flags $in";
+                final switch(language) with(Language) {
+                        import std.stdio;
+                        debug writeln("builtinTemplate called with language ", language);
+                    case D:
+                    case unknown:
+                        return dCompiler ~ " -of$out $flags $in";
+                    case Cplusplus:
+                        return cppCompiler ~ " -o $out $flags $in";
+                    case C:
+                        return cCompiler ~ " -o $out $flags $in";
+                }
 
             case code:
                 throw new Exception("Command type 'code' has no built-in template");
@@ -393,17 +409,17 @@ struct Command {
                     case C:
                         return cCompiler ~ ccParams;
                     case unknown:
-                        throw new Exception("Unsupported language");
+                        throw new Exception("Unsupported language for compiling");
                 }
         }
     }
 
     string defaultCommand(in string projectPath,
+                          in Language language,
                           in string[] outputs,
                           in string[] inputs,
                           Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
         assert(isDefaultCommand, text("This command is not a default command: ", this));
-        immutable language = getLanguage(inputs[0]);
         auto cmd = builtinTemplate(type, language, deps);
         foreach(key; params.keys) {
             immutable var = "$" ~ key;
@@ -415,16 +431,18 @@ struct Command {
 
     ///returns a command string to be run by the shell
     string shellCommand(in string projectPath,
+                        in Language language,
                         in string[] outputs,
                         in string[] inputs,
                         Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
         return isDefaultCommand
-            ? defaultCommand(projectPath, outputs, inputs, deps)
+            ? defaultCommand(projectPath, language, outputs, inputs, deps)
             : expand(projectPath, outputs, inputs);
     }
 
 
-    void execute(in string projectPath, in string[] outputs, in string[] inputs) const @trusted {
+    void execute(in string projectPath, in Language language,
+                 in string[] outputs, in string[] inputs) const @trusted {
         import std.process;
         import std.stdio;
 
@@ -432,7 +450,7 @@ struct Command {
             case shell:
             case compile:
             case link:
-                immutable cmd = shellCommand(projectPath, outputs, inputs);
+                immutable cmd = shellCommand(projectPath, language, outputs, inputs);
                 writeln("[build] " ~ cmd);
                 immutable res = executeShell(cmd);
                 enforce(res.status == 0, "Could not execute" ~ cmd ~ ":\n" ~ res.output);

@@ -81,9 +81,12 @@ Target executable(App app,
 //all paths relative to projectPath
 //@trusted because of .array
 Target executable(in App app, in Flags flags,
-            in ImportPaths importPaths,
-            in StringImportPaths stringImportPaths,
-            in Target[] linkWith) @trusted {
+                  in ImportPaths importPaths,
+                  in StringImportPaths stringImportPaths,
+                  in Target[] linkWith) @trusted {
+
+    if(getLanguage(app.srcFileName) != Language.D)
+        throw new Exception("'executable' rule only works with D files");
 
     auto mainObj = objectFile(app.srcFileName, flags.value, importPaths.value, stringImportPaths.value);
     const output = runDCompiler(buildPath(projectPath, app.srcFileName), flags.value,

@@ -149,13 +149,15 @@ Language getLanguage(in string srcFileName) pure nothrow {
     }
 }
 
+
 /**
+ Regular run-time link function.
  Links an executable from the given dependency targets. The linker used
  depends on the file extension of the leaf nodes of the passed-in targets.
  If any D files are found, the linker is the D compiler, and so on with
  C++ and C. If none of those apply, the D compiler is used.
  */
-Target link(in string exeName, in Target[] dependencies, in string flags = "") @safe pure {
-    const command = Command(CommandType.link, assocList([assocEntry("flags", flags.splitter.array)]));
-    return Target(exeName, command, dependencies);
+Target link(in ExeName exeName, in Target[] dependencies, in Flags flags = Flags()) @safe pure {
+    const command = Command(CommandType.link, assocList([assocEntry("flags", flags.value.splitter.array)]));
+    return Target(exeName.value, command, dependencies);
 }

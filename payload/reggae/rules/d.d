@@ -96,7 +96,7 @@ Target executable(in App app, in Flags flags,
     const dependencies = [mainObj] ~ objectFiles(files, flags.value,
                                                  importPaths.value, stringImportPaths.value);
 
-    return link(app.exeFileName, dependencies ~ linkWith);
+    return link(ExeName(app.exeFileName), dependencies ~ linkWith);
 }
 
 

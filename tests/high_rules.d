@@ -7,7 +7,9 @@ import unit_threaded;
 
 void testCObjectFile() {
     immutable fileName = "foo.c";
-    const obj = objectFile(fileName, "-g -O0", ["myhdrs", "otherhdrs"]);
+    const obj = objectFile(SourceFile(fileName),
+                           Flags("-g -O0"),
+                           IncludePaths(["myhdrs", "otherhdrs"]));
     const cmd = Command(CommandType.compile,
                         assocListT("includes", ["-I$project/myhdrs", "-I$project/otherhdrs"],
                                    "flags", ["-g", "-O0"],
@@ -20,7 +22,9 @@ void testCObjectFile() {
 void testCppObjectFile() {
     foreach(ext; ["cpp", "CPP", "cc", "cxx", "C", "c++"]) {
         immutable fileName = "foo." ~ ext;
-        const obj = objectFile(fileName, "-g -O0", ["myhdrs", "otherhdrs"]);
+        const obj = objectFile(SourceFile(fileName),
+                               Flags("-g -O0"),
+                               IncludePaths(["myhdrs", "otherhdrs"]));
         const cmd = Command(CommandType.compile,
                             assocListT("includes", ["-I$project/myhdrs", "-I$project/otherhdrs"],
                                        "flags", ["-g", "-O0"],
@@ -32,7 +36,10 @@ void testCppObjectFile() {
 
 
 void testDObjectFile() {
-    const obj = objectFile("foo.d", "-g -debug", ["myhdrs", "otherhdrs"], ["strings", "otherstrings"]);
+    const obj = objectFile(SourceFile("foo.d"),
+                           Flags("-g -debug"),
+                           ImportPaths(["myhdrs", "otherhdrs"]),
+                           StringImportPaths(["strings", "otherstrings"]));
     const cmd = Command(CommandType.compile,
                         assocListT("includes", ["-I$project/myhdrs", "-I$project/otherhdrs"],
                                    "flags", ["-g", "-debug"],
@@ -64,11 +71,11 @@ void testBuiltinTemplateNoDeps() {
 
 
 void testLinkC() {
-    const tgt = link(ExeName("app"), [objectFile("foo.c")]);
+    const tgt = link(ExeName("app"), [objectFile(SourceFile("foo.c"))]);
     tgt.shellCommand.shouldEqual("gcc -o app  foo.o");
 }
 
 void testLinkCpp() {
-    const tgt = link(ExeName("app"), [objectFile("foo.cpp")]);
+    const tgt = link(ExeName("app"), [objectFile(SourceFile("foo.cpp"))]);
     tgt.shellCommand.shouldEqual("g++ -o app  foo.o");
 }

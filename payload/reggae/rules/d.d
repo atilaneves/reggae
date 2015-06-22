@@ -45,7 +45,11 @@ Target[] objectFilesPerModule(in string[] srcFiles, in string flags = "",
                               in string[] importPaths = [], in string[] stringImportPaths = [],
                               in string projDir = "$project") @trusted pure {
 
-    return srcFiles.map!(a => objectFile(a, flags, importPaths, stringImportPaths, projDir)).array;
+    return srcFiles.map!(a => objectFile(const SourceFile(a),
+                                         const Flags(flags),
+                                         const ImportPaths(importPaths),
+                                         const StringImportPaths(stringImportPaths),
+                                         projDir)).array;
 }
 
 
@@ -88,7 +92,7 @@ Target executable(in App app, in Flags flags,
     if(getLanguage(app.srcFileName) != Language.D)
         throw new Exception("'executable' rule only works with D files");
 
-    auto mainObj = objectFile(app.srcFileName, flags.value, importPaths.value, stringImportPaths.value);
+    auto mainObj = objectFile(SourceFile(app.srcFileName), flags, importPaths, stringImportPaths);
     const output = runDCompiler(buildPath(projectPath, app.srcFileName), flags.value,
                                 importPaths.value, stringImportPaths.value);
 

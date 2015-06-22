@@ -93,3 +93,7 @@ auto Sources(Dirs dirs = Dirs(), Files files = Files(), F = Filter!(a => true))(
 auto Sources(string[] dirs, Files files = Files(), F = Filter!(a => true))() {
     return Sources!(Dirs(dirs), files, F)();
 }
+
+struct SourceFile {
+    string value;
+}

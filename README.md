@@ -3,7 +3,9 @@ Reggae
 [![Build Status](https://travis-ci.org/atilaneves/reggae.png?branch=master)](https://travis-ci.org/atilaneves/reggae)
 
 
-A build system in D. This is alpha software, only tested on Linux and likely to have breaking changes made.
+A build system in [the D programming language](http://dlang.org). This
+is alpha software, only tested on Linux and likely to have breaking
+changes made.
 
 Features
 --------
@@ -12,7 +14,7 @@ Features
 * Backends for GNU make, ninja, tup and a binary executable backend.
 * User-defined variables like CMake in order to choose features before compile-time
 * Low-level DAG build descriptions + high-level convenience rules to build C, C++ and D
-* Automatic header dependency detection for C, C++ and D
+* Automatic header/module dependency detection for C, C++ and D
 * Automatically runs itself if the build description changes
 * Rules for using dub build targets in your own build decription - use dub with ninja, add to it, ...
 
@@ -54,7 +56,8 @@ Arbritrary build rules can be used. Here is an example of a simple D build `regg
     const app = Target("myapp", "dmd -of$out $in", [mainObj, mathsObj]);
     mixin build!(app);
 
-That was just an example. To build D apps with no external dependencies, this will suffice:
+That was just an example to illustrate the low-level primitives. To
+build D apps with no external dependencies, this will suffice and is similar to using rdmd:
 
     import reggae;
     alias app = executable!(App("src/main.d", "myapp"),
@@ -66,6 +69,26 @@ That was just an example. To build D apps with no external dependencies, this wi
 There are also other functions and pre-built rules for C and C++ objects. There is no
 HTML documentation yet but the [package file](payload/reggae/package.d) contains the
 relevant DDoc with details. Other subpackages might contain DDoc of their own.
+
+For C and C++, the main high-level rules to use are `targetsFromSourceFiles` and
+`link`, but of course they can also be hand-assembled from `Target` structs. Here is an
+example C++ build:
+
+    import reggae;
+    alias objs = targetsFromSources!(Sources!(["."]), // a list of directories
+                                     Flags("-g -O0"),
+                                     IncludePaths(["inc1", "inc2"]));
+    alias app = link!(ExeName("app"), objs);
+
+`Sources` can also be used like so:
+
+    Sources!(Dirs([/*directories to look for sources*/],
+             Files([/*list of extra files to add*/]),
+             Filter!(a => a != "foo.d"))); //get rid of unwanted files
+
+`targetsFromSources` isn't specific to C++, it'll create object file targets
+for all supported languages (currently C, C++ and D).
+
 
 Dub integration
 ---------------

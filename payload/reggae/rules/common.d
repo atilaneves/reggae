@@ -77,7 +77,7 @@ Target[] targetsFromSources(alias sourcesFunc = Sources!(),
     auto otherSrcs = srcFiles.filter!(a => a.getLanguage != Language.D && a.getLanguage != Language.unknown);
     import reggae.rules.d: objectFiles;
     return objectFiles(dSrcs, flags.value, ["."] ~ includes.value, stringImports.value) ~
-        otherSrcs.map!(a => objectFile(a, flags.value, includes.value)).array;
+        otherSrcs.map!(a => objectFile(SourceFile(a), flags, includes)).array;
 }
 
 @safe:
@@ -92,15 +92,18 @@ string removeProjectPath(in string path) pure {
  An object file, typically from one source file in a certain language
  (although for D the default is a whole package. The language is determined
  by the file extension of the file passed in.
+ The $(D projDir) variable is best left alone; right now only the dub targets
+ make use of it (since dub packages are by definition outside of the project
+ source tree).
 */
-Target objectFile(in string srcFileName,
-                  in string flags = "",
-                  in string[] includePaths = [],
-                  in string[] stringImportPaths = [],
+Target objectFile(in SourceFile srcFile,
+                  in Flags flags = Flags(),
+                  in ImportPaths includePaths = ImportPaths(),
+                  in StringImportPaths stringImportPaths = StringImportPaths(),
                   in string projDir = "$project") pure {
 
-    const cmd = compileCommand(srcFileName, flags, includePaths, stringImportPaths, projDir);
-    return Target(srcFileName.objFileName, cmd, [Target(srcFileName)]);
+    const cmd = compileCommand(srcFile.value, flags.value, includePaths.value, stringImportPaths.value, projDir);
+    return Target(srcFile.value.objFileName, cmd, [Target(srcFile.value)]);
 }
 
 

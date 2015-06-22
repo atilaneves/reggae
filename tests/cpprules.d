@@ -6,7 +6,7 @@ import unit_threaded;
 
 
 void testNoIncludePaths() {
-    const build = Build(objectFile("path/to/src/foo.cpp"));
+    const build = Build(objectFile(SourceFile("path/to/src/foo.cpp")));
     const ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build path/to/src/foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",
@@ -16,7 +16,8 @@ void testNoIncludePaths() {
 
 
 void testIncludePaths() {
-    const build = Build(objectFile("path/to/src/foo.cpp", "", ["path/to/src", "other/path"]));
+    const build = Build(objectFile(SourceFile("path/to/src/foo.cpp"), Flags(""),
+                                   IncludePaths(["path/to/src", "other/path"])));
     const ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build path/to/src/foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",
@@ -27,7 +28,7 @@ void testIncludePaths() {
 
 
 void testFlagsCompileC() {
-    const build = Build(objectFile("path/to/src/foo.c", "-m64 -fPIC -O3"));
+    const build = Build(objectFile(SourceFile("path/to/src/foo.c"), Flags("-m64 -fPIC -O3")));
     const ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build path/to/src/foo.o: _ccompile /tmp/myproject/path/to/src/foo.c",
@@ -37,7 +38,7 @@ void testFlagsCompileC() {
 }
 
 void testFlagsCompileCpp() {
-    const build = Build(objectFile("path/to/src/foo.cpp", "-m64 -fPIC -O3"));
+    const build = Build(objectFile(SourceFile("path/to/src/foo.cpp"), Flags("-m64 -fPIC -O3")));
     const ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build path/to/src/foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",
@@ -47,11 +48,21 @@ void testFlagsCompileCpp() {
 }
 
 void testCppCompile() {
-    const mathsObj = objectFile(`src/cpp/maths.cpp`, `-m64 -fPIC -O3`, [`headers`]);
-    mathsObj.shellCommand("/path/to").shouldEqual("g++ -m64 -fPIC -O3 -I/path/to/headers -MMD -MT src/cpp/maths.o -MF src/cpp/maths.o.dep -o src/cpp/maths.o -c /path/to/src/cpp/maths.cpp");
+    const mathsObj = objectFile(SourceFile("src/cpp/maths.cpp"),
+                                Flags("-m64 -fPIC -O3"),
+                                IncludePaths(["headers"]));
+
+    mathsObj.shellCommand("/path/to").shouldEqual(
+        "g++ -m64 -fPIC -O3 -I/path/to/headers -MMD -MT src/cpp/maths.o -MF src/cpp/maths.o.dep "
+        "-o src/cpp/maths.o -c /path/to/src/cpp/maths.cpp");
 }
 
 void testCCompile() {
-    const mathsObj = objectFile(`src/c/maths.c`, `-m64 -fPIC -O3`, [`headers`]);
-    mathsObj.shellCommand("/path/to").shouldEqual("gcc -m64 -fPIC -O3 -I/path/to/headers -MMD -MT src/c/maths.o -MF src/c/maths.o.dep -o src/c/maths.o -c /path/to/src/c/maths.c");
+    const mathsObj = objectFile(SourceFile("src/c/maths.c"),
+                                Flags("-m64 -fPIC -O3"),
+                                IncludePaths(["headers"]));
+
+    mathsObj.shellCommand("/path/to").shouldEqual(
+        "gcc -m64 -fPIC -O3 -I/path/to/headers -MMD -MT src/c/maths.o -MF src/c/maths.o.dep "
+        "-o src/c/maths.o -c /path/to/src/c/maths.c");
 }

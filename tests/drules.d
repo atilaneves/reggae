@@ -35,7 +35,7 @@ void testDLinkNinja() {
     const build = Build(link("bin/lefoo", [Target("leobj.o")], "-lib"));
     const ninja = Ninja(build, "/dir/stuff");
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build bin/lefoo: _link /dir/stuff/leobj.o",
+        [NinjaEntry("build bin/lefoo: _ulink /dir/stuff/leobj.o",
                     ["flags = -lib"])]);
 }
 

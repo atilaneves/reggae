@@ -73,8 +73,16 @@ void testDCompileWithMultipleFilesNinja() {
 
 
 void testLink() {
-    const target = link("myapp", [Target("foo.o"), Target("bar.o")], "-L-L");
-    target.shellCommand("/path/to").shouldEqual("dmd -ofmyapp -L-L /path/to/foo.o /path/to/bar.o");
+    const objTarget = link("myapp", [Target("foo.o"), Target("bar.o")], "-L-L");
+    objTarget.shellCommand("/path/to").shouldEqual("dmd -ofmyapp -L-L /path/to/foo.o /path/to/bar.o");
+
+    const cppTarget = link("myapp", [Target("foo.o", "", Target("foo.cpp"))], "--sillyflag");
+    //since foo.o is not a leaf target, the path should not appear (it's created in the build dir)
+    cppTarget.shellCommand("/foo/bar").shouldEqual("g++ -o myapp --sillyflag foo.o");
+
+    const cTarget = link("capp", [Target("bar.o", "", Target("bar.c"))]);
+    //since foo.o is not a leaf target, the path should not appear (it's created in the build dir)
+    cTarget.shellCommand("/foo/bar").shouldEqual("gcc -o capp  bar.o");
 }
 
 

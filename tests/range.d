@@ -82,3 +82,27 @@ void testByDepthLevelTwoDependencyLevels() {
             [target], //level 0
             ]);
 }
+
+void testLeavesEmpty() {
+    Leaves(Target("leaf")).array.shouldEqual([Target("leaf")]);
+}
+
+
+void testLeavesTwoLevels() {
+    auto fooC = Target("foo.c");
+    auto barC = Target("bar.c");
+    auto fooObj = Target("foo.o", "gcc -c -o foo.o foo.c", [fooC]);
+    auto barObj = Target("bar.o", "gcc -c -o bar.o bar.c", [barC]);
+    auto hdrI = Target("hdr.i");
+    auto header = Target("hdr.h", "genhdr $in", [hdrI]);
+    auto impLeaf = Target("leaf");
+
+    //implicit dependencies should show up, but only if they're not leaves
+    auto target = Target("app",
+                         "gcc -o letarget foo.o bar.o",
+                         [fooObj, barObj],
+                         [header, impLeaf]);
+
+    Leaves(target).array.shouldEqual([fooC, barC, hdrI, impLeaf]);
+
+}

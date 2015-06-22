@@ -1,17 +1,6 @@
-Standard rules for compiled languages, automatically recognising extensions
-Target struct that instead of a string command takes any "commandable", allowing D code instead of `execute`
-  - default wraps a string and calls `execute`
-  - Only for binary backend? How would make and ninja deal with it?
-  - No more string serialisation of parameters like `includes=`, `flags=` and `stringImports=`
 Easier way to specify build parameters
   - More typing to catch build description errors at compile-time (LinkFlags vs CompilerFlags?)
   - Allow any order of parameters
-  - Like "commandable", allow "srcable" for things likke
-    * Directories with source files
-    * Files to include
-    * Files to exclude
-    * Directories to exclude
-    * Consider ranges
 
 Crazy idea: build server? In: list of changed files, out: build.
 

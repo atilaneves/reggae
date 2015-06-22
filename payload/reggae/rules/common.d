@@ -91,7 +91,7 @@ string removeProjectPath(in string path) pure {
 /**
  An object file, typically from one source file in a certain language
  (although for D the default is a whole package. The language is determined
- by the file extension of the file(s) passed in.
+ by the file extension of the file passed in.
 */
 Target objectFile(in string srcFileName,
                   in string flags = "",
@@ -150,9 +150,10 @@ Language getLanguage(in string srcFileName) pure nothrow {
 }
 
 /**
- Should pull its weight more in the future by automatically figuring out what
- to do. Right now only works for linking D applications using the configured
- D compiler
+ Links an executable from the given dependency targets. The linker used
+ depends on the file extension of the leaf nodes of the passed-in targets.
+ If any D files are found, the linker is the D compiler, and so on with
+ C++ and C. If none of those apply, the D compiler is used.
  */
 Target link(in string exeName, in Target[] dependencies, in string flags = "") @safe pure {
     const command = Command(CommandType.link, assocList([assocEntry("flags", flags.splitter.array)]));

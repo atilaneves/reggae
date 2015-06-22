@@ -61,3 +61,14 @@ void testBuiltinTemplateNoDeps() {
         "dmd $flags $includes $stringImports -of$out -c $in");
 
 }
+
+
+void testLinkC() {
+    const tgt = link("app", [objectFile("foo.c")]);
+    tgt.shellCommand.shouldEqual("gcc -o app  foo.o");
+}
+
+void testLinkCpp() {
+    const tgt = link("app", [objectFile("foo.cpp")]);
+    tgt.shellCommand.shouldEqual("g++ -o app  foo.o");
+}

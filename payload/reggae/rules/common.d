@@ -45,7 +45,7 @@ Target[] targetsFromSources(alias sourcesFunc = Sources!(),
                             Flags flags = Flags(),
                             ImportPaths includes = ImportPaths(),
                             StringImportPaths stringImports = StringImportPaths(),
-    )() {
+    )() @trusted {
 
     import std.exception: enforce;
     import std.file;
@@ -149,6 +149,19 @@ Language getLanguage(in string srcFileName) pure nothrow {
     }
 }
 
+/**
+ "Compile-time" link function.
+ Its parameters are compile-time so that it can be aliased and used
+ at global scope in a reggafile.
+ Links an executable from the given dependency targets. The linker used
+ depends on the file extension of the leaf nodes of the passed-in targets.
+ If any D files are found, the linker is the D compiler, and so on with
+ C++ and C. If none of those apply, the D compiler is used.
+ */
+Target link(ExeName exeName, alias dependenciesFunc, Flags flags = Flags())() @safe {
+    auto dependencies = dependenciesFunc();
+    return link(exeName, dependencies, flags);
+}
 
 /**
  Regular run-time link function.

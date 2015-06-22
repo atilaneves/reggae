@@ -64,17 +64,17 @@ Target[] targetsFromSources(alias sourcesFunc = Sources!(),
         modules ~= normalised.filter!(a => !a.isDir).array;
     }
 
-    foreach(module_; srcs.files.value)
+    foreach(module_; srcs.files.value) {
         modules ~= DirEntry(buildNormalizedPath(buildPath(projectPath, module_)));
+    }
 
     const srcFiles = modules.
         map!(a => a.name.removeProjectPath).
         filter!(srcs.filterFunc).
         array;
 
-    const dSrcs = srcFiles.filter!(a => a.getLanguage == Language.D).array;
-    auto otherSrcs = srcFiles.filter!(a => a.getLanguage != Language.D);
-
+    const dSrcs = srcFiles.filter!(a => a.getLanguage == Language.D).filter!(a => a!= "reggaefile.d").array;
+    auto otherSrcs = srcFiles.filter!(a => a.getLanguage != Language.D && a.getLanguage != Language.unknown);
     import reggae.rules.d: objectFiles;
     return objectFiles(dSrcs, flags.value, ["."] ~ includes.value, stringImports.value) ~
         otherSrcs.map!(a => objectFile(a, flags.value, includes.value)).array;

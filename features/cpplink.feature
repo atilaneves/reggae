@@ -36,8 +36,7 @@ Feature: Using executable for a C++ project
       //enum app = link(`app`, objs);
       //mixin build!app;
       Build b() {
-          //return Build(link(`app`, objs));
-          return Build(Target(`app`, `g++ -o$out $in`, objs()));
+          return Build(link(`app`, objs));
       }
       """
 

@@ -146,7 +146,7 @@ struct UniqueDepthFirst {
     Build build;
     private const(Target)[] _targets;
 
-    this(in Build build) {
+    this(in Build build) pure nothrow {
         _targets = build.targets.
             map!(a => DepthFirst(a)).
             flatten.

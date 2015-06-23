@@ -281,7 +281,7 @@ struct Target {
         return Language.unknown;
     }
 
-    string execute(in string projectPath = "") @safe const {
+    string[] execute(in string projectPath = "") @safe const {
         return _command.execute(projectPath, getLanguage(), outputs, inputs(projectPath));
     }
 
@@ -496,7 +496,7 @@ struct Command {
     }
 
 
-    string execute(in string projectPath, in Language language,
+    string[] execute(in string projectPath, in Language language,
                  in string[] outputs, in string[] inputs) const @trusted {
         import std.process;
         import std.stdio;
@@ -509,11 +509,11 @@ struct Command {
                 immutable cmd = shellCommand(projectPath, language, outputs, inputs);
                 immutable res = executeShell(cmd);
                 enforce(res.status == 0, "Could not execute" ~ cmd ~ ":\n" ~ res.output);
-                return cmd ~ "\n" ~ res.output;
+                return [cmd, res.output];
             case code:
                 assert(func !is null, "Command of type code with null function");
                 func(inputs, outputs);
-                return "";
+                return [];
         }
     }
 

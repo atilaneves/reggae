@@ -175,7 +175,10 @@ private:
 
     void executeCommand(in Target target) const @trusted {
         mkDir(target);
-        writeln("[build] " ~ target.execute(projectPath));
+        const output = target.execute(projectPath);
+        writeln("[build] " ~ output[0]);
+        if(target.command.getType == CommandType.phony)
+            writeln("\n", output[1]);
     }
 
     //@trusted because of mkdirRecurse

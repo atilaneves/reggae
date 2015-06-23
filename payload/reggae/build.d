@@ -242,7 +242,7 @@ struct Target {
     }
 
     //@trusted because of replace
-    string rawCmdString(in string projectPath) @trusted pure nothrow const {
+    string rawCmdString(in string projectPath) @trusted pure const {
         return _command.rawCmdString(projectPath);
     }
 
@@ -393,7 +393,9 @@ struct Command {
     }
 
     //@trusted because of replace
-    string rawCmdString(in string projectPath) @trusted pure nothrow const {
+    string rawCmdString(in string projectPath) @trusted pure const {
+        if(getType != CommandType.shell)
+            throw new Exception("Command type 'code' not supported for ninja backend");
         return command.replace("$project", projectPath);
     }
 

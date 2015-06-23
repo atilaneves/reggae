@@ -245,6 +245,7 @@ void testPhonyRule() {
     const ninja = Ninja(Build(tgt), "/path/to/proj");
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build lephony: _phony",
-                ["cmd = whatever boo bop"])]
+                    ["cmd = whatever boo bop",
+                     "pool = console"])]
         );
 }

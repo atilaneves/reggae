@@ -18,6 +18,7 @@ Feature: Binary backend
       See his little feet
       And his little nosey-wose
       Isn't the goblin sweet?
+
       """
 
     And a file named "proj/foo.d" with:

@@ -42,3 +42,9 @@ Feature: Phony rules
       """
       helloooo
       """
+    Given I successfully run `touch hello`
+    When I successfully run `./build`
+    Then the output should not contain:
+      """
+      [build] Nothing to do
+      """

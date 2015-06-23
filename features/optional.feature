@@ -35,10 +35,7 @@ Feature: Optional top-level targets
       """
       hello foo
       """
-    When I run `./bar`
-    Then it should fail with:
-      """
-      """
+    And the file "bar" should not exist
     Given I successfully run `ninja bar`
     When I successfully run `./bar`
     Then the output should contain:

@@ -27,7 +27,7 @@ Build.TopLevelTarget createTopLevelTarget(in Target target) {
 
 
 Build.TopLevelTarget optional(in Target target) {
-    return Build.TopLevelTarget(target);
+    return Build.TopLevelTarget(target, true);
 }
 
 /**
@@ -58,6 +58,10 @@ struct Build {
 
     const(Target)[] targets() @trusted pure nothrow const {
         return _targets.map!(a => a.target).array;
+    }
+
+    const(string)[] defaultTargets() @trusted pure nothrow const {
+        return _targets.filter!(a => !a.optional).map!(a => a.target.outputs[0]).array;
     }
 }
 

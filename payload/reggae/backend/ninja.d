@@ -89,7 +89,8 @@ struct Ninja {
         immutable files = [buildFilePath, reggaePath].join(" ");
         return buildEntries ~
             NinjaEntry("build build.ninja: _rerun | " ~ files,
-                       ["pool = console"]);
+                       ["pool = console"]) ~
+            NinjaEntry("default " ~ _build.defaultTargets.join(" "));
     }
 
     const(NinjaEntry)[] allRuleEntries() @safe pure const {

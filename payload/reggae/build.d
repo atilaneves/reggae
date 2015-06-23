@@ -18,33 +18,54 @@ import std.conv;
 import std.exception;
 import std.typecons;
 
-Target createTopLevelTarget(in Target target) {
-    return Target(target.outputs,
-                  target._command.expandBuildDir,
-                  target.dependencies.map!(a => a.enclose(target)).array,
-                  target.implicits.map!(a => a.enclose(target)).array);
+Build.TopLevelTarget createTopLevelTarget(in Target target) {
+    return Build.TopLevelTarget(Target(target.outputs,
+                                       target._command.expandBuildDir,
+                                       target.dependencies.map!(a => a.enclose(target)).array,
+                                       target.implicits.map!(a => a.enclose(target)).array));
+}
+
+
+Build.TopLevelTarget optional(in Target target) {
+    return Build.TopLevelTarget(target, true);
 }
 
 /**
  Contains the top-level targets.
  */
 struct Build {
-    const(Target)[] targets;
+    static struct TopLevelTarget {
+        Target target;
+        bool optional;
+    }
+    private const(TopLevelTarget)[] _targets;
 
     this(in Target[] targets) {
-        this.targets = targets.map!createTopLevelTarget.array;
+        _targets = targets.map!createTopLevelTarget.array;
     }
 
     this(T...)(in T targets) {
         foreach(t; targets) {
             static if(isSomeFunction!(typeof(t))) {
-                const target = t();
+                _targets ~= createTopLevelTarget(t());
+            } else static if(is(Unqual!(typeof(t)) == TopLevelTarget)) {
+                _targets ~= t;
             } else {
-                const target = t;
+                _targets ~= createTopLevelTarget(t);
             }
-
-            this.targets ~= createTopLevelTarget(target);
         }
+    }
+
+    const(Target)[] targets() @trusted pure nothrow const {
+        return _targets.map!(a => a.target).array;
+    }
+
+    const(Target)[] defaultTargets() @trusted pure nothrow const {
+        return _targets.filter!(a => !a.optional).map!(a => a.target).array;
+    }
+
+    string defaultTargetsString() @trusted pure nothrow const {
+        return defaultTargets.map!(a => a.outputs[0]).join(" ");
     }
 }
 
@@ -89,14 +110,18 @@ private string _expandBuildDir(in string output) @trusted pure {
         join(" ");
 }
 
-enum isTarget(alias T) = is(Unqual!(typeof(T)) == Target) ||
-    isSomeFunction!T && is(ReturnType!T == Target);
-
+ enum isTarget(alias T) =
+     is(Unqual!(typeof(T)) == Target) ||
+     is(Unqual!(typeof(T)) == Build.TopLevelTarget) ||
+     isSomeFunction!T && is(ReturnType!T == Target);
+//enum isTarget(alias T) = true;
 unittest {
     auto  t1 = Target();
     const t2 = Target();
     static assert(isTarget!t1);
     static assert(isTarget!t2);
+    const t3 = TopLevelTarget(Target());
+    static assert(isTarget!t3);
 }
 
 mixin template buildImpl(targets...) if(allSatisfy!(isTarget, targets)) {

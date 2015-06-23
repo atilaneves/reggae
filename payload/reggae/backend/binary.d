@@ -68,13 +68,12 @@ struct Binary {
 
         foreach(topTarget; topTargets) {
 
-            immutable didPhony = checkPhony(topTarget);
+            immutable didPhony = checkChildlessPhony(topTarget);
             didAnything = didPhony || didAnything;
             if(didPhony) continue;
 
             foreach(level; ByDepthLevel(topTarget)) {
                 foreach(target; level.parallel) {
-
                     const outs = target.outputsInProjectPath(projectPath);
                     immutable depFileName = outs[0] ~ ".dep";
                     if(depFileName.exists) {
@@ -140,11 +139,12 @@ private:
     bool checkTimestamps(in Target target) const {
         foreach(dep; chain(target.dependencies, target.implicits)) {
 
+            immutable isPhony = target.command.getType == CommandType.phony;
             immutable anyNewer = cartesianProduct(dep.outputsInProjectPath(projectPath),
                                                   target.outputsInProjectPath(projectPath)).
                 any!(a => a[0].newerThan(a[1]));
 
-            if(anyNewer) {
+            if(isPhony || anyNewer) {
                 executeCommand(target);
                 return true;
             }
@@ -153,8 +153,11 @@ private:
         return false;
     }
 
-    bool checkPhony(in Target target) const {
-        if(target.command.getType == CommandType.phony) {
+    //always run phony rules with no dependencies at top-level
+    //ByDepthLevel won't include them
+    bool checkChildlessPhony(in Target target) const {
+        if(target.command.getType == CommandType.phony &&
+           target.dependencies.empty && target.implicits.empty) {
             executeCommand(target);
             return true;
         }

@@ -7,7 +7,13 @@ Feature: Phony rules
     Given a file named "proj/reggaefile.d" with:
       """
       import reggae;
-      mixin build!(Target.phony(`hello`, `echo helloooo`));
+      enum foo = Target(`foo`, `dmd -of$out $in`, [Target(`foo.d`)]);
+      enum phony = Target.phony(`hello`, `echo helloooo`, [foo]);
+      mixin build!(foo, phony);
+      """
+    And a file named "proj/foo.d" with:
+      """
+      void main() {}
       """
 
   @make
@@ -15,6 +21,10 @@ Feature: Phony rules
     Given I successfully run `reggae -b make proj`
     When I successfully run `make`
     Then the output should contain:
+      """
+      dmd -offoo
+      """
+    And the output should contain:
       """
       helloooo
       """

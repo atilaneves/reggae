@@ -16,8 +16,35 @@ import std.parallelism: parallel;
 import std.conv;
 import std.array: replace, empty;
 import std.string: strip;
+import std.getopt;
 
 @safe:
+
+struct BinaryOptions {
+    bool list;
+    private bool _earlyReturn;
+    string[] args;
+
+    this(string[] args) @trusted {
+        auto optInfo = getopt(
+            args,
+            "list|l", "List available build targets", &list,
+            );
+        if(optInfo.helpWanted) {
+            defaultGetoptPrinter("Usage: build <targets>", optInfo.options);
+            _earlyReturn = true;
+        }
+        if(list) {
+            _earlyReturn = true;
+        }
+
+        this.args = args;
+    }
+
+    bool earlyReturn() const pure nothrow {
+        return _earlyReturn;
+    }
+}
 
 struct Binary {
     Build build;
@@ -29,9 +56,13 @@ struct Binary {
     }
 
     void run(string[] args) const @system { //@system due to parallel
+        auto options = BinaryOptions(args);
+        handleOptions(options);
+        if(options.earlyReturn) return;
+
         bool didAnything = checkReRun();
 
-        foreach(topTarget; topLevelTargets(args)) {
+        foreach(topTarget; topLevelTargets(options.args)) {
             foreach(level; ByDepthLevel(topTarget)) {
                 foreach(target; level.parallel) {
 
@@ -56,6 +87,15 @@ struct Binary {
 
 private:
 
+    void handleOptions(BinaryOptions options) const {
+        if(options.list) {
+            writeln("List of available top-level targets:");
+            foreach(topTarget; topLevelTargets(options.args)) {
+                writeln("- " ~ topTarget.outputsInProjectPath(projectPath).join(" "));
+            }
+        }
+    }
+
     bool checkReRun() const {
         immutable myPath = thisExePath;
         if(reggaePath.newerThan(myPath) || buildFilePath.newerThan(myPath)) {
@@ -67,8 +107,8 @@ private:
             writeln(reggaeRes.output);
 
             //currently not needed because generating the build also runs it.
-            // immutable buildRes = execute([myPath]);
-            // enforce(buildRes.status == 0, "Could not redo the build:\n", buildRes.output);
+            immutable buildRes = execute([myPath]);
+            enforce(buildRes.status == 0, "Could not redo the build:\n", buildRes.output);
             return true;
         }
 

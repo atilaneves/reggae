@@ -66,3 +66,13 @@ Feature: Binary backend
       And his little nosey-wose
       Isn't the goblin sweet?
       """
+
+  Scenario: Listing targets
+    Given I successfully run `reggae -b binary proj`
+    And I successfully run `./build -l`
+    Then the output should contain:
+      """
+      List of available top-level targets:
+      - copy.txt
+      - foo
+      """

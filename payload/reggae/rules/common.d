@@ -46,7 +46,7 @@ Target[] targetsFromSources(alias sourcesFunc = Sources!(),
                             Flags flags = Flags(),
                             ImportPaths includes = ImportPaths(),
                             StringImportPaths stringImports = StringImportPaths(),
-    )() @safe {
+    )() @trusted {
 
     const srcFiles = sourcesToFileNames!(sourcesFunc);
     const dSrcs = srcFiles.filter!(a => a.getLanguage == Language.D).array;

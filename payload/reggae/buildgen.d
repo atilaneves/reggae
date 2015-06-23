@@ -19,7 +19,7 @@ mixin template BuildGenMain(string buildModule = "reggaefile") {
 
     int main(string[] args) {
         try {
-            generateBuildFor!(buildModule); //the user's build description
+            generateBuildFor!(buildModule)(args); //the user's build description
         } catch(Exception ex) {
             stderr.writeln(ex.msg);
             return 1;
@@ -29,13 +29,13 @@ mixin template BuildGenMain(string buildModule = "reggaefile") {
     }
 }
 
-void generateBuildFor(alias module_)() {
+void generateBuildFor(alias module_)(string[] args) {
     const buildFunc = getBuild!(module_); //get the function to call by CT reflection
     const build = buildFunc(); //actually call the function to get the build description
-    generateBuild(build);
+    generateBuild(build, args);
 }
 
-void generateBuild(in Build build) {
+void generateBuild(in Build build, string[] args) {
     final switch(backend) with(Backend) {
 
         case make:
@@ -51,7 +51,7 @@ void generateBuild(in Build build) {
             break;
 
         case binary:
-            Binary(build, projectPath).run();
+            Binary(build, projectPath).run(args);
             break;
 
         case none:

@@ -102,6 +102,9 @@ private void createBuild(in Options options) {
     //compile the binaries (the build generator and dcompile)
     immutable buildGenName = compileBinaries(options);
 
+    //binary backend has no build generator, it _is_ the build
+    if(options.backend == Backend.binary) return;
+
     //actually run the build generator
     writeln("[Reggae] Running the created binary to generate the build");
     immutable retRunBuildgen = execute([buildPath(".", buildGenName)]);

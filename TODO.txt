@@ -1,7 +1,4 @@
-Phobos lessons:
-  - mkDir and $project bugs with make and binary backends, possibly tup
-  - phony rules
-
+Bug: phony depending on real target creates double dependencies
 
 Distinguish LinkFlags vs CompilerFlags?
 Any order of parameters

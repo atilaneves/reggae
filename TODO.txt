@@ -1,3 +1,9 @@
+Phobos lessons:
+  - "Compile-time" link rule must have an easy way to concatenate objects
+  - Top-level targets that aren't built by default (like the unit test ones)
+  - Possibility of picking per-package or per-module on a target basis (unit tests...)
+
+
 Distinguish LinkFlags vs CompilerFlags?
 Any order of parameters
 

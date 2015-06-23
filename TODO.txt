@@ -1,7 +1,6 @@
 Phobos lessons:
   - mkDir and $project bugs with make and binary backends, possibly tup
-  - Top-level targets that aren't built by default (like the unit test ones)
-  - Possibility of picking per-package or per-module on a target basis (unit tests...)
+  - phony rules
 
 
 Distinguish LinkFlags vs CompilerFlags?

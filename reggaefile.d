@@ -38,5 +38,7 @@ version(minimal) {
                                        Configuration("unittest"),
                                        Flags("-g -debug -cov"));
 
-    mixin build!(main, ut);
+    enum cuke = Target.phony("cuke", "cd $project && cucumber", [main]);
+
+    mixin build!(main, ut, optional(cuke));
 }

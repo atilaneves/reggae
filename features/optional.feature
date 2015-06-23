@@ -59,3 +59,20 @@ Feature: Optional top-level targets
       """
       hello bar
       """
+
+  @binary
+  Scenario: Binary
+    Given I successfully run `reggae -b binary proj`
+    And I successfully run `./build`
+    When I successfully run `./foo`
+    Then the output should contain:
+      """
+      hello foo
+      """
+    And the file "bar" should not exist
+    Given I successfully run `./build bar`
+    When I successfully run `./bar`
+    Then the output should contain:
+      """
+      hello bar
+      """

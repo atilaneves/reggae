@@ -81,7 +81,9 @@ struct Binary {
 
     const(Target)[] topLevelTargets(string[] args) @trusted const pure nothrow {
         args = args[1..$];
-        return build.targets.filter!(a => args.empty || args.canFind(a.outputs[0])).array;
+        return args.empty ?
+            build.defaultTargets :
+            build.targets.filter!(a => args.canFind(a.outputs[0])).array;
     }
 
 

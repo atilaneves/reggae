@@ -60,8 +60,12 @@ struct Build {
         return _targets.map!(a => a.target).array;
     }
 
-    const(string)[] defaultTargets() @trusted pure nothrow const {
-        return _targets.filter!(a => !a.optional).map!(a => a.target.outputs[0]).array;
+    const(Target)[] defaultTargets() @trusted pure nothrow const {
+        return _targets.filter!(a => !a.optional).map!(a => a.target).array;
+    }
+
+    string defaultTargetsString() @trusted pure nothrow const {
+        return defaultTargets.map!(a => a.outputs[0]).join(" ");
     }
 }
 

@@ -32,7 +32,7 @@ struct Makefile {
     //only the main targets
     string simpleOutput() @safe const {
 
-        auto ret = text("all: ", build.defaultTargets.join(" "), "\n");
+        auto ret = text("all: ", build.defaultTargetsString, "\n");
 
         foreach(topTarget; build.targets) {
             foreach(t; DepthFirst(topTarget)) {

@@ -25,6 +25,7 @@ Build.TopLevelTarget createTopLevelTarget(in Target target) {
                                        target.implicits.map!(a => a.enclose(target)).array));
 }
 
+
 Build.TopLevelTarget optional(in Target target) {
     return Build.TopLevelTarget(target);
 }
@@ -46,12 +47,12 @@ struct Build {
     this(T...)(in T targets) {
         foreach(t; targets) {
             static if(isSomeFunction!(typeof(t))) {
-                const target = t();
+                _targets ~= createTopLevelTarget(t());
+            } else static if(is(Unqual!(typeof(t)) == TopLevelTarget)) {
+                _targets ~= t;
             } else {
-                const target = t;
+                _targets ~= createTopLevelTarget(t);
             }
-
-            _targets ~= createTopLevelTarget(target);
         }
     }
 
@@ -101,14 +102,18 @@ private string _expandBuildDir(in string output) @trusted pure {
         join(" ");
 }
 
-enum isTarget(alias T) = is(Unqual!(typeof(T)) == Target) ||
-    isSomeFunction!T && is(ReturnType!T == Target);
-
+ enum isTarget(alias T) =
+     is(Unqual!(typeof(T)) == Target) ||
+     is(Unqual!(typeof(T)) == Build.TopLevelTarget) ||
+     isSomeFunction!T && is(ReturnType!T == Target);
+//enum isTarget(alias T) = true;
 unittest {
     auto  t1 = Target();
     const t2 = Target();
     static assert(isTarget!t1);
     static assert(isTarget!t2);
+    const t3 = TopLevelTarget(Target());
+    static assert(isTarget!t3);
 }
 
 mixin template buildImpl(targets...) if(allSatisfy!(isTarget, targets)) {

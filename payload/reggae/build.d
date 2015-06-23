@@ -281,8 +281,8 @@ struct Target {
         return Language.unknown;
     }
 
-    void execute(in string projectPath = "") @safe const {
-        _command.execute(projectPath, getLanguage(), outputs, inputs(projectPath));
+    string execute(in string projectPath = "") @safe const {
+        return _command.execute(projectPath, getLanguage(), outputs, inputs(projectPath));
     }
 
     static Target phony(in string output, in string shellCommand, in Target[] dependencies = []) {
@@ -496,7 +496,7 @@ struct Command {
     }
 
 
-    void execute(in string projectPath, in Language language,
+    string execute(in string projectPath, in Language language,
                  in string[] outputs, in string[] inputs) const @trusted {
         import std.process;
         import std.stdio;
@@ -507,14 +507,13 @@ struct Command {
             case link:
             case phony:
                 immutable cmd = shellCommand(projectPath, language, outputs, inputs);
-                writeln("[build] " ~ cmd);
                 immutable res = executeShell(cmd);
                 enforce(res.status == 0, "Could not execute" ~ cmd ~ ":\n" ~ res.output);
-                break;
+                return cmd ~ "\n" ~ res.output;
             case code:
                 assert(func !is null, "Command of type code with null function");
                 func(inputs, outputs);
-                break;
+                return "";
         }
     }
 

@@ -123,6 +123,7 @@ private:
             //currently not needed because generating the build also runs it.
             immutable buildRes = execute([myPath]);
             enforce(buildRes.status == 0, "Could not redo the build:\n", buildRes.output);
+            writeln(buildRes.output);
             return true;
         }
 
@@ -174,7 +175,7 @@ private:
 
     void executeCommand(in Target target) const @trusted {
         mkDir(target);
-        target.execute(projectPath);
+        writeln("[build] " ~ target.execute(projectPath));
     }
 
     //@trusted because of mkdirRecurse

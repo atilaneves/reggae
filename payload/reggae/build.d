@@ -18,11 +18,12 @@ import std.conv;
 import std.exception;
 import std.typecons;
 
-Build.TopLevelTarget createTopLevelTarget(in Target target) {
+Build.TopLevelTarget createTopLevelTarget(in Target target, in bool optional = false) {
     return Build.TopLevelTarget(Target(target.outputs,
                                        target._command.expandBuildDir,
                                        target.dependencies.map!(a => a.enclose(target)).array,
-                                       target.implicits.map!(a => a.enclose(target)).array));
+                                       target.implicits.map!(a => a.enclose(target)).array),
+                                optional);
 }
 
 /**
@@ -37,7 +38,7 @@ Build.TopLevelTarget optional(alias targetFunc)() {
  */
 
 Build.TopLevelTarget optional(in Target target) {
-    return Build.TopLevelTarget(target, true);
+    return createTopLevelTarget(target, true);
 }
 
 
@@ -436,8 +437,6 @@ struct Command {
 
             case link:
                 final switch(language) with(Language) {
-                        import std.stdio;
-                        debug writeln("builtinTemplate called with language ", language);
                     case D:
                     case unknown:
                         return dCompiler ~ " -of$out $flags $in";
@@ -501,7 +500,6 @@ struct Command {
     string[] execute(in string projectPath, in Language language,
                  in string[] outputs, in string[] inputs) const @trusted {
         import std.process;
-        import std.stdio;
 
         final switch(type) with(CommandType) {
             case shell:

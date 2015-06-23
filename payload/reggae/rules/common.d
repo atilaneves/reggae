@@ -8,6 +8,7 @@ import reggae.types;
 import std.algorithm;
 import std.path;
 import std.array: array;
+import std.traits;
 
 version(Windows) {
     immutable objExt = ".obj";
@@ -176,4 +177,32 @@ Target link(ExeName exeName, alias dependenciesFunc, Flags flags = Flags())() @s
 Target link(in ExeName exeName, in Target[] dependencies, in Flags flags = Flags()) @safe pure {
     const command = Command(CommandType.link, assocList([assocEntry("flags", flags.value.splitter.array)]));
     return Target(exeName.value, command, dependencies);
+}
+
+/**
+ * Convenience alias for appending targets without calling any runtime function.
+ * This replaces the need to manually define a function to return a `Build` struct
+ * just to concatenate targets
+ */
+Target[] targetConcat(T...)() {
+    Target[] ret;
+    foreach(target; T) {
+        static if(isCallable!target)
+            ret ~= target();
+        else
+            ret ~= target;
+    }
+    return ret;
+}
+
+/**
+ "Compile-time" target creation.
+ Its parameters are compile-time so that it can be aliased and used
+ at global scope in a reggaefile
+ */
+Target target(alias outputs,
+              alias command,
+              alias dependenciesFunc,
+              alias implicitsFunc = () { Target[] ts; return ts; })() {
+    return Target(outputs, command, dependenciesFunc(), implicitsFunc());
 }

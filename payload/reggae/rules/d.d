@@ -14,11 +14,19 @@ import reggae.rules.common;
 import std.algorithm;
 import std.array;
 
-//objectFile, objectFiles and link are the only default rules
-//They work by serialising the rule to use piggy-backing on Target's string
-//command attribute. It's horrible, but it works with the original decision
-//of using strings as commands. Should be changed to be a sum type where
-//a string represents a shell command and other variants call D code.
+
+Target[] targetsFromSourcesPerModule(alias sourcesFunc = Sources!(),
+                                     Flags flags = Flags(),
+                                     ImportPaths includes = ImportPaths(),
+                                     StringImportPaths stringImports = StringImportPaths(),
+    )() @safe {
+
+    const srcFiles = sourcesToFileNames!(sourcesFunc);
+    if(!srcFiles.filter!(a => a.getLanguage != Language.D).empty)
+        throw new Exception("targetsFromSourcesPerModules only accepts D files");
+
+    return objectFilesPerModule(srcFiles, flags.value, ["."] ~ includes.value, stringImports.value);
+}
 
 //generate object file(s) for a D package. By default generates one per package,
 //if reggae.config.perModule is true, generates one per module

@@ -56,6 +56,7 @@ Target[] targetsFromSources(alias sourcesFunc = Sources!(),
         otherSrcs.map!(a => objectFile(SourceFile(a), flags, includes)).array;
 }
 
+
 string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
 
     import std.exception: enforce;

@@ -278,7 +278,6 @@ private:
 
     //@trusted because of join
     string depFilesStringImpl(in Target[] deps, in string projectPath) @trusted pure const nothrow {
-        import std.conv;
         string files;
         //join doesn't do const, resort to loops
         foreach(i, dep; deps) {
@@ -344,6 +343,10 @@ struct Command {
     this(CommandFunction func) @safe pure nothrow {
         type = CommandType.code;
         this.func = func;
+    }
+
+    static Command phony(in string shellCommand) @safe pure nothrow {
+        return Command(shellCommand);
     }
 
     const(string)[] paramNames() @safe pure nothrow const {

@@ -42,3 +42,20 @@ Feature: Optional top-level targets
       """
       hello bar
       """
+
+  @make
+  Scenario: Make
+    Given I successfully run `reggae -b make proj`
+    And I successfully run `make`
+    When I successfully run `./foo`
+    Then the output should contain:
+      """
+      hello foo
+      """
+    And the file "bar" should not exist
+    Given I successfully run `make bar`
+    When I successfully run `./bar`
+    Then the output should contain:
+      """
+      hello bar
+      """

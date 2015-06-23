@@ -32,8 +32,7 @@ struct Makefile {
     //only the main targets
     string simpleOutput() @safe const {
 
-        const outputs = build.targets.map!(a => a.outputs[0]).join(" ");
-        auto ret = text("all: ", outputs, "\n");
+        auto ret = text("all: ", build.defaultTargets.join(" "), "\n");
 
         foreach(topTarget; build.targets) {
             foreach(t; DepthFirst(topTarget)) {

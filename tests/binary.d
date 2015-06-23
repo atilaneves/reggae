@@ -77,13 +77,11 @@ void testTargetSelection() {
 }
 
 void testTopLevelTargets() {
-    import core.exception: RangeError;
     const foo = Target("foo", &foo, Target("foo.d"));
     const bar = Target("bar", &bar, Target("bar.d"));
     const binary = Binary(Build(foo, bar), "/path/to");
-    binary.topLevelTargets(["prog", "foo"]).shouldEqual([foo]);
-    binary.topLevelTargets(["prog", "bar"]).shouldEqual([bar]);
-    binary.topLevelTargets(["prog"]).shouldEqual([foo, bar]);
-    binary.topLevelTargets([]).shouldThrow!RangeError;
-    binary.topLevelTargets(["prog", "oops"]).shouldEqual([]);
+    binary.topLevelTargets(["foo"]).shouldEqual([foo]);
+    binary.topLevelTargets(["bar"]).shouldEqual([bar]);
+    binary.topLevelTargets([]).shouldEqual([foo, bar]);
+    binary.topLevelTargets(["oops"]).shouldEqual([]);
 }

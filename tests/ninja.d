@@ -241,10 +241,10 @@ void testOutputInProjectPathDefault() {
 
 
 void testPhonyRule() {
-    const tgt = Target("lephony", Command.phony("whatever boo bop"), []);
+    const tgt = Target("lephony", Command.phony("whatever boo bop"), [Target("toto"), Target("tata")]);
     const ninja = Ninja(Build(tgt), "/path/to/proj");
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build lephony: _phony",
+        [NinjaEntry("build lephony: _phony /path/to/proj/toto /path/to/proj/tata",
                     ["cmd = whatever boo bop",
                      "pool = console"])]
         );

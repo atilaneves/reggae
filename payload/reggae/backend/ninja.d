@@ -143,7 +143,7 @@ private:
     void phonyRule(in Target target) @safe {
         //no projectPath for phony rules
         immutable outputs = target.outputsInProjectPath("").join(" ");
-        buildEntries ~= NinjaEntry("build " ~ outputs ~ ": _phony",
+        buildEntries ~= NinjaEntry("build " ~ outputs ~ ": _phony " ~ target.dependencyFilesString(_projectPath),
                                    ["cmd = " ~ target.shellCommand(_projectPath),
                                     "pool = console"]);
     }

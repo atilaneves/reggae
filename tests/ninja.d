@@ -159,6 +159,8 @@ void testDefaultRules() {
                        ["command = dmd -of$out $flags $in"]),
             NinjaEntry("rule _ulink",
                        ["command = dmd -of$out $flags $in"]),
+            NinjaEntry("rule _phony",
+                       ["command = $cmd"]),
             ]);
 }
 
@@ -235,4 +237,14 @@ void testOutputInProjectPathDefault() {
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build /path/to/proj/foo.o: _ccompile /path/to/proj/foo.c",
                     ["foo = bar"])]);
+}
+
+
+void testPhonyRule() {
+    const tgt = Target("lephony", Command.phony("whatever boo bop"), []);
+    const ninja = Ninja(Build(tgt), "/path/to/proj");
+    ninja.buildEntries.shouldEqual(
+        [NinjaEntry("build lephony: _phony",
+                ["cmd = whatever boo bop"])]
+        );
 }

@@ -66,6 +66,9 @@ NinjaEntry[] defaultRules() @safe pure {
             entries ~= createNinjaEntry(type, language);
         }
     }
+
+    entries ~= NinjaEntry("rule _phony", ["command = $cmd"]);
+
     return entries;
 }
 
@@ -80,7 +83,11 @@ struct Ninja {
 
         foreach(topTarget; _build.targets) {
             foreach(target; DepthFirst(topTarget)) {
-                target.command.isDefaultCommand ? defaultRule(target) : customRule(target);
+                target.command.isDefaultCommand
+                    ? defaultRule(target)
+                    : target.command.getType == CommandType.phony
+                        ? phonyRule(target)
+                        : customRule(target);
             }
         }
     }
@@ -131,6 +138,13 @@ private:
                                    cmdTypeToNinjaString(target.command.getType, language) ~
                                    " " ~ target.dependencyFilesString(_projectPath),
                                    paramLines);
+    }
+
+    void phonyRule(in Target target) @safe {
+        //no projectPath for phony rules
+        immutable outputs = target.outputsInProjectPath("").join(" ");
+        buildEntries ~= NinjaEntry("build " ~ outputs ~ ": _phony",
+                                   ["cmd = " ~ target.shellCommand(_projectPath)]);
     }
 
     void customRule(in Target target) @safe {

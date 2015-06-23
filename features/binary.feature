@@ -79,3 +79,19 @@ Feature: Binary backend
       - foo
       - bar (optional)
       """
+
+  Scenario: Unknown target
+    Given I successfully run `reggae -b binary proj`
+    And I run `./build oops`
+    Then it should fail with:
+      """
+      Unknown target(s) 'oops'
+      """
+
+  Scenario: Unknown targets
+    Given I successfully run `reggae -b binary proj`
+    And I run `./build oopsie woopsie`
+    Then it should fail with:
+      """
+      Unknown target(s) 'oopsie' 'woopsie'
+      """

@@ -38,7 +38,7 @@ struct BinaryOptions {
             _earlyReturn = true;
         }
 
-        this.args = args;
+        this.args = args[1..$];
     }
 
     bool earlyReturn() const pure nothrow {
@@ -62,7 +62,11 @@ struct Binary {
 
         bool didAnything = checkReRun();
 
-        foreach(topTarget; topLevelTargets(options.args)) {
+        const topTargets = topLevelTargets(options.args);
+        if(topTargets.empty)
+            throw new Exception(text("Unknown target(s) ", options.args.map!(a => "'" ~ a ~ "'").join(" ")));
+
+        foreach(topTarget; topTargets) {
 
             immutable didPhony = checkPhony(topTarget);
             didAnything = didPhony || didAnything;
@@ -84,8 +88,7 @@ struct Binary {
         if(!didAnything) writeln("[build] Nothing to do");
     }
 
-    const(Target)[] topLevelTargets(string[] args) @trusted const pure nothrow {
-        args = args[1..$];
+    const(Target)[] topLevelTargets(in string[] args) @trusted const pure nothrow {
         return args.empty ?
             build.defaultTargets :
             build.targets.filter!(a => args.canFind(a.outputs[0])).array;

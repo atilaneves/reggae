@@ -28,9 +28,18 @@ Build.TopLevelTarget createTopLevelTarget(in Target target) {
 /**
  Designate a target as optional so it won't be built by default.
  */
+Build.TopLevelTarget optional(alias targetFunc)() {
+    return optional(targetFunc());
+}
+
+/**
+ Designate a target as optional so it won't be built by default.
+ */
+
 Build.TopLevelTarget optional(in Target target) {
     return Build.TopLevelTarget(target, true);
 }
+
 
 /**
  Contains the top-level targets.
@@ -48,8 +57,10 @@ struct Build {
 
     this(T...)(in T targets) {
         foreach(t; targets) {
-            static if(isSomeFunction!(typeof(t))) {
+            static if(isSomeFunction!(typeof(t)) && is(ReturnType!(typeof(t))) == Target) {
                 _targets ~= createTopLevelTarget(t());
+            } else static if(isSomeFunction!(typeof(t)) && is(ReturnType!(typeof(t))) == TopLevelTarget) {
+                _targets ~= t();
             } else static if(is(Unqual!(typeof(t)) == TopLevelTarget)) {
                 _targets ~= t;
             } else {

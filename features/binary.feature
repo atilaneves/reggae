@@ -9,7 +9,8 @@ Feature: Binary backend
     """
     import reggae;
     mixin build!(Target(`copy.txt`,`cp $project/original.txt copy.txt`, Target(`original.txt`)),
-                 Target(`foo`, `dmd -of$out $in`, Target(`foo.d`)));
+                 Target(`foo`, `dmd -of$out $in`, Target(`foo.d`)),
+                 optional(Target.phony(`bar`, `echo baribari`)));
     """
 
     And a file named "proj/original.txt" with:
@@ -76,4 +77,5 @@ Feature: Binary backend
       List of available top-level targets:
       - copy.txt
       - foo
+      - bar (optional)
       """

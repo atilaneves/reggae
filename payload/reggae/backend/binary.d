@@ -97,9 +97,13 @@ private:
     void handleOptions(BinaryOptions options) const {
         if(options.list) {
             writeln("List of available top-level targets:");
-            foreach(topTarget; topLevelTargets(options.args)) {
+            const defaultTargets = topLevelTargets(options.args);
+            foreach(topTarget; defaultTargets)
                 writeln("- " ~ topTarget.outputsInProjectPath(projectPath).join(" "));
-            }
+
+            auto optionalTargets = build.targets.filter!(a => !defaultTargets.canFind(a));
+            foreach(optionalTarget; optionalTargets)
+                writeln("- " ~ optionalTarget.outputs.join(" ") ~ " (optional)");
         }
     }
 

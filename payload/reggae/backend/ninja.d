@@ -125,7 +125,8 @@ private:
         }
 
         immutable language = target.getLanguage;
-        buildEntries ~= NinjaEntry("build " ~ target.outputs[0] ~ ": " ~
+
+        buildEntries ~= NinjaEntry(buildLine(target) ~
                                    cmdTypeToNinjaString(target.command.getType, language) ~
                                    " " ~ target.dependencyFilesString(_projectPath),
                                    paramLines);
@@ -168,7 +169,8 @@ private:
             ? target.dependencyFilesString(_projectPath)
             : implicitInput;
 
-        auto buildLine = "build " ~ target.outputs.join(" ") ~ ": " ~ ruleName ~
+
+        auto buildLine = buildLine(target) ~ ruleName ~
             " " ~ deps;
         if(!target.implicits.empty) buildLine ~= " | " ~  target.implicitFilesString(_projectPath);
 
@@ -189,7 +191,7 @@ private:
         immutable ruleCmdLine = getRuleCommandLine(target, shellCommand, "" /*before*/, "$in");
         immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAdd);
 
-        immutable buildLine = "build " ~ target.outputs.join(" ") ~ ": " ~ ruleName ~
+        immutable buildLine = buildLine(target) ~ ruleName ~
             " " ~ target.dependencyFilesString(_projectPath);
         buildEntries ~= NinjaEntry(buildLine);
 
@@ -272,6 +274,11 @@ private:
 
     string output(const(NinjaEntry)[] entries) @safe pure const nothrow {
         return entries.map!(a => a.toString).join("\n\n");
+    }
+
+    string buildLine(in Target target) @safe pure const nothrow {
+        immutable outputs = target.outputsInProjectPath(_projectPath).join(" ");
+        return "build " ~ outputs ~ ": ";
     }
 }
 

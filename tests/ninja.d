@@ -215,3 +215,24 @@ void testImplicitInput() {
                     ["command = dmd $before$out $in"])
             ]);
 }
+
+
+void testOutputInProjectPathCustom() {
+    const tgt = Target("$project/foo.o", "gcc -o $out -c $in", Target("foo.c"));
+    const ninja = Ninja(Build(tgt), "/path/to/proj");
+    ninja.buildEntries.shouldEqual(
+        [NinjaEntry("build /path/to/proj/foo.o: gcc /path/to/proj/foo.c",
+                    ["before = -o",
+                     "between = -c"])]);
+}
+
+void testOutputInProjectPathDefault() {
+    import reggae.ctaa;
+    const tgt = Target("$project/foo.o",
+                       Command(CommandType.compile, assocListT("foo", ["bar"])),
+                       Target("foo.c"));
+    const ninja = Ninja(Build(tgt), "/path/to/proj");
+    ninja.buildEntries.shouldEqual(
+        [NinjaEntry("build /path/to/proj/foo.o: _ccompile /path/to/proj/foo.c",
+                    ["foo = bar"])]);
+}

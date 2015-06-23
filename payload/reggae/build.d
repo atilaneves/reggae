@@ -226,7 +226,8 @@ struct Target {
     }
 
     string[] outputsInProjectPath(in string projectPath) @safe pure nothrow const {
-        return outputs.map!(a => isLeaf ? buildPath(projectPath, a) : a).array;
+        return outputs.map!(a => isLeaf ? buildPath(projectPath, a) : a).
+            map!(a => a.replace("$project", projectPath)).array;
     }
 
     @property const(Command) command() @safe const pure nothrow { return _command; }

@@ -126,8 +126,9 @@ private string _expandBuildDir(in string output) @trusted pure {
  enum isTarget(alias T) =
      is(Unqual!(typeof(T)) == Target) ||
      is(Unqual!(typeof(T)) == Build.TopLevelTarget) ||
-     isSomeFunction!T && is(ReturnType!T == Target);
-//enum isTarget(alias T) = true;
+     isSomeFunction!T && is(ReturnType!T == Target) ||
+     isSomeFunction!T && is(ReturnType!T == Build.TopLevelTarget);
+
 unittest {
     auto  t1 = Target();
     const t2 = Target();

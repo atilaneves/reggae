@@ -32,14 +32,14 @@ struct Makefile {
     //only the main targets
     string simpleOutput() @safe const {
 
-        auto ret = text("all: ", build.defaultTargetsString, "\n");
+        auto ret = text("all: ", build.defaultTargetsString(projectPath), "\n");
 
         foreach(topTarget; build.targets) {
             foreach(t; DepthFirst(topTarget)) {
 
                 mkDir(t);
 
-                const output = t.outputs.join(" ");
+                immutable output = t.outputsInProjectPath(projectPath).join(" ");
                 if(t.command.getType == CommandType.phony) {
                     ret ~= ".PHONY: " ~ output ~ "\n";
                 }
@@ -67,7 +67,7 @@ struct Makefile {
     }
 
     private void mkDir(in Target target) @trusted const {
-        foreach(output; target.outputs) {
+        foreach(output; target.outputsInProjectPath(projectPath)) {
             import std.file;
             if(!output.dirName.exists) mkdirRecurse(output.dirName);
         }

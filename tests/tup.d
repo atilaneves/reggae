@@ -7,7 +7,7 @@ import reggae;
 
 void testEmpty() {
     const tup = Tup();
-    tup.output.shouldEqual("");
+    tup.output.shouldEqual("\n");
     tup.fileName.shouldEqual("Tupfile");
 }
 

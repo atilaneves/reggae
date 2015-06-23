@@ -97,7 +97,7 @@ struct Ninja {
         return buildEntries ~
             NinjaEntry("build build.ninja: _rerun | " ~ files,
                        ["pool = console"]) ~
-            NinjaEntry("default " ~ _build.defaultTargetsString);
+            NinjaEntry("default " ~ _build.defaultTargetsString(_projectPath));
     }
 
     const(NinjaEntry)[] allRuleEntries() @safe pure const {

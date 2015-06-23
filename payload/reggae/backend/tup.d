@@ -15,7 +15,7 @@ struct Tup {
     string projectPath;
 
     string output() const pure {
-        return lines.join("\n");
+        return lines.join("\n") ~ "\n";
     }
 
     string[] lines() const pure {
@@ -32,7 +32,7 @@ struct Tup {
                 immutable line = ": " ~
                     target.dependencyFilesString(projectPath) ~ " |> " ~
                     target.shellCommand(projectPath, No.dependencies) ~ " |> " ~
-                    target.outputs.join(" ");
+                    target.outputsInProjectPath(projectPath).join(" ");
                     lines ~= line;
             }
         }

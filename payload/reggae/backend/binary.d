@@ -170,6 +170,14 @@ private:
         target.execute(projectPath);
     }
 
+    //@trusted because of mkdirRecurse
+    private void mkDir(in Target target) @trusted const {
+        foreach(output; target.outputsInProjectPath(projectPath)) {
+            import std.file: exists, mkdirRecurse;
+            import std.path: dirName;
+            if(!output.dirName.exists) mkdirRecurse(output.dirName);
+        }
+    }
 }
 
 bool newerThan(in string a, in string b) nothrow {
@@ -177,15 +185,6 @@ bool newerThan(in string a, in string b) nothrow {
         return a.timeLastModified > b.timeLastModified;
     } catch(Exception) { //file not there, so newer
         return true;
-    }
-}
-
-//@trusted because of mkdirRecurse
-private void mkDir(in Target target) @trusted {
-    foreach(output; target.outputs) {
-        import std.file: exists, mkdirRecurse;
-        import std.path: dirName;
-        if(!output.dirName.exists) mkdirRecurse(output.dirName);
     }
 }
 

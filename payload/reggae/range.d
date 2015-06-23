@@ -131,7 +131,7 @@ auto flatten(R)(R range) @trusted pure nothrow {
     return res;
 }
 
-
+//TODO: a non-allocating version with no arrays
 auto noSortUniq(R)(R range) if(isInputRange!R) {
     ElementType!R[] ret;
     foreach(elt; range) {

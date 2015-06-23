@@ -308,6 +308,7 @@ enum CommandType {
     compile,
     link,
     code,
+    phony,
 }
 
 alias CommandFunction = void function(in string[], in string[]);
@@ -333,7 +334,7 @@ struct Command {
 
     /**Explicitly request a command of this type with these parameters
        In general to create one of the builtin high level rules*/
-    this(CommandType type, Params params) @safe pure {
+    this(CommandType type, Params params = Params()) @safe pure {
         if(type == CommandType.shell) throw new Exception("Command rule cannot be shell");
         this.type = type;
         this.params = params;
@@ -346,7 +347,10 @@ struct Command {
     }
 
     static Command phony(in string shellCommand) @safe pure nothrow {
-        return Command(shellCommand);
+        Command cmd;
+        cmd.type = CommandType.phony;
+        cmd.command = shellCommand;
+        return cmd;
     }
 
     const(string)[] paramNames() @safe pure nothrow const {
@@ -358,7 +362,7 @@ struct Command {
     }
 
     bool isDefaultCommand() @safe pure const {
-        return type != CommandType.shell;
+        return type == CommandType.compile || type == CommandType.link;
     }
 
     string[] getParams(in string projectPath, in string key, string[] ifNotFound) @safe pure const {
@@ -405,6 +409,9 @@ struct Command {
         import reggae.config: dCompiler, cppCompiler, cCompiler;
 
         final switch(type) with(CommandType) {
+            case phony:
+                assert(0, "builtinTemplate cannot be phony");
+
             case shell:
                 assert(0, "builtinTemplate cannot be shell");
 
@@ -481,6 +488,7 @@ struct Command {
             case shell:
             case compile:
             case link:
+            case phony:
                 immutable cmd = shellCommand(projectPath, language, outputs, inputs);
                 writeln("[build] " ~ cmd);
                 immutable res = executeShell(cmd);

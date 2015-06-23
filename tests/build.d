@@ -109,3 +109,23 @@ void testMultipleOutputsImplicits() {
                  newProtoD])]
         );
 }
+
+
+void testRealTargetPath() {
+    const fooLib = Target("$project/foo.so", "dmd -of$out $in", [Target("src1.d"), Target("src2.d")]);
+    const barLib = Target("$builddir/bar.so", "dmd -of$out $in", [Target("src1.d"), Target("src2.d")]);
+    const symlink1 = Target("$project/weird/path/thingie1", "ln -sf $in $out", fooLib);
+    const symlink2 = Target("$project/weird/path/thingie2", "ln -sf $in $out", fooLib);
+    const symlinkBar = Target("$builddir/weird/path/thingie2", "ln -sf $in $out", fooLib);
+
+    immutable dirName = "/made/up/dir";
+
+    realTargetPath(dirName, symlink1.outputs[0]).shouldEqual("$project/weird/path/thingie1");
+    realTargetPath(dirName, symlink2.outputs[0]).shouldEqual("$project/weird/path/thingie2");
+    realTargetPath(dirName, fooLib.outputs[0]).shouldEqual("$project/foo.so");
+
+
+    realTargetPath(dirName, symlinkBar.outputs[0]).shouldEqual("weird/path/thingie2");
+    realTargetPath(dirName, barLib.outputs[0]).shouldEqual("bar.so");
+
+}

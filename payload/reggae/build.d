@@ -106,8 +106,10 @@ immutable gBuilddir = "$builddir";
 //targets that have outputs with $builddir in them want to be placed
 //in a specific place. Those don't get touched. Other targets get
 //placed in their top-level parent's object directory
-private string realTargetPath(in string dirName, in string output) @trusted pure {
+string realTargetPath(in string dirName, in string output) @trusted pure {
     import std.algorithm: canFind;
+
+    if(output.startsWith("$project")) return output;
 
     return output.canFind(gBuilddir)
         ? output._expandBuildDir

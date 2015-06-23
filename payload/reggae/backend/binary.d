@@ -63,6 +63,11 @@ struct Binary {
         bool didAnything = checkReRun();
 
         foreach(topTarget; topLevelTargets(options.args)) {
+
+            immutable didPhony = checkPhony(topTarget);
+            didAnything = didPhony || didAnything;
+            if(didPhony) continue;
+
             foreach(level; ByDepthLevel(topTarget)) {
                 foreach(target; level.parallel) {
 
@@ -72,7 +77,7 @@ struct Binary {
                         didAnything = checkDeps(target, depFileName) || didAnything;
                     }
 
-                    didAnything = checkTarget(target) || didAnything;
+                    didAnything = checkTimestamps(target) || didAnything;
                 }
             }
         }
@@ -124,17 +129,27 @@ private:
         return mutCmd ~ projectPath;
     }
 
-    bool checkTarget(in Target target) const {
+    bool checkTimestamps(in Target target) const {
         foreach(dep; chain(target.dependencies, target.implicits)) {
-            if(cartesianProduct(dep.outputsInProjectPath(projectPath),
-                                target.outputsInProjectPath(projectPath)).
-               any!(a => a[0].newerThan(a[1]))) {
 
+            immutable anyNewer = cartesianProduct(dep.outputsInProjectPath(projectPath),
+                                                  target.outputsInProjectPath(projectPath)).
+                any!(a => a[0].newerThan(a[1]));
+
+            if(anyNewer) {
                 executeCommand(target);
                 return true;
             }
         }
 
+        return false;
+    }
+
+    bool checkPhony(in Target target) const {
+        if(target.command.getType == CommandType.phony) {
+            executeCommand(target);
+            return true;
+        }
         return false;
     }
 

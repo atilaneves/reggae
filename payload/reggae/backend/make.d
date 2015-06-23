@@ -39,7 +39,11 @@ struct Makefile {
 
                 mkDir(t);
 
-                ret ~= text(t.outputs.join(" "), ": ");
+                const output = t.outputs.join(" ");
+                if(t.command.getType == CommandType.phony) {
+                    ret ~= ".PHONY: " ~ output ~ "\n";
+                }
+                ret ~= output ~  ": ";
                 ret ~= t.dependencyFilesString(projectPath);
                 immutable implicitFiles = t.implicitFilesString(projectPath);
                 if(!implicitFiles.empty) ret ~= " " ~ t.implicitFilesString(projectPath);

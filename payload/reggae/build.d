@@ -242,7 +242,7 @@ struct Target {
     }
 
     //@trusted because of replace
-    string rawCmdString(in string projectPath) @trusted pure nothrow const {
+    string rawCmdString(in string projectPath) @trusted pure const {
         return _command.rawCmdString(projectPath);
     }
 
@@ -273,12 +273,14 @@ struct Target {
         _command.execute(projectPath, getLanguage(), outputs, inputs(projectPath));
     }
 
+    static Target phony(in string output, in string shellCommand, in Target[] dependencies = []) {
+        return Target(output, Command.phony(shellCommand), dependencies);
+    }
 
 private:
 
     //@trusted because of join
     string depFilesStringImpl(in Target[] deps, in string projectPath) @trusted pure const nothrow {
-        import std.conv;
         string files;
         //join doesn't do const, resort to loops
         foreach(i, dep; deps) {
@@ -309,6 +311,7 @@ enum CommandType {
     compile,
     link,
     code,
+    phony,
 }
 
 alias CommandFunction = void function(in string[], in string[]);
@@ -334,7 +337,7 @@ struct Command {
 
     /**Explicitly request a command of this type with these parameters
        In general to create one of the builtin high level rules*/
-    this(CommandType type, Params params) @safe pure {
+    this(CommandType type, Params params = Params()) @safe pure {
         if(type == CommandType.shell) throw new Exception("Command rule cannot be shell");
         this.type = type;
         this.params = params;
@@ -346,6 +349,13 @@ struct Command {
         this.func = func;
     }
 
+    static Command phony(in string shellCommand) @safe pure nothrow {
+        Command cmd;
+        cmd.type = CommandType.phony;
+        cmd.command = shellCommand;
+        return cmd;
+    }
+
     const(string)[] paramNames() @safe pure nothrow const {
         return params.keys;
     }
@@ -355,7 +365,7 @@ struct Command {
     }
 
     bool isDefaultCommand() @safe pure const {
-        return type != CommandType.shell;
+        return type == CommandType.compile || type == CommandType.link;
     }
 
     string[] getParams(in string projectPath, in string key, string[] ifNotFound) @safe pure const {
@@ -386,7 +396,9 @@ struct Command {
     }
 
     //@trusted because of replace
-    string rawCmdString(in string projectPath) @trusted pure nothrow const {
+    string rawCmdString(in string projectPath) @trusted pure const {
+        if(getType != CommandType.shell)
+            throw new Exception("Command type 'code' not supported for ninja backend");
         return command.replace("$project", projectPath);
     }
 
@@ -402,6 +414,9 @@ struct Command {
         import reggae.config: dCompiler, cppCompiler, cCompiler;
 
         final switch(type) with(CommandType) {
+            case phony:
+                assert(0, "builtinTemplate cannot be phony");
+
             case shell:
                 assert(0, "builtinTemplate cannot be shell");
 
@@ -478,6 +493,7 @@ struct Command {
             case shell:
             case compile:
             case link:
+            case phony:
                 immutable cmd = shellCommand(projectPath, language, outputs, inputs);
                 writeln("[build] " ~ cmd);
                 immutable res = executeShell(cmd);

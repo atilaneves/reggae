@@ -16,6 +16,7 @@ import std.path: defaultExtension, absolutePath;
 string cmdTypeToNinjaString(CommandType commandType, Language language) @safe pure {
     final switch(commandType) with(CommandType) {
         case shell: assert(0, "cmdTypeToNinjaString doesn't work for shell");
+        case phony: assert(0, "cmdTypeToNinjaString doesn't work for phony");
         case code: throw new Exception("Command type 'code' not supported for ninja backend");
         case link:
             final switch(language) with(Language) {
@@ -59,13 +60,15 @@ NinjaEntry[] defaultRules() @safe pure {
     }
 
     NinjaEntry[] entries;
-    for(CommandType type = CommandType.min; type <= CommandType.max; ++type) {
-        if(type == CommandType.shell || type == CommandType.code) continue;
+    foreach(type; [CommandType.compile, CommandType.link]) {
         for(Language language = Language.min; language <= Language.max; ++language) {
             if(type == CommandType.compile && language == Language.unknown) continue;
             entries ~= createNinjaEntry(type, language);
         }
     }
+
+    entries ~= NinjaEntry("rule _phony", ["command = $cmd"]);
+
     return entries;
 }
 
@@ -80,7 +83,11 @@ struct Ninja {
 
         foreach(topTarget; _build.targets) {
             foreach(target; DepthFirst(topTarget)) {
-                target.command.isDefaultCommand ? defaultRule(target) : customRule(target);
+                target.command.isDefaultCommand
+                    ? defaultRule(target)
+                    : target.command.getType == CommandType.phony
+                        ? phonyRule(target)
+                        : customRule(target);
             }
         }
     }
@@ -131,6 +138,14 @@ private:
                                    cmdTypeToNinjaString(target.command.getType, language) ~
                                    " " ~ target.dependencyFilesString(_projectPath),
                                    paramLines);
+    }
+
+    void phonyRule(in Target target) @safe {
+        //no projectPath for phony rules
+        immutable outputs = target.outputsInProjectPath("").join(" ");
+        buildEntries ~= NinjaEntry("build " ~ outputs ~ ": _phony",
+                                   ["cmd = " ~ target.shellCommand(_projectPath),
+                                    "pool = console"]);
     }
 
     void customRule(in Target target) @safe {

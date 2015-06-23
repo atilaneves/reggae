@@ -18,21 +18,29 @@ import std.conv;
 import std.exception;
 import std.typecons;
 
-Target createTopLevelTarget(in Target target) {
-    return Target(target.outputs,
-                  target._command.expandBuildDir,
-                  target.dependencies.map!(a => a.enclose(target)).array,
-                  target.implicits.map!(a => a.enclose(target)).array);
+Build.TopLevelTarget createTopLevelTarget(in Target target) {
+    return Build.TopLevelTarget(Target(target.outputs,
+                                       target._command.expandBuildDir,
+                                       target.dependencies.map!(a => a.enclose(target)).array,
+                                       target.implicits.map!(a => a.enclose(target)).array));
+}
+
+Build.TopLevelTarget optional(in Target target) {
+    return Build.TopLevelTarget(target);
 }
 
 /**
  Contains the top-level targets.
  */
 struct Build {
-    const(Target)[] targets;
+    static struct TopLevelTarget {
+        Target target;
+        bool optional;
+    }
+    private const(TopLevelTarget)[] _targets;
 
     this(in Target[] targets) {
-        this.targets = targets.map!createTopLevelTarget.array;
+        _targets = targets.map!createTopLevelTarget.array;
     }
 
     this(T...)(in T targets) {
@@ -43,8 +51,12 @@ struct Build {
                 const target = t;
             }
 
-            this.targets ~= createTopLevelTarget(target);
+            _targets ~= createTopLevelTarget(target);
         }
+    }
+
+    const(Target)[] targets() @trusted pure nothrow const {
+        return _targets.map!(a => a.target).array;
     }
 }
 

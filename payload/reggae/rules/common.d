@@ -46,7 +46,17 @@ Target[] targetsFromSources(alias sourcesFunc = Sources!(),
                             Flags flags = Flags(),
                             ImportPaths includes = ImportPaths(),
                             StringImportPaths stringImports = StringImportPaths(),
-    )() @trusted {
+    )() @safe {
+
+    const srcFiles = sourcesToFileNames!(sourcesFunc);
+    const dSrcs = srcFiles.filter!(a => a.getLanguage == Language.D).array;
+    auto otherSrcs = srcFiles.filter!(a => a.getLanguage != Language.D && a.getLanguage != Language.unknown);
+    import reggae.rules.d: objectFiles;
+    return objectFiles(dSrcs, flags.value, ["."] ~ includes.value, stringImports.value) ~
+        otherSrcs.map!(a => objectFile(SourceFile(a), flags, includes)).array;
+}
+
+string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
 
     import std.exception: enforce;
     import std.file;
@@ -69,17 +79,13 @@ Target[] targetsFromSources(alias sourcesFunc = Sources!(),
         modules ~= DirEntry(buildNormalizedPath(buildPath(projectPath, module_)));
     }
 
-    const srcFiles = modules.
+    return modules.
         map!(a => a.name.removeProjectPath).
         filter!(srcs.filterFunc).
+        filter!(a => a != "reggaefile.d").
         array;
-
-    const dSrcs = srcFiles.filter!(a => a.getLanguage == Language.D).filter!(a => a!= "reggaefile.d").array;
-    auto otherSrcs = srcFiles.filter!(a => a.getLanguage != Language.D && a.getLanguage != Language.unknown);
-    import reggae.rules.d: objectFiles;
-    return objectFiles(dSrcs, flags.value, ["."] ~ includes.value, stringImports.value) ~
-        otherSrcs.map!(a => objectFile(SourceFile(a), flags, includes)).array;
 }
+
 
 @safe:
 

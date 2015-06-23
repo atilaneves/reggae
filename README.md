@@ -18,6 +18,12 @@ Features
 * Automatically runs itself if the build description changes
 * Rules for using dub build targets in your own build decription - use dub with ninja, add to it, ...
 
+Not all features are available on all backends. Executable D code commands (as opposed to shell commands)
+are only supported by the binary backend, and due to tup's nature dub support and a few other features
+can't be supported. When using the tup backend, simple is better.
+
+The recommended backends are ninja and binary.
+
 Usage
 -----
 

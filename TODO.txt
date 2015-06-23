@@ -1,19 +1,19 @@
 Bug: phony depending on real target creates double dependencies
 
-Distinguish LinkFlags vs CompilerFlags?
+Compute dependencies for reggaefile.d itself - what if it imports other modules?
+Use CC, CXX, LD environment variables
+Better static library support
+Optimise run-time: only write srcs once, build static lib to link to reggaefile
+
 Any order of parameters
+Distinguish LinkFlags vs CompilerFlags?
 
 Crazy idea: build server? In: list of changed files, out: build.
 
 Refactoring:
   range.d
-  Review all uses of @trusted
   Use ranges instead of arrays where possible
+  Review all uses of @trusted
 
-Compute dependencies for reggaefile.d itself - what if it imports other modules?
-Static libraries
-Use CC, CXX, LD environment variables
-Optimise run-time
-  Write source files once and create static library to link buildgen
 Automatic selection of files based on OS/arch/etc.
 Finding of C/C++ libraries (Qt, boost, libevent)

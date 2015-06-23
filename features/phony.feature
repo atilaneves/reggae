@@ -7,7 +7,7 @@ Feature: Phony rules
     Given a file named "proj/reggaefile.d" with:
       """
       import reggae;
-      mixin build!(Target(`hello`, Command.phony(`echo helloooo`), []));
+      mixin build!(Target.phony(`hello`, `echo helloooo`));
       """
 
   @make

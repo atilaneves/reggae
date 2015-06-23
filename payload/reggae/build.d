@@ -273,6 +273,9 @@ struct Target {
         _command.execute(projectPath, getLanguage(), outputs, inputs(projectPath));
     }
 
+    static Target phony(in string output, in string shellCommand, in Target[] dependencies = []) {
+        return Target(output, Command.phony(shellCommand), dependencies);
+    }
 
 private:
 

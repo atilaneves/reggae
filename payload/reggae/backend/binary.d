@@ -28,10 +28,10 @@ struct Binary {
         this.projectPath = projectPath;
     }
 
-    void run() const @system { //@system due to parallel
+    void run(string[] args) const @system { //@system due to parallel
         bool didAnything = checkReRun();
 
-        foreach(topTarget; build.targets) {
+        foreach(topTarget; topLevelTargets(args)) {
             foreach(level; ByDepthLevel(topTarget)) {
                 foreach(target; level.parallel) {
 
@@ -47,6 +47,12 @@ struct Binary {
         }
         if(!didAnything) writeln("[build] Nothing to do");
     }
+
+    const(Target)[] topLevelTargets(string[] args) @trusted const pure nothrow {
+        args = args[1..$];
+        return build.targets.filter!(a => args.empty || args.canFind(a.outputs[0])).array;
+    }
+
 
 private:
 

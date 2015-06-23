@@ -56,3 +56,13 @@ Feature: Binary backend
       """
       foobar
       """
+
+    When I successfully run `./build`
+    And I successfully run `cat copy.txt`
+    Then the output should contain:
+      """
+      See the little goblin
+      See his little feet
+      And his little nosey-wose
+      Isn't the goblin sweet?
+      """

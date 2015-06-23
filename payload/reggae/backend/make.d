@@ -34,23 +34,21 @@ struct Makefile {
 
         auto ret = text("all: ", build.defaultTargetsString(projectPath), "\n");
 
-        foreach(topTarget; build.targets) {
-            foreach(t; DepthFirst(topTarget)) {
+        foreach(t; UniqueDepthFirst(build)) {
 
-                mkDir(t);
+            mkDir(t);
 
-                immutable output = t.outputsInProjectPath(projectPath).join(" ");
-                if(t.command.getType == CommandType.phony) {
-                    ret ~= ".PHONY: " ~ output ~ "\n";
-                }
-                ret ~= output ~  ": ";
-                ret ~= t.dependencyFilesString(projectPath);
-                immutable implicitFiles = t.implicitFilesString(projectPath);
-                if(!implicitFiles.empty) ret ~= " " ~ t.implicitFilesString(projectPath);
-                ret ~= " Makefile\n";
-
-                ret ~= "\t" ~ command(t) ~ "\n";
+            immutable output = t.outputsInProjectPath(projectPath).join(" ");
+            if(t.command.getType == CommandType.phony) {
+                ret ~= ".PHONY: " ~ output ~ "\n";
             }
+            ret ~= output ~  ": ";
+            ret ~= t.dependencyFilesString(projectPath);
+            immutable implicitFiles = t.implicitFilesString(projectPath);
+            if(!implicitFiles.empty) ret ~= " " ~ t.implicitFilesString(projectPath);
+            ret ~= " Makefile\n";
+
+            ret ~= "\t" ~ command(t) ~ "\n";
         }
 
         return ret;

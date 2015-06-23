@@ -199,7 +199,6 @@ void testImplicitInput() {
          NinjaEntry("build bin/protocol.o: gcc gen/protocol.c | gen/protocol.c gen/protocol.h",
                     ["before = -o",
                      "between = -c"]),
-         NinjaEntry("build gen/protocol.c gen/protocol.h: compiler protocol.proto"),
          NinjaEntry("build gen/protocol.d: translator gen/protocol.h | gen/protocol.c gen/protocol.h"),
          NinjaEntry("build app: dmd src/main.d bin/protocol.o gen/protocol.d",
                     ["before = -of"])

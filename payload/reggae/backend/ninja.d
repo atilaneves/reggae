@@ -81,14 +81,12 @@ struct Ninja {
         _build = build;
         _projectPath = projectPath;
 
-        foreach(topTarget; _build.targets) {
-            foreach(target; DepthFirst(topTarget)) {
-                target.command.isDefaultCommand
-                    ? defaultRule(target)
-                    : target.command.getType == CommandType.phony
-                        ? phonyRule(target)
-                        : customRule(target);
-            }
+        foreach(target; UniqueDepthFirst(_build)) {
+            target.command.isDefaultCommand
+                ? defaultRule(target)
+                : target.command.getType == CommandType.phony
+                ? phonyRule(target)
+                : customRule(target);
         }
     }
 

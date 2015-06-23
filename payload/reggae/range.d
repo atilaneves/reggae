@@ -130,3 +130,41 @@ auto flatten(R)(R range) @trusted pure nothrow {
     foreach(x; range) res ~= x.array;
     return res;
 }
+
+
+auto noSortUniq(R)(R range) if(isInputRange!R) {
+    ElementType!R[] ret;
+    foreach(elt; range) {
+        if(!ret.canFind(elt)) ret ~= elt;
+    }
+    return ret;
+}
+
+//removes duplicate targets from the build, presents a depth-first interface
+//per top-level target
+struct UniqueDepthFirst {
+    Build build;
+    private const(Target)[] _targets;
+
+    this(in Build build) {
+        _targets = build.targets.
+            map!(a => DepthFirst(a)).
+            flatten.
+            noSortUniq.
+            array;
+    }
+
+    Target front() pure nothrow {
+        return _targets.front;
+    }
+
+    void popFront() pure nothrow {
+        _targets.popFront;
+    }
+
+    bool empty() pure nothrow {
+        return _targets.empty;
+    }
+
+    static assert(isInputRange!UniqueDepthFirst);
+}

@@ -25,7 +25,9 @@ Build.TopLevelTarget createTopLevelTarget(in Target target) {
                                        target.implicits.map!(a => a.enclose(target)).array));
 }
 
-
+/**
+ Designate a target as optional so it won't be built by default.
+ */
 Build.TopLevelTarget optional(in Target target) {
     return Build.TopLevelTarget(target, true);
 }

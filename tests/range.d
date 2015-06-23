@@ -106,3 +106,12 @@ void testLeavesTwoLevels() {
     Leaves(target).array.shouldEqual([fooC, barC, hdrI, impLeaf]);
 
 }
+
+void testDiamondDeps() {
+    const fooLib = Target("$project/foo.so", "dmd -of$out $in", [Target("src1.d"), Target("src2.d")]);
+    const symlink1 = Target("$project/weird/path/thingie1", "ln -sf $in $out", fooLib);
+    const symlink2 = Target("$project/weird/path/thingie2", "ln -sf $in $out", fooLib);
+    const build = Build(symlink1, symlink2); //defined by the mixin
+    UniqueDepthFirst(build).array.shouldEqual(
+        [fooLib, symlink1, symlink2]);
+}

@@ -40,5 +40,5 @@ version(minimal) {
 
     enum cuke = Target.phony("cuke", "cd $project && cucumber", [main]);
 
-    mixin build!(main, ut, optional(cuke));
+    mixin build!(main, ut); //optional(cuke));
 }

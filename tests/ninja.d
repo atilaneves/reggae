@@ -1,8 +1,7 @@
 module tests.ninja;
 
 import unit_threaded;
-import reggae.backend.ninja;
-import reggae.build;
+import reggae;
 
 
 void testEmpty() {
@@ -200,7 +199,6 @@ void testImplicitInput() {
          NinjaEntry("build bin/protocol.o: gcc gen/protocol.c | gen/protocol.c gen/protocol.h",
                     ["before = -o",
                      "between = -c"]),
-         NinjaEntry("build gen/protocol.c gen/protocol.h: compiler protocol.proto"),
          NinjaEntry("build gen/protocol.d: translator gen/protocol.h | gen/protocol.c gen/protocol.h"),
          NinjaEntry("build app: dmd src/main.d bin/protocol.o gen/protocol.d",
                     ["before = -of"])
@@ -226,6 +224,25 @@ void testOutputInProjectPathCustom() {
         [NinjaEntry("build /path/to/proj/foo.o: gcc /path/to/proj/foo.c",
                     ["before = -o",
                      "between = -c"])]);
+}
+
+
+void testOutputAndDepOutputInProjectPath() {
+    const fooLib = Target("$project/foo.so", "dmd -of$out $in", [Target("src1.d"), Target("src2.d")]);
+    const symlink1 = Target("$project/weird/path/thingie1", "ln -sf $in $out", fooLib);
+    const symlink2 = Target("$project/weird/path/thingie2", "ln -sf $in $out", fooLib);
+    const build = Build(symlink1, symlink2); //defined by the mixin
+    const ninja = Ninja(build, "/tmp/proj");
+
+    ninja.buildEntries.shouldEqual(
+        [NinjaEntry("build /tmp/proj/foo.so: dmd /tmp/proj/src1.d /tmp/proj/src2.d",
+                    ["before = -of"]),
+         NinjaEntry("build /tmp/proj/weird/path/thingie1: ln /tmp/proj/foo.so",
+                    ["before = -sf"]),
+         NinjaEntry("build /tmp/proj/weird/path/thingie2: ln /tmp/proj/foo.so",
+                    ["before = -sf"]),
+            ]
+        );
 }
 
 void testOutputInProjectPathDefault() {

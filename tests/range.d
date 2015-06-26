@@ -109,41 +109,41 @@ void testLeavesTwoLevels() {
 
 
 void testConvertLeaf() {
-    auto converter = TargetConverter();
-    converter.targets.array.shouldBeEmpty;
+    auto graph = Graph();
+    graph.targets.array.shouldBeEmpty;
 
     const foo = Target("foo.d");
-    converter.convert(foo).shouldEqual(TargetWithRefs(foo));
-    converter.targets.array.shouldBeEmpty;
+    graph.convert(foo).shouldEqual(TargetWithRefs(foo));
+    graph.targets.array.shouldBeEmpty;
 
     const bar = Target("bar.d");
-    converter.convert(bar).shouldEqual(TargetWithRefs(bar));
-    converter.targets.array.shouldBeEmpty;
+    graph.convert(bar).shouldEqual(TargetWithRefs(bar));
+    graph.targets.array.shouldBeEmpty;
 
-    converter.put(foo);
-    converter.targets.array.shouldEqual([TargetWithRefs(foo)]);
+    graph.put(foo);
+    graph.targets.array.shouldEqual([TargetWithRefs(foo)]);
 
-    converter.put(bar);
-    converter.targets.array.shouldEqual([TargetWithRefs(foo), TargetWithRefs(bar)]);
+    graph.put(bar);
+    graph.targets.array.shouldEqual([TargetWithRefs(foo), TargetWithRefs(bar)]);
 
 }
 
 void testConvertOneLevel() {
-    auto converter = TargetConverter();
+    auto graph = Graph();
     const foo = Target("foo.d");
     const hidden = Target("hidden");
     const target = Target("foo.o", "dmd -of$out -c $in", [foo], [hidden]);
-    //converter is empty, it can't find target's dependencies and therefore throws
-    converter.convert(target).shouldThrow;
-    converter.targets.array.shouldBeEmpty;
+    //graph is empty, it can't find target's dependencies and therefore throws
+    graph.convert(target).shouldThrow;
+    graph.targets.array.shouldBeEmpty;
 
-    converter.put(target);
-    converter.convert(target).shouldEqual(TargetWithRefs(target, [0], [1]));
+    graph.put(target);
+    graph.convert(target).shouldEqual(TargetWithRefs(target, [0], [1]));
 
-    converter.targets.array.shouldEqual(
+    graph.targets.array.shouldEqual(
         [TargetWithRefs(foo),
          TargetWithRefs(hidden),
-         TargetWithRefs(target, [converter.getRef(foo)], [converter.getRef(hidden)])]);
+         TargetWithRefs(target, [graph.getRef(foo)], [graph.getRef(hidden)])]);
 }
 
 private struct DiamondDepsBuild {
@@ -156,7 +156,7 @@ private struct DiamondDepsBuild {
     Target symlink2;
 }
 
-DiamondDepsBuild getDiamondDepsBuild() {
+DiamondDepsBuild getDiamondDeps() {
     const src1 = Target("src1.d");
     const src2 = Target("src2.d");
     const obj1 = Target("obj1.o", "dmd -of$out -c $in", src1);
@@ -168,38 +168,38 @@ DiamondDepsBuild getDiamondDepsBuild() {
 }
 
 void testConvertDiamondDepsNoBuildStruct() {
-    auto converter = TargetConverter();
-    auto build = getDiamondDepsBuild();
+    auto graph = Graph();
+    auto deps = getDiamondDeps();
 
     import std.stdio;
-    foreach(topTarget; [build.symlink1, build.symlink2]) {
+    foreach(topTarget; [deps.symlink1,deps.symlink2]) {
         foreach(target; DepthFirst(topTarget)) {
-            converter.put(target);
+            graph.put(target);
         }
     }
 
-    converter.targets.array.shouldEqual(
+    graph.targets.array.shouldEqual(
         [
-            TargetWithRefs(build.src1),
-            TargetWithRefs(build.obj1, [0]),
-            TargetWithRefs(build.src2),
-            TargetWithRefs(build.obj2, [2]),
-            TargetWithRefs(build.fooLib, [1, 3]),
-            TargetWithRefs(build.symlink1, [4]),
-            TargetWithRefs(build.symlink2, [4]),
+            TargetWithRefs(deps.src1),
+            TargetWithRefs(deps.obj1, [0]),
+            TargetWithRefs(deps.src2),
+            TargetWithRefs(deps.obj2, [2]),
+            TargetWithRefs(deps.fooLib, [1, 3]),
+            TargetWithRefs(deps.symlink1, [4]),
+            TargetWithRefs(deps.symlink2, [4]),
             ]);
 }
 
 
 @ShouldFail
 void testConvertDiamondDeps() {
-    auto converter = TargetConverter();
-    const deps = getDiamondDepsBuild();
+    auto graph = Graph();
+    const deps = getDiamondDeps();
     const build = Build(deps.symlink1, deps.symlink2); //defined by the mixin
 
-    converter.put(build);
+    graph.put(build);
 
-    converter.targets.array.shouldEqual(
+    graph.targets.array.shouldEqual(
         [
             TargetWithRefs(deps.src1),
             TargetWithRefs(deps.obj1, [0]),

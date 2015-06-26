@@ -186,7 +186,7 @@ import std.stdio;
 
 
 //a converter from Target to TargetWithRefs
-struct TargetConverter {
+struct Graph {
     TargetWithRefs convert(in Target target) pure const {
         //leaves can always be converted
         if(target.isLeaf) return TargetWithRefs(target);

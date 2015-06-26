@@ -188,6 +188,8 @@ void testConvertDiamondDepsNoBuildStruct() {
             TargetWithRefs(deps.symlink1, [4]),
             TargetWithRefs(deps.symlink2, [4]),
             ]);
+
+    graph.convert(deps.symlink1).shouldEqual(TargetWithRefs(deps.symlink1, [graph.getRef(deps.fooLib)]));
 }
 
 

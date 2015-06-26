@@ -52,12 +52,12 @@ struct Build {
         }
     }
 
-    const(Target)[] targets() @trusted pure nothrow const {
-        return _targets.map!(a => a.target).array;
+    auto targets() @trusted pure nothrow const {
+        return _targets.map!(a => a.target);
     }
 
-    const(Target)[] defaultTargets() @trusted pure nothrow const {
-        return _targets.filter!(a => !a.optional).map!(a => a.target).array;
+    auto defaultTargets() @trusted pure nothrow const {
+        return _targets.filter!(a => !a.optional).map!(a => a.target);
     }
 
     string defaultTargetsString(in string projectPath) @trusted pure nothrow const {

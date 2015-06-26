@@ -62,7 +62,7 @@ void testMultipleOutputs() {
     target.expandCommand("myproj").shouldEqual("protocomp myproj/foo.proto");
 
     const bld = Build(target);
-    bld.targets[0].outputs.shouldEqual(["foo.hpp", "foo.cpp"]);
+    bld.targets.array[0].outputs.shouldEqual(["foo.hpp", "foo.cpp"]);
 }
 
 
@@ -104,7 +104,7 @@ void testMultipleOutputsImplicits() {
                              `echo "extern(C) " > $out; cat gen/protocol.h >> $out`,
                              [], [newProtoSrcs]);
 
-    build.targets.shouldEqual(
+    build.targets.array.shouldEqual(
         [Target("app", "dmd -of$out $in",
                 [Target("src/main.d"),
                  Target("bin/protocol.o", "gcc -o $out -c gen/protocol.c",
@@ -141,5 +141,5 @@ void testOptional() {
     optional(bar).target.shouldEqual(bar);
     mixin build!(foo, optional(bar));
     auto build = buildFunc();
-    build.targets[1].shouldEqual(bar);
+    build.targets.array[1].shouldEqual(bar);
 }

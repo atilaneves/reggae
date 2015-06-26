@@ -247,13 +247,28 @@ struct Target {
         return depFilesStringImpl(implicits, projectPath);
     }
 
+    bool isLeaf() @safe pure const nothrow {
+        return dependencies is null && implicits is null;
+    }
+
+    string[] outputsInProjectPath(in string projectPath) @safe pure nothrow const {
+        return outputs.map!(a => isLeaf ? buildPath(projectPath, a) : a).
+            map!(a => a.replace("$project", projectPath)).array;
+    }
+
+    Language getLanguage() @safe pure nothrow const {
+        import reggae.range: Leaves;
+        const leaves = () @trusted { return Leaves(this).array; }();
+        foreach(language; [Language.D, Language.Cplusplus, Language.C]) {
+            if(leaves.any!(a => reggae.rules.common.getLanguage(a.outputs[0]) == language)) return language;
+        }
+
+        return Language.unknown;
+    }
+
     ///replace all special variables with their expansion
     @property string expandCommand(in string projectPath = "") @trusted pure const nothrow {
         return _command.expand(projectPath, outputs, inputs(projectPath));
-    }
-
-    bool isLeaf() @safe pure const nothrow {
-        return dependencies is null && implicits is null;
     }
 
     //@trusted because of replace
@@ -267,25 +282,24 @@ struct Target {
         return _command.shellCommand(projectPath, getLanguage(), outputs, inputs(projectPath), deps);
     }
 
-    string[] outputsInProjectPath(in string projectPath) @safe pure nothrow const {
-        return outputs.map!(a => isLeaf ? buildPath(projectPath, a) : a).
-            map!(a => a.replace("$project", projectPath)).array;
-    }
-
-    @property const(Command) command() @safe const pure nothrow { return _command; }
-
-    Language getLanguage() @safe pure nothrow const {
-        import reggae.range: Leaves;
-        const leaves = () @trusted { return Leaves(this).array; }();
-        foreach(language; [Language.D, Language.Cplusplus, Language.C]) {
-            if(leaves.any!(a => reggae.rules.common.getLanguage(a.outputs[0]) == language)) return language;
-        }
-
-        return Language.unknown;
-    }
-
     string[] execute(in string projectPath = "") @safe const {
         return _command.execute(projectPath, getLanguage(), outputs, inputs(projectPath));
+    }
+
+    bool hasDefaultCommand() @safe const pure {
+        return _command.isDefaultCommand;
+    }
+
+    CommandType getCommandType() @safe pure const nothrow {
+        return _command.getType;
+    }
+
+    string[] getCommandParams(in string projectPath, in string key, string[] ifNotFound) @safe pure const {
+        return _command.getParams(projectPath, key, ifNotFound);
+    }
+
+    const(string)[] commandParamNames() @safe pure nothrow const {
+        return _command.paramNames;
     }
 
     static Target phony(in string output, in string shellCommand, in Target[] dependencies = []) {
@@ -298,7 +312,7 @@ struct Target {
             immutable outputs = outputs.length == 1 ? `"` ~ outputs[0] ~ `"` : text(outputs);
             immutable depsStr = dependencies.length == 0 ? "" : text(dependencies);
             immutable impsStr = implicits.length == 0 ? "" : text(implicits);
-            auto parts = [text(outputs), `"` ~ command.command ~ `"`];
+            auto parts = [text(outputs), `"` ~ _command.command ~ `"`];
             if(depsStr != "") parts ~= depsStr;
             if(impsStr != "") parts ~= impsStr;
             return text("Target(", parts.join(", "), ")");
@@ -307,9 +321,6 @@ struct Target {
         }
     }
 
-    bool hasDefaultCommand() @safe const pure {
-        return _command.isDefaultCommand;
-    }
 
 private:
 
@@ -395,7 +406,7 @@ struct Command {
         return params.keys;
     }
 
-    CommandType getType() @safe pure const {
+    CommandType getType() @safe pure const nothrow {
         return type;
     }
 

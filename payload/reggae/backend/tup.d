@@ -22,7 +22,7 @@ struct Tup {
 
         string[] lines;
         foreach(target; UniqueDepthFirst(build)) {
-            if(target.command.getType == CommandType.code)
+            if(target.getCommandType == CommandType.code)
                 throw new Exception("Command type 'code' not supported for tup backend");
 
             //tup does its own dependency detection, trying to output

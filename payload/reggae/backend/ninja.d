@@ -84,7 +84,7 @@ struct Ninja {
         foreach(target; UniqueDepthFirst(_build)) {
             target.hasDefaultCommand
                 ? defaultRule(target)
-                : target.command.getType == CommandType.phony
+                : target.getCommandType == CommandType.phony
                 ? phonyRule(target)
                 : customRule(target);
         }
@@ -124,8 +124,8 @@ private:
     void defaultRule(in Target target) @trusted {
         string[] paramLines;
 
-        foreach(immutable param; target.command.paramNames) {
-            immutable value = target.command.getParams(_projectPath, param, []).join(" ");
+        foreach(immutable param; target.commandParamNames) {
+            immutable value = target.getCommandParams(_projectPath, param, []).join(" ");
             if(value == "") continue;
             paramLines ~= param ~ " = " ~ value;
         }
@@ -133,7 +133,7 @@ private:
         immutable language = target.getLanguage;
 
         buildEntries ~= NinjaEntry(buildLine(target) ~
-                                   cmdTypeToNinjaString(target.command.getType, language) ~
+                                   cmdTypeToNinjaString(target.getCommandType, language) ~
                                    " " ~ target.dependencyFilesString(_projectPath),
                                    paramLines);
     }

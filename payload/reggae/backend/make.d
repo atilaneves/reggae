@@ -39,7 +39,7 @@ struct Makefile {
             mkDir(t);
 
             immutable output = t.outputsInProjectPath(projectPath).join(" ");
-            if(t.command.getType == CommandType.phony) {
+            if(t.getCommandType == CommandType.phony) {
                 ret ~= ".PHONY: " ~ output ~ "\n";
             }
             ret ~= output ~  ": ";
@@ -74,7 +74,7 @@ struct Makefile {
     //the only reason this is needed is to add auto dependency
     //tracking
     string command(in Target target) @safe const {
-        immutable cmdType = target.command.getType;
+        immutable cmdType = target.getCommandType;
         if(cmdType == CommandType.code)
             throw new Exception("Command type 'code' not supported for make backend");
 

@@ -139,7 +139,7 @@ private:
     bool checkTimestamps(in Target target) const {
         foreach(dep; chain(target.dependencies, target.implicits)) {
 
-            immutable isPhony = target.command.getType == CommandType.phony;
+            immutable isPhony = target.getCommandType == CommandType.phony;
             immutable anyNewer = cartesianProduct(dep.outputsInProjectPath(projectPath),
                                                   target.outputsInProjectPath(projectPath)).
                 any!(a => a[0].newerThan(a[1]));
@@ -156,7 +156,7 @@ private:
     //always run phony rules with no dependencies at top-level
     //ByDepthLevel won't include them
     bool checkChildlessPhony(in Target target) const {
-        if(target.command.getType == CommandType.phony &&
+        if(target.getCommandType == CommandType.phony &&
            target.dependencies.empty && target.implicits.empty) {
             executeCommand(target);
             return true;
@@ -180,7 +180,7 @@ private:
         mkDir(target);
         const output = target.execute(projectPath);
         writeln("[build] " ~ output[0]);
-        if(target.command.getType == CommandType.phony)
+        if(target.getCommandType == CommandType.phony)
             writeln("\n", output[1]);
     }
 

@@ -144,6 +144,9 @@ void testConvertOneLevel() {
         [TargetWithRefs(foo),
          TargetWithRefs(hidden),
          TargetWithRefs(target, [graph.getRef(foo)], [graph.getRef(hidden)])]);
+
+    // graph.targets[2].dependencies.shouldEqual([foo]);
+    // graph.targets[2].implicits.shouldEqual([hidden]);
 }
 
 private struct DiamondDepsBuild {
@@ -195,11 +198,9 @@ void testConvertDiamondDepsNoBuildStruct() {
 
 @ShouldFail
 void testConvertDiamondDeps() {
-    auto graph = Graph();
     const deps = getDiamondDeps();
     const build = Build(deps.symlink1, deps.symlink2); //defined by the mixin
-
-    graph.put(build);
+    const graph = Graph(build);
 
     graph.targets.array.shouldEqual(
         [

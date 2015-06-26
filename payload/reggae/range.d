@@ -178,8 +178,17 @@ alias TargetRef = long;
 //a wrapper for each distinct target so that we can deal with reference semantics
 struct TargetWithRefs {
     Target target;
-    const(TargetRef)[] dependencies;
-    const(TargetRef)[] implicits;
+    const(TargetRef)[] dependencyRefs;
+    const(TargetRef)[] implicitRefs;
+
+    // const(Target)[] dependencies() const pure nothrow {
+    //     return dependencyRefs.map!(a => );
+    // }
+
+    // const(Target)[] implicits() const pure nothrow {
+    //     return [];
+    // }
+
 }
 
 import std.stdio;
@@ -187,6 +196,15 @@ import std.stdio;
 
 //a converter from Target to TargetWithRefs
 struct Graph {
+
+    this(Build build) pure {
+        foreach(topTarget; build.targets) {
+            foreach(target; DepthFirst(topTarget)) {
+                put(target);
+            }
+        }
+    }
+
     TargetWithRefs convert(in Target target) pure const {
         //leaves can always be converted
         if(target.isLeaf) return TargetWithRefs(target);
@@ -210,15 +228,7 @@ struct Graph {
         return _targets;
     }
 
-    void put(in Build build) {
-        foreach(topTarget; build.targets) {
-            foreach(target; DepthFirst(topTarget)) {
-                put(target);
-            }
-        }
-    }
-
-    void put(in Target target) @trusted {
+    void put(in Target target) @trusted pure {
         foreach(t; chain(target.dependencies, target.implicits, [target])) {
             putIfNotAlreadyHere(t);
         }
@@ -232,7 +242,7 @@ private:
 
     TargetWithRefs[] _targets;
 
-    void putIfNotAlreadyHere(in Target target) {
+    void putIfNotAlreadyHere(in Target target) pure {
         auto converted = convert(target);
         if(!_targets.canFind(converted)) _targets ~= converted;
     }

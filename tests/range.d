@@ -126,29 +126,98 @@ void testDiamondDeps() {
     //targets.length.shouldEqual(5);
 }
 
-
 void testConvertLeaf() {
     auto converter = TargetConverter();
+    converter.targets.array.shouldBeEmpty;
+
+    converter.convert(Target("foo.d")).shouldEqual(TargetWithRefs("foo.d"));
+    converter.targets.array.shouldBeEmpty;
+
+    converter.convert(Target("bar.d")).shouldEqual(TargetWithRefs("bar.d"));
+    converter.targets.array.shouldBeEmpty;
+
     converter.put(Target("foo.d"));
     converter.targets.array.shouldEqual([TargetWithRefs("foo.d")]);
+
     converter.put(Target("bar.d"));
     converter.targets.array.shouldEqual([TargetWithRefs("foo.d"), TargetWithRefs("bar.d")]);
 
 }
 
+void testConvertOneLevel() {
+    auto converter = TargetConverter();
+    const target = Target("foo.o", "dmd -of$out -c $in", [Target("foo.d")], [Target("hidden")]);
+    //converter is empty, it can't find target's dependencies and therefore throws
+    converter.convert(target).shouldThrow;
+    converter.targets.array.shouldBeEmpty;
+
+    converter.put(target);
+    converter.convert(target).shouldEqual(TargetWithRefs("foo.o", "dmd -of$out -c $in", [0], [1]));
+
+    converter.targets.array.shouldEqual(
+        [TargetWithRefs("foo.d"), TargetWithRefs("hidden"),
+         TargetWithRefs("foo.o", "dmd -of$out -c $in", [0], [1])]);
+}
+
+// void testConverterGetRefEmpty() {
+//     auto converter = TargetConverter();
+//     converter.getRef(Target("foo.d")).shouldThrow;
+// }
+
+// void testConverterGerRefLeaves() {
+//     auto converter = TargetConverter();
+//     const foo = Target("foo.d");
+//     converter.put(foo);
+//     converter.getRef(foo).shouldEqual(0);
+
+//     const bar = Target("bar.d");
+//     converter.getRef(bar).shouldThrow;
+
+//     converter.put(bar);
+//     converter.getRef(foo).shouldEqual(0);
+//     converter.getRef(bar).shouldEqual(1);
+//     converter.getRef(Target("baz.d")).shouldThrow;
+// }
+
+// void testConverterGetRefBranches() {
+//     auto converter = TargetConverter();
+//     const target = Target("foo.o", "dmd -of$out -c $in", [Target("foo.d")], [Target("hidden")]);
+//     converter.put(target);
+//     converter.getRef(Target("foo.d")).shouldEqual(0);
+//     converter.getRef(Target("bar.d")).shouldEqual(1);
+// }
+
+// void testConvertLeaf() {
+//     auto converter = TargetConverter();
+
+//     const foo = Target("foo.d");
+//     converter.put(foo);
+//     converter.targets.array.shouldEqual([TargetWithRefs("foo.d")]);
+
+//     const bar = Target("bar.d");
+//     converter.put(bar);
+//     converter.targets.array.shouldEqual([TargetWithRefs("foo.d"), TargetWithRefs("bar.d")]);
+
+//     converter.getRef(foo).shouldEqual(0);
+//     converter.getRef(bar).shouldEqual(1);
+//     converter.getRef(Target("quux.d")).shouldEqual(-1);
+// }
+
 // void testConvertOneLevel() {
 //     auto converter = TargetConverter();
 //     const target = Target("foo.o", "dmd -of$out -c $in", [Target("foo.d")], [Target("hidden")]);
 //     converter.put(target);
-//     immutable srcRef = converter.getRef(TargetWithRefs("foo.d"));
-//     immutable hiddenRef = converter.getRef(TargetWithRefs("hidden"));
+//     immutable srcRef = converter.getRef(Target("foo.d"));
+//     immutable hiddenRef = converter.getRef(Target("hidden"));
 //     converter.targets.array.shouldEqual(
 //         [
 //             TargetWithRefs("foo.d"),
 //             TargetWithRefs("hidden"),
 //             TargetWithRefs("foo.o", "dmd -of$out -c $in", [srcRef], [hiddenRef])
 //             ]);
+
 //     converter.haveAlready(target).shouldBeTrue;
+//     converter.getRef(target).shouldEqual(2);
 // }
 
 

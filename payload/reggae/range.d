@@ -3,6 +3,7 @@ module reggae.range;
 import reggae.build;
 import std.range;
 import std.algorithm;
+import std.conv;
 
 @safe:
 
@@ -219,7 +220,7 @@ struct TargetWithRefs {
 }
 
 
-struct TargetConverter {
+struct TargetConverter0 {
     private TargetWithRefs[] _targets;
     import std.stdio;
     void put(in Build build) @trusted {
@@ -270,9 +271,19 @@ struct TargetConverter {
         return _targets.countUntil(target);
     }
 
+    TargetRef getRef(in Target target) const pure {
+        immutable index = _targets.countUntil(TargetWithRefs(target.outputs));
+        if(index == -1) {
+            immutable msg = () @trusted { return text("Dependencies for ", target, " were not filled in"); }();
+            throw new Exception(msg);
+        }
+        return index;
+    }
+
     bool haveAlready(in Target target) const pure nothrow {
         if(target.isLeaf) return _targets.canFind(TargetWithRefs(target.outputs));
-        return chain(target.dependencies, target.implicits).all!(a => haveAlready(a));
+        if(!chain(target.dependencies, target.implicits).all!(a => haveAlready(a))) return false;
+        return true;
     }
 
     // TargetWithRefs convert(in Target target) const pure nothrow {
@@ -281,4 +292,41 @@ struct TargetConverter {
     //     const implicits = target.implicits.map!(a => getRef(a));
     //     return TargetWithRefs(target.outputs, target.rawCmdString, dependencies.array, implicits.array);
     // }
+}
+
+
+struct TargetConverter {
+    TargetWithRefs convert(in Target target) pure {
+        //leaves can always be converted
+        if(target.isLeaf) return TargetWithRefs(target.outputs);
+
+        TargetRef[] depRefs(in Target[] deps) @trusted {
+            return deps.map!(a => convert(a)).map!(a => _targets.countUntil(a)).array;
+        }
+        const deps = depRefs(target.dependencies);
+        const imps = depRefs(target.implicits);
+
+        if(chain(deps, imps).any!(a => a == -1)) {
+            immutable msg = () @trusted { return text("Could not find all dependency refs for ", target); }();
+            throw new Exception(msg);
+        }
+
+        return TargetWithRefs(target.outputs, target.rawCmdString, deps, imps);
+    }
+
+    const (TargetWithRefs)[] targets() nothrow pure const {
+        return _targets;
+    }
+
+    void put(in Target target) {
+        foreach(dep; chain(target.dependencies, target.implicits)) {
+            auto converted = convert(dep);
+            if(!_targets.canFind(converted)) _targets ~= converted;
+        }
+        _targets ~= convert(target);
+    }
+
+private:
+
+    TargetWithRefs[] _targets;
 }

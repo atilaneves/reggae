@@ -154,91 +154,65 @@ void testConvertOneLevel() {
     converter.put(target);
     converter.convert(target).shouldEqual(TargetWithRefs("foo.o", "dmd -of$out -c $in", [0], [1]));
 
+    immutable fooRef = converter.getRef(Target("foo.d"));
+    immutable hiddenRef = converter.getRef(Target("hidden"));
     converter.targets.array.shouldEqual(
-        [TargetWithRefs("foo.d"), TargetWithRefs("hidden"),
-         TargetWithRefs("foo.o", "dmd -of$out -c $in", [0], [1])]);
+        [TargetWithRefs("foo.d"),
+         TargetWithRefs("hidden"),
+         TargetWithRefs("foo.o", "dmd -of$out -c $in", [fooRef], [hiddenRef])]);
 }
 
-// void testConverterGetRefEmpty() {
-//     auto converter = TargetConverter();
-//     converter.getRef(Target("foo.d")).shouldThrow;
-// }
+private struct DiamondDepsBuild {
+    Target symlink1;
+    Target symlink2;
+}
 
-// void testConverterGerRefLeaves() {
-//     auto converter = TargetConverter();
-//     const foo = Target("foo.d");
-//     converter.put(foo);
-//     converter.getRef(foo).shouldEqual(0);
+DiamondDepsBuild getDiamondDepsBuild() {
+    const obj1 = Target("obj1.o", "dmd -of$out -c $in", Target("src1.d"));
+    const obj2 = Target("obj2.o", "dmd -of$out -c $in", Target("src2.d"));
+    const fooLib = Target("$project/foo.so", "dmd -of$out $in", [obj1, obj2]);
+    const symlink1 = Target("$project/weird/path/thingie1", "ln -sf $in $out", fooLib);
+    const symlink2 = Target("$project/weird/path/thingie2", "ln -sf $in $out", fooLib);
+    return DiamondDepsBuild(symlink1, symlink2);
+}
 
-//     const bar = Target("bar.d");
-//     converter.getRef(bar).shouldThrow;
+void testConvertDiamondDepsNoBuildStruct() {
+    auto converter = TargetConverter();
+    auto build = getDiamondDepsBuild();
 
-//     converter.put(bar);
-//     converter.getRef(foo).shouldEqual(0);
-//     converter.getRef(bar).shouldEqual(1);
-//     converter.getRef(Target("baz.d")).shouldThrow;
-// }
+    import std.stdio;
+    foreach(topTarget; [build.symlink1, build.symlink2]) {
+        foreach(target; DepthFirst(topTarget)) {
+            converter.put(target);
+        }
+    }
 
-// void testConverterGetRefBranches() {
-//     auto converter = TargetConverter();
-//     const target = Target("foo.o", "dmd -of$out -c $in", [Target("foo.d")], [Target("hidden")]);
-//     converter.put(target);
-//     converter.getRef(Target("foo.d")).shouldEqual(0);
-//     converter.getRef(Target("bar.d")).shouldEqual(1);
-// }
+    converter.targets.array.shouldEqual(
+        [
+            TargetWithRefs("src1.d"),
+            TargetWithRefs("obj1.o", "dmd -of$out -c $in", [0]),
+            TargetWithRefs("src2.d"),
+            TargetWithRefs("obj2.o", "dmd -of$out -c $in", [2]),
+            TargetWithRefs("$project/foo.so", "dmd -of$out $in", [1, 3]),
+            TargetWithRefs("$project/weird/path/thingie1", "ln -sf $in $out", [4]),
+            TargetWithRefs("$project/weird/path/thingie2", "ln -sf $in $out", [4]),
+            ]);
+}
+void testConvertDiamondDeps() {
+    auto converter = TargetConverter();
+    const deps = getDiamondDepsBuild();
+    const build = Build(deps.symlink1, deps.symlink2); //defined by the mixin
 
-// void testConvertLeaf() {
-//     auto converter = TargetConverter();
+    converter.put(build);
 
-//     const foo = Target("foo.d");
-//     converter.put(foo);
-//     converter.targets.array.shouldEqual([TargetWithRefs("foo.d")]);
-
-//     const bar = Target("bar.d");
-//     converter.put(bar);
-//     converter.targets.array.shouldEqual([TargetWithRefs("foo.d"), TargetWithRefs("bar.d")]);
-
-//     converter.getRef(foo).shouldEqual(0);
-//     converter.getRef(bar).shouldEqual(1);
-//     converter.getRef(Target("quux.d")).shouldEqual(-1);
-// }
-
-// void testConvertOneLevel() {
-//     auto converter = TargetConverter();
-//     const target = Target("foo.o", "dmd -of$out -c $in", [Target("foo.d")], [Target("hidden")]);
-//     converter.put(target);
-//     immutable srcRef = converter.getRef(Target("foo.d"));
-//     immutable hiddenRef = converter.getRef(Target("hidden"));
-//     converter.targets.array.shouldEqual(
-//         [
-//             TargetWithRefs("foo.d"),
-//             TargetWithRefs("hidden"),
-//             TargetWithRefs("foo.o", "dmd -of$out -c $in", [srcRef], [hiddenRef])
-//             ]);
-
-//     converter.haveAlready(target).shouldBeTrue;
-//     converter.getRef(target).shouldEqual(2);
-// }
-
-
-// void testConvertDiamondDeps() {
-//     const obj1 = Target("obj1.o", "dmd -of$out -c $in", Target("src1.d"));
-//     const obj2 = Target("obj2.o", "dmd -of$out -c $in", Target("src2.d"));
-//     const fooLib = Target("$project/foo.so", "dmd -of$out $in", [obj1, obj2]);
-//     const symlink1 = Target("$project/weird/path/thingie1", "ln -sf $in $out", fooLib);
-//     const symlink2 = Target("$project/weird/path/thingie2", "ln -sf $in $out", fooLib);
-//     const build = Build(symlink1, symlink2); //defined by the mixin
-//     auto converter = TargetConverter();
-//     converter.put(build);
-//     //converter.targets.array.length.shouldEqual(5);
-//     converter.targets.array.shouldEqual(
-//         [
-//             TargetWithRefs("src1.d"),
-//             TargetWithRefs("objs/$project/weird/path/thingie1.objs/obj1.o", "dmd -of$out -c $in", [0]),
-//             TargetWithRefs("src2.d"),
-//             TargetWithRefs("objs/$project/weird/path/thingie1.objs/obj2.o", "dmd -of$out -c $in", [2]),
-//             TargetWithRefs("$project/foo.so", "dmd -of$out $in", [1, 3]),
-//             TargetWithRefs("$project/weird/path/thingie1", "ln -sf $in $out", [4]),
-//             TargetWithRefs("$project/weird/path/thingie2", "ln -sf $in $out", [4]),
-//             ]);
-// }
+    converter.targets.array.shouldEqual(
+        [
+            TargetWithRefs("src1.d"),
+            TargetWithRefs("objs/$project/weird/path/thingie1.objs/obj1.o", "dmd -of$out -c $in", [0]),
+            TargetWithRefs("src2.d"),
+            TargetWithRefs("objs/$project/weird/path/thingie1.objs/obj2.o", "dmd -of$out -c $in", [2]),
+            TargetWithRefs("$project/foo.so", "dmd -of$out $in", [1, 3]),
+            TargetWithRefs("$project/weird/path/thingie1", "ln -sf $in $out", [4]),
+            TargetWithRefs("$project/weird/path/thingie2", "ln -sf $in $out", [4]),
+            ]);
+}

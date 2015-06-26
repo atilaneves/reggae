@@ -219,6 +219,7 @@ struct TargetWithRefs {
     }
 }
 
+import std.stdio;
 
 struct TargetConverter0 {
     private TargetWithRefs[] _targets;
@@ -318,12 +319,32 @@ struct TargetConverter {
         return _targets;
     }
 
+    void put(in Build build) {
+        foreach(topTarget; build.targets) {
+            foreach(target; DepthFirst(topTarget)) {
+                put(target);
+            }
+        }
+    }
+
     void put(in Target target) {
         foreach(dep; chain(target.dependencies, target.implicits)) {
             auto converted = convert(dep);
-            if(!_targets.canFind(converted)) _targets ~= converted;
+            writeln("    Dep is ", converted);
+            if(!_targets.canFind(converted)) {
+                writeln("        Don't have it yet");
+                _targets ~= converted;
+            } else {
+                writeln("        Have it, doing nothing");
+            }
         }
-        _targets ~= convert(target);
+        auto converted = convert(target);
+        if(!_targets.canFind(converted)) _targets ~= converted;
+        writeln("targets now ", _targets, "\n");
+    }
+
+    TargetRef getRef(in Target target) {
+        return _targets.countUntil(convert(target));
     }
 
 private:

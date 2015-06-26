@@ -172,20 +172,23 @@ DiamondDepsBuild getDiamondDeps() {
 
 void testConvertDiamondDepsNoBuildStruct() {
     auto deps = getDiamondDeps();
-    auto graph = Graph([deps.symlink1,deps.symlink2]);
+    with(deps) {
 
-    graph.targets.array.shouldEqual(
-        [
-            TargetWithRefs(deps.src1),
-            TargetWithRefs(deps.obj1, [0]),
-            TargetWithRefs(deps.src2),
-            TargetWithRefs(deps.obj2, [2]),
-            TargetWithRefs(deps.fooLib, [1, 3]),
-            TargetWithRefs(deps.symlink1, [4]),
-            TargetWithRefs(deps.symlink2, [4]),
-            ]);
+        auto graph = Graph([symlink1,symlink2]);
 
-    graph.convert(deps.symlink1).shouldEqual(TargetWithRefs(deps.symlink1, [graph.getRef(deps.fooLib)]));
+        graph.targets.array.shouldEqual(
+            [
+                TargetWithRefs(src1),
+                TargetWithRefs(obj1, [graph.getRef(src1)]),
+                TargetWithRefs(src2),
+                TargetWithRefs(obj2, [graph.getRef(src2)]),
+                TargetWithRefs(fooLib, [graph.getRef(obj1), graph.getRef(obj2)]),
+                TargetWithRefs(symlink1, [graph.getRef(fooLib)]),
+                TargetWithRefs(symlink2, [graph.getRef(fooLib)]),
+                ]);
+
+        graph.convert(symlink1).shouldEqual(TargetWithRefs(symlink1, [graph.getRef(fooLib)]));
+    }
 }
 
 

@@ -8,7 +8,18 @@ import std.exception;
 
 @safe:
 
-struct DepthFirst(T) {
+enum isTargetLike(T) = is(typeof(() {
+    auto target = T.init;
+    auto deps = target.dependencies;
+    auto imps = target.implicits;
+    if(target.isLeaf) {}
+    string cmd = target.expandCommand;
+    cmd = target.expandCommand("");
+}));
+
+static assert(isTargetLike!Target);
+
+struct DepthFirst(T) if(isTargetLike!T) {
     const(Target)[] targets;
 
     this(in T target) pure nothrow {
@@ -259,6 +270,14 @@ struct TargetWrapper {
         return subTargets(targetWithRefs.implicits);
     }
 
+    auto expandCommand(in string projectPath = "") const pure nothrow {
+        return targetWithRefs.target.expandCommand(projectPath);
+    }
+
+    auto isLeaf() const pure nothrow {
+        return targetWithRefs.target.isLeaf;
+    }
+
 private:
 
     //@trusted because of .array
@@ -266,4 +285,5 @@ private:
         return refs.map!(a => targets[a].target).array;
     }
 
+    static assert(isTargetLike!TargetWrapper);
 }

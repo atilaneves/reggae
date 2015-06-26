@@ -66,16 +66,18 @@ void testMultipleOutputs() {
 }
 
 
-void testEnclose() {
+void testInTopLevelObjDir() {
 
-    Target("foo.o", "", [Target("foo.c")]).enclose(Target("theapp")).shouldEqual(
-            Target("objs/theapp.objs/foo.o", "", [Target("foo.c")]));
+    const fooObj = Target("foo.o", "", [Target("foo.c")]);
+    fooObj.inTopLevelObjDirOf(Target("theapp")).shouldEqual(
+        Target("objs/theapp.objs/foo.o", "", [Target("foo.c")]));
 
-    Target("$builddir/bar.o", "", [Target("bar.c")]).enclose(Target("theapp")).shouldEqual(
+    const barObjInBuildDir = Target("$builddir/bar.o", "", [Target("bar.c")]);
+    barObjInBuildDir.inTopLevelObjDirOf(Target("theapp")).shouldEqual(
         Target("bar.o", "", [Target("bar.c")]));
 
     const leafTarget = Target("foo.c");
-    leafTarget.enclose(Target("theapp")).shouldEqual(leafTarget);
+    leafTarget.inTopLevelObjDirOf(Target("theapp")).shouldEqual(leafTarget);
 }
 
 

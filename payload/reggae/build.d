@@ -18,29 +18,6 @@ import std.conv;
 import std.exception;
 import std.typecons;
 
-Build.TopLevelTarget createTopLevelTarget(in Target target, in bool optional = false) {
-    return Build.TopLevelTarget(Target(target.outputs,
-                                       target._command.expandBuildDir,
-                                       target.dependencies.map!(a => a.enclose(target)).array,
-                                       target.implicits.map!(a => a.enclose(target)).array),
-                                optional);
-}
-
-/**
- Designate a target as optional so it won't be built by default.
- */
-Build.TopLevelTarget optional(alias targetFunc)() {
-    return optional(targetFunc());
-}
-
-/**
- Designate a target as optional so it won't be built by default.
- */
-
-Build.TopLevelTarget optional(in Target target) {
-    return createTopLevelTarget(target, true);
-}
-
 
 /**
  Contains the top-level targets.
@@ -50,6 +27,7 @@ struct Build {
         Target target;
         bool optional;
     }
+
     private const(TopLevelTarget)[] _targets;
 
     this(in Target[] targets) {
@@ -58,6 +36,11 @@ struct Build {
 
     this(T...)(in T targets) {
         foreach(t; targets) {
+            //the constructor needs to go from Target to TopLevelTarget
+            //and accepts functions that return a parameter as well as parameters themselves
+            //if a function, call it, if not, take the value
+            //if the value is Target, call createTopLevelTarget, if not, take it as is
+
             static if(isSomeFunction!(typeof(t)) && is(ReturnType!(typeof(t))) == Target) {
                 _targets ~= createTopLevelTarget(t());
             } else static if(isSomeFunction!(typeof(t)) && is(ReturnType!(typeof(t))) == TopLevelTarget) {
@@ -83,12 +66,39 @@ struct Build {
     }
 }
 
+
+/**
+ Designate a target as optional so it won't be built by default.
+ "Compile-time" version that can be aliased
+ */
+Build.TopLevelTarget optional(alias targetFunc)() {
+    return optional(targetFunc());
+}
+
+/**
+ Designate a target as optional so it won't be built by default.
+ */
+Build.TopLevelTarget optional(in Target target) {
+    return createTopLevelTarget(target, true);
+}
+
+Build.TopLevelTarget createTopLevelTarget(in Target target, in bool optional = false) {
+    //outputs is unchanged - top level targets are created in the root of the build directory
+    return Build.TopLevelTarget(Target(target.outputs,
+                                       target._command.expandVariables,
+                                       target.dependencies.map!(a => a.inTopLevelObjDirOf(target)).array,
+                                       target.implicits.map!(a => a.inTopLevelObjDirOf(target)).array),
+                                optional);
+}
+
+
 //a directory for each top-level target no avoid name clashes
 //@trusted because of map -> buildPath -> array
-Target enclose(in Target target, in Target topLevel) @trusted {
+Target inTopLevelObjDirOf(in Target target, in Target topLevel) @trusted {
     //leaf targets only get the $builddir expansion, nothing else
-    if(target.isLeaf) return Target(target.outputs.map!(a => a._expandBuildDir).array,
-                                    target._command.expandBuildDir,
+    //this is because leaf targets are by definition in the project path
+    if(target.isLeaf) return Target(target.outputs.map!(a => a._expandVariables).array,
+                                    target._command.expandVariables,
                                     target.dependencies,
                                     target.implicits);
 
@@ -96,28 +106,30 @@ Target enclose(in Target target, in Target topLevel) @trusted {
     //specific to its top-level parent
     immutable dirName = buildPath("objs", topLevel.outputs[0] ~ ".objs");
     return Target(target.outputs.map!(a => realTargetPath(dirName, a)).array,
-                  target._command.expandBuildDir,
-                  target.dependencies.map!(a => a.enclose(topLevel)).array,
-                  target.implicits.map!(a => a.enclose(topLevel)).array);
+                  target._command.expandVariables,
+                  target.dependencies.map!(a => a.inTopLevelObjDirOf(topLevel)).array,
+                  target.implicits.map!(a => a.inTopLevelObjDirOf(topLevel)).array);
 }
 
 immutable gBuilddir = "$builddir";
+immutable gProjdir  = "$project";
 
 
-//targets that have outputs with $builddir in them want to be placed
+//targets that have outputs with $builddir or $project in them want to be placed
 //in a specific place. Those don't get touched. Other targets get
 //placed in their top-level parent's object directory
 string realTargetPath(in string dirName, in string output) @trusted pure {
     import std.algorithm: canFind;
 
-    if(output.startsWith("$project")) return output;
+    if(output.startsWith(gProjdir)) return output;
 
     return output.canFind(gBuilddir)
-        ? output._expandBuildDir
+        ? output._expandVariables
         : buildPath(dirName, output);
 }
 
-private string _expandBuildDir(in string output) @trusted pure {
+//replace $builddir with the current directory
+private string _expandVariables(in string output) @trusted pure {
     import std.path: buildNormalizedPath;
     import std.algorithm;
     return output.
@@ -418,10 +430,10 @@ struct Command {
         return getParams(projectPath, key, true, ifNotFound);
     }
 
-    const(Command) expandBuildDir() @safe pure const {
+    const(Command) expandVariables() @safe pure const {
         switch(type) with(CommandType) {
         case shell:
-            auto cmd = Command(_expandBuildDir(command));
+            auto cmd = Command(_expandVariables(command));
             cmd.type = this.type;
             return cmd;
         default:

@@ -208,9 +208,13 @@ struct Graph {
 
     this(in Target[] topLevelTargets) pure {
         foreach(topTarget; topLevelTargets) {
-            foreach(target; depthFirst(topTarget)) {
-                put(target);
-            }
+            putTopLevelTarget(topTarget);
+        }
+    }
+
+    void putTopLevelTarget(in Target topTarget) pure {
+        foreach(target; depthFirst(topTarget)) {
+            put(target);
         }
     }
 

@@ -82,13 +82,9 @@ Build.TopLevelTarget optional(in Target target) {
     return Build.TopLevelTarget(target, true);
 }
 
-//Build.TopLevelTarget createTopLevelTarget(in Target target, in bool optional = false) {
 Build.TopLevelTarget createTopLevelTarget(in Target target) {
     //outputs is unchanged - top level targets are created in the root of the build directory
-    return Build.TopLevelTarget(Target(target.outputs,
-                                       target._command.expandVariables,
-                                       target.dependencies.map!(a => a.inTopLevelObjDirOf(target)).array,
-                                       target.implicits.map!(a => a.inTopLevelObjDirOf(target)).array));
+    return Build.TopLevelTarget(target.inTopLevelObjDirOf(target));
 }
 
 
@@ -97,18 +93,29 @@ Build.TopLevelTarget createTopLevelTarget(in Target target) {
 Target inTopLevelObjDirOf(in Target target, in Target topLevel) @trusted {
     //leaf targets only get the $builddir expansion, nothing else
     //this is because leaf targets are by definition in the project path
-    if(target.isLeaf) return Target(target.outputs.map!(a => a._expandVariables).array,
-                                    target._command.expandVariables,
-                                    target.dependencies,
-                                    target.implicits);
 
     //every other non-top-level target gets its outputs placed in a directory
     //specific to its top-level parent
-    immutable dirName = buildPath("objs", topLevel.outputs[0] ~ ".objs");
-    return Target(target.outputs.map!(a => realTargetPath(dirName, a)).array,
+
+    const outputs = target == topLevel
+        ? target.outputs
+        : target.outputs.map!(a => realTargetPath(target, topLevel, a)).array;
+
+    return Target(outputs,
                   target._command.expandVariables,
                   target.dependencies.map!(a => a.inTopLevelObjDirOf(topLevel)).array,
                   target.implicits.map!(a => a.inTopLevelObjDirOf(topLevel)).array);
+}
+
+
+//targets that have outputs with $builddir or $project in them want to be placed
+//in a specific place. Those don't get touched. Other targets get
+//placed in their top-level parent's object directory
+string realTargetPath(in Target target, in Target topLevel, in string output) @trusted pure {
+    immutable dirName = buildPath("objs", topLevel.outputs[0] ~ ".objs");
+    return target.isLeaf
+        ? _expandVariables(output)
+        : realTargetPath(dirName, output);
 }
 
 immutable gBuilddir = "$builddir";

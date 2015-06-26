@@ -198,25 +198,9 @@ struct UniqueDepthFirst2 {
 alias TargetRef = long;
 
 struct TargetWithRefs {
-    const(string)[] outputs;
-    const string command;
+    Target target;
     const(TargetRef)[] dependencies;
     const(TargetRef)[] implicits;
-
-    this(in string output, in string cmd = "",
-         in TargetRef[] dependencies = [],
-         in TargetRef[] implicits = []) pure nothrow {
-        this([output], cmd, dependencies, implicits);
-    }
-
-    this(in string[] outputs, in string cmd = "",
-         in TargetRef[] dependencies = [],
-         in TargetRef[] implicits = []) pure nothrow {
-        this.outputs = outputs;
-        this.command = cmd;
-        this.dependencies = dependencies.array;
-        this.implicits = implicits;
-    }
 }
 
 import std.stdio;
@@ -225,7 +209,7 @@ import std.stdio;
 struct TargetConverter {
     TargetWithRefs convert(in Target target) pure {
         //leaves can always be converted
-        if(target.isLeaf) return TargetWithRefs(target.outputs);
+        if(target.isLeaf) return TargetWithRefs(target);
 
         TargetRef[] depRefs(in Target[] deps) @trusted {
             return deps.map!(a => convert(a)).map!(a => _targets.countUntil(a)).array;
@@ -238,7 +222,7 @@ struct TargetConverter {
             throw new Exception(msg);
         }
 
-        return TargetWithRefs(target.outputs, target.rawCmdString, deps, imps);
+        return TargetWithRefs(target, deps, imps);
     }
 
     const (TargetWithRefs)[] targets() nothrow pure const {
@@ -253,7 +237,7 @@ struct TargetConverter {
         }
     }
 
-    void put(in Target target) {
+    void put(in Target target) @trusted {
         foreach(dep; chain(target.dependencies, target.implicits)) {
             auto converted = convert(dep);
             writeln("    Dep is ", converted);

@@ -112,50 +112,59 @@ void testConvertLeaf() {
     auto converter = TargetConverter();
     converter.targets.array.shouldBeEmpty;
 
-    converter.convert(Target("foo.d")).shouldEqual(TargetWithRefs("foo.d"));
+    const foo = Target("foo.d");
+    converter.convert(foo).shouldEqual(TargetWithRefs(foo));
     converter.targets.array.shouldBeEmpty;
 
-    converter.convert(Target("bar.d")).shouldEqual(TargetWithRefs("bar.d"));
+    const bar = Target("bar.d");
+    converter.convert(bar).shouldEqual(TargetWithRefs(bar));
     converter.targets.array.shouldBeEmpty;
 
-    converter.put(Target("foo.d"));
-    converter.targets.array.shouldEqual([TargetWithRefs("foo.d")]);
+    converter.put(foo);
+    converter.targets.array.shouldEqual([TargetWithRefs(foo)]);
 
-    converter.put(Target("bar.d"));
-    converter.targets.array.shouldEqual([TargetWithRefs("foo.d"), TargetWithRefs("bar.d")]);
+    converter.put(bar);
+    converter.targets.array.shouldEqual([TargetWithRefs(foo), TargetWithRefs(bar)]);
 
 }
 
 void testConvertOneLevel() {
     auto converter = TargetConverter();
-    const target = Target("foo.o", "dmd -of$out -c $in", [Target("foo.d")], [Target("hidden")]);
+    const foo = Target("foo.d");
+    const hidden = Target("hidden");
+    const target = Target("foo.o", "dmd -of$out -c $in", [foo], [hidden]);
     //converter is empty, it can't find target's dependencies and therefore throws
     converter.convert(target).shouldThrow;
     converter.targets.array.shouldBeEmpty;
 
     converter.put(target);
-    converter.convert(target).shouldEqual(TargetWithRefs("foo.o", "dmd -of$out -c $in", [0], [1]));
+    converter.convert(target).shouldEqual(TargetWithRefs(target, [0], [1]));
 
-    immutable fooRef = converter.getRef(Target("foo.d"));
-    immutable hiddenRef = converter.getRef(Target("hidden"));
     converter.targets.array.shouldEqual(
-        [TargetWithRefs("foo.d"),
-         TargetWithRefs("hidden"),
-         TargetWithRefs("foo.o", "dmd -of$out -c $in", [fooRef], [hiddenRef])]);
+        [TargetWithRefs(foo),
+         TargetWithRefs(hidden),
+         TargetWithRefs(target, [converter.getRef(foo)], [converter.getRef(hidden)])]);
 }
 
 private struct DiamondDepsBuild {
+    Target src1;
+    Target src2;
+    Target obj1;
+    Target obj2;
+    Target fooLib;
     Target symlink1;
     Target symlink2;
 }
 
 DiamondDepsBuild getDiamondDepsBuild() {
-    const obj1 = Target("obj1.o", "dmd -of$out -c $in", Target("src1.d"));
-    const obj2 = Target("obj2.o", "dmd -of$out -c $in", Target("src2.d"));
+    const src1 = Target("src1.d");
+    const src2 = Target("src2.d");
+    const obj1 = Target("obj1.o", "dmd -of$out -c $in", src1);
+    const obj2 = Target("obj2.o", "dmd -of$out -c $in", src2);
     const fooLib = Target("$project/foo.so", "dmd -of$out $in", [obj1, obj2]);
     const symlink1 = Target("$project/weird/path/thingie1", "ln -sf $in $out", fooLib);
     const symlink2 = Target("$project/weird/path/thingie2", "ln -sf $in $out", fooLib);
-    return DiamondDepsBuild(symlink1, symlink2);
+    return DiamondDepsBuild(src1, src2, obj1, obj2, fooLib, symlink1, symlink2);
 }
 
 void testConvertDiamondDepsNoBuildStruct() {
@@ -171,13 +180,13 @@ void testConvertDiamondDepsNoBuildStruct() {
 
     converter.targets.array.shouldEqual(
         [
-            TargetWithRefs("src1.d"),
-            TargetWithRefs("obj1.o", "dmd -of$out -c $in", [0]),
-            TargetWithRefs("src2.d"),
-            TargetWithRefs("obj2.o", "dmd -of$out -c $in", [2]),
-            TargetWithRefs("$project/foo.so", "dmd -of$out $in", [1, 3]),
-            TargetWithRefs("$project/weird/path/thingie1", "ln -sf $in $out", [4]),
-            TargetWithRefs("$project/weird/path/thingie2", "ln -sf $in $out", [4]),
+            TargetWithRefs(build.src1),
+            TargetWithRefs(build.obj1, [0]),
+            TargetWithRefs(build.src2),
+            TargetWithRefs(build.obj2, [2]),
+            TargetWithRefs(build.fooLib, [1, 3]),
+            TargetWithRefs(build.symlink1, [4]),
+            TargetWithRefs(build.symlink2, [4]),
             ]);
 }
 
@@ -192,12 +201,12 @@ void testConvertDiamondDeps() {
 
     converter.targets.array.shouldEqual(
         [
-            TargetWithRefs("src1.d"),
-            TargetWithRefs("objs/$project/weird/path/thingie1.objs/obj1.o", "dmd -of$out -c $in", [0]),
-            TargetWithRefs("src2.d"),
-            TargetWithRefs("objs/$project/weird/path/thingie1.objs/obj2.o", "dmd -of$out -c $in", [2]),
-            TargetWithRefs("$project/foo.so", "dmd -of$out $in", [1, 3]),
-            TargetWithRefs("$project/weird/path/thingie1", "ln -sf $in $out", [4]),
-            TargetWithRefs("$project/weird/path/thingie2", "ln -sf $in $out", [4]),
+            TargetWithRefs(deps.src1),
+            TargetWithRefs(deps.obj1, [0]),
+            TargetWithRefs(deps.src2),
+            TargetWithRefs(deps.obj2, [2]),
+            TargetWithRefs(deps.fooLib, [1, 3]),
+            TargetWithRefs(deps.symlink1, [4]),
+            TargetWithRefs(deps.symlink2, [4]),
             ]);
 }

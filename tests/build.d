@@ -68,16 +68,17 @@ void testMultipleOutputs() {
 
 void testInTopLevelObjDir() {
 
+    const theApp = Target("theapp");
     const fooObj = Target("foo.o", "", [Target("foo.c")]);
-    fooObj.inTopLevelObjDirOf(Target("theapp")).shouldEqual(
+    fooObj.inTopLevelObjDirOf(theApp).shouldEqual(
         Target("objs/theapp.objs/foo.o", "", [Target("foo.c")]));
 
     const barObjInBuildDir = Target("$builddir/bar.o", "", [Target("bar.c")]);
-    barObjInBuildDir.inTopLevelObjDirOf(Target("theapp")).shouldEqual(
+    barObjInBuildDir.inTopLevelObjDirOf(theApp).shouldEqual(
         Target("bar.o", "", [Target("bar.c")]));
 
     const leafTarget = Target("foo.c");
-    leafTarget.inTopLevelObjDirOf(Target("theapp")).shouldEqual(leafTarget);
+    leafTarget.inTopLevelObjDirOf(theApp).shouldEqual(leafTarget);
 }
 
 
@@ -130,4 +131,15 @@ void testRealTargetPath() {
     realTargetPath(dirName, symlinkBar.outputs[0]).shouldEqual("weird/path/thingie2");
     realTargetPath(dirName, barLib.outputs[0]).shouldEqual("bar.so");
 
+}
+
+
+void testOptional() {
+    enum foo = Target("foo", "dmd -of$out $in", Target("foo.d"));
+    enum bar = Target("bar", "dmd -of$out $in", Target("bar.d"));
+
+    optional(bar).target.shouldEqual(bar);
+    mixin build!(foo, optional(bar));
+    auto build = buildFunc();
+    build.targets[1].shouldEqual(bar);
 }

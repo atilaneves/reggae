@@ -194,7 +194,7 @@ struct UniqueDepthFirst2 {
     static assert(isInputRange!UniqueDepthFirst2);
 }
 
-alias TargetRef = ulong;
+alias TargetRef = long;
 
 struct TargetWithRefs {
     const(string)[] outputs;
@@ -203,15 +203,17 @@ struct TargetWithRefs {
     const(TargetRef)[] implicits;
 
     this(in string output, in string cmd = "",
-         in TargetRef[] dependencies = [], in TargetRef[] implicits = []) pure nothrow {
+         in TargetRef[] dependencies = [],
+         in TargetRef[] implicits = []) pure nothrow {
         this([output], cmd, dependencies, implicits);
     }
 
     this(in string[] outputs, in string cmd = "",
-         in TargetRef[] dependencies = [], in TargetRef[] implicits = []) pure nothrow {
+         in TargetRef[] dependencies = [],
+         in TargetRef[] implicits = []) pure nothrow {
         this.outputs = outputs;
         this.command = cmd;
-        this.dependencies = dependencies;
+        this.dependencies = dependencies.array;
         this.implicits = implicits;
     }
 }
@@ -219,25 +221,45 @@ struct TargetWithRefs {
 
 struct TargetConverter {
     private TargetWithRefs[] _targets;
+    import std.stdio;
+    void put(in Build build) @trusted {
+        foreach(topTarget; build.targets) {
+            foreach(target; DepthFirst(topTarget)) {
+                writeln("Putting target ", target);
+                put(target);
+            }
+        }
+    }
 
     void put(in Target target) @trusted {
+        import std.stdio;
         TargetRef[] newDependencies;
         foreach(dep; target.dependencies) {
-            if(dep.isLeaf) {
+            writeln("    dep: ", dep);
+            if(!haveAlready(dep)) {
+                writeln("        Don't have it yet, adding");
                 _targets ~= TargetWithRefs(dep.outputs);
-                newDependencies ~= _targets.length - 1;
+            } else {
+                writeln("        Have this one already");
             }
+            newDependencies ~= _targets.length - 1;
         }
 
         TargetRef[] newImplicits;
-        foreach(implicit; target.implicits) {
-            if(implicit.isLeaf) {
-                _targets ~= TargetWithRefs(implicit.outputs);
-                newImplicits ~= _targets.length - 1;
+        foreach(imp; target.implicits) {
+            writeln("    imp: ", imp);
+            if(!haveAlready(imp)) {
+                writeln("        Don't have it yet, adding");
+                _targets ~= TargetWithRefs(imp.outputs);
+            } else {
+                writeln("        Have this one already");
             }
+            newImplicits ~= _targets.length - 1;
         }
 
+
         _targets ~= TargetWithRefs(target.outputs, target.rawCmdString, newDependencies, newImplicits);
+        writeln("targets: ", _targets, "\n");
     }
 
     TargetWithRefs[] targets() pure nothrow {
@@ -247,4 +269,16 @@ struct TargetConverter {
     TargetRef getRef(in TargetWithRefs target) const pure nothrow {
         return _targets.countUntil(target);
     }
+
+    bool haveAlready(in Target target) const pure nothrow {
+        if(target.isLeaf) return _targets.canFind(TargetWithRefs(target.outputs));
+        return chain(target.dependencies, target.implicits).all!(a => haveAlready(a));
+    }
+
+    // TargetWithRefs convert(in Target target) const pure nothrow {
+    //     if(target.isLeaf) return TargetWithRefs(target.outputs);
+    //     const dependencies = target.dependencies.map!(a => getRef(a));
+    //     const implicits = target.implicits.map!(a => getRef(a));
+    //     return TargetWithRefs(target.outputs, target.rawCmdString, dependencies.array, implicits.array);
+    // }
 }

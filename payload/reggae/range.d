@@ -4,6 +4,7 @@ import reggae.build;
 import std.range;
 import std.algorithm;
 import std.conv;
+import std.exception;
 
 @safe:
 
@@ -190,12 +191,12 @@ struct TargetConverter {
         //leaves can always be converted
         if(target.isLeaf) return TargetWithRefs(target);
 
-        TargetRef[] depRefs(in Target[] deps) @trusted {
-            return deps.map!(a => getRef(a)).array;
+        immutable(TargetRef)[] depRefs(in Target[] deps) @trusted {
+            return deps.map!(a => getRef(a)).array.assumeUnique;
         }
 
-        const deps = depRefs(target.dependencies);
-        const imps = depRefs(target.implicits);
+        immutable deps = depRefs(target.dependencies);
+        immutable imps = depRefs(target.implicits);
 
         if(chain(deps, imps).canFind(-1)) {
             immutable msg = () @trusted { return text("Could not find all dependency refs for ", target); }();
@@ -218,19 +219,9 @@ struct TargetConverter {
     }
 
     void put(in Target target) @trusted {
-        foreach(dep; chain(target.dependencies, target.implicits)) {
-            auto converted = convert(dep);
-            writeln("    Dep is ", converted);
-            if(!_targets.canFind(converted)) {
-                writeln("        Don't have it yet");
-                _targets ~= converted;
-            } else {
-                writeln("        Have it, doing nothing");
-            }
+        foreach(t; chain(target.dependencies, target.implicits, [target])) {
+            putIfNotAlreadyHere(t);
         }
-        auto converted = convert(target);
-        if(!_targets.canFind(converted)) _targets ~= converted;
-        writeln("targets now ", _targets, "\n");
     }
 
     TargetRef getRef(in Target target) pure const {
@@ -240,4 +231,9 @@ struct TargetConverter {
 private:
 
     TargetWithRefs[] _targets;
+
+    void putIfNotAlreadyHere(in Target target) {
+        auto converted = convert(target);
+        if(!_targets.canFind(converted)) _targets ~= converted;
+    }
 }

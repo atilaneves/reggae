@@ -43,8 +43,6 @@ struct Build {
 
             static if(isSomeFunction!(typeof(t)) && is(ReturnType!(typeof(t))) == Target) {
                 _targets ~= createTopLevelTarget(t());
-            } else static if(isSomeFunction!(typeof(t)) && is(ReturnType!(typeof(t))) == TopLevelTarget) {
-                _targets ~= t();
             } else static if(is(Unqual!(typeof(t)) == TopLevelTarget)) {
                 _targets ~= t;
             } else {

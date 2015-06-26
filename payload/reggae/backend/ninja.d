@@ -82,7 +82,7 @@ struct Ninja {
         _projectPath = projectPath;
 
         foreach(target; UniqueDepthFirst(_build)) {
-            target.command.isDefaultCommand
+            target.hasDefaultCommand
                 ? defaultRule(target)
                 : target.command.getType == CommandType.phony
                 ? phonyRule(target)

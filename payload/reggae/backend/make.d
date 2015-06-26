@@ -80,7 +80,7 @@ struct Makefile {
 
         immutable cmd = target.shellCommand(projectPath);
         immutable depfile = target.outputs[0] ~ ".dep";
-        if(target.command.isDefaultCommand) {
+        if(target.hasDefaultCommand) {
             return cmdType == CommandType.link ? cmd : cmd ~ makeAutoDeps(depfile);
         } else {
             return cmd;

@@ -307,6 +307,10 @@ struct Target {
         }
     }
 
+    bool hasDefaultCommand() @safe const pure {
+        return _command.isDefaultCommand;
+    }
+
 private:
 
 

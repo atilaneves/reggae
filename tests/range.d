@@ -145,8 +145,8 @@ void testConvertOneLevel() {
          TargetWithRefs(hidden),
          TargetWithRefs(target, [graph.getRef(foo)], [graph.getRef(hidden)])]);
 
-    graph.target(target).dependencies.shouldEqual([foo]);
-    graph.target(target).implicits.shouldEqual([hidden]);
+    graph.target(target).dependencies.map!(a => a.targetWithRefs.target).array.shouldEqual([foo]);
+    graph.target(target).implicits.map!(a => a.targetWithRefs.target).array.shouldEqual([hidden]);
 }
 
 private struct DiamondDepsBuild {
@@ -188,6 +188,12 @@ void testConvertDiamondDepsNoBuildStruct() {
                 ]);
 
         graph.convert(symlink1).shouldEqual(TargetWithRefs(symlink1, [graph.getRef(fooLib)]));
+
+        depthFirst(graph.target(fooLib)).map!(a => a.targetWithRefs).array.shouldEqual(
+            [ TargetWithRefs(obj1, [graph.getRef(src1)]),
+              TargetWithRefs(obj2, [graph.getRef(src2)]),
+              TargetWithRefs(fooLib, [graph.getRef(obj1), graph.getRef(obj2)]),
+                ]);
     }
 }
 

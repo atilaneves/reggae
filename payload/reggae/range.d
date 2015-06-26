@@ -11,22 +11,25 @@ import std.exception;
 enum isTargetLike(T) = is(typeof(() {
     auto target = T.init;
     auto deps = target.dependencies;
+    static assert(is(Unqual!(typeof(deps[0])) == Unqual!T));
     auto imps = target.implicits;
+    static assert(is(Unqual!(typeof(imps[0])) == Unqual!T));
     if(target.isLeaf) {}
     string cmd = target.expandCommand;
     cmd = target.expandCommand("");
 }));
 
+
 static assert(isTargetLike!Target);
 
 struct DepthFirst(T) if(isTargetLike!T) {
-    const(Target)[] targets;
+    const(T)[] targets;
 
     this(in T target) pure nothrow {
         this.targets = depthFirstTargets(target);
     }
 
-    const(Target)[] depthFirstTargets(in T target) pure nothrow {
+    const(T)[] depthFirstTargets(in T target) pure nothrow {
         //if leaf, return
         if(target.isLeaf) return target.expandCommand is null ? [] : [target];
 
@@ -270,11 +273,11 @@ struct TargetWrapper {
     TargetWithRefs targetWithRefs;
     const TargetWithRefs[] targets;
 
-    const(Target)[] dependencies() const pure nothrow {
-           return subTargets(targetWithRefs.dependencies);
+    const(TargetWrapper)[] dependencies() const pure nothrow {
+        return subTargets(targetWithRefs.dependencies);
     }
 
-    const(Target)[] implicits() const pure nothrow {
+    const(TargetWrapper)[] implicits() const pure nothrow {
         return subTargets(targetWithRefs.implicits);
     }
 
@@ -289,8 +292,8 @@ struct TargetWrapper {
 private:
 
     //@trusted because of .array
-    const(Target)[] subTargets(in TargetRef[] refs) const pure nothrow @trusted {
-        return refs.map!(a => targets[a].target).array;
+    const(TargetWrapper)[] subTargets(in TargetRef[] refs) const pure nothrow @trusted {
+        return refs.map!(a => TargetWrapper(targets[a], targets)).array;
     }
 
     static assert(isTargetLike!TargetWrapper);

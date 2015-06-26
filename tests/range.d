@@ -145,8 +145,8 @@ void testConvertOneLevel() {
          TargetWithRefs(hidden),
          TargetWithRefs(target, [graph.getRef(foo)], [graph.getRef(hidden)])]);
 
-    // graph.targets[2].dependencies.shouldEqual([foo]);
-    // graph.targets[2].implicits.shouldEqual([hidden]);
+    graph.target(target).dependencies.shouldEqual([foo]);
+    graph.target(target).implicits.shouldEqual([hidden]);
 }
 
 private struct DiamondDepsBuild {

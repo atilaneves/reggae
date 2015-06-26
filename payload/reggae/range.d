@@ -178,17 +178,8 @@ alias TargetRef = long;
 //a wrapper for each distinct target so that we can deal with reference semantics
 struct TargetWithRefs {
     Target target;
-    const(TargetRef)[] dependencyRefs;
-    const(TargetRef)[] implicitRefs;
-
-    // const(Target)[] dependencies() const pure nothrow {
-    //     return dependencyRefs.map!(a => );
-    // }
-
-    // const(Target)[] implicits() const pure nothrow {
-    //     return [];
-    // }
-
+    const(TargetRef)[] dependencies;
+    const(TargetRef)[] implicits;
 }
 
 import std.stdio;
@@ -238,6 +229,10 @@ struct Graph {
         return _targets.countUntil(convert(target));
     }
 
+    TargetWrapper target(in Target target) pure const {
+        return TargetWrapper(convert(target), _targets);
+    }
+
 private:
 
     TargetWithRefs[] _targets;
@@ -246,4 +241,26 @@ private:
         auto converted = convert(target);
         if(!_targets.canFind(converted)) _targets ~= converted;
     }
+}
+
+
+struct TargetWrapper {
+    TargetWithRefs targetWithRefs;
+    const TargetWithRefs[] targets;
+
+    const(Target)[] dependencies() const pure nothrow {
+           return subTargets(targetWithRefs.dependencies);
+    }
+
+    const(Target)[] implicits() const pure nothrow {
+        return subTargets(targetWithRefs.implicits);
+    }
+
+private:
+
+    //@trusted because of .array
+    const(Target)[] subTargets(in TargetRef[] refs) const pure nothrow @trusted {
+        return refs.map!(a => targets[a].target).array;
+    }
+
 }

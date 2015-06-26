@@ -146,7 +146,7 @@ struct UniqueDepthFirst {
     Build build;
     private const(Target)[] _targets;
 
-    this(in Build build) pure nothrow {
+    this(in Build build) pure nothrow @trusted {
         _targets = build.targets.
             map!(a => DepthFirst(a)).
             flatten.
@@ -167,4 +167,67 @@ struct UniqueDepthFirst {
     }
 
     static assert(isInputRange!UniqueDepthFirst);
+}
+
+
+struct UniqueDepthFirst2 {
+
+    private const(Target)[] _targets;
+
+    this(in Build build) pure nothrow {
+
+    }
+
+    Target front() pure nothrow {
+        return _targets.front;
+    }
+
+    void popFront() pure nothrow {
+        _targets.popFront;
+    }
+
+    bool empty() pure nothrow {
+        return _targets.empty;
+    }
+
+
+    static assert(isInputRange!UniqueDepthFirst2);
+}
+
+alias TargetRef = int;
+
+struct TargetWithRefs {
+    const(string)[] outputs;
+    const string command;
+    const(TargetRef)[] dependencies;
+    const(TargetRef)[] implicits;
+
+    this(in string output, in string cmd = "",
+         in TargetRef[] dependencies = [], in TargetRef[] implicits = []) pure nothrow {
+        this([output], cmd, dependencies, implicits);
+    }
+
+    this(in string[] outputs, in string cmd = "",
+         in TargetRef[] dependencies = [], in TargetRef[] implicits = []) pure nothrow {
+        this.outputs = outputs;
+        this.command = cmd;
+        this.dependencies = dependencies;
+        this.implicits = implicits;
+    }
+}
+
+
+struct TargetConverter {
+    private TargetWithRefs[] _targets;
+
+    void put(in Target target) @trusted {
+        _targets ~= TargetWithRefs(target.outputs,
+                                   target.rawCmdString,
+                                   [0],
+                                   [1]);
+    }
+
+    TargetWithRefs[] targets() {
+        return _targets;
+    }
 }

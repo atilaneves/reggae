@@ -257,7 +257,7 @@ struct Target {
     }
 
     //@trusted because of replace
-    string rawCmdString(in string projectPath) @trusted pure const {
+    string rawCmdString(in string projectPath = "") @trusted pure const {
         return _command.rawCmdString(projectPath);
     }
 

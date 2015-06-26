@@ -206,7 +206,7 @@ struct Graph {
         this(build.targets);
     }
 
-    this(in Target[] topLevelTargets) pure {
+    this(R)(R topLevelTargets) pure if(isInputRange!R) {
         foreach(topTarget; topLevelTargets) {
             putTopLevelTarget(topTarget);
         }

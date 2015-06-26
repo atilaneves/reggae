@@ -16,8 +16,7 @@ struct Makefile {
     string projectPath;
 
     this(Build build) @safe pure {
-        this.build = build;
-        this.projectPath = "";
+        this(build, "");
     }
 
     this(Build build, string projectPath) @safe pure {

@@ -171,32 +171,10 @@ struct UniqueDepthFirst {
 }
 
 
-struct UniqueDepthFirst2 {
-
-    private const(Target)[] _targets;
-
-    this(in Build build) pure nothrow {
-
-    }
-
-    Target front() pure nothrow {
-        return _targets.front;
-    }
-
-    void popFront() pure nothrow {
-        _targets.popFront;
-    }
-
-    bool empty() pure nothrow {
-        return _targets.empty;
-    }
-
-
-    static assert(isInputRange!UniqueDepthFirst2);
-}
-
+//a reference to a target. The reggae API uses values, but DAGs need references
 alias TargetRef = long;
 
+//a wrapper for each distinct target so that we can deal with reference semantics
 struct TargetWithRefs {
     Target target;
     const(TargetRef)[] dependencies;
@@ -206,18 +184,20 @@ struct TargetWithRefs {
 import std.stdio;
 
 
+//a converter from Target to TargetWithRefs
 struct TargetConverter {
-    TargetWithRefs convert(in Target target) pure {
+    TargetWithRefs convert(in Target target) pure const {
         //leaves can always be converted
         if(target.isLeaf) return TargetWithRefs(target);
 
         TargetRef[] depRefs(in Target[] deps) @trusted {
-            return deps.map!(a => convert(a)).map!(a => _targets.countUntil(a)).array;
+            return deps.map!(a => getRef(a)).array;
         }
+
         const deps = depRefs(target.dependencies);
         const imps = depRefs(target.implicits);
 
-        if(chain(deps, imps).any!(a => a == -1)) {
+        if(chain(deps, imps).canFind(-1)) {
             immutable msg = () @trusted { return text("Could not find all dependency refs for ", target); }();
             throw new Exception(msg);
         }
@@ -253,7 +233,7 @@ struct TargetConverter {
         writeln("targets now ", _targets, "\n");
     }
 
-    TargetRef getRef(in Target target) {
+    TargetRef getRef(in Target target) pure const {
         return _targets.countUntil(convert(target));
     }
 

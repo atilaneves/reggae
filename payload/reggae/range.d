@@ -8,14 +8,14 @@ import std.exception;
 
 @safe:
 
-struct DepthFirst {
+struct DepthFirst(T) {
     const(Target)[] targets;
 
-    this(in Target target) pure nothrow {
+    this(in T target) pure nothrow {
         this.targets = depthFirstTargets(target);
     }
 
-    const(Target)[] depthFirstTargets(in Target target) pure nothrow {
+    const(Target)[] depthFirstTargets(in T target) pure nothrow {
         //if leaf, return
         if(target.isLeaf) return target.expandCommand is null ? [] : [target];
 
@@ -25,7 +25,7 @@ struct DepthFirst {
             target;
     }
 
-    Target front() pure nothrow {
+    T front() pure nothrow {
         return targets.front;
     }
 
@@ -40,6 +40,9 @@ struct DepthFirst {
     static assert(isInputRange!DepthFirst);
 }
 
+auto depthFirst(T)(in T target) pure nothrow {
+    return DepthFirst!T(target);
+}
 
 struct ByDepthLevel {
     const(Target)[][] targets;
@@ -150,7 +153,7 @@ struct UniqueDepthFirst {
 
     this(in Build build) pure nothrow @trusted {
         _targets = build.targets.
-            map!(a => DepthFirst(a)).
+            map!(a => depthFirst(a)).
             flatten.
             noSortUniq.
             array;
@@ -190,7 +193,7 @@ struct Graph {
 
     this(Build build) pure {
         foreach(topTarget; build.targets) {
-            foreach(target; DepthFirst(topTarget)) {
+            foreach(target; depthFirst(topTarget)) {
                 put(target);
             }
         }

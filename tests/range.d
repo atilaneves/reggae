@@ -6,12 +6,12 @@ import std.array;
 
 
 void testDepFirstLeaf() {
-    DepthFirst(Target("letarget")).array.shouldEqual([]);
+    depthFirst(Target("letarget")).array.shouldEqual([]);
 }
 
 void testDepthFirstOneDependencyLevel() {
     auto target = Target("letarget", "lecmdfoo bar other", [Target("foo"), Target("bar")]);
-    auto depth = DepthFirst(target);
+    auto depth = depthFirst(target);
     depth.array.shouldEqual([target]);
 }
 
@@ -23,7 +23,7 @@ void testDepthFirstTwoDependencyLevels() {
     auto impLeaf = Target("leaf");
     //implicit dependencies should show up, but only if they're not leaves
     auto target = Target("app", "gcc -o letarget foo.o bar.o", [fooObj, barObj], [header, impLeaf]);
-    auto depth = DepthFirst(target);
+    auto depth = depthFirst(target);
     depth.array.shouldEqual([fooObj, barObj, header, target]);
 }
 
@@ -41,7 +41,7 @@ void testDepthFirstProtocolExample() {
     const app = Target(`app`,
                        `dmd -of$out $in`,
                        [Target(`src/main.d`), protoObj, protoD]);
-    DepthFirst(app).array.shouldEqual(
+    depthFirst(app).array.shouldEqual(
         [protoSrcs, protoObj, protoSrcs, protoD, app]);
 }
 
@@ -176,7 +176,7 @@ void testConvertDiamondDepsNoBuildStruct() {
 
     import std.stdio;
     foreach(topTarget; [deps.symlink1,deps.symlink2]) {
-        foreach(target; DepthFirst(topTarget)) {
+        foreach(target; depthFirst(topTarget)) {
             graph.put(target);
         }
     }

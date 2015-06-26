@@ -171,15 +171,8 @@ DiamondDepsBuild getDiamondDeps() {
 }
 
 void testConvertDiamondDepsNoBuildStruct() {
-    auto graph = Graph();
     auto deps = getDiamondDeps();
-
-    import std.stdio;
-    foreach(topTarget; [deps.symlink1,deps.symlink2]) {
-        foreach(target; depthFirst(topTarget)) {
-            graph.put(target);
-        }
-    }
+    auto graph = Graph([deps.symlink1,deps.symlink2]);
 
     graph.targets.array.shouldEqual(
         [

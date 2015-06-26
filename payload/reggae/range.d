@@ -203,7 +203,11 @@ import std.stdio;
 struct Graph {
 
     this(Build build) pure {
-        foreach(topTarget; build.targets) {
+        this(build.targets);
+    }
+
+    this(in Target[] topLevelTargets) pure {
+        foreach(topTarget; topLevelTargets) {
             foreach(target; depthFirst(topTarget)) {
                 put(target);
             }

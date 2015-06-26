@@ -138,8 +138,12 @@ void testConvertLeaf() {
 void testConvertOneLevel() {
     auto converter = TargetConverter();
     converter.put(Target("foo.o", "dmd -of$out -c $in", [Target("foo.d")], [Target("hidden")]));
+    immutable srcRef = converter.getRef(TargetWithRefs("foo.d"));
+    immutable hiddenRef = converter.getRef(TargetWithRefs("hidden"));
     converter.targets.array.shouldEqual(
         [
-            TargetWithRefs("foo.o", "dmd -of$out -c $in", [0], [2])
+            TargetWithRefs("foo.d"),
+            TargetWithRefs("hidden"),
+            TargetWithRefs("foo.o", "dmd -of$out -c $in", [srcRef], [hiddenRef])
             ]);
 }

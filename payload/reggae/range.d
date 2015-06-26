@@ -194,7 +194,7 @@ struct UniqueDepthFirst2 {
     static assert(isInputRange!UniqueDepthFirst2);
 }
 
-alias TargetRef = int;
+alias TargetRef = ulong;
 
 struct TargetWithRefs {
     const(string)[] outputs;
@@ -221,13 +221,30 @@ struct TargetConverter {
     private TargetWithRefs[] _targets;
 
     void put(in Target target) @trusted {
-        _targets ~= TargetWithRefs(target.outputs,
-                                   target.rawCmdString,
-                                   [0],
-                                   [1]);
+        TargetRef[] newDependencies;
+        foreach(dep; target.dependencies) {
+            if(dep.isLeaf) {
+                _targets ~= TargetWithRefs(dep.outputs);
+                newDependencies ~= _targets.length - 1;
+            }
+        }
+
+        TargetRef[] newImplicits;
+        foreach(implicit; target.implicits) {
+            if(implicit.isLeaf) {
+                _targets ~= TargetWithRefs(implicit.outputs);
+                newImplicits ~= _targets.length - 1;
+            }
+        }
+
+        _targets ~= TargetWithRefs(target.outputs, target.rawCmdString, newDependencies, newImplicits);
     }
 
-    TargetWithRefs[] targets() {
+    TargetWithRefs[] targets() pure nothrow {
         return _targets;
+    }
+
+    TargetRef getRef(in TargetWithRefs target) const pure nothrow {
+        return _targets.countUntil(target);
     }
 }

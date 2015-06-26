@@ -79,16 +79,16 @@ Build.TopLevelTarget optional(alias targetFunc)() {
  Designate a target as optional so it won't be built by default.
  */
 Build.TopLevelTarget optional(in Target target) {
-    return createTopLevelTarget(target, true);
+    return Build.TopLevelTarget(target, true);
 }
 
-Build.TopLevelTarget createTopLevelTarget(in Target target, in bool optional = false) {
+//Build.TopLevelTarget createTopLevelTarget(in Target target, in bool optional = false) {
+Build.TopLevelTarget createTopLevelTarget(in Target target) {
     //outputs is unchanged - top level targets are created in the root of the build directory
     return Build.TopLevelTarget(Target(target.outputs,
                                        target._command.expandVariables,
                                        target.dependencies.map!(a => a.inTopLevelObjDirOf(target)).array,
-                                       target.implicits.map!(a => a.inTopLevelObjDirOf(target)).array),
-                                optional);
+                                       target.implicits.map!(a => a.inTopLevelObjDirOf(target)).array));
 }
 
 

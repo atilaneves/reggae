@@ -17,6 +17,7 @@ import std.array: array, join;
 import std.conv;
 import std.exception;
 import std.typecons;
+import std.range;
 
 
 /**
@@ -62,6 +63,33 @@ struct Build {
     string defaultTargetsString(in string projectPath) @trusted pure nothrow const {
         return defaultTargets.map!(a => a.outputsInProjectPath(projectPath).join(" ")).join(" ");
     }
+
+    auto range() @safe pure nothrow const {
+        import reggae.range;
+        return UniqueDepthFirst(this);
+        // auto forRange = _targets.map!(a => a.target);
+        // return Range!(typeof(forRange))(forRange);
+    }
+
+    // static struct Range(R) if(isInputRange!R) {
+
+    //     R _targets;
+
+    //     bool empty() {
+    //         return _targets.empty;
+    //     }
+
+    //     const(Target) front() {
+    //         return _targets.front;
+    //     }
+
+    //     void popFront() {
+    //         _targets.popFront;
+    //     }
+    // }
+
+
+    // static assert(isInputRange!(Build.Range!(Target[])));
 }
 
 

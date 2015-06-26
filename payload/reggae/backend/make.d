@@ -33,7 +33,7 @@ struct Makefile {
 
         auto ret = text("all: ", build.defaultTargetsString(projectPath), "\n");
 
-        foreach(t; UniqueDepthFirst(build)) {
+        foreach(t; build.range) {
 
             mkDir(t);
 

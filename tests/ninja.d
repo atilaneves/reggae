@@ -269,3 +269,23 @@ void testPhonyRule() {
                      "pool = console"])]
         );
 }
+
+void testImplicitsWithNoIn() {
+    Target[] emptyDependencies;
+    const stuff = Target("foo.o", "dmd -of$out -c $in", Target("foo.d"));
+    const foo = Target("$project/foodir", "mkdir -p $out", emptyDependencies, [stuff]);
+    const ninja = Ninja(Build(foo), "/path/to/proj"); //to make sure we can
+    ninja.buildEntries.shouldEqual(
+        [NinjaEntry("build objs//path/to/proj/foodir.objs/foo.o: dmd /path/to/proj/foo.d",
+                    ["before = -of",
+                     "between = -c"]),
+         NinjaEntry("build /path/to/proj/foodir: mkdir  | objs//path/to/proj/foodir.objs/foo.o",
+                    ["before = -p"]),
+            ]);
+    ninja.ruleEntries.shouldEqual(
+        [NinjaEntry("rule dmd",
+                    ["command = dmd $before$out $between $in"]),
+         NinjaEntry("rule mkdir",
+                    ["command = mkdir $before $out$in"])
+            ]);
+}

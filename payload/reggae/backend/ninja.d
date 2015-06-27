@@ -90,7 +90,7 @@ struct Ninja {
         }
     }
 
-    const(NinjaEntry)[] allBuildEntries() @safe pure nothrow const {
+    const(NinjaEntry)[] allBuildEntries() @safe pure const {
         immutable files = [buildFilePath, reggaePath].join(" ");
         return buildEntries ~
             NinjaEntry("build build.ninja: _rerun | " ~ files,
@@ -107,7 +107,7 @@ struct Ninja {
                         "generator = 1"]);
     }
 
-    string buildOutput() @safe pure nothrow const {
+    string buildOutput() @safe pure const {
         return output(allBuildEntries);
     }
 
@@ -139,7 +139,12 @@ private:
     }
 
     void phonyRule(in Target target) @safe {
-        //no projectPath for phony rules
+
+        // immutable outputs = target.outputsInProjectPath(_projectPath).join(" ");
+        // return "build " ~ outputs ~ ": ";
+
+
+        //no projectPath for phony rules since they don't generate output
         immutable outputs = target.outputsInProjectPath("").join(" ");
         auto buildLine = "build " ~ outputs ~ ": _phony " ~ target.dependencyFilesString(_projectPath);
         if(!target.implicits.empty) buildLine ~= " | " ~ target.implicitFilesString(_projectPath);
@@ -169,8 +174,17 @@ private:
         auto reg = regex(`^[^ ]+ +(.*?)(\$in|\$out)(.*?)(\$in|\$out)(.*?)$`);
 
         auto mat = shellCommand.match(reg);
-        enforce(!mat.captures.empty, text("Could not find both $in and $out.\nCommand: ",
-                                          shellCommand, "\nCaptures: ", mat.captures));
+        if(mat.captures.empty) { //this is usually bad since we need both $in and $out
+            if(target.dependencies.empty) { //ah, no $in needed then
+                mat = match(shellCommand ~ " $in", reg); //add a dummy one
+            }
+            else
+                throw new Exception(text("Could not find both $in and $out.\nCommand: ",
+                                         shellCommand, "\nCaptures: ", mat.captures, "\n",
+                                         "outputs: ", target.outputs.join(" "), "\n",
+                                         "dependencies: ", target.dependencyFilesString(_projectPath)));
+        }
+
         immutable before  = mat.captures[1].strip;
         immutable first   = mat.captures[2];
         immutable between = mat.captures[3].strip;
@@ -178,13 +192,12 @@ private:
         immutable after   = mat.captures[5].strip;
 
         immutable ruleCmdLine = getRuleCommandLine(target, shellCommand, before, first, between, last, after);
-        bool haveToAdd;
-        immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAdd);
+        bool haveToAddRule;
+        immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAddRule);
 
         immutable deps = implicitInput.empty
             ? target.dependencyFilesString(_projectPath)
             : implicitInput;
-
 
         auto buildLine = buildLine(target) ~ ruleName ~ " " ~ deps;
         if(!target.implicits.empty) buildLine ~= " | " ~  target.implicitFilesString(_projectPath);
@@ -196,12 +209,12 @@ private:
 
         buildEntries ~= NinjaEntry(buildLine, buildParamLines);
 
-        if(haveToAdd) {
+        if(haveToAddRule) {
             ruleEntries ~= NinjaEntry("rule " ~ ruleName, [ruleCmdLine]);
         }
     }
 
-    void implicitOutputRule(in Target target, in string shellCommand) @safe nothrow {
+    void implicitOutputRule(in Target target, in string shellCommand) @safe {
         bool haveToAdd;
         immutable ruleCmdLine = getRuleCommandLine(target, shellCommand, "" /*before*/, "$in");
         immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAdd);
@@ -291,7 +304,7 @@ private:
         return entries.map!(a => a.toString).join("\n\n");
     }
 
-    string buildLine(in Target target) @safe pure const nothrow {
+    string buildLine(in Target target) @safe pure const {
         immutable outputs = target.outputsInProjectPath(_projectPath).join(" ");
         return "build " ~ outputs ~ ": ";
     }

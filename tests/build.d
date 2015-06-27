@@ -185,3 +185,9 @@ void testPhobosOptionalBug() {
 
     build.range.array.shouldEqual([fooObj1, fooObj2, newFoo, barObj1, barObj2, newBar]);
 }
+
+
+void testOutputsInProjectPath() {
+    const mkDir = Target("$project/foodir", "mkdir -p $out", [], []);
+    mkDir.outputsInProjectPath("/path/to/proj").shouldEqual(["/path/to/proj/foodir"]);
+}

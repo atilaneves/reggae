@@ -61,7 +61,7 @@ struct Build {
         return _targets.filter!(a => !a.optional).map!(a => a.target);
     }
 
-    string defaultTargetsString(in string projectPath) @trusted pure nothrow const {
+    string defaultTargetsString(in string projectPath) @trusted pure const {
         return defaultTargets.map!(a => a.outputsInProjectPath(projectPath).join(" ")).join(" ");
     }
 
@@ -272,11 +272,11 @@ struct Target {
             this._command = Command(command);
     }
 
-    @property string dependencyFilesString(in string projectPath = "") @safe pure const nothrow {
+    @property string dependencyFilesString(in string projectPath = "") @safe pure const {
         return depFilesStringImpl(dependencies, projectPath);
     }
 
-    @property string implicitFilesString(in string projectPath = "") @safe pure const nothrow {
+    @property string implicitFilesString(in string projectPath = "") @safe pure const {
         return depFilesStringImpl(implicits, projectPath);
     }
 
@@ -284,8 +284,12 @@ struct Target {
         return dependencies is null && implicits is null;
     }
 
-    string[] outputsInProjectPath(in string projectPath) @safe pure nothrow const {
-        return outputs.map!(a => isLeaf ? buildPath(projectPath, a) : a).
+    string[] outputsInProjectPath(in string projectPath) @safe pure const {
+        string inProjectPath(in string path) {
+            return path.startsWith(gProjdir) ? path : buildPath(projectPath, path);
+        }
+
+        return outputs.map!(a => isLeaf ? inProjectPath(a) : a).
             map!(a => a.replace("$project", projectPath)).array;
     }
 
@@ -360,7 +364,7 @@ private:
 
 
     //@trusted because of join
-    string depFilesStringImpl(in Target[] deps, in string projectPath) @trusted pure const nothrow {
+    string depFilesStringImpl(in Target[] deps, in string projectPath) @trusted pure const {
         string files;
         //join doesn't do const, resort to loops
         foreach(i, dep; deps) {

@@ -6,12 +6,12 @@ import std.array;
 
 
 void testDepFirstLeaf() {
-    DepthFirst(Target("letarget")).array.shouldEqual([]);
+    depthFirst(Target("letarget")).array.shouldEqual([]);
 }
 
 void testDepthFirstOneDependencyLevel() {
     auto target = Target("letarget", "lecmdfoo bar other", [Target("foo"), Target("bar")]);
-    auto depth = DepthFirst(target);
+    auto depth = depthFirst(target);
     depth.array.shouldEqual([target]);
 }
 
@@ -23,7 +23,7 @@ void testDepthFirstTwoDependencyLevels() {
     auto impLeaf = Target("leaf");
     //implicit dependencies should show up, but only if they're not leaves
     auto target = Target("app", "gcc -o letarget foo.o bar.o", [fooObj, barObj], [header, impLeaf]);
-    auto depth = DepthFirst(target);
+    auto depth = depthFirst(target);
     depth.array.shouldEqual([fooObj, barObj, header, target]);
 }
 
@@ -41,7 +41,7 @@ void testDepthFirstProtocolExample() {
     const app = Target(`app`,
                        `dmd -of$out $in`,
                        [Target(`src/main.d`), protoObj, protoD]);
-    DepthFirst(app).array.shouldEqual(
+    depthFirst(app).array.shouldEqual(
         [protoSrcs, protoObj, protoSrcs, protoD, app]);
 }
 
@@ -107,11 +107,118 @@ void testLeavesTwoLevels() {
 
 }
 
-void testDiamondDeps() {
-    const fooLib = Target("$project/foo.so", "dmd -of$out $in", [Target("src1.d"), Target("src2.d")]);
+
+void testConvertLeaf() {
+    auto graph = Graph();
+    graph.targets.array.shouldBeEmpty;
+
+    const foo = Target("foo.d");
+    graph.convert(foo).shouldEqual(TargetWithRefs(foo));
+    graph.targets.array.shouldBeEmpty;
+
+    const bar = Target("bar.d");
+    graph.convert(bar).shouldEqual(TargetWithRefs(bar));
+    graph.targets.array.shouldBeEmpty;
+
+    graph.put(foo);
+    graph.targets.array.shouldEqual([TargetWithRefs(foo)]);
+
+    graph.put(bar);
+    graph.targets.array.shouldEqual([TargetWithRefs(foo), TargetWithRefs(bar)]);
+
+}
+
+void testConvertOneLevel() {
+    auto graph = Graph();
+    const foo = Target("foo.d");
+    const hidden = Target("hidden");
+    const target = Target("foo.o", "dmd -of$out -c $in", [foo], [hidden]);
+    //graph is empty, it can't find target's dependencies and therefore throws
+    graph.convert(target).shouldThrow;
+    graph.targets.array.shouldBeEmpty;
+
+    graph.put(target);
+    graph.convert(target).shouldEqual(TargetWithRefs(target, [0], [1]));
+
+    graph.targets.array.shouldEqual(
+        [TargetWithRefs(foo),
+         TargetWithRefs(hidden),
+         TargetWithRefs(target, [graph.getRef(foo)], [graph.getRef(hidden)])]);
+
+    graph.target(target).dependencies.map!(a => a.targetWithRefs.target).array.shouldEqual([foo]);
+    graph.target(target).implicits.map!(a => a.targetWithRefs.target).array.shouldEqual([hidden]);
+}
+
+private struct DiamondDepsBuild {
+    Target src1;
+    Target src2;
+    Target obj1;
+    Target obj2;
+    Target fooLib;
+    Target symlink1;
+    Target symlink2;
+}
+
+DiamondDepsBuild getDiamondDeps() {
+    const src1 = Target("src1.d");
+    const src2 = Target("src2.d");
+    const obj1 = Target("obj1.o", "dmd -of$out -c $in", src1);
+    const obj2 = Target("obj2.o", "dmd -of$out -c $in", src2);
+    const fooLib = Target("$project/foo.so", "dmd -of$out $in", [obj1, obj2]);
     const symlink1 = Target("$project/weird/path/thingie1", "ln -sf $in $out", fooLib);
     const symlink2 = Target("$project/weird/path/thingie2", "ln -sf $in $out", fooLib);
-    const build = Build(symlink1, symlink2); //defined by the mixin
-    UniqueDepthFirst(build).array.shouldEqual(
-        [fooLib, symlink1, symlink2]);
+    return DiamondDepsBuild(src1, src2, obj1, obj2, fooLib, symlink1, symlink2);
+}
+
+void testConvertDiamondDepsNoBuildStruct() {
+    auto deps = getDiamondDeps();
+    with(deps) {
+
+        auto graph = Graph([symlink1,symlink2]);
+
+        graph.targets.array.shouldEqual(
+            [
+                TargetWithRefs(src1),
+                TargetWithRefs(obj1, [graph.getRef(src1)]),
+                TargetWithRefs(src2),
+                TargetWithRefs(obj2, [graph.getRef(src2)]),
+                TargetWithRefs(fooLib, [graph.getRef(obj1), graph.getRef(obj2)]),
+                TargetWithRefs(symlink1, [graph.getRef(fooLib)]),
+                TargetWithRefs(symlink2, [graph.getRef(fooLib)]),
+                ]);
+
+        graph.convert(symlink1).shouldEqual(TargetWithRefs(symlink1, [graph.getRef(fooLib)]));
+
+        depthFirst(graph.target(fooLib)).map!(a => a.targetWithRefs).array.shouldEqual(
+            [ TargetWithRefs(obj1, [graph.getRef(src1)]),
+              TargetWithRefs(obj2, [graph.getRef(src2)]),
+              TargetWithRefs(fooLib, [graph.getRef(obj1), graph.getRef(obj2)]),
+                ]);
+
+        depthFirst(graph.target(symlink1)).map!(a => a.targetWithRefs).array.shouldEqual(
+            [ TargetWithRefs(obj1, [graph.getRef(src1)]),
+              TargetWithRefs(obj2, [graph.getRef(src2)]),
+              TargetWithRefs(fooLib, [graph.getRef(obj1), graph.getRef(obj2)]),
+              TargetWithRefs(symlink1, [graph.getRef(fooLib)]),
+                ]);
+
+    }
+}
+
+@ShouldFail
+void testConvertDiamondDeps() {
+    const deps = getDiamondDeps();
+    const build = Build(deps.symlink1, deps.symlink2); //defined by the mixin
+    const graph = Graph(build);
+
+    graph.targets.array.shouldEqual(
+        [
+            TargetWithRefs(deps.src1),
+            TargetWithRefs(deps.obj1, [0]),
+            TargetWithRefs(deps.src2),
+            TargetWithRefs(deps.obj2, [2]),
+            TargetWithRefs(deps.fooLib, [1, 3]),
+            TargetWithRefs(deps.symlink1, [4]),
+            TargetWithRefs(deps.symlink2, [4]),
+            ]);
 }

@@ -16,8 +16,7 @@ struct Makefile {
     string projectPath;
 
     this(Build build) @safe pure {
-        this.build = build;
-        this.projectPath = "";
+        this(build, "");
     }
 
     this(Build build, string projectPath) @safe pure {
@@ -34,12 +33,12 @@ struct Makefile {
 
         auto ret = text("all: ", build.defaultTargetsString(projectPath), "\n");
 
-        foreach(t; UniqueDepthFirst(build)) {
+        foreach(t; build.range) {
 
             mkDir(t);
 
             immutable output = t.outputsInProjectPath(projectPath).join(" ");
-            if(t.command.getType == CommandType.phony) {
+            if(t.getCommandType == CommandType.phony) {
                 ret ~= ".PHONY: " ~ output ~ "\n";
             }
             ret ~= output ~  ": ";
@@ -74,13 +73,13 @@ struct Makefile {
     //the only reason this is needed is to add auto dependency
     //tracking
     string command(in Target target) @safe const {
-        immutable cmdType = target.command.getType;
+        immutable cmdType = target.getCommandType;
         if(cmdType == CommandType.code)
             throw new Exception("Command type 'code' not supported for make backend");
 
         immutable cmd = target.shellCommand(projectPath);
         immutable depfile = target.outputs[0] ~ ".dep";
-        if(target.command.isDefaultCommand) {
+        if(target.hasDefaultCommand) {
             return cmdType == CommandType.link ? cmd : cmd ~ makeAutoDeps(depfile);
         } else {
             return cmd;

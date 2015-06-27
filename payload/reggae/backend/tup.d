@@ -21,8 +21,8 @@ struct Tup {
     string[] lines() const pure {
 
         string[] lines;
-        foreach(target; UniqueDepthFirst(build)) {
-            if(target.command.getType == CommandType.code)
+        foreach(target; build.range) {
+            if(target.getCommandType == CommandType.code)
                 throw new Exception("Command type 'code' not supported for tup backend");
 
             //tup does its own dependency detection, trying to output

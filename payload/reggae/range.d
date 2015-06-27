@@ -3,17 +3,33 @@ module reggae.range;
 import reggae.build;
 import std.range;
 import std.algorithm;
+import std.conv;
+import std.exception;
 
 @safe:
 
-struct DepthFirst {
-    const(Target)[] targets;
+enum isTargetLike(T) = is(typeof(() {
+    auto target = T.init;
+    auto deps = target.dependencies;
+    static assert(is(Unqual!(typeof(deps[0])) == Unqual!T));
+    auto imps = target.implicits;
+    static assert(is(Unqual!(typeof(imps[0])) == Unqual!T));
+    if(target.isLeaf) {}
+    string cmd = target.expandCommand;
+    cmd = target.expandCommand("");
+}));
 
-    this(in Target target) pure nothrow {
+
+static assert(isTargetLike!Target);
+
+struct DepthFirst(T) if(isTargetLike!T) {
+    const(T)[] targets;
+
+    this(in T target) pure nothrow {
         this.targets = depthFirstTargets(target);
     }
 
-    const(Target)[] depthFirstTargets(in Target target) pure nothrow {
+    const(T)[] depthFirstTargets(in T target) pure nothrow {
         //if leaf, return
         if(target.isLeaf) return target.expandCommand is null ? [] : [target];
 
@@ -23,7 +39,7 @@ struct DepthFirst {
             target;
     }
 
-    Target front() pure nothrow {
+    T front() pure nothrow {
         return targets.front;
     }
 
@@ -38,6 +54,9 @@ struct DepthFirst {
     static assert(isInputRange!DepthFirst);
 }
 
+auto depthFirst(T)(in T target) pure nothrow {
+    return DepthFirst!T(target);
+}
 
 struct ByDepthLevel {
     const(Target)[][] targets;
@@ -131,7 +150,7 @@ auto flatten(R)(R range) @trusted pure nothrow {
     return res;
 }
 
-
+//TODO: a non-allocating version with no arrays
 auto noSortUniq(R)(R range) if(isInputRange!R) {
     ElementType!R[] ret;
     foreach(elt; range) {
@@ -146,9 +165,9 @@ struct UniqueDepthFirst {
     Build build;
     private const(Target)[] _targets;
 
-    this(in Build build) pure nothrow {
+    this(in Build build) pure nothrow @trusted {
         _targets = build.targets.
-            map!(a => DepthFirst(a)).
+            map!(a => depthFirst(a)).
             flatten.
             noSortUniq.
             array;
@@ -167,4 +186,115 @@ struct UniqueDepthFirst {
     }
 
     static assert(isInputRange!UniqueDepthFirst);
+}
+
+
+//a reference to a target. The reggae API uses values, but DAGs need references
+alias TargetRef = long;
+
+//a wrapper for each distinct target so that we can deal with reference semantics
+struct TargetWithRefs {
+    Target target;
+    const(TargetRef)[] dependencies;
+    const(TargetRef)[] implicits;
+}
+
+import std.stdio;
+
+
+//a converter from Target to TargetWithRefs
+struct Graph {
+
+    this(Build build) pure {
+        this(build.targets);
+    }
+
+    this(R)(R topLevelTargets) pure if(isInputRange!R) {
+        foreach(topTarget; topLevelTargets) {
+            putTopLevelTarget(topTarget);
+        }
+    }
+
+    void putTopLevelTarget(in Target topTarget) pure {
+        foreach(target; depthFirst(topTarget)) {
+            put(target);
+        }
+    }
+
+    TargetWithRefs convert(in Target target) pure const {
+        //leaves can always be converted
+        if(target.isLeaf) return TargetWithRefs(target);
+
+        immutable(TargetRef)[] depRefs(in Target[] deps) @trusted {
+            return deps.map!(a => getRef(a)).array.assumeUnique;
+        }
+
+        immutable deps = depRefs(target.dependencies);
+        immutable imps = depRefs(target.implicits);
+
+        if(chain(deps, imps).canFind(-1)) {
+            immutable msg = () @trusted { return text("Could not find all dependency refs for ", target); }();
+            throw new Exception(msg);
+        }
+
+        return TargetWithRefs(target, deps, imps);
+    }
+
+    const (TargetWithRefs)[] targets() nothrow pure const {
+        return _targets;
+    }
+
+    void put(in Target target) @trusted pure {
+        foreach(t; chain(target.dependencies, target.implicits, [target])) {
+            putIfNotAlreadyHere(t);
+        }
+    }
+
+    TargetRef getRef(in Target target) pure const {
+        return _targets.countUntil(convert(target));
+    }
+
+    TargetWrapper target(in Target target) pure const {
+        return TargetWrapper(convert(target), _targets);
+    }
+
+private:
+
+    TargetWithRefs[] _targets;
+
+    void putIfNotAlreadyHere(in Target target) pure {
+        auto converted = convert(target);
+        if(!_targets.canFind(converted)) _targets ~= converted;
+    }
+}
+
+
+struct TargetWrapper {
+    TargetWithRefs targetWithRefs;
+    const TargetWithRefs[] targets;
+
+    const(TargetWrapper)[] dependencies() const pure nothrow {
+        return subTargets(targetWithRefs.dependencies);
+    }
+
+    const(TargetWrapper)[] implicits() const pure nothrow {
+        return subTargets(targetWithRefs.implicits);
+    }
+
+    auto expandCommand(in string projectPath = "") const pure nothrow {
+        return targetWithRefs.target.expandCommand(projectPath);
+    }
+
+    auto isLeaf() const pure nothrow {
+        return targetWithRefs.target.isLeaf;
+    }
+
+private:
+
+    //@trusted because of .array
+    const(TargetWrapper)[] subTargets(in TargetRef[] refs) const pure nothrow @trusted {
+        return refs.map!(a => TargetWrapper(targets[a], targets)).array;
+    }
+
+    static assert(isTargetLike!TargetWrapper);
 }

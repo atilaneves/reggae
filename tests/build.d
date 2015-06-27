@@ -62,20 +62,24 @@ void testMultipleOutputs() {
     target.expandCommand("myproj").shouldEqual("protocomp myproj/foo.proto");
 
     const bld = Build(target);
-    bld.targets[0].outputs.shouldEqual(["foo.hpp", "foo.cpp"]);
+    bld.targets.array[0].outputs.shouldEqual(["foo.hpp", "foo.cpp"]);
 }
 
 
-void testEnclose() {
+void testInTopLevelObjDir() {
 
-    Target("foo.o", "", [Target("foo.c")]).enclose(Target("theapp")).shouldEqual(
-            Target("objs/theapp.objs/foo.o", "", [Target("foo.c")]));
+    const theApp = Target("theapp");
+    const dirName = topLevelDirName(theApp);
+    const fooObj = Target("foo.o", "", [Target("foo.c")]);
+    fooObj.inTopLevelObjDirOf(dirName).shouldEqual(
+        Target("objs/theapp.objs/foo.o", "", [Target("foo.c")]));
 
-    Target("$builddir/bar.o", "", [Target("bar.c")]).enclose(Target("theapp")).shouldEqual(
+    const barObjInBuildDir = Target("$builddir/bar.o", "", [Target("bar.c")]);
+    barObjInBuildDir.inTopLevelObjDirOf(dirName).shouldEqual(
         Target("bar.o", "", [Target("bar.c")]));
 
     const leafTarget = Target("foo.c");
-    leafTarget.enclose(Target("theapp")).shouldEqual(leafTarget);
+    leafTarget.inTopLevelObjDirOf(dirName).shouldEqual(leafTarget);
 }
 
 
@@ -101,7 +105,7 @@ void testMultipleOutputsImplicits() {
                              `echo "extern(C) " > $out; cat gen/protocol.h >> $out`,
                              [], [newProtoSrcs]);
 
-    build.targets.shouldEqual(
+    build.targets.array.shouldEqual(
         [Target("app", "dmd -of$out $in",
                 [Target("src/main.d"),
                  Target("bin/protocol.o", "gcc -o $out -c gen/protocol.c",
@@ -128,4 +132,35 @@ void testRealTargetPath() {
     realTargetPath(dirName, symlinkBar.outputs[0]).shouldEqual("weird/path/thingie2");
     realTargetPath(dirName, barLib.outputs[0]).shouldEqual("bar.so");
 
+}
+
+
+void testOptional() {
+    enum foo = Target("foo", "dmd -of$out $in", Target("foo.d"));
+    enum bar = Target("bar", "dmd -of$out $in", Target("bar.d"));
+
+    optional(bar).target.shouldEqual(bar);
+    mixin build!(foo, optional(bar));
+    auto build = buildFunc();
+    build.targets.array[1].shouldEqual(bar);
+}
+
+
+void testDiamondDeps() {
+    const src1 = Target("src1.d");
+    const src2 = Target("src2.d");
+    const obj1 = Target("obj1.o", "dmd -of$out -c $in", src1);
+    const obj2 = Target("obj2.o", "dmd -of$out -c $in", src2);
+    const fooLib = Target("$project/foo.so", "dmd -of$out $in", [obj1, obj2]);
+    const symlink1 = Target("$project/weird/path/thingie1", "ln -sf $in $out", fooLib);
+    const symlink2 = Target("$project/weird/path/thingie2", "ln -sf $in $out", fooLib);
+    const build = Build(symlink1, symlink2);
+
+    const newObj1 = Target("objs/$project/foo.so.objs/obj1.o", "dmd -of$out -c $in", src1);
+    const newObj2 = Target("objs/$project/foo.so.objs/obj2.o", "dmd -of$out -c $in", src2);
+    const newFooLib = Target("$project/foo.so", "dmd -of$out $in", [newObj1, newObj2]);
+    const newSymlink1 = Target("$project/weird/path/thingie1", "ln -sf $in $out", newFooLib);
+    const newSymlink2 = Target("$project/weird/path/thingie2", "ln -sf $in $out", newFooLib);
+
+    build.range.array.shouldEqual([newObj1, newObj2, newFooLib, newSymlink1, newSymlink2]);
 }

@@ -68,29 +68,7 @@ struct Build {
     auto range() @safe pure nothrow const {
         import reggae.range;
         return UniqueDepthFirst(this);
-        // auto forRange = _targets.map!(a => a.target);
-        // return Range!(typeof(forRange))(forRange);
     }
-
-    // static struct Range(R) if(isInputRange!R) {
-
-    //     R _targets;
-
-    //     bool empty() {
-    //         return _targets.empty;
-    //     }
-
-    //     const(Target) front() {
-    //         return _targets.front;
-    //     }
-
-    //     void popFront() {
-    //         _targets.popFront;
-    //     }
-    // }
-
-
-    // static assert(isInputRange!(Build.Range!(Target[])));
 }
 
 

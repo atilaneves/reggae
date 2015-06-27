@@ -122,8 +122,8 @@ Target inTopLevelObjDirOf(in Target target, string dirName, Flag!"topLevel" isTo
 }
 
 
-string topLevelDirName(in Target target) @safe pure nothrow {
-    return buildPath("objs", target.outputs[0] ~ ".objs");
+string topLevelDirName(in Target target) @safe pure {
+    return buildPath("objs", target.outputs[0]._expandVariables ~ ".objs");
 }
 
 //targets that have outputs with $builddir or $project in them want to be placed

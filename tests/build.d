@@ -144,3 +144,23 @@ void testOptional() {
     auto build = buildFunc();
     build.targets.array[1].shouldEqual(bar);
 }
+
+
+void testDiamondDeps() {
+    const src1 = Target("src1.d");
+    const src2 = Target("src2.d");
+    const obj1 = Target("obj1.o", "dmd -of$out -c $in", src1);
+    const obj2 = Target("obj2.o", "dmd -of$out -c $in", src2);
+    const fooLib = Target("$project/foo.so", "dmd -of$out $in", [obj1, obj2]);
+    const symlink1 = Target("$project/weird/path/thingie1", "ln -sf $in $out", fooLib);
+    const symlink2 = Target("$project/weird/path/thingie2", "ln -sf $in $out", fooLib);
+    const build = Build(symlink1, symlink2);
+
+    const newObj1 = Target("objs/$project/foo.so.objs/obj1.o", "dmd -of$out -c $in", src1);
+    const newObj2 = Target("objs/$project/foo.so.objs/obj2.o", "dmd -of$out -c $in", src2);
+    const newFooLib = Target("$project/foo.so", "dmd -of$out $in", [newObj1, newObj2]);
+    const newSymlink1 = Target("$project/weird/path/thingie1", "ln -sf $in $out", newFooLib);
+    const newSymlink2 = Target("$project/weird/path/thingie2", "ln -sf $in $out", newFooLib);
+
+    build.range.array.shouldEqual([newObj1, newObj2, newFooLib, newSymlink1, newSymlink2]);
+}

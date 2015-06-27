@@ -57,10 +57,10 @@ struct Binary {
 
     void run(string[] args) const @system { //@system due to parallel
         auto options = BinaryOptions(args);
+        bool didAnything = checkReRun();
+
         handleOptions(options);
         if(options.earlyReturn) return;
-
-        bool didAnything = checkReRun();
 
         const topTargets = topLevelTargets(options.args);
         if(topTargets.empty)
@@ -87,10 +87,24 @@ struct Binary {
         if(!didAnything) writeln("[build] Nothing to do");
     }
 
-    const(Target)[] topLevelTargets(in string[] args) @trusted const pure nothrow {
+    const(Target)[] topLevelTargets(in string[] args) @trusted const pure {
         return args.empty ?
             build.defaultTargets.array :
-            build.targets.filter!(a => args.canFind(a.outputs[0])).array;
+            build.targets.filter!(a => args.canFind(a.expandOutputs(projectPath))).array;
+    }
+
+    string[] listTargets(BinaryOptions options) pure const {
+        string[] result;
+
+        const defaultTargets = topLevelTargets(options.args);
+        foreach(topTarget; defaultTargets)
+            result ~= "- " ~ topTarget.expandOutputs(projectPath).join(" ");
+
+        auto optionalTargets = build.targets.filter!(a => !defaultTargets.canFind(a));
+        foreach(optionalTarget; optionalTargets)
+            result ~= "- " ~ optionalTarget.expandOutputs(projectPath).join(" ") ~ " (optional)";
+
+        return result;
     }
 
 
@@ -99,13 +113,7 @@ private:
     void handleOptions(BinaryOptions options) const {
         if(options.list) {
             writeln("List of available top-level targets:");
-            const defaultTargets = topLevelTargets(options.args);
-            foreach(topTarget; defaultTargets)
-                writeln("- " ~ topTarget.outputsInProjectPath(projectPath).join(" "));
-
-            auto optionalTargets = build.targets.filter!(a => !defaultTargets.canFind(a));
-            foreach(optionalTarget; optionalTargets)
-                writeln("- " ~ optionalTarget.outputs.join(" ") ~ " (optional)");
+            foreach(l; listTargets(options)) writeln(l);
         }
     }
 

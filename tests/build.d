@@ -191,3 +191,19 @@ void testOutputsInProjectPath() {
     const mkDir = Target("$project/foodir", "mkdir -p $out", [], []);
     mkDir.outputsInProjectPath("/path/to/proj").shouldEqual(["/path/to/proj/foodir"]);
 }
+
+
+void testExpandOutputs() {
+    const foo = Target("$project/foodir", "mkdir -p $out", [], []);
+    foo.expandOutputs("/path/to/proj").array.shouldEqual(["/path/to/proj/foodir"]);
+
+    const bar = Target("$builddir/foodir", "mkdir -p $out", [], []);
+    bar.expandOutputs("/path/to/proj").array.shouldEqual(["foodir"]);
+}
+
+
+void testCommandBuilddir() {
+    const cmd = Command("dmd -of$builddir/ut_debug $in");
+    cmd.shellCommand("/path/to/proj", Language.unknown, ["$builddir/ut_debug"], ["foo.d"]).
+        shouldEqual("dmd -ofut_debug foo.d");
+}

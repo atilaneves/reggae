@@ -10,7 +10,7 @@ import reggae.rules.common: Language, getLanguage;
 
 import std.string: replace;
 import std.algorithm;
-import std.path: buildPath;
+import std.path: buildPath, dirSeparator;
 import std.typetuple: allSatisfy;
 import std.traits: Unqual, isSomeFunction, ReturnType, arity;
 import std.array: array, join;
@@ -286,7 +286,11 @@ struct Target {
 
     string[] outputsInProjectPath(in string projectPath) @safe pure const {
         string inProjectPath(in string path) {
-            return path.startsWith(gProjdir) ? path : buildPath(projectPath, path);
+            return path.startsWith(gProjdir)
+                ? path
+                : path.startsWith(gBuilddir)
+                    ? path.replace(gBuilddir ~ dirSeparator, "")
+                    : buildPath(projectPath, path);
         }
 
         return outputs.map!(a => isLeaf ? inProjectPath(a) : a).
@@ -301,6 +305,11 @@ struct Target {
         }
 
         return Language.unknown;
+    }
+
+    ///Replace special variables and return a list of outputs thus modified
+    auto expandOutputs(in string projectPath) @safe pure const {
+        return outputsInProjectPath(projectPath).map!(a => a.replace(gBuilddir ~ dirSeparator, ""));
     }
 
     ///replace all special variables with their expansion
@@ -476,7 +485,7 @@ struct Command {
                                     in string[] outputs, in string[] inputs) @safe pure nothrow {
         auto replaceIn = cmd.dup.replace("$in", inputs.join(" "));
         auto replaceOut = replaceIn.replace("$out", outputs.join(" "));
-        return replaceOut.replace("$project", projectPath);
+        return replaceOut.replace("$project", projectPath).replace(gBuilddir ~ dirSeparator, "");
     }
 
     //@trusted because of replace
@@ -567,7 +576,7 @@ struct Command {
 
 
     string[] execute(in string projectPath, in Language language,
-                 in string[] outputs, in string[] inputs) const @trusted {
+                     in string[] outputs, in string[] inputs) const @trusted {
         import std.process;
 
         final switch(type) with(CommandType) {

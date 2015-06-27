@@ -194,6 +194,14 @@ void testConvertDiamondDepsNoBuildStruct() {
               TargetWithRefs(obj2, [graph.getRef(src2)]),
               TargetWithRefs(fooLib, [graph.getRef(obj1), graph.getRef(obj2)]),
                 ]);
+
+        depthFirst(graph.target(symlink1)).map!(a => a.targetWithRefs).array.shouldEqual(
+            [ TargetWithRefs(obj1, [graph.getRef(src1)]),
+              TargetWithRefs(obj2, [graph.getRef(src2)]),
+              TargetWithRefs(fooLib, [graph.getRef(obj1), graph.getRef(obj2)]),
+              TargetWithRefs(symlink1, [graph.getRef(fooLib)]),
+                ]);
+
     }
 }
 

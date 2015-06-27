@@ -110,35 +110,38 @@ Build.TopLevelTarget optional(in Target target) {
 
 Build.TopLevelTarget createTopLevelTarget(in Target target) {
     //outputs is unchanged - top level targets are created in the root of the build directory
-    return Build.TopLevelTarget(target.inTopLevelObjDirOf(target));
+    return Build.TopLevelTarget(target.inTopLevelObjDirOf(topLevelDirName(target)));
 }
 
 
 //a directory for each top-level target no avoid name clashes
 //@trusted because of map -> buildPath -> array
-Target inTopLevelObjDirOf(in Target target, in Target topLevel) @trusted {
+Target inTopLevelObjDirOf(in Target target, in string dirName) @trusted {
     //leaf targets only get the $builddir expansion, nothing else
     //this is because leaf targets are by definition in the project path
 
     //every other non-top-level target gets its outputs placed in a directory
     //specific to its top-level parent
 
-    const outputs = target == topLevel
+    const outputs = topLevelDirName(target) == dirName
         ? target.outputs
-        : target.outputs.map!(a => realTargetPath(target, topLevel, a)).array;
+        : target.outputs.map!(a => realTargetPath(dirName, target, a)).array;
 
     return Target(outputs,
                   target._command.expandVariables,
-                  target.dependencies.map!(a => a.inTopLevelObjDirOf(topLevel)).array,
-                  target.implicits.map!(a => a.inTopLevelObjDirOf(topLevel)).array);
+                  target.dependencies.map!(a => a.inTopLevelObjDirOf(dirName)).array,
+                  target.implicits.map!(a => a.inTopLevelObjDirOf(dirName)).array);
 }
 
+
+string topLevelDirName(in Target target) @safe pure nothrow {
+    return buildPath("objs", target.outputs[0] ~ ".objs");
+}
 
 //targets that have outputs with $builddir or $project in them want to be placed
 //in a specific place. Those don't get touched. Other targets get
 //placed in their top-level parent's object directory
-string realTargetPath(in Target target, in Target topLevel, in string output) @trusted pure {
-    immutable dirName = buildPath("objs", topLevel.outputs[0] ~ ".objs");
+string realTargetPath(in string dirName, in Target target, in string output) @trusted pure {
     return target.isLeaf
         ? _expandVariables(output)
         : realTargetPath(dirName, output);

@@ -69,16 +69,17 @@ void testMultipleOutputs() {
 void testInTopLevelObjDir() {
 
     const theApp = Target("theapp");
+    const dirName = topLevelDirName(theApp);
     const fooObj = Target("foo.o", "", [Target("foo.c")]);
-    fooObj.inTopLevelObjDirOf(theApp).shouldEqual(
+    fooObj.inTopLevelObjDirOf(dirName).shouldEqual(
         Target("objs/theapp.objs/foo.o", "", [Target("foo.c")]));
 
     const barObjInBuildDir = Target("$builddir/bar.o", "", [Target("bar.c")]);
-    barObjInBuildDir.inTopLevelObjDirOf(theApp).shouldEqual(
+    barObjInBuildDir.inTopLevelObjDirOf(dirName).shouldEqual(
         Target("bar.o", "", [Target("bar.c")]));
 
     const leafTarget = Target("foo.c");
-    leafTarget.inTopLevelObjDirOf(theApp).shouldEqual(leafTarget);
+    leafTarget.inTopLevelObjDirOf(dirName).shouldEqual(leafTarget);
 }
 
 

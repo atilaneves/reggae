@@ -57,10 +57,11 @@ struct Binary {
 
     void run(string[] args) const @system { //@system due to parallel
         auto options = BinaryOptions(args);
-        bool didAnything = checkReRun();
 
         handleOptions(options);
         if(options.earlyReturn) return;
+
+        bool didAnything = checkReRun();
 
         const topTargets = topLevelTargets(options.args);
         if(topTargets.empty)
@@ -102,7 +103,8 @@ struct Binary {
 
         auto optionalTargets = build.targets.filter!(a => !defaultTargets.canFind(a));
         foreach(optionalTarget; optionalTargets)
-            result ~= "- " ~ optionalTarget.expandOutputs(projectPath).join(" ") ~ " (optional)";
+            result ~= "- " ~ optionalTarget.outputs.map!(a => a.replace("$builddir/", "")).join(" ") ~
+                " (optional)";
 
         return result;
     }

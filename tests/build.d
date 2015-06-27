@@ -164,3 +164,24 @@ void testDiamondDeps() {
 
     build.range.array.shouldEqual([newObj1, newObj2, newFooLib, newSymlink1, newSymlink2]);
 }
+
+void testPhobosOptionalBug() {
+    enum obj1 = Target("obj1.o", "dmd -of$out -c $in", Target("src1.d"));
+    enum obj2 = Target("obj2.o", "dmd -of$out -c $in", Target("src2.d"));
+    enum foo = Target("foo", "dmd -of$out $in", [obj1, obj2]);
+    Target bar() {
+        return Target("bar", "dmd -of$out $in", [obj1, obj2]);
+    }
+    mixin build!(foo, optional!(bar));
+    const build = buildFunc();
+
+    const fooObj1 = Target("objs/foo.objs/obj1.o", "dmd -of$out -c $in", Target("src1.d"));
+    const fooObj2 = Target("objs/foo.objs/obj2.o", "dmd -of$out -c $in", Target("src2.d"));
+    const newFoo = Target("foo", "dmd -of$out $in", [fooObj1, fooObj2]);
+
+    const barObj1 = Target("objs/bar.objs/obj1.o", "dmd -of$out -c $in", Target("src1.d"));
+    const barObj2 = Target("objs/bar.objs/obj2.o", "dmd -of$out -c $in", Target("src2.d"));
+    const newBar = Target("bar", "dmd -of$out $in", [barObj1, barObj2]);
+
+    build.range.array.shouldEqual([fooObj1, fooObj2, newFoo, barObj1, barObj2, newBar]);
+}

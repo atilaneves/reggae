@@ -77,7 +77,8 @@ struct Build {
  "Compile-time" version that can be aliased
  */
 Build.TopLevelTarget optional(alias targetFunc)() {
-    return optional(targetFunc());
+    auto target = targetFunc();
+    return createTopLevelTarget(target, true);
 }
 
 /**
@@ -87,9 +88,10 @@ Build.TopLevelTarget optional(in Target target) {
     return Build.TopLevelTarget(target, true);
 }
 
-Build.TopLevelTarget createTopLevelTarget(in Target target) {
+Build.TopLevelTarget createTopLevelTarget(in Target target, bool optional = false) {
     //outputs is unchanged - top level targets are created in the root of the build directory
-    return Build.TopLevelTarget(target.inTopLevelObjDirOf(topLevelDirName(target), Yes.topLevel));
+    return Build.TopLevelTarget(target.inTopLevelObjDirOf(topLevelDirName(target), Yes.topLevel),
+                                optional);
 }
 
 

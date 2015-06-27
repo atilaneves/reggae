@@ -18,6 +18,7 @@ import std.conv;
 import std.exception;
 import std.typecons;
 import std.range;
+import std.typecons;
 
 
 /**
@@ -110,20 +111,27 @@ Build.TopLevelTarget optional(in Target target) {
 
 Build.TopLevelTarget createTopLevelTarget(in Target target) {
     //outputs is unchanged - top level targets are created in the root of the build directory
-    return Build.TopLevelTarget(target.inTopLevelObjDirOf(topLevelDirName(target)));
+    return Build.TopLevelTarget(target.inTopLevelObjDirOf(topLevelDirName(target), Yes.topLevel));
 }
 
 
+immutable gBuilddir = "$builddir";
+immutable gProjdir  = "$project";
+
 //a directory for each top-level target no avoid name clashes
 //@trusted because of map -> buildPath -> array
-Target inTopLevelObjDirOf(in Target target, in string dirName) @trusted {
+Target inTopLevelObjDirOf(in Target target, string dirName, Flag!"topLevel" isTopLevel = No.topLevel) @trusted {
     //leaf targets only get the $builddir expansion, nothing else
     //this is because leaf targets are by definition in the project path
 
     //every other non-top-level target gets its outputs placed in a directory
     //specific to its top-level parent
 
-    const outputs = topLevelDirName(target) == dirName
+    if(target.outputs.any!(a => a.startsWith(gBuilddir) || a.startsWith(gProjdir))) {
+         dirName = topLevelDirName(target);
+    }
+
+    const outputs = isTopLevel
         ? target.outputs
         : target.outputs.map!(a => realTargetPath(dirName, target, a)).array;
 
@@ -146,9 +154,6 @@ string realTargetPath(in string dirName, in Target target, in string output) @tr
         ? _expandVariables(output)
         : realTargetPath(dirName, output);
 }
-
-immutable gBuilddir = "$builddir";
-immutable gProjdir  = "$project";
 
 
 //targets that have outputs with $builddir or $project in them want to be placed

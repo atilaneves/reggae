@@ -205,7 +205,6 @@ void testConvertDiamondDepsNoBuildStruct() {
     }
 }
 
-
 @ShouldFail
 void testConvertDiamondDeps() {
     const deps = getDiamondDeps();

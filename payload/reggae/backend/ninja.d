@@ -141,7 +141,9 @@ private:
     void phonyRule(in Target target) @safe {
         //no projectPath for phony rules
         immutable outputs = target.outputsInProjectPath("").join(" ");
-        buildEntries ~= NinjaEntry("build " ~ outputs ~ ": _phony " ~ target.dependencyFilesString(_projectPath),
+        auto buildLine = "build " ~ outputs ~ ": _phony " ~ target.dependencyFilesString(_projectPath);
+        if(!target.implicits.empty) buildLine ~= " | " ~ target.implicitFilesString(_projectPath);
+        buildEntries ~= NinjaEntry(buildLine,
                                    ["cmd = " ~ target.shellCommand(_projectPath),
                                     "pool = console"]);
     }
@@ -184,8 +186,7 @@ private:
             : implicitInput;
 
 
-        auto buildLine = buildLine(target) ~ ruleName ~
-            " " ~ deps;
+        auto buildLine = buildLine(target) ~ ruleName ~ " " ~ deps;
         if(!target.implicits.empty) buildLine ~= " | " ~  target.implicitFilesString(_projectPath);
 
         string[] buildParamLines;

@@ -308,17 +308,18 @@ private:
         immutable outputs = target.outputsInProjectPath(_projectPath).join(" ");
         return "build " ~ outputs ~ ": ";
     }
+
+    //@trusted because of splitter
+    private string targetCommand(in Target target) @trusted pure nothrow const {
+        return targetRawCommand(target).sanitizeCmd;
+    }
+
+    //@trusted because of splitter
+    private string targetRawCommand(in Target target) @trusted pure nothrow const {
+        return target.expandCommand(_projectPath).splitter(" ").front;
+    }
 }
 
-//@trusted because of splitter
-private string targetCommand(in Target target) @trusted pure nothrow {
-    return targetRawCommand(target).sanitizeCmd;
-}
-
-//@trusted because of splitter
-private string targetRawCommand(in Target target) @trusted pure nothrow {
-    return target.expandCommand.splitter(" ").front;
-}
 
 //ninja doesn't like symbols in rule names
 //@trusted because of replace

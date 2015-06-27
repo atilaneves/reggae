@@ -289,3 +289,14 @@ void testImplicitsWithNoIn() {
                     ["command = mkdir $before $out$in"])
             ]);
 }
+
+
+void testCustomRuleInvolvingProjectPath() {
+    const foo = Target("foo.o", "$project/../dmd/src/dmd -of$out -c $in", Target("foo.d"));
+    const app = Target("app", "$project/../dmd/src/dmd -of$out -c $in", Target("foo.d"));
+    const ninja = Ninja(Build(app), "/path/to/proj");
+    ninja.ruleEntries.shouldEqual(
+        [NinjaEntry("rule dmd",
+                    ["command = /path/to/proj/../dmd/src/dmd $before$out $between $in"]),
+            ]);
+}

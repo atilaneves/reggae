@@ -1,8 +1,12 @@
+/**
+ This file is never actually used in production. It owes its existence
+ to allowing the UTs to build and flycheck to not complain.
+ */
+
 module reggae.config;
 
 import reggae.types;
 
-//dummy file for UT builds / flycheck
 immutable string projectPath;
 immutable string dflags;
 immutable string reggaePath;
@@ -12,6 +16,7 @@ immutable string cppCompiler = "g++";
 immutable string dCompiler = "dmd";
 immutable bool perModule = true; //only for UTs, false in the real world
 immutable Backend backend;
+enum userVars = AssocList!(string, string)();
 
 version(minimal) {}
 else {

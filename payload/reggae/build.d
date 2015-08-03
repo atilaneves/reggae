@@ -529,13 +529,13 @@ struct Command {
 
             case compile:
                 immutable ccParams = deps
-                    ? " $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in"
+                    ? " $flags $includes -MMD -MT $out -MF $out.dep -o $out -c $in"
                     : " $flags $includes -o $out -c $in";
 
                 final switch(language) with(Language) {
                     case D:
                         return deps
-                            ? ".reggae/dcompile --objFile=$out --depFile=$DEPFILE " ~
+                            ? ".reggae/dcompile --objFile=$out --depFile=$out.dep " ~
                             dCompiler ~ " $flags $includes $stringImports $in"
                             : dCompiler ~ " $flags $includes $stringImports -of$out -c $in";
                     case Cplusplus:

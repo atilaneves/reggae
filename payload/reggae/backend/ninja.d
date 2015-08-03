@@ -55,7 +55,7 @@ NinjaEntry[] defaultRules() @safe pure {
 
     NinjaEntry createNinjaEntry(in CommandType type, in Language language) @safe pure {
         string[] paramLines = ["command = " ~ Command.builtinTemplate(type, language)];
-        if(hasDepFile(type)) paramLines ~= ["deps = gcc", "depfile = $DEPFILE"];
+        if(hasDepFile(type)) paramLines ~= ["deps = gcc", "depfile = $out.dep"];
         return NinjaEntry("rule " ~ cmdTypeToNinjaString(type, language), paramLines);
     }
 

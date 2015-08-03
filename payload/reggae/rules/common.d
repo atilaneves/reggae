@@ -130,7 +130,7 @@ Command compileCommand(in string srcFileName,
     if(language == Language.D)
         params ~= assocEntry("stringImports", stringImportPaths.map!(a => "-J" ~ buildPath(projDir, a)).array);
 
-    params ~= assocEntry("DEPFILE", ["$out.dep"]);
+    params ~= assocEntry("DEPFILE", [srcFileName.objFileName ~ ".dep"]);
 
     return Command(CommandType.compile, assocList(params));
 }

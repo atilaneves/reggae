@@ -10,10 +10,12 @@ install:
   - cd ..
   - dub fetch unit-threaded --version=0.4.10
   - dub fetch cerealed --version=0.6.1
+  - git clone https://github.com/D-Programming-Language/dub.git
+  - cd dub
+  - dub build
+  - export PATH=$PWD/bin:$PATH
 
 script:
-  - echo $PATH
-  - which ninja
   - ./bootstrap.sh make
   - bin/ut
-  - cucumber --tags ~@tup
+  - cucumber --tags ~@tup --tags ~@regression

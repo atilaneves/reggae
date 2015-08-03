@@ -1,3 +1,4 @@
+@regression
 Feature: Regressions
   As a reggae developer
   I want to reproduce bugs with regression tests

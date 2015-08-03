@@ -27,6 +27,7 @@ struct DubPackage {
     string[] versions;
     string[] dependencies;
     string[] libs;
+    bool active;
 }
 
 struct DubInfo {

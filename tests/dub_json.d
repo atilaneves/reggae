@@ -23,21 +23,19 @@ auto jsonString =
     `        "src/string_imports",`
     `        "src/moar_stringies"`
     `      ],`
+    `      "active": true,`
     `      "files": [`
     `        {`
     `          "path": "src/foo.d",`
-    `          "type": "source",`
-    `          "active": true`
+    `          "type": "source"`
     `        },`
     `        {`
     `          "path": "src/bar.d",`
-    `          "type": "source",`
-    `          "active": true`
+    `          "type": "source"`
     `        },`
     `        {`
     `          "path": "src/boooo.d",`
-    `          "type": "source",`
-    `          "active": true`
+    `          "type": "source"`
     `        }`
     `      ]`
     `    },`
@@ -54,21 +52,19 @@ auto jsonString =
     `      "libs": ["liblib", "otherlib"],`
     `      "versions": ["v3", "v4"],`
     `      "stringImportPaths": [],`
+    `      "active": true,`
     `      "files": [`
     `        {`
     `          "path": "source/toto.d",`
-    `          "type": "source",`
-    `          "active": true`
+    `          "type": "source"`
     `        },`
     `        {`
     `          "path": "source/africa.d",`
-    `          "type": "source",`
-    `          "active": true`
+    `          "type": "source"`
     `        },`
     `        {`
     `          "path": "source/africa.d",`
-    `          "type": "weirdo",`
-    `          "active": true`
+    `          "type": "weirdo"`
     `        }`
     `      ]`
     `    }`
@@ -85,14 +81,14 @@ void testJsonToDubDescribe() {
                         ["leimports"],
                         ["src/string_imports", "src/moar_stringies"],
                         ["src/foo.d", "src/bar.d", "src/boooo.d"],
-                        "executable", ["v1", "v2"], ["pkg_other"]),
+                        "executable", ["v1", "v2"], ["pkg_other"], [], true),
 
              DubPackage("pkg_other", "/weird/path/pkg_other", "", "",
                         ["-g", "-debug"],
                         ["my_imports", "moar_imports"],
                         [],
                         ["source/toto.d", "source/africa.d"],
-                        "", ["v3", "v4"], [], ["liblib", "otherlib"])]));
+                        "", ["v3", "v4"], [], ["liblib", "otherlib"], true)]));
 }
 
 

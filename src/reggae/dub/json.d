@@ -9,25 +9,29 @@ import std.algorithm: map, filter;
 DubInfo getDubInfo(string jsonString) @trusted {
     auto json = parseJSON(jsonString);
     auto packages = json.byKey("packages").array;
-    return DubInfo(packages.map!(a => DubPackage(a.byKey("name").str,
-                                                 a.byKey("path").str,
-                                                 a.getOptional("mainSourceFile"),
-                                                 a.getOptional("targetFileName"),
-                                                 a.byKey("dflags").jsonValueToStrings,
-                                                 a.byKey("importPaths").jsonValueToStrings,
-                                                 a.byKey("stringImportPaths").jsonValueToStrings,
-                                                 a.byKey("files").jsonValueToFiles,
-                                                 a.getOptional("targetType"),
-                                                 a.getOptionalList("versions"),
-                                                 a.getOptionalList("dependencies"),
-                                                 a.getOptionalList("libs"))).array);
+    return DubInfo(packages.
+                   map!(a => DubPackage(a.byKey("name").str,
+                                        a.byKey("path").str,
+                                        a.getOptional("mainSourceFile"),
+                                        a.getOptional("targetFileName"),
+                                        a.byKey("dflags").jsonValueToStrings,
+                                        a.byKey("importPaths").jsonValueToStrings,
+                                        a.byKey("stringImportPaths").jsonValueToStrings,
+                                        a.byKey("files").jsonValueToFiles,
+                                        a.getOptional("targetType"),
+                                        a.getOptionalList("versions"),
+                                        a.getOptionalList("dependencies"),
+                                        a.getOptionalList("libs"),
+                                        a.byOptionalKey("active", true), //true for backwards compatibility
+                            )).
+                   filter!(a => a.active).
+                   array);
 }
 
 
 private string[] jsonValueToFiles(JSONValue files) @trusted {
     return files.array.
         filter!(a => a.byKey("type").str == "source").
-        filter!(a => a.byOptionalKey("active", true)). //true for backward compatibility
         map!(a => a.byKey("path").str).
         array;
 }

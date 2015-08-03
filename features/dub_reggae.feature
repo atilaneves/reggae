@@ -64,7 +64,7 @@ Feature: Augmenting dub projects with reggae builds
       module tests.util.more_maths;
       import util.maths;
       unittest {
-          assert(adder(3, 4) == 42);
+          assert(adder(3, 4) == 42); //oops
       }
       void testMoreAdder() {
           assert(adder(4, 9) == 13);

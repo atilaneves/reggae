@@ -29,7 +29,6 @@ struct DubPackage {
     string[] libs;
 }
 
-
 struct DubInfo {
     DubPackage[] packages;
 
@@ -37,7 +36,7 @@ struct DubInfo {
         Target[] targets;
 
         foreach(const i, const dubPackage; packages) {
-            const importPaths = dubPackage.allOf!(a => a.packagePaths(a.importPaths))(packages);
+            const importPaths = allImportPaths();
             const stringImportPaths = dubPackage.allOf!(a => a.packagePaths(a.stringImportPaths))(packages);
             auto versions = dubPackage.allOf!(a => a.versions)(packages).map!(a => "-version=" ~ a);
             //the path must be explicit for the other packages, implicit for the "main"
@@ -82,6 +81,13 @@ struct DubInfo {
 
     string[][] fetchCommands() @safe pure nothrow const {
         return packages[0].dependencies.map!(a => ["dub", "fetch", a]).array;
+    }
+
+    string[] allImportPaths() @safe nothrow const {
+        string[] paths;
+        auto rng = packages.map!(a => a.packagePaths(a.importPaths));
+        foreach(p; rng) paths ~= p;
+        return paths;
     }
 }
 

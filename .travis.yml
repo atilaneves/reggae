@@ -6,12 +6,14 @@ install:
   - git clone https://github.com/martine/ninja.git
   - cd ninja
   - ./configure.py --bootstrap
-  - export PATH=$CWD:$PATH
+  - export PATH=$PWD:$PATH
   - cd ..
   - dub fetch unit-threaded --version=0.4.10
   - dub fetch cerealed --version=0.6.1
 
 script:
+  - echo $PATH
+  - which ninja
   - ./bootstrap.sh make
   - bin/ut
   - cucumber --tags ~@tup

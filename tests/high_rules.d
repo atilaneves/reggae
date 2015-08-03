@@ -13,7 +13,7 @@ void testCObjectFile() {
     const cmd = Command(CommandType.compile,
                         assocListT("includes", ["-I$project/myhdrs", "-I$project/otherhdrs"],
                                    "flags", ["-g", "-O0"],
-                                   "DEPFILE", ["$out.dep"]));
+                                   "DEPFILE", ["foo.o.dep"]));
 
     obj.shouldEqual(Target("foo.o", cmd, [Target(fileName)]));
 
@@ -28,7 +28,7 @@ void testCppObjectFile() {
         const cmd = Command(CommandType.compile,
                             assocListT("includes", ["-I$project/myhdrs", "-I$project/otherhdrs"],
                                        "flags", ["-g", "-O0"],
-                                       "DEPFILE", ["$out.dep"]));
+                                       "DEPFILE", ["foo.o.dep"]));
 
         obj.shouldEqual(Target("foo.o", cmd, [Target(fileName)]));
     }
@@ -44,7 +44,7 @@ void testDObjectFile() {
                         assocListT("includes", ["-I$project/myhdrs", "-I$project/otherhdrs"],
                                    "flags", ["-g", "-debug"],
                                    "stringImports", ["-J$project/strings", "-J$project/otherstrings"],
-                                   "DEPFILE", ["$out.dep"]));
+                                   "DEPFILE", ["foo.o.dep"]));
 
     obj.shouldEqual(Target("foo.o", cmd, [Target("foo.d")]));
 }
@@ -52,10 +52,10 @@ void testDObjectFile() {
 
 void testBuiltinTemplateDeps() {
     Command.builtinTemplate(CommandType.compile, Language.C).shouldEqual(
-        "gcc $flags $includes -MMD -MT $out -MF $DEPFILE -o $out -c $in");
+        "gcc $flags $includes -MMD -MT $out -MF $out.dep -o $out -c $in");
 
     Command.builtinTemplate(CommandType.compile, Language.D).shouldEqual(
-        ".reggae/dcompile --objFile=$out --depFile=$DEPFILE " ~
+        ".reggae/dcompile --objFile=$out --depFile=$out.dep " ~
          "dmd $flags $includes $stringImports $in");
 
 }

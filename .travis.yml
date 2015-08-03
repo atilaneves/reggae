@@ -1,14 +1,14 @@
 language: d
-d: dmd-2.067.0
+sudo: false
 install:
   - gem install cucumber rspec aruba
   - git clone https://github.com/martine/ninja.git
   - cd ninja
   - ./configure.py --bootstrap
-  - sudo cp ninja /usr/bin
+  - export PATH=$CWD:$PATH
   - cd ..
   - dub fetch unit-threaded --version=0.4.10
-  - dub fetch cerealed --version=0.5.4
+  - dub fetch cerealed --version=0.6.1
 
 script:
   - ./bootstrap.sh make

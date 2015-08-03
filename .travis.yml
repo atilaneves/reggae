@@ -1,7 +1,8 @@
 language: d
 sudo: false
 install:
-  - gem install cucumber rspec aruba
+  - gem install bundler
+  - bundle install
   - git clone https://github.com/martine/ninja.git
   - cd ninja
   - ./configure.py --bootstrap

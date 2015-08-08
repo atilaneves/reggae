@@ -49,7 +49,7 @@ Feature: Regressions
       Then I successfully run `ninja`
 
     @ninja
-    Scenario: Github isse 12: Can't set executable as a dependency
+    Scenario: Github issue 12: Can't set executable as a dependency
       Given a file named "project/reggaefile.d" with:
         """
         import reggae;
@@ -90,3 +90,40 @@ Feature: Regressions
        bar bar
        baz baz
        """
+
+    @ninja
+    Scenario: Github issue 10: dubConfigurationTarget doesn't work for unittest builds
+      Given a file named "project/dub.json" with:
+        """
+        {
+            "name": "dubproj",
+            "configurations": [
+                { "name": "executable"},
+                { "name": "unittest"}
+            ]
+        }
+        """
+      And a file named "project/reggaefile.d" with:
+        """
+        import reggae;
+        alias ut = dubConfigurationTarget!(ExeName(`ut`),
+                                           Configuration(`unittest`),
+                                           Flags(`-g -debug -cov`));
+        mixin build!ut;
+        """
+      And a file named "project/source/src.d" with:
+        """
+        unittest { static assert(false, `oopsie`); }
+        int add(int i, int j) { return i + j; }
+        """
+      And a file named "project/source/main.d" with:
+        """
+        import src;
+        void main() {}
+        """
+      Given I successfully run `reggae -b ninja project`
+      When I run `ninja`
+      Then it should fail with:
+        """
+        oopsie
+        """

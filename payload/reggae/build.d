@@ -169,7 +169,7 @@ unittest {
     const t2 = Target();
     static assert(isTarget!t1);
     static assert(isTarget!t2);
-    const t3 = TopLevelTarget(Target());
+    const t3 = Build.TopLevelTarget(Target());
     static assert(isTarget!t3);
 }
 

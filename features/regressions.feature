@@ -47,3 +47,46 @@ Feature: Regressions
         """
       When I successfully run `reggae -b ninja project`
       Then I successfully run `ninja`
+
+    @ninja
+    Scenario: Github isse 12: Can't set executable as a dependency
+      Given a file named "project/reggaefile.d" with:
+        """
+        import reggae;
+        alias app = executable!(App("src/main.d", "$builddir/myapp"),
+                                Flags("-g -debug"),
+                                ImportPaths(["/path/to/imports"])
+                                );
+        alias code_gen = target!("out.c", "./myapp $in $out", target!"in.txt", app);
+        mixin build!(code_gen);
+        """
+      And a file named "project/src/main.d" with:
+        """
+        import std.stdio;
+        import std.algorithm;
+        import std.conv;
+        void main(string[] args) {
+            const inFileName = args[1];
+            const outFileName = args[2];
+            auto lines = File(inFileName).byLine.
+                                          map!(a => a.to!string).
+                                          map!(a => a ~ ` ` ~ a);
+            auto outFile = File(outFileName, `w`);
+            foreach(line; lines) outFile.writeln(line);
+        }
+        """
+      And a file named "project/in.txt" with:
+        """
+        foo
+        bar
+        baz
+        """
+      When I successfully run `reggae -b ninja project`
+      And I successfully run `ninja`
+      And I successfully run `cat out.c`
+      Then the output should contain:
+       """
+       foo foo
+       bar bar
+       baz baz
+       """

@@ -83,7 +83,7 @@ Target executable(App app,
                   ImportPaths importPaths = ImportPaths(),
                   StringImportPaths stringImportPaths = StringImportPaths(),
                   alias linkWithFunction = () { return cast(Target[])[];})
-    () {
+    () @trusted {
     auto linkWith = linkWithFunction();
     return executable(app, flags, importPaths, stringImportPaths, linkWith);
 }

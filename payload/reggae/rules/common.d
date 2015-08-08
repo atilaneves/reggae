@@ -208,8 +208,23 @@ Target[] targetConcat(T...)() {
  at global scope in a reggaefile
  */
 Target target(alias outputs,
-              alias command,
-              alias dependenciesFunc,
-              alias implicitsFunc = () { Target[] ts; return ts; })() {
-    return Target(outputs, command, dependenciesFunc(), implicitsFunc());
+              alias command = "",
+              alias dependenciesFunc = () { Target[] ts; return ts; },
+              alias implicitsFunc = () { Target[] ts; return ts; })() @trusted {
+
+    auto depsRes = dependenciesFunc();
+    auto impsRes = implicitsFunc();
+
+    static if(isArray!(typeof(depsRes)))
+        auto dependencies = depsRes;
+    else
+        auto dependencies = [depsRes];
+
+    static if(isArray!(typeof(impsRes)))
+        auto implicits = impsRes;
+    else
+        auto implicits = [impsRes];
+
+
+    return Target(outputs, command, dependencies, implicits);
 }

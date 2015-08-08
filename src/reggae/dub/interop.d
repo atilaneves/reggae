@@ -50,6 +50,13 @@ private DubInfo _getDubInfo(in Options options) {
                 immutable descArgs = ["dub", "describe", "-c", config];
                 immutable descOutput = _callDub(options, descArgs);
                 gDubInfos[config] = getDubInfo(descOutput);
+
+                //dub adds certain flags to certain configurations automatically but these flags
+                //don't know up in the output to `dub describe`. Special case them here.
+
+                //unittest should only apply to the main package, hence [0]
+                if(config == "unittest") gDubInfos[config].packages[0].flags ~= " -unittest";
+
             }
             gDubInfos["default"] = gDubInfos[configs.default_];
         }

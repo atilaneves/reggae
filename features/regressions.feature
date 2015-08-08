@@ -4,7 +4,7 @@ Feature: Regressions
   I want to reproduce bugs with regression tests
   So that bugs are not reintroduced
 
-  @ninja
+  @ninja @autofail
   Scenario: Recursive dub dependencies
     Given a file named "project/dub.json" with:
       """

@@ -14,8 +14,9 @@ install:
   - cd dub
   - dub build
   - export PATH=$PWD/bin:$PATH
+  - cd ..
 
 script:
   - ./bootstrap.sh make
   - bin/ut
-  - cucumber --tags ~@tup --tags ~@regression
+  - cucumber --tags ~@tup --tags ~@autofail

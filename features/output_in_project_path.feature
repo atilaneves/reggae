@@ -29,12 +29,12 @@ Feature: Outputs in the project path
       When I successfully run `make`
       Then a file named "proj/generated/release/64/linux/copy.txt" should exist
 
-    # The command succeeds but tup thinks it didn't
-    # @tup
-    # Scenario: Tup
-    #   Given I successfully run `reggae -b tup proj`
-    #   When I successfully run `tup`
-    #   Then a file named "proj/generated/release/64/linux/copy.txt" should exist
+    #The command succeeds but tup thinks it didn't
+    @tup @autofail
+    Scenario: Tup
+      Given I successfully run `reggae -b tup proj`
+      When I successfully run `tup`
+      Then a file named "proj/generated/release/64/linux/copy.txt" should exist
 
     @binary
     Scenario: binary

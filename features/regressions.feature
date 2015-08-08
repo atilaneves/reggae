@@ -42,5 +42,8 @@ Feature: Regressions
         const liba = Target("$builddir/liba.a", "ar rcs liba.a a.o", [ao]);
         mixin build!(liba);
         """
+      And a file named "project/a.c" with:
+        """
+        """
       When I successfully run `reggae -b ninja project`
       Then I successfully run `ninja`

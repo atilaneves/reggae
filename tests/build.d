@@ -214,5 +214,5 @@ void testBuilddirInTopLevelTarget() {
     const liba = Target("$builddir/liba.a", "ar rcs liba.a a.o", [ao]);
     mixin build!(liba);
     const build = buildFunc();
-    build.targets.array.shouldEqual([Target("liba.a", "ar rcs liba.a a.o", [ao])]);
+    build.targets[0].outputs.shouldEqual(["liba.a"]);
 }

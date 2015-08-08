@@ -228,3 +228,23 @@ Target target(alias outputs,
 
     return Target(outputs, command, dependencies, implicits);
 }
+
+
+/**
+ Convenience rule for creating static libraries
+ */
+Target[] staticLibrary(string name,
+                       alias sourcesFunc = Sources!(),
+                       Flags flags = Flags(),
+                       ImportPaths includes = ImportPaths(),
+                       StringImportPaths stringImports = StringImportPaths())
+    () {
+
+    version(Posix) {}
+    else
+        static assert(false, "Can only create static libraries on Posix");
+
+    const srcFiles = sourcesToFileNames!(sourcesFunc);
+    return [Target(buildPath("$builddir", name), "ar rcs $out $in",
+                   targetsFromSources!(sourcesFunc, flags, includes, stringImports)())];
+}

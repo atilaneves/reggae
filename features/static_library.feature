@@ -7,11 +7,11 @@ Feature: Static library
     Given a file named "project/reggaefile.d" with:
       """
       import reggae;
-      alias lib = staticLibrary!(`maths.a`, Sources([`libsrc`]));
+      alias lib = staticLibrary!(`maths.a`, Sources!([`libsrc`]));
       enum mainObj = objectFile(SourceFile(`src/main.d`));
       alias app = executable!(App(`src/main.d`, `app`),
                               Flags(),
-                              ImportPaths(),
+                              ImportPaths([`libsrc`]),
                               StringImportPaths(),
                               lib);
       mixin build!app;

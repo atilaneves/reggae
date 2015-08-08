@@ -89,7 +89,6 @@ Build.TopLevelTarget optional(in Target target) {
 }
 
 Build.TopLevelTarget createTopLevelTarget(in Target target, bool optional = false) {
-    //outputs is unchanged - top level targets are created in the root of the build directory
     return Build.TopLevelTarget(target.inTopLevelObjDirOf(topLevelDirName(target), Yes.topLevel),
                                 optional);
 }
@@ -112,7 +111,7 @@ Target inTopLevelObjDirOf(in Target target, string dirName, Flag!"topLevel" isTo
     }
 
     const outputs = isTopLevel
-        ? target.outputs
+        ? target.outputs.map!(a => _expandVariables(a)).array
         : target.outputs.map!(a => realTargetPath(dirName, target, a)).array;
 
     return Target(outputs,

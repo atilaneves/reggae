@@ -31,3 +31,19 @@ Feature: Regressions
       """
     When I successfully run `reggae -b ninja project`
     And I successfully run `ninja`
+
+    @ninja
+    Scenario: Github issue 14: $builddir not expanded
+      Given a file named "project/reggaefile.d" with:
+        """
+        import reggae;
+
+        const ao = objectFile(SourceFile("a.c"));
+        const liba = Target("$builddir/liba.a", "ar rcs $out $in", [ao]);
+        mixin build!(liba);
+        """
+      And a file named "project/a.c" with:
+        """
+        """
+      When I successfully run `reggae -b ninja project`
+      Then I successfully run `ninja`

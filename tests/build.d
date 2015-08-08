@@ -207,3 +207,12 @@ void testCommandBuilddir() {
     cmd.shellCommand("/path/to/proj", Language.unknown, ["$builddir/ut_debug"], ["foo.d"]).
         shouldEqual("dmd -ofut_debug foo.d");
 }
+
+
+void testBuilddirInTopLevelTarget() {
+    const ao = objectFile(SourceFile("a.c"));
+    const liba = Target("$builddir/liba.a", "ar rcs liba.a a.o", [ao]);
+    mixin build!(liba);
+    const build = buildFunc();
+    build.targets.array.shouldEqual([Target("liba.a", "ar rcs liba.a a.o", [ao])]);
+}

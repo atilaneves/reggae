@@ -39,7 +39,7 @@ Feature: Regressions
         import reggae;
 
         const ao = objectFile(SourceFile("a.c"));
-        const liba = Target("$builddir/liba.a", "ar rcs liba.a a.o", [ao]);
+        const liba = Target("$builddir/liba.a", "ar rcs $out $in", [ao]);
         mixin build!(liba);
         """
       And a file named "project/a.c" with:

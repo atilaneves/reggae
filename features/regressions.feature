@@ -121,9 +121,8 @@ Feature: Regressions
         import src;
         void main() {}
         """
-      When I successfully run `reggae -b ninja project`
-      And I successfully run `ninja`
-      And I run `./ut`
+      Given I successfully run `reggae -b ninja project`
+      When I run `ninja`
       Then it should fail with:
         """
         oopsie

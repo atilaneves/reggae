@@ -15,6 +15,7 @@ immutable string cCompiler = "gcc";
 immutable string cppCompiler = "g++";
 immutable string dCompiler = "dmd";
 immutable bool perModule = true; //only for UTs, false in the real world
+immutable bool oldNinja = false;
 immutable Backend backend;
 enum userVars = AssocList!(string, string)();
 

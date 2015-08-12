@@ -217,6 +217,7 @@ private void writeConfig(in Options options) {
     file.writeln("enum cppCompiler = `", options.cppCompiler, "`;");
     file.writeln("enum dCompiler = `", options.dCompiler, "`;");
     file.writeln("enum perModule = ", options.perModule, ";");
+    file.writeln("enum oldNinja = ", options.oldNinja, ";");
 
     file.writeln("enum userVars = AssocList!(string, string)([");
     foreach(key, value; options.userVars) {

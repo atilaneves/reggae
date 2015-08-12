@@ -20,6 +20,7 @@ struct Options {
     bool help;
     bool perModule;
     bool isDubProject;
+    bool oldNinja;
 
     //finished setup
     void finalize() @safe{
@@ -60,7 +61,7 @@ Options getOptions(string[] args) @trusted {
             "cxx", "C++ compiler to use (default g++).", &options.cppCompiler,
             "nofetch", "Assume dub packages are present (no dub fetch).", &options.noFetch,
             "per_module", "Compile D files per module (default is per package)", &options.perModule,
-
+            "old_ninja", "Generate a Ninja build compatible with older versions of Ninja", &options.oldNinja,
             );
 
         if(helpInfo.helpWanted) {

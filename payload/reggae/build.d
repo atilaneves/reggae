@@ -111,7 +111,7 @@ Target inTopLevelObjDirOf(in Target target, string dirName, Flag!"topLevel" isTo
     }
 
     const outputs = isTopLevel
-        ? target.outputs.map!(a => _expandVariables(a)).array
+        ? target.outputs.map!(a => expandBuildDir(a)).array
         : target.outputs.map!(a => realTargetPath(dirName, target, a)).array;
 
     return Target(outputs,
@@ -122,7 +122,7 @@ Target inTopLevelObjDirOf(in Target target, string dirName, Flag!"topLevel" isTo
 
 
 string topLevelDirName(in Target target) @safe pure {
-    return buildPath("objs", target.outputs[0]._expandVariables ~ ".objs");
+    return buildPath("objs", target.outputs[0].expandBuildDir ~ ".objs");
 }
 
 //targets that have outputs with $builddir or $project in them want to be placed
@@ -130,7 +130,7 @@ string topLevelDirName(in Target target) @safe pure {
 //placed in their top-level parent's object directory
 string realTargetPath(in string dirName, in Target target, in string output) @trusted pure {
     return target.isLeaf
-        ? _expandVariables(output)
+        ? expandBuildDir(output)
         : realTargetPath(dirName, output);
 }
 
@@ -144,12 +144,12 @@ string realTargetPath(in string dirName, in string output) @trusted pure {
     if(output.startsWith(gProjdir)) return output;
 
     return output.canFind(gBuilddir)
-        ? output._expandVariables
+        ? output.expandBuildDir
         : buildPath(dirName, output);
 }
 
 //replace $builddir with the current directory
-private string _expandVariables(in string output) @trusted pure {
+string expandBuildDir(in string output) @trusted pure {
     import std.path: buildNormalizedPath;
     import std.algorithm;
     return output.
@@ -467,7 +467,7 @@ struct Command {
     const(Command) expandVariables() @safe pure const {
         switch(type) with(CommandType) {
         case shell:
-            auto cmd = Command(_expandVariables(command));
+            auto cmd = Command(expandBuildDir(command));
             cmd.type = this.type;
             return cmd;
         default:

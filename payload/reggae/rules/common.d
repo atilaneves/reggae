@@ -120,7 +120,12 @@ Command compileCommand(in string srcFileName,
                        in string[] includePaths = [],
                        in string[] stringImportPaths = [],
                        in string projDir = "$project") pure {
-    auto includeParams = includePaths.map!(a => "-I" ~ buildPath(projDir, a)).array;
+
+    string buildIncludeyPath(string path) {
+        return path.startsWith(gBuilddir) ? expandBuildDir(path) : buildPath(projDir, path);
+    }
+
+    auto includeParams = includePaths.map!(a => "-I" ~ buildIncludeyPath(a)). array;
     auto flagParams = flags.splitter.array;
     immutable language = getLanguage(srcFileName);
 
@@ -128,7 +133,7 @@ Command compileCommand(in string srcFileName,
                    assocEntry("flags", flagParams)];
 
     if(language == Language.D)
-        params ~= assocEntry("stringImports", stringImportPaths.map!(a => "-J" ~ buildPath(projDir, a)).array);
+        params ~= assocEntry("stringImports", stringImportPaths.map!(a => "-J" ~ buildIncludeyPath(a)).array);
 
     params ~= assocEntry("DEPFILE", [srcFileName.objFileName ~ ".dep"]);
 

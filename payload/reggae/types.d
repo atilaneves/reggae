@@ -5,11 +5,13 @@ import std.path: baseName, stripExtension, defaultExtension;
 
 //Wrapper structs to ensure type-safety and readability
 
+@safe:
+
 struct App {
     string srcFileName;
     string exeFileName;
 
-    this(string srcFileName) @safe pure {
+    this(string srcFileName) pure {
         immutable stripped = srcFileName.baseName.stripExtension;
         immutable exeFileName =  exeExt == "" ? stripped : stripped.defaultExtension(exeExt);
 

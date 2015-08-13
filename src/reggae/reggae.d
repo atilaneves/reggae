@@ -92,7 +92,7 @@ private string[] fileNames() @safe pure nothrow {
 
 private void createBuild(in Options options) {
 
-    immutable reggaefilePath = getReggaefilePath(options);
+    immutable reggaefilePath = options.getReggaefilePath;
     enforce(reggaefilePath.exists, text("Could not find ", reggaefilePath));
 
     //write out the library source files to be compiled with the user's
@@ -144,7 +144,7 @@ private auto compileBinaries(in Options options) {
     return buildGenName;
 }
 
-string[] getCompileBuildGenCmd(in Options options) @safe nothrow {
+string[] getCompileBuildGenCmd(in Options options) @safe {
     const reggaeSrcs = ("config.d" ~ fileNames).
         filter!(a => a != "dcompile.d").
         map!(a => a.reggaeSrcFileName).array;
@@ -156,7 +156,7 @@ string[] getCompileBuildGenCmd(in Options options) @safe nothrow {
                               "-I" ~ options.projectPath,
                               "-g", "-debug",
                               "-of" ~ getBuildGenName(options)];
-    const commonAfter = buildBinFlags ~ reggaeSrcs ~ getReggaefilePath(options);
+    const commonAfter = buildBinFlags ~ reggaeSrcs ~ options.getReggaefilePath;
     version(minimal) return commonBefore ~ "-version=minimal" ~ commonAfter;
     else return commonBefore ~ commonAfter;
 }
@@ -212,7 +212,7 @@ private void writeConfig(in Options options) {
     file.writeln("enum backend = Backend.", options.backend, ";");
     file.writeln("enum dflags = `", options.dflags, "`;");
     file.writeln("enum reggaePath = `", options.reggaePath, "`;");
-    file.writeln("enum buildFilePath = `", getReggaefilePath(options).absolutePath, "`;");
+    file.writeln("enum buildFilePath = `", options.getReggaefilePath, "`;");
     file.writeln("enum cCompiler = `", options.cCompiler, "`;");
     file.writeln("enum cppCompiler = `", options.cppCompiler, "`;");
     file.writeln("enum dCompiler = `", options.dCompiler, "`;");

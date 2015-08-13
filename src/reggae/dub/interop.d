@@ -19,7 +19,7 @@ DubInfo[string] gDubInfos;
 @safe:
 
 void maybeCreateReggaefile(in Options options) {
-    if(options.isDubProject && !projectBuildFile(options).exists) {
+    if(options.isDubProject && !options.projectBuildFile.exists) {
         createReggaefile(options);
     }
 }

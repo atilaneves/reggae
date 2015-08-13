@@ -42,6 +42,17 @@ struct Options {
             buildPath(projectPath, "package.json").exists;
     }
 
+    string getReggaefilePath() @safe const {
+        immutable regular = projectBuildFile;
+        if(regular.exists) return regular;
+        immutable path = isDubProject ? "" : projectPath;
+        return buildPath(path, "reggaefile.d").absolutePath;
+    }
+
+    string projectBuildFile() @safe const pure nothrow {
+        return buildPath(projectPath, "reggaefile.d");
+    }
+
 }
 
 
@@ -78,16 +89,4 @@ Options getOptions(string[] args) @trusted {
     options.finalize();
 
     return options;
-}
-
-string projectBuildFile(in Options options) @safe pure nothrow {
-    return buildPath(options.projectPath, "reggaefile.d");
-}
-
-
-string getReggaefilePath(in Options options) @safe nothrow {
-    immutable regular = projectBuildFile(options);
-    if(regular.exists) return regular;
-    immutable path = options.isDubProject ? "" : options.projectPath;
-    return buildPath(path, "reggaefile.d");
 }

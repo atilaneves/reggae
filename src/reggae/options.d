@@ -83,3 +83,11 @@ Options getOptions(string[] args) @trusted {
 string projectBuildFile(in Options options) @safe pure nothrow {
     return buildPath(options.projectPath, "reggaefile.d");
 }
+
+
+string getReggaefilePath(in Options options) @safe nothrow {
+    immutable regular = projectBuildFile(options);
+    if(regular.exists) return regular;
+    immutable path = options.isDubProject ? "" : options.projectPath;
+    return buildPath(path, "reggaefile.d");
+}

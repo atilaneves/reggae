@@ -212,7 +212,7 @@ private void writeConfig(in Options options) {
     file.writeln("enum backend = Backend.", options.backend, ";");
     file.writeln("enum dflags = `", options.dflags, "`;");
     file.writeln("enum reggaePath = `", options.reggaePath, "`;");
-    file.writeln("enum buildFilePath = `", options.getReggaefilePath.absolutePath, "`;");
+    file.writeln("enum buildFilePath = `", getReggaefilePath(options).absolutePath, "`;");
     file.writeln("enum cCompiler = `", options.cCompiler, "`;");
     file.writeln("enum cppCompiler = `", options.cppCompiler, "`;");
     file.writeln("enum dCompiler = `", options.dCompiler, "`;");
@@ -232,11 +232,4 @@ private void writeConfig(in Options options) {
 
 private string reggaeSrcFileName(in string fileName) @safe pure nothrow {
     return buildPath(reggaeSrcDirName, fileName);
-}
-
-private string getReggaefilePath(in Options options) @safe nothrow {
-    immutable regular = projectBuildFile(options);
-    if(regular.exists) return regular;
-    immutable path = options.isDubProject ? "" : options.projectPath;
-    return buildPath(path, "reggaefile.d");
 }

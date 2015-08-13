@@ -9,7 +9,7 @@ import reggae.types;
 
 immutable string projectPath;
 immutable string dflags;
-immutable string reggaePath;
+immutable string ranFromPath;
 immutable string buildFilePath;
 immutable string cCompiler = "gcc";
 immutable string cppCompiler = "g++";

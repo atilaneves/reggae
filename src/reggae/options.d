@@ -11,7 +11,7 @@ struct Options {
     Backend backend;
     string projectPath;
     string dflags;
-    string reggaePath;
+    string ranFromPath;
     string[string] userVars;
     string cCompiler;
     string cppCompiler;
@@ -24,7 +24,7 @@ struct Options {
 
     //finished setup
     void finalize() @safe{
-        reggaePath = thisExePath();
+        ranFromPath = thisExePath();
 
         if(!cCompiler)   cCompiler   = "gcc";
         if(!cppCompiler) cppCompiler = "g++";

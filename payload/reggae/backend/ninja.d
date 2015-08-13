@@ -91,7 +91,7 @@ struct Ninja {
     }
 
     const(NinjaEntry)[] allBuildEntries() @safe pure const {
-        immutable files = [buildFilePath, reggaePath].join(" ");
+        immutable files = [buildFilePath, ranFromPath].join(" ");
         auto paramLines = oldNinja ? [] : ["pool = console"];
         return buildEntries ~
             NinjaEntry("build build.ninja: _rerun | " ~ files,
@@ -104,7 +104,7 @@ struct Ninja {
 
         return ruleEntries ~ defaultRules ~
             NinjaEntry("rule _rerun",
-                       ["command = " ~ reggaePath ~ " -b ninja" ~ _dflags ~ " " ~ projectPath,
+                       ["command = " ~ ranFromPath ~ " -b ninja" ~ _dflags ~ " " ~ projectPath,
                         "generator = 1"]);
     }
 

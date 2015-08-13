@@ -121,7 +121,7 @@ private:
 
     bool checkReRun() const {
         immutable myPath = thisExePath;
-        if(reggaePath.newerThan(myPath) || buildFilePath.newerThan(myPath)) {
+        if(ranFromPath.newerThan(myPath) || buildFilePath.newerThan(myPath)) {
             writeln("[build] " ~ reggaeCmd.join(" "));
             immutable reggaeRes = execute(reggaeCmd);
             enforce(reggaeRes.status == 0,
@@ -141,7 +141,7 @@ private:
 
     string[] reggaeCmd() pure nothrow const {
         immutable _dflags = dflags == "" ? "" : " --dflags='" ~ dflags ~ "'";
-        auto mutCmd = [reggaePath, "-b", "binary"];
+        auto mutCmd = [ranFromPath, "-b", "binary"];
         if(_dflags != "") mutCmd ~= _dflags;
         return mutCmd ~ projectPath;
     }

@@ -211,8 +211,8 @@ private void writeConfig(in Options options) {
     file.writeln("enum projectPath = `", options.projectPath, "`;");
     file.writeln("enum backend = Backend.", options.backend, ";");
     file.writeln("enum dflags = `", options.dflags, "`;");
-    file.writeln("enum reggaePath = `", options.reggaePath, "`;");
-    file.writeln("enum buildFilePath = `", options.getReggaefilePath, "`;");
+    file.writeln("enum ranFromPath = `", options.ranFromPath, "`;");
+    file.writeln("enum buildFilePath = `", options.getReggaefilePath(), "`;");
     file.writeln("enum cCompiler = `", options.cCompiler, "`;");
     file.writeln("enum cppCompiler = `", options.cppCompiler, "`;");
     file.writeln("enum dCompiler = `", options.dCompiler, "`;");

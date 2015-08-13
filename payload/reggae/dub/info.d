@@ -3,7 +3,7 @@ module reggae.dub.info;
 import reggae.build;
 import reggae.rules;
 import reggae.types;
-import reggae.config: dflags, perModule;
+import reggae.config: options;
 import reggae.sorting;
 
 public import std.typecons: Yes, No;
@@ -45,7 +45,7 @@ struct DubInfo {
             const projDir = i == 0 ? "" : dubPackage.path;
 
             immutable flags = chain(dubPackage.flags, versions).join(" ") ~
-                " " ~ dflags ~ " " ~ compilerFlags;
+                " " ~ options.dflags ~ " " ~ compilerFlags;
 
             const files = dubPackage.
                 files.

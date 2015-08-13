@@ -36,7 +36,7 @@ void generateBuildFor(alias module_)(string[] args) {
 }
 
 void generateBuild(in Build build, string[] args) {
-    final switch(backend) with(Backend) {
+    final switch(options.backend) with(Backend) {
 
         case make:
             handleMake(build);
@@ -51,7 +51,7 @@ void generateBuild(in Build build, string[] args) {
             break;
 
         case binary:
-            Binary(build, projectPath).run(args);
+            Binary(build, options.projectPath).run(args);
             break;
 
         case none:
@@ -64,7 +64,7 @@ private void handleNinja(in Build build) {
         throw new Exception("Ninja backend support not compiled in");
     } else {
 
-        const ninja = Ninja(build, projectPath);
+        const ninja = Ninja(build, options.projectPath);
 
         auto buildNinja = File("build.ninja", "w");
         buildNinja.writeln("include rules.ninja\n");
@@ -81,7 +81,7 @@ private void handleMake(in Build build) {
         throw new Exception("Make backend support not compiled in");
     } else {
 
-        const makefile = Makefile(build, projectPath);
+        const makefile = Makefile(build, options.projectPath);
         auto file = File(makefile.fileName, "w");
         file.write(makefile.output);
     }
@@ -92,7 +92,7 @@ private void handleTup(in Build build) {
         throw new Exception("Tup backend support not compiled in");
     } else {
         if(!".tup".exists) execute(["tup", "init"]);
-        const tup = Tup(build, projectPath);
+        const tup = Tup(build, options.projectPath);
         auto file = File(tup.fileName, "w");
         file.write(tup.output);
     }

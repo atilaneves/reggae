@@ -1,6 +1,6 @@
 module reggae.options;
 
-import reggae.types: Backend;
+import reggae.types;
 
 import std.file: thisExePath;
 import std.conv: ConvException;
@@ -11,8 +11,7 @@ struct Options {
     Backend backend;
     string projectPath;
     string dflags;
-    string reggaePath;
-    string[string] userVars;
+    string ranFromPath;
     string cCompiler;
     string cppCompiler;
     string dCompiler;
@@ -21,10 +20,11 @@ struct Options {
     bool perModule;
     bool isDubProject;
     bool oldNinja;
+    string[string] userVars;
 
     //finished setup
     void finalize() @safe{
-        reggaePath = thisExePath();
+        ranFromPath = thisExePath();
 
         if(!cCompiler)   cCompiler   = "gcc";
         if(!cppCompiler) cppCompiler = "g++";
@@ -42,6 +42,51 @@ struct Options {
             buildPath(projectPath, "package.json").exists;
     }
 
+    string reggaeFilePath() @safe const {
+        immutable regular = projectBuildFile;
+        if(regular.exists) return regular;
+        immutable path = isDubProject ? "" : projectPath;
+        return buildPath(path, "reggaefile.d").absolutePath;
+    }
+
+    string projectBuildFile() @safe const pure nothrow {
+        return buildPath(projectPath, "reggaefile.d");
+    }
+
+    string toString() @safe const pure {
+        import std.conv: text;
+        import std.traits: isSomeString, isAssociativeArray;
+
+        string repr = "Options(Backend.";
+
+        foreach(member; this.tupleof) {
+            static if(isSomeString!(typeof(member)))
+                repr ~= `"` ~ text(member) ~ `", `;
+            else static if(isAssociativeArray!(typeof(member)))
+                {}
+            else
+                repr ~= text(member, ", ");
+        }
+
+        repr ~= ")";
+        return repr;
+    }
+
+    string[] rerunArgs() @safe pure const {
+        import std.conv: to;
+
+        auto args =  [ranFromPath, "-b", backend.to!string, ];
+
+        if(dflags != "") args ~= ["--dflags='" ~ dflags ~ "'"];
+        if(oldNinja) args ~= "--old_ninja";
+        if(cCompiler != "") args ~=  ["--cc", cCompiler];
+        if(cppCompiler != "") args ~=  ["--cxx", cppCompiler];
+        if(dCompiler != "") args ~=  ["--dc", dCompiler];
+
+        args ~= projectPath;
+
+        return args;
+    }
 }
 
 
@@ -78,8 +123,4 @@ Options getOptions(string[] args) @trusted {
     options.finalize();
 
     return options;
-}
-
-string projectBuildFile(in Options options) @safe pure nothrow {
-    return buildPath(options.projectPath, "reggaefile.d");
 }

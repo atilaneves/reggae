@@ -121,11 +121,11 @@ private:
 
     bool checkReRun() const {
         immutable myPath = thisExePath;
-        if(reggaePath.newerThan(myPath) || buildFilePath.newerThan(myPath)) {
-            writeln("[build] " ~ reggaeCmd.join(" "));
-            immutable reggaeRes = execute(reggaeCmd);
+        if(options.ranFromPath.newerThan(myPath) || options.reggaeFilePath.newerThan(myPath)) {
+            writeln("[build] " ~ options.rerunArgs.join(" "));
+            immutable reggaeRes = execute(options.rerunArgs);
             enforce(reggaeRes.status == 0,
-                    text("Could not run ", reggaeCmd.join(" "), " to regenerate build:\n",
+                    text("Could not run ", options.rerunArgs.join(" "), " to regenerate build:\n",
                          reggaeRes.output));
             writeln(reggaeRes.output);
 
@@ -137,13 +137,6 @@ private:
         }
 
         return false;
-    }
-
-    string[] reggaeCmd() pure nothrow const {
-        immutable _dflags = dflags == "" ? "" : " --dflags='" ~ dflags ~ "'";
-        auto mutCmd = [reggaePath, "-b", "binary"];
-        if(_dflags != "") mutCmd ~= _dflags;
-        return mutCmd ~ projectPath;
     }
 
     bool checkTimestamps(in Target target) const {

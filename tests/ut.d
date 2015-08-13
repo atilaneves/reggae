@@ -25,5 +25,6 @@ int main(string[] args) {
                           "tests.high_rules",
                           "tests.code_command",
                           "tests.tup",
+                          "tests.options",
         );
 }

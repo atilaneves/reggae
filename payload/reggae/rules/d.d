@@ -34,7 +34,7 @@ Target[] objectFiles(in string[] srcFiles, in string flags = "",
                      in string[] importPaths = [], in string[] stringImportPaths = [],
                      in string projDir = "$project") @safe pure {
     import reggae.config;
-    auto func = perModule ? &objectFilesPerModule : &objectFilesPerPackage;
+    auto func = options.perModule ? &objectFilesPerModule : &objectFilesPerPackage;
     return func(srcFiles, flags, importPaths, stringImportPaths, projDir);
 }
 
@@ -101,7 +101,7 @@ Target executable(in App app, in Flags flags,
         throw new Exception("'executable' rule only works with D files");
 
     auto mainObj = objectFile(SourceFile(app.srcFileName), flags, importPaths, stringImportPaths);
-    const output = runDCompiler(buildPath(projectPath, app.srcFileName), flags.value,
+    const output = runDCompiler(buildPath(options.projectPath, app.srcFileName), flags.value,
                                 importPaths.value, stringImportPaths.value);
 
     const files = dMainDepSrcs(output).map!(a => a.removeProjectPath).array;
@@ -122,8 +122,8 @@ private auto runDCompiler(in string srcFileName, in string flags,
 
     immutable compiler = "dmd";
     const compArgs = [compiler] ~ flags.splitter.array ~
-        importPaths.map!(a => "-I" ~ buildPath(projectPath, a)).array ~
-        stringImportPaths.map!(a => "-J" ~ buildPath(projectPath, a)).array ~
+        importPaths.map!(a => "-I" ~ buildPath(options.projectPath, a)).array ~
+        stringImportPaths.map!(a => "-J" ~ buildPath(options.projectPath, a)).array ~
         ["-o-", "-v", "-c", srcFileName];
     const compRes = execute(compArgs);
     enforce(compRes.status == 0, text("executable could not run ", compArgs.join(" "), ":\n", compRes.output));

@@ -208,6 +208,7 @@ private void writeConfig(in Options options) {
 
     });
 
+    //file.writeln("immutable options = ", options, ";");
     file.writeln("enum projectPath = `", options.projectPath, "`;");
     file.writeln("enum backend = Backend.", options.backend, ";");
     file.writeln("enum dflags = `", options.dflags, "`;");

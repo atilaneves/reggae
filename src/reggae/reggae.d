@@ -117,9 +117,16 @@ private void createBuild(in Options options) {
 }
 
 private immutable hiddenDir = ".reggae";
+private immutable reggaeLibName = buildPath(hiddenDir, "libreggae.a");
 
 
 private auto compileBinaries(in Options options) {
+    const reggaeLibCmd  = getCompileReggaeLibCmd(options);
+    immutable libRes = execute(reggaeLibCmd);
+    enforce(libRes.status == 0,
+            text("Could not execute ", reggaeLibCmd.join(" "), ":\n", libRes.output));
+
+
     immutable buildGenName = getBuildGenName(options);
     const compileBuildGenCmd = getCompileBuildGenCmd(options);
 
@@ -162,6 +169,23 @@ string[] getCompileBuildGenCmd(in Options options) @safe {
     version(minimal) return commonBefore ~ "-version=minimal" ~ commonAfter;
     else return commonBefore ~ commonAfter;
 }
+
+
+string[] getCompileReggaeLibCmd(in Options options) @safe {
+    const reggaeSrcs = ("config.d" ~ fileNames).
+        filter!(a => a != "dcompile.d").
+        map!(a => a.reggaeSrcFileName).array;
+
+    immutable commonBefore = ["dmd",
+                              "-I" ~ options.projectPath,
+                              "-g", "-debug",
+                              "-of" ~ reggaeLibName,
+                              "-lib"];
+    const commonAfter = reggaeSrcs;
+    version(minimal) return commonBefore ~ "-version=minimal" ~ commonAfter;
+    else return commonBefore ~ commonAfter;
+}
+
 
 string getBuildGenName(in Options options) @safe pure nothrow {
     return options.backend == Backend.binary ? "build" : buildPath(hiddenDir, "buildgen");

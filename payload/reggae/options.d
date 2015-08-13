@@ -71,6 +71,22 @@ struct Options {
         repr ~= ")";
         return repr;
     }
+
+    string[] rerunArgs() @safe pure const {
+        import std.conv: to;
+
+        auto args =  [ranFromPath, "-b", backend.to!string, ];
+
+        if(dflags != "") args ~= ["--dflags='" ~ dflags ~ "'"];
+        if(oldNinja) args ~= "--old_ninja";
+        if(cCompiler != "") args ~=  ["--cc", cCompiler];
+        if(cppCompiler != "") args ~=  ["--cxx", cppCompiler];
+        if(dCompiler != "") args ~=  ["--dc", dCompiler];
+
+        args ~= projectPath;
+
+        return args;
+    }
 }
 
 

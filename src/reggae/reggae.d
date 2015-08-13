@@ -18,7 +18,7 @@ import std.process: execute;
 import std.array: array, join, empty;
 import std.path: absolutePath, buildPath, relativePath;
 import std.typetuple;
-import std.file: exists;
+import std.file;
 import std.conv: text;
 import std.exception: enforce;
 import std.conv: to;
@@ -99,10 +99,14 @@ private void createBuild(in Options options) {
 
     //write out the library source files to be compiled with the user's
     //build description
-    writeSrcFiles(options);
+    immutable newer = thisExeNewer;
+    if(newer) {
+        writeln("[Reggae] Writing reggae source files");
+        writeSrcFiles(options);
+    }
 
     //compile the binaries (the build generator and dcompile)
-    immutable buildGenName = compileBinaries(options);
+    immutable buildGenName = compileBinaries(options, newer);
 
     //binary backend has no build generator, it _is_ the build
     if(options.backend == Backend.binary) return;
@@ -116,16 +120,29 @@ private void createBuild(in Options options) {
     writeln(retRunBuildgen.output);
 }
 
+private bool newerThan(in string a, in string b) nothrow {
+    try {
+        return a.timeLastModified > b.timeLastModified;
+    } catch(Exception) { //file not there, so newer
+        return true;
+    }
+}
+
+private bool thisExeNewer() {
+    return thisExePath.newerThan(reggaeLibName);
+}
+
 private immutable hiddenDir = ".reggae";
 private immutable reggaeLibName = buildPath(hiddenDir, "libreggae.a");
 
 
-private auto compileBinaries(in Options options) {
-    const reggaeLibCmd  = getCompileReggaeLibCmd(options);
-    immutable libRes = execute(reggaeLibCmd);
-    enforce(libRes.status == 0,
-            text("Could not execute ", reggaeLibCmd.join(" "), ":\n", libRes.output));
-
+private auto compileBinaries(in Options options, in bool newer) {
+    if(newer) {
+        const reggaeLibCmd  = getCompileReggaeLibCmd(options);
+        immutable libRes = execute(reggaeLibCmd);
+        enforce(libRes.status == 0,
+                text("Could not execute ", reggaeLibCmd.join(" "), ":\n", libRes.output));
+    }
 
     immutable buildGenName = getBuildGenName(options);
     const compileBuildGenCmd = getCompileBuildGenCmd(options);
@@ -140,11 +157,13 @@ private auto compileBinaries(in Options options) {
 
     static struct Binary { string name; const(string)[] cmd; }
 
-    const binaries = [Binary(buildGenName, compileBuildGenCmd), Binary(dcompileName, dcompileCmd)];
+    auto binaries = [Binary(buildGenName, compileBuildGenCmd)];
+    if(newer) binaries ~= Binary(dcompileName, dcompileCmd);
+    foreach(bin; binaries) writeln("[Reggae] Compiling metabuild binary ", bin.name);
+
     import std.parallelism;
 
     foreach(bin; binaries.parallel) {
-        writeln("[Reggae] Compiling metabuild binary ", bin.name);
         immutable res = execute(bin.cmd);
         enforce(res.status == 0, text("Couldn't execute ", bin.cmd.join(" "), ":\n", res.output,
                                       "\n", "bin.name: ", bin.name, ", bin.cmd: ", bin.cmd.join(" ")));
@@ -153,7 +172,7 @@ private auto compileBinaries(in Options options) {
     return buildGenName;
 }
 
-string[] getCompileBuildGenCmd(in Options options) @safe {
+const (string[]) getCompileBuildGenCmd(in Options options) @safe {
     const reggaeSrcs = ("config.d" ~ fileNames).
         filter!(a => a != "dcompile.d").
         map!(a => a.reggaeSrcFileName).array;
@@ -163,9 +182,10 @@ string[] getCompileBuildGenCmd(in Options options) @safe {
         : [];
     immutable commonBefore = ["dmd",
                               "-I" ~ options.projectPath,
+                              "-I" ~ buildPath(hiddenDir, "src"),
                               "-g", "-debug",
                               "-of" ~ getBuildGenName(options)];
-    const commonAfter = buildBinFlags ~ reggaeSrcs ~ options.reggaeFilePath;
+    const commonAfter = buildBinFlags ~ options.reggaeFilePath ~ reggaeLibName;
     version(minimal) return commonBefore ~ "-version=minimal" ~ commonAfter;
     else return commonBefore ~ commonAfter;
 }
@@ -191,7 +211,7 @@ string getBuildGenName(in Options options) @safe pure nothrow {
     return options.backend == Backend.binary ? "build" : buildPath(hiddenDir, "buildgen");
 }
 
-immutable reggaeSrcDirName = buildPath(".reggae", "src", "reggae");
+immutable reggaeSrcDirName = buildPath(hiddenDir, "src", "reggae");
 
 private string filesTupleString() @safe pure nothrow {
     return "TypeTuple!(" ~ fileNames.map!(a => `"` ~ a ~ `"`).join(",") ~ ")";

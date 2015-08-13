@@ -12,7 +12,6 @@ struct Options {
     string projectPath;
     string dflags;
     string ranFromPath;
-    string[string] userVars;
     string cCompiler;
     string cppCompiler;
     string dCompiler;
@@ -21,6 +20,7 @@ struct Options {
     bool perModule;
     bool isDubProject;
     bool oldNinja;
+    string[string] userVars;
 
     //finished setup
     void finalize() @safe{
@@ -53,6 +53,24 @@ struct Options {
         return buildPath(projectPath, "reggaefile.d");
     }
 
+    string toString() @safe const pure {
+        import std.conv: text;
+        import std.traits: isSomeString, isAssociativeArray;
+
+        string repr = "Options(Backend.";
+
+        foreach(member; this.tupleof) {
+            static if(isSomeString!(typeof(member)))
+                repr ~= `"` ~ text(member) ~ `", `;
+            else static if(isAssociativeArray!(typeof(member)))
+                {}
+            else
+                repr ~= text(member, ", ");
+        }
+
+        repr ~= ")";
+        return repr;
+    }
 }
 
 

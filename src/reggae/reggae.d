@@ -67,6 +67,7 @@ void run(in Options options) {
 
 
 enum coreFiles = [
+    "options.d",
     "buildgen_main.d", "buildgen.d",
     "build.d",
     "backend/binary.d",
@@ -205,10 +206,10 @@ private void writeConfig(in Options options) {
         module reggae.config;
         import reggae.ctaa;
         import reggae.types: Backend;
-
+        import reggae.options;
     });
 
-    //file.writeln("immutable options = ", options, ";");
+    file.writeln("immutable options = ", options, ";");
     file.writeln("enum projectPath = `", options.projectPath, "`;");
     file.writeln("enum backend = Backend.", options.backend, ";");
     file.writeln("enum dflags = `", options.dflags, "`;");

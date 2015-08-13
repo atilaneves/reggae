@@ -172,10 +172,9 @@ private auto compileBinaries(in Options options, in bool newer) {
 }
 
 const (string[]) getCompileBuildGenCmd(in Options options) @safe {
-    // immutable buildBinFlags = options.backend == Backend.binary
-    //     ? ["-O", "-release", "-inline"]
-    //     : [];
-    immutable string[] buildBinFlags = [];
+    immutable buildBinFlags = options.backend == Backend.binary
+        ? ["-O"]
+        : [];
     immutable commonBefore = ["dmd",
                               "-I" ~ options.projectPath,
                               "-I" ~ buildPath(hiddenDir, "src"),

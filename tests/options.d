@@ -26,7 +26,8 @@ void testRerunArgsOldNinjaAndCompilers() {
     options.dCompiler = "gdc";
     options.projectPath = "leproject";
     options.rerunArgs.shouldEqual(
-        ["/usr/bin/reggae", "-b", "ninja", "--old_ninja", "--cc", "icc", "--cxx", "clang++", "--dc", "gdc", "leproject"]);
+        ["/usr/bin/reggae", "-b", "ninja", "--old_ninja",
+         "--cc", "icc", "--cxx", "clang++", "--dc", "gdc", "leproject"]);
 }
 
 void testRerunArgsMakeAndDflags() {

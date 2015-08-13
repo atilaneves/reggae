@@ -57,8 +57,7 @@ struct Makefile {
     string output() @safe const {
         auto ret = simpleOutput;
         ret ~= "Makefile: " ~ options.reggaeFilePath ~ " " ~ options.ranFromPath ~ "\n";
-        immutable _dflags = options.dflags == "" ? "" : " --dflags='" ~ options.dflags ~ "'";
-        ret ~= "\t" ~ options.ranFromPath ~ " -b make" ~ _dflags ~ " " ~ projectPath ~ "\n";
+        ret ~= "\t" ~ options.rerunArgs.join(" ") ~ "\n";
 
         return ret;
     }

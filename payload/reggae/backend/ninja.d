@@ -100,11 +100,9 @@ struct Ninja {
     }
 
     const(NinjaEntry)[] allRuleEntries() @safe pure const {
-        immutable _dflags = options.dflags == "" ? "" : " --dflags='" ~ options.dflags ~ "'";
-
         return ruleEntries ~ defaultRules ~
             NinjaEntry("rule _rerun",
-                       ["command = " ~ options.ranFromPath ~ " -b ninja" ~ _dflags ~ " " ~ options.projectPath,
+                       ["command = " ~ options.rerunArgs.join(" "),
                         "generator = 1"]);
     }
 

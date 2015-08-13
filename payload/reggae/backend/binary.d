@@ -121,7 +121,7 @@ private:
 
     bool checkReRun() const {
         immutable myPath = thisExePath;
-        if(ranFromPath.newerThan(myPath) || buildFilePath.newerThan(myPath)) {
+        if(ranFromPath.newerThan(myPath) || reggaeFilePath.newerThan(myPath)) {
             writeln("[build] " ~ reggaeCmd.join(" "));
             immutable reggaeRes = execute(reggaeCmd);
             enforce(reggaeRes.status == 0,

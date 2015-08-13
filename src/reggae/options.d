@@ -42,7 +42,7 @@ struct Options {
             buildPath(projectPath, "package.json").exists;
     }
 
-    string getReggaefilePath() @safe const {
+    string reggaeFilePath() @safe const {
         immutable regular = projectBuildFile;
         if(regular.exists) return regular;
         immutable path = isDubProject ? "" : projectPath;

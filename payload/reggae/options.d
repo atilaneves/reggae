@@ -1,6 +1,6 @@
 module reggae.options;
 
-import reggae.types: Backend;
+import reggae.types;
 
 import std.file: thisExePath;
 import std.conv: ConvException;

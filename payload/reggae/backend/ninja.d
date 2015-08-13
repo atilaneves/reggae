@@ -90,9 +90,9 @@ struct Ninja {
         }
     }
 
-    const(NinjaEntry)[] allBuildEntries() @safe pure const {
-        immutable files = [reggaeFilePath, ranFromPath].join(" ");
-        auto paramLines = oldNinja ? [] : ["pool = console"];
+    const(NinjaEntry)[] allBuildEntries() @safe const {
+        immutable files = [options.reggaeFilePath, options.ranFromPath].join(" ");
+        auto paramLines = options.oldNinja ? [] : ["pool = console"];
         return buildEntries ~
             NinjaEntry("build build.ninja: _rerun | " ~ files,
                        paramLines) ~
@@ -100,15 +100,15 @@ struct Ninja {
     }
 
     const(NinjaEntry)[] allRuleEntries() @safe pure const {
-        immutable _dflags = dflags == "" ? "" : " --dflags='" ~ dflags ~ "'";
+        immutable _dflags = options.dflags == "" ? "" : " --dflags='" ~ options.dflags ~ "'";
 
         return ruleEntries ~ defaultRules ~
             NinjaEntry("rule _rerun",
-                       ["command = " ~ ranFromPath ~ " -b ninja" ~ _dflags ~ " " ~ projectPath,
+                       ["command = " ~ options.ranFromPath ~ " -b ninja" ~ _dflags ~ " " ~ options.projectPath,
                         "generator = 1"]);
     }
 
-    string buildOutput() @safe pure const {
+    string buildOutput() @safe const {
         return output(allBuildEntries);
     }
 

@@ -56,9 +56,9 @@ struct Makefile {
     //includes rerunning reggae
     string output() @safe const {
         auto ret = simpleOutput;
-        ret ~= "Makefile: " ~ reggaeFilePath ~ " " ~ ranFromPath ~ "\n";
-        immutable _dflags = dflags == "" ? "" : " --dflags='" ~ dflags ~ "'";
-        ret ~= "\t" ~ ranFromPath ~ " -b make" ~ _dflags ~ " " ~ projectPath ~ "\n";
+        ret ~= "Makefile: " ~ options.reggaeFilePath ~ " " ~ options.ranFromPath ~ "\n";
+        immutable _dflags = options.dflags == "" ? "" : " --dflags='" ~ options.dflags ~ "'";
+        ret ~= "\t" ~ options.ranFromPath ~ " -b make" ~ _dflags ~ " " ~ projectPath ~ "\n";
 
         return ret;
     }

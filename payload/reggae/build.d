@@ -503,7 +503,7 @@ struct Command {
     static string builtinTemplate(CommandType type,
                                   Language language,
                                   Flag!"dependencies" deps = Yes.dependencies) @safe pure {
-        import reggae.config: dCompiler, cppCompiler, cCompiler;
+        import reggae.config: options;
 
         final switch(type) with(CommandType) {
             case phony:
@@ -516,11 +516,11 @@ struct Command {
                 final switch(language) with(Language) {
                     case D:
                     case unknown:
-                        return dCompiler ~ " -of$out $flags $in";
+                        return options.dCompiler ~ " -of$out $flags $in";
                     case Cplusplus:
-                        return cppCompiler ~ " -o $out $flags $in";
+                        return options.cppCompiler ~ " -o $out $flags $in";
                     case C:
-                        return cCompiler ~ " -o $out $flags $in";
+                        return options.cCompiler ~ " -o $out $flags $in";
                 }
 
             case code:
@@ -535,12 +535,12 @@ struct Command {
                     case D:
                         return deps
                             ? ".reggae/dcompile --objFile=$out --depFile=$out.dep " ~
-                            dCompiler ~ " $flags $includes $stringImports $in"
-                            : dCompiler ~ " $flags $includes $stringImports -of$out -c $in";
+                            options.dCompiler ~ " $flags $includes $stringImports $in"
+                            : options.dCompiler ~ " $flags $includes $stringImports -of$out -c $in";
                     case Cplusplus:
-                        return cppCompiler ~ ccParams;
+                        return options.cppCompiler ~ ccParams;
                     case C:
-                        return cCompiler ~ ccParams;
+                        return options.cCompiler ~ ccParams;
                     case unknown:
                         throw new Exception("Unsupported language for compiling");
                 }

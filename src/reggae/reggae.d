@@ -26,6 +26,7 @@ import std.algorithm;
 
 import reggae.options;
 import reggae.ctaa;
+import reggae.types;
 
 
 version(minimal) {
@@ -205,21 +206,11 @@ private void writeConfig(in Options options) {
     file.writeln(q{
         module reggae.config;
         import reggae.ctaa;
-        import reggae.types: Backend;
+        import reggae.types;
         import reggae.options;
     });
 
     file.writeln("immutable options = ", options, ";");
-    file.writeln("enum projectPath = `", options.projectPath, "`;");
-    file.writeln("enum backend = Backend.", options.backend, ";");
-    file.writeln("enum dflags = `", options.dflags, "`;");
-    file.writeln("enum ranFromPath = `", options.ranFromPath, "`;");
-    file.writeln("enum reggaeFilePath = `", options.reggaeFilePath, "`;");
-    file.writeln("enum cCompiler = `", options.cCompiler, "`;");
-    file.writeln("enum cppCompiler = `", options.cppCompiler, "`;");
-    file.writeln("enum dCompiler = `", options.dCompiler, "`;");
-    file.writeln("enum perModule = ", options.perModule, ";");
-    file.writeln("enum oldNinja = ", options.oldNinja, ";");
 
     file.writeln("enum userVars = AssocList!(string, string)([");
     foreach(key, value; options.userVars) {

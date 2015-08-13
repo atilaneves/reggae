@@ -2,7 +2,7 @@ module reggae.rules.common;
 
 
 import reggae.build;
-import reggae.config: projectPath;
+import reggae.config: options;
 import reggae.ctaa;
 import reggae.types;
 import std.algorithm;
@@ -68,7 +68,7 @@ string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
     auto srcs = sourcesFunc();
 
     DirEntry[] modules;
-    foreach(dir; srcs.dirs.value.map!(a => buildPath(projectPath, a))) {
+    foreach(dir; srcs.dirs.value.map!(a => buildPath(options.projectPath, a))) {
         enforce(isDir(dir), dir ~ " is not a directory name");
         auto entries = dirEntries(dir, SpanMode.depth);
         auto normalised = entries.map!(a => DirEntry(buildNormalizedPath(a)));
@@ -77,7 +77,7 @@ string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
     }
 
     foreach(module_; srcs.files.value) {
-        modules ~= DirEntry(buildNormalizedPath(buildPath(projectPath, module_)));
+        modules ~= DirEntry(buildNormalizedPath(buildPath(options.projectPath, module_)));
     }
 
     return modules.
@@ -93,7 +93,7 @@ string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
 string removeProjectPath(in string path) pure {
     import std.path: relativePath, absolutePath;
     //relativePath is @system
-    return () @trusted { return path.absolutePath.relativePath(projectPath.absolutePath); }();
+    return () @trusted { return path.absolutePath.relativePath(options.projectPath.absolutePath); }();
 }
 
 /**

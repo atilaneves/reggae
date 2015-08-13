@@ -100,10 +100,7 @@ private void createBuild(in Options options) {
     //write out the library source files to be compiled with the user's
     //build description
     immutable newer = thisExeNewer;
-    if(newer) {
-        writeln("[Reggae] Writing reggae source files");
-        writeSrcFiles(options);
-    }
+    writeSrcFiles(options, newer);
 
     //compile the binaries (the build generator and dcompile)
     immutable buildGenName = compileBinaries(options, newer);
@@ -139,6 +136,8 @@ private immutable reggaeLibName = buildPath(hiddenDir, "libreggae.a");
 private auto compileBinaries(in Options options, in bool newer) {
     if(newer) {
         const reggaeLibCmd  = getCompileReggaeLibCmd(options);
+        writeln("[Reggae] Rebuilding ", reggaeLibName);
+
         immutable libRes = execute(reggaeLibCmd);
         enforce(libRes.status == 0,
                 text("Could not execute ", reggaeLibCmd.join(" "), ":\n", libRes.output));
@@ -173,31 +172,31 @@ private auto compileBinaries(in Options options, in bool newer) {
 }
 
 const (string[]) getCompileBuildGenCmd(in Options options) @safe {
-    const reggaeSrcs = ("config.d" ~ fileNames).
-        filter!(a => a != "dcompile.d").
-        map!(a => a.reggaeSrcFileName).array;
-
-    immutable buildBinFlags = options.backend == Backend.binary
-        ? ["-O", "-release", "-inline"]
-        : [];
+    // immutable buildBinFlags = options.backend == Backend.binary
+    //     ? ["-O", "-release", "-inline"]
+    //     : [];
+    immutable string[] buildBinFlags = [];
     immutable commonBefore = ["dmd",
                               "-I" ~ options.projectPath,
                               "-I" ~ buildPath(hiddenDir, "src"),
                               "-g", "-debug",
                               "-of" ~ getBuildGenName(options)];
-    const commonAfter = buildBinFlags ~ options.reggaeFilePath ~ reggaeLibName;
+    const commonAfter = buildBinFlags ~
+        options.reggaeFilePath ~ reggaeSrcFileName("config.d") ~
+        reggaeLibName;
     version(minimal) return commonBefore ~ "-version=minimal" ~ commonAfter;
     else return commonBefore ~ commonAfter;
 }
 
 
 string[] getCompileReggaeLibCmd(in Options options) @safe {
-    const reggaeSrcs = ("config.d" ~ fileNames).
+    const reggaeSrcs = fileNames.
         filter!(a => a != "dcompile.d").
         map!(a => a.reggaeSrcFileName).array;
 
     immutable commonBefore = ["dmd",
                               "-I" ~ options.projectPath,
+                              "-I" ~ buildPath(hiddenDir, "src"),
                               "-g", "-debug",
                               "-of" ~ reggaeLibName,
                               "-lib"];
@@ -222,22 +221,27 @@ template FileNames() {
 }
 
 
-private void writeSrcFiles(in Options options) {
-    import std.file: mkdirRecurse;
-    if(!reggaeSrcDirName.exists) {
-        mkdirRecurse(reggaeSrcDirName);
-        mkdirRecurse(buildPath(reggaeSrcDirName, "dub"));
-        mkdirRecurse(buildPath(reggaeSrcDirName, "rules"));
-        mkdirRecurse(buildPath(reggaeSrcDirName, "backend"));
-        mkdirRecurse(buildPath(reggaeSrcDirName, "core", "rules"));
-    }
+private void writeSrcFiles(in Options options, in bool newer) {
+    writeln("[Reggae] Writing reggae source files");
+
+    if(newer) {
+
+        import std.file: mkdirRecurse;
+        if(!reggaeSrcDirName.exists) {
+            mkdirRecurse(reggaeSrcDirName);
+            mkdirRecurse(buildPath(reggaeSrcDirName, "dub"));
+            mkdirRecurse(buildPath(reggaeSrcDirName, "rules"));
+            mkdirRecurse(buildPath(reggaeSrcDirName, "backend"));
+            mkdirRecurse(buildPath(reggaeSrcDirName, "core", "rules"));
+        }
 
 
-    //this foreach has to happen at compile time due
-    //to the string import below.
-    foreach(fileName; FileNames!()) {
-        auto file = File(reggaeSrcFileName(fileName), "w");
-        file.write(import(fileName));
+        //this foreach has to happen at compile time due
+        //to the string import below.
+        foreach(fileName; FileNames!()) {
+            auto file = File(reggaeSrcFileName(fileName), "w");
+            file.write(import(fileName));
+        }
     }
 
     writeConfig(options);

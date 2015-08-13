@@ -48,24 +48,24 @@ struct BinaryOptions {
 
 struct Binary {
     Build build;
-    string projectPath;
+    string _projectPath;
 
     this(Build build, string projectPath) pure {
         this.build = build;
-        this.projectPath = projectPath;
+        this._projectPath = projectPath;
     }
 
     void run(string[] args) const @system { //@system due to parallel
-        auto options = BinaryOptions(args);
+        auto binaryOptions = BinaryOptions(args);
 
-        handleOptions(options);
-        if(options.earlyReturn) return;
+        handleOptions(binaryOptions);
+        if(binaryOptions.earlyReturn) return;
 
         bool didAnything = checkReRun();
 
-        const topTargets = topLevelTargets(options.args);
+        const topTargets = topLevelTargets(binaryOptions.args);
         if(topTargets.empty)
-            throw new Exception(text("Unknown target(s) ", options.args.map!(a => "'" ~ a ~ "'").join(" ")));
+            throw new Exception(text("Unknown target(s) ", binaryOptions.args.map!(a => "'" ~ a ~ "'").join(" ")));
 
         foreach(topTarget; topTargets) {
 
@@ -75,7 +75,7 @@ struct Binary {
 
             foreach(level; ByDepthLevel(topTarget)) {
                 foreach(target; level.parallel) {
-                    const outs = target.outputsInProjectPath(projectPath);
+                    const outs = target.outputsInProjectPath(_projectPath);
                     immutable depFileName = outs[0] ~ ".dep";
                     if(depFileName.exists) {
                         didAnything = checkDeps(target, depFileName) || didAnything;
@@ -91,15 +91,15 @@ struct Binary {
     const(Target)[] topLevelTargets(in string[] args) @trusted const pure {
         return args.empty ?
             build.defaultTargets.array :
-            build.targets.filter!(a => args.canFind(a.expandOutputs(projectPath))).array;
+            build.targets.filter!(a => args.canFind(a.expandOutputs(_projectPath))).array;
     }
 
-    string[] listTargets(BinaryOptions options) pure const {
+    string[] listTargets(BinaryOptions binaryOptions) pure const {
         string[] result;
 
-        const defaultTargets = topLevelTargets(options.args);
+        const defaultTargets = topLevelTargets(binaryOptions.args);
         foreach(topTarget; defaultTargets)
-            result ~= "- " ~ topTarget.expandOutputs(projectPath).join(" ");
+            result ~= "- " ~ topTarget.expandOutputs(_projectPath).join(" ");
 
         auto optionalTargets = build.targets.filter!(a => !defaultTargets.canFind(a));
         foreach(optionalTarget; optionalTargets)
@@ -112,10 +112,10 @@ struct Binary {
 
 private:
 
-    void handleOptions(BinaryOptions options) const {
-        if(options.list) {
+    void handleOptions(BinaryOptions binaryOptions) const {
+        if(binaryOptions.list) {
             writeln("List of available top-level targets:");
-            foreach(l; listTargets(options)) writeln(l);
+            foreach(l; listTargets(binaryOptions)) writeln(l);
         }
     }
 
@@ -143,8 +143,8 @@ private:
         foreach(dep; chain(target.dependencies, target.implicits)) {
 
             immutable isPhony = target.getCommandType == CommandType.phony;
-            immutable anyNewer = cartesianProduct(dep.outputsInProjectPath(projectPath),
-                                                  target.outputsInProjectPath(projectPath)).
+            immutable anyNewer = cartesianProduct(dep.outputsInProjectPath(_projectPath),
+                                                  target.outputsInProjectPath(_projectPath)).
                 any!(a => a[0].newerThan(a[1]));
 
             if(isPhony || anyNewer) {
@@ -172,7 +172,7 @@ private:
         auto file = File(depFileName);
         const dependencies = file.byLine.map!(a => a.to!string).dependenciesFromFile;
 
-        if(dependencies.any!(a => a.newerThan(target.outputsInProjectPath(projectPath)[0]))) {
+        if(dependencies.any!(a => a.newerThan(target.outputsInProjectPath(_projectPath)[0]))) {
             executeCommand(target);
             return true;
         }
@@ -181,7 +181,7 @@ private:
 
     void executeCommand(in Target target) const @trusted {
         mkDir(target);
-        const output = target.execute(projectPath);
+        const output = target.execute(_projectPath);
         writeln("[build] " ~ output[0]);
         if(target.getCommandType == CommandType.phony)
             writeln("\n", output[1]);
@@ -189,7 +189,7 @@ private:
 
     //@trusted because of mkdirRecurse
     private void mkDir(in Target target) @trusted const {
-        foreach(output; target.outputsInProjectPath(projectPath)) {
+        foreach(output; target.outputsInProjectPath(_projectPath)) {
             import std.file: exists, mkdirRecurse;
             import std.path: dirName;
             if(!output.dirName.exists) mkdirRecurse(output.dirName);

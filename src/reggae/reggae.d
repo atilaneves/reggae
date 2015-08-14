@@ -99,11 +99,10 @@ private void createBuild(in Options options) {
 
     //write out the library source files to be compiled with the user's
     //build description
-    immutable newer = thisExeNewer;
-    writeSrcFiles(options, newer);
+    writeSrcFiles(options);
 
     //compile the binaries (the build generator and dcompile)
-    immutable buildGenName = compileBinaries(options, newer);
+    immutable buildGenName = compileBinaries(options);
 
     //binary backend has no build generator, it _is_ the build
     if(options.backend == Backend.binary) return;
@@ -117,31 +116,10 @@ private void createBuild(in Options options) {
     writeln(retRunBuildgen.output);
 }
 
-private bool newerThan(in string a, in string b) nothrow {
-    try {
-        return a.timeLastModified > b.timeLastModified;
-    } catch(Exception) { //file not there, so newer
-        return true;
-    }
-}
-
-private bool thisExeNewer() {
-    return thisExePath.newerThan(reggaeLibName);
-}
 
 private immutable hiddenDir = ".reggae";
-private immutable reggaeLibName = buildPath(hiddenDir, "libreggae.a");
 
-
-private auto compileBinaries(in Options options, in bool newer) {
-    if(newer) {
-        const reggaeLibCmd  = getCompileReggaeLibCmd(options);
-        writeln("[Reggae] Rebuilding ", reggaeLibName);
-
-        immutable libRes = execute(reggaeLibCmd);
-        enforce(libRes.status == 0,
-                text("Could not execute ", reggaeLibCmd.join(" "), ":\n", libRes.output));
-    }
+private auto compileBinaries(in Options options) {
 
     immutable buildGenName = getBuildGenName(options);
     const compileBuildGenCmd = getCompileBuildGenCmd(options);
@@ -156,8 +134,7 @@ private auto compileBinaries(in Options options, in bool newer) {
 
     static struct Binary { string name; const(string)[] cmd; }
 
-    auto binaries = [Binary(buildGenName, compileBuildGenCmd)];
-    if(newer) binaries ~= Binary(dcompileName, dcompileCmd);
+    auto binaries = [Binary(buildGenName, compileBuildGenCmd), Binary(dcompileName, dcompileCmd)];
     foreach(bin; binaries) writeln("[Reggae] Compiling metabuild binary ", bin.name);
 
     import std.parallelism;
@@ -172,6 +149,10 @@ private auto compileBinaries(in Options options, in bool newer) {
 }
 
 const (string[]) getCompileBuildGenCmd(in Options options) @safe {
+    const reggaeSrcs = ("config.d" ~ fileNames).
+        filter!(a => a != "dcompile.d").
+        map!(a => a.reggaeSrcFileName).array;
+
     immutable buildBinFlags = options.backend == Backend.binary
         ? ["-O"]
         : [];
@@ -181,29 +162,10 @@ const (string[]) getCompileBuildGenCmd(in Options options) @safe {
                               "-g", "-debug",
                               "-of" ~ getBuildGenName(options)];
     const commonAfter = buildBinFlags ~
-        options.reggaeFilePath ~ reggaeSrcFileName("config.d") ~
-        reggaeLibName;
+        options.reggaeFilePath ~ reggaeSrcs;
     version(minimal) return commonBefore ~ "-version=minimal" ~ commonAfter;
     else return commonBefore ~ commonAfter;
 }
-
-
-string[] getCompileReggaeLibCmd(in Options options) @safe {
-    const reggaeSrcs = fileNames.
-        filter!(a => a != "dcompile.d").
-        map!(a => a.reggaeSrcFileName).array;
-
-    immutable commonBefore = ["dmd",
-                              "-I" ~ options.projectPath,
-                              "-I" ~ buildPath(hiddenDir, "src"),
-                              "-g", "-debug",
-                              "-of" ~ reggaeLibName,
-                              "-lib"];
-    const commonAfter = reggaeSrcs;
-    version(minimal) return commonBefore ~ "-version=minimal" ~ commonAfter;
-    else return commonBefore ~ commonAfter;
-}
-
 
 string getBuildGenName(in Options options) @safe pure nothrow {
     return options.backend == Backend.binary ? "build" : buildPath(hiddenDir, "buildgen");
@@ -220,27 +182,24 @@ template FileNames() {
 }
 
 
-private void writeSrcFiles(in Options options, in bool newer) {
+private void writeSrcFiles(in Options options) {
     writeln("[Reggae] Writing reggae source files");
 
-    if(newer) {
-
-        import std.file: mkdirRecurse;
-        if(!reggaeSrcDirName.exists) {
-            mkdirRecurse(reggaeSrcDirName);
-            mkdirRecurse(buildPath(reggaeSrcDirName, "dub"));
-            mkdirRecurse(buildPath(reggaeSrcDirName, "rules"));
-            mkdirRecurse(buildPath(reggaeSrcDirName, "backend"));
-            mkdirRecurse(buildPath(reggaeSrcDirName, "core", "rules"));
-        }
+    import std.file: mkdirRecurse;
+    if(!reggaeSrcDirName.exists) {
+        mkdirRecurse(reggaeSrcDirName);
+        mkdirRecurse(buildPath(reggaeSrcDirName, "dub"));
+        mkdirRecurse(buildPath(reggaeSrcDirName, "rules"));
+        mkdirRecurse(buildPath(reggaeSrcDirName, "backend"));
+        mkdirRecurse(buildPath(reggaeSrcDirName, "core", "rules"));
+    }
 
 
-        //this foreach has to happen at compile time due
-        //to the string import below.
-        foreach(fileName; FileNames!()) {
-            auto file = File(reggaeSrcFileName(fileName), "w");
-            file.write(import(fileName));
-        }
+    //this foreach has to happen at compile time due
+    //to the string import below.
+    foreach(fileName; FileNames!()) {
+        auto file = File(reggaeSrcFileName(fileName), "w");
+        file.write(import(fileName));
     }
 
     writeConfig(options);

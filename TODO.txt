@@ -1,14 +1,14 @@
-Bug: phony depending on real target creates double dependencies
-
 Compute dependencies for reggaefile.d itself - what if it imports other modules?
 Use CC, CXX, LD environment variables
-Better static library support
-Optimise run-time: only write srcs once, build static lib to link to reggaefile
 
 Any order of parameters
 Distinguish LinkFlags vs CompilerFlags?
 
-Crazy idea: build server? In: list of changed files, out: build.
+Build server? In: list of changed files, out: build.
+
+Change to using -deps for D dependencies
+Code coverage for both UTs and Cucumber
+
 
 Refactoring:
   range.d

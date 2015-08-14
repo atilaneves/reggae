@@ -18,7 +18,7 @@ import std.process: execute;
 import std.array: array, join, empty;
 import std.path: absolutePath, buildPath, relativePath;
 import std.typetuple;
-import std.file: exists;
+import std.file;
 import std.conv: text;
 import std.exception: enforce;
 import std.conv: to;
@@ -116,10 +116,11 @@ private void createBuild(in Options options) {
     writeln(retRunBuildgen.output);
 }
 
+
 private immutable hiddenDir = ".reggae";
 
-
 private auto compileBinaries(in Options options) {
+
     immutable buildGenName = getBuildGenName(options);
     const compileBuildGenCmd = getCompileBuildGenCmd(options);
 
@@ -133,11 +134,12 @@ private auto compileBinaries(in Options options) {
 
     static struct Binary { string name; const(string)[] cmd; }
 
-    const binaries = [Binary(buildGenName, compileBuildGenCmd), Binary(dcompileName, dcompileCmd)];
+    auto binaries = [Binary(buildGenName, compileBuildGenCmd), Binary(dcompileName, dcompileCmd)];
+    foreach(bin; binaries) writeln("[Reggae] Compiling metabuild binary ", bin.name);
+
     import std.parallelism;
 
     foreach(bin; binaries.parallel) {
-        writeln("[Reggae] Compiling metabuild binary ", bin.name);
         immutable res = execute(bin.cmd);
         enforce(res.status == 0, text("Couldn't execute ", bin.cmd.join(" "), ":\n", res.output,
                                       "\n", "bin.name: ", bin.name, ", bin.cmd: ", bin.cmd.join(" ")));
@@ -146,19 +148,21 @@ private auto compileBinaries(in Options options) {
     return buildGenName;
 }
 
-string[] getCompileBuildGenCmd(in Options options) @safe {
+const (string[]) getCompileBuildGenCmd(in Options options) @safe {
     const reggaeSrcs = ("config.d" ~ fileNames).
         filter!(a => a != "dcompile.d").
         map!(a => a.reggaeSrcFileName).array;
 
     immutable buildBinFlags = options.backend == Backend.binary
-        ? ["-O", "-release", "-inline"]
+        ? ["-O"]
         : [];
     immutable commonBefore = ["dmd",
                               "-I" ~ options.projectPath,
+                              "-I" ~ buildPath(hiddenDir, "src"),
                               "-g", "-debug",
                               "-of" ~ getBuildGenName(options)];
-    const commonAfter = buildBinFlags ~ reggaeSrcs ~ options.reggaeFilePath;
+    const commonAfter = buildBinFlags ~
+        options.reggaeFilePath ~ reggaeSrcs;
     version(minimal) return commonBefore ~ "-version=minimal" ~ commonAfter;
     else return commonBefore ~ commonAfter;
 }
@@ -167,7 +171,7 @@ string getBuildGenName(in Options options) @safe pure nothrow {
     return options.backend == Backend.binary ? "build" : buildPath(hiddenDir, "buildgen");
 }
 
-immutable reggaeSrcDirName = buildPath(".reggae", "src", "reggae");
+immutable reggaeSrcDirName = buildPath(hiddenDir, "src", "reggae");
 
 private string filesTupleString() @safe pure nothrow {
     return "TypeTuple!(" ~ fileNames.map!(a => `"` ~ a ~ `"`).join(",") ~ ")";
@@ -179,6 +183,8 @@ template FileNames() {
 
 
 private void writeSrcFiles(in Options options) {
+    writeln("[Reggae] Writing reggae source files");
+
     import std.file: mkdirRecurse;
     if(!reggaeSrcDirName.exists) {
         mkdirRecurse(reggaeSrcDirName);

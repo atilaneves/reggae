@@ -42,7 +42,6 @@ struct Build {
             //and accepts functions that return a parameter as well as parameters themselves
             //if a function, call it, if not, take the value
             //if the value is Target, call createTopLevelTarget, if not, take it as is
-
             static if(isSomeFunction!(typeof(t)) && is(ReturnType!(typeof(t))) == Target) {
                 _targets ~= createTopLevelTarget(t());
             } else static if(is(Unqual!(typeof(t)) == TopLevelTarget)) {
@@ -585,7 +584,7 @@ struct Command {
             case phony:
                 immutable cmd = shellCommand(projectPath, language, outputs, inputs);
                 immutable res = executeShell(cmd);
-                enforce(res.status == 0, "Could not execute" ~ cmd ~ ":\n" ~ res.output);
+                enforce(res.status == 0, "Could not execute phony " ~ cmd ~ ":\n" ~ res.output);
                 return [cmd, res.output];
             case code:
                 assert(func !is null, "Command of type code with null function");

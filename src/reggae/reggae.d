@@ -62,10 +62,93 @@ void run(in Options options) {
     if(options.help) return;
     enforce(options.projectPath != "", "A project path must be specified");
 
+    immutable pythonFile = buildPath(options.projectPath, "reggaefile.py");
+    if(pythonFile.exists) {
+        python(options);
+        return;
+    }
+
     maybeCreateReggaefile(options);
     createBuild(options);
 }
 
+void python(in Options options) {
+    immutable pythonArgs = ["python", "-m", "reggae.json", options.projectPath];
+    immutable res = execute(pythonArgs);
+    enforce(res.status == 0, text("Could not execute ", pythonArgs.join(" "), ":\n", res.output));
+
+    import reggae.json_build;
+    //import reggae.buildgen;
+    //generateBuild(jsonToBuild(res.output), options.args.dup);
+    generateBuild(jsonToBuild(res.output), options);
+}
+import reggae.build;
+import reggae.backend.ninja;
+import reggae.backend.make;
+import reggae.backend.binary;
+import reggae.backend.tup;
+void generateBuild(in Build build, in Options options) {
+    final switch(options.backend) with(Backend) {
+
+        case make:
+            handleMake(build, options);
+            break;
+
+        case ninja:
+            handleNinja(build, options);
+            break;
+
+        case tup:
+            handleTup(build, options);
+            break;
+
+        case binary:
+            Binary(build, options.projectPath).run(options.args.dup);
+            break;
+
+        case none:
+            throw new Exception("A backend must be specified with -b/--backend");
+        }
+}
+
+private void handleNinja(in Build build, in Options options) {
+    version(minimal) {
+        throw new Exception("Ninja backend support not compiled in");
+    } else {
+
+        const ninja = Ninja(build, options.projectPath);
+
+        auto buildNinja = File("build.ninja", "w");
+        buildNinja.writeln("include rules.ninja\n");
+        buildNinja.writeln(ninja.buildOutput);
+
+        auto rulesNinja = File("rules.ninja", "w");
+        rulesNinja.writeln(ninja.rulesOutput);
+    }
+}
+
+
+private void handleMake(in Build build, in Options options) {
+    version(minimal) {
+        throw new Exception("Make backend support not compiled in");
+    } else {
+
+        const makefile = Makefile(build, options.projectPath);
+        auto file = File(makefile.fileName, "w");
+        file.write(makefile.output);
+    }
+}
+
+private void handleTup(in Build build, in Options options) {
+    version(minimal) {
+        throw new Exception("Tup backend support not compiled in");
+    } else {
+        if(!".tup".exists) execute(["tup", "init"]);
+        const tup = Tup(build, options.projectPath);
+        auto file = File(tup.fileName, "w");
+        file.write(tup.output);
+    }
+}
 
 enum coreFiles = [
     "options.d",

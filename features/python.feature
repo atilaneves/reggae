@@ -3,7 +3,7 @@ Feature: Python integration
   I want to be able to write build descriptions in Python
   So I don't have to compile the build description
 
-  Scenario:
+  Background:
     Given a file named "path/to/reggaefile.py" with:
       """
       from reggae import *

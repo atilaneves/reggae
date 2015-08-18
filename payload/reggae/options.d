@@ -21,6 +21,7 @@ struct Options {
     bool isDubProject;
     bool oldNinja;
     string[string] userVars;
+    string[] args;
 
     //finished setup
     void finalize() @safe{
@@ -121,6 +122,7 @@ Options getOptions(string[] args) @trusted {
 
     if(args.length > 1) options.projectPath = args[1].absolutePath;
     options.finalize();
+    options.args = args;
 
     return options;
 }

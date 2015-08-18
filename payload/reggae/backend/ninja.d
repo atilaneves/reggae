@@ -78,6 +78,8 @@ struct Ninja {
     NinjaEntry[] ruleEntries;
 
     this(Build build, in string projectPath = "") @safe {
+        import std.stdio;
+        writeln("\n\nprojectPath: ", projectPath, "\n\n");
         _build = build;
         _projectPath = projectPath;
 

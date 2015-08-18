@@ -38,7 +38,7 @@ mixin template BuildGenMain(string buildModule = "reggaefile") {
 void generateBuildFor(alias module_)(in Options options, string[] args) {
     const buildFunc = getBuild!(module_); //get the function to call by CT reflection
     const build = buildFunc(); //actually call the function to get the build description
-    generateBuild(build, options);
+    generateBuild(build, options, args);
 }
 
 void generateBuild(in Build build, in Options options, string[] args = []) {

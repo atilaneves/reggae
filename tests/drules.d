@@ -44,7 +44,7 @@ void testDLinkNinja() {
 }
 
 void testDCompileWithMultipleFilesMake() {
-    const build = Build(objectFilesPerPackage(["path/to/src/foo.d", "path/to/src/bar.d", "other/weird.d"],
+    const build = Build(dlangPackageObjectFilesPerPackage(["path/to/src/foo.d", "path/to/src/bar.d", "other/weird.d"],
                                               "-O", ["path/to/src", "other/path"]));
     build.targets.map!(a => a.shellCommand("/tmp/myproject")).array.sort.shouldEqual(
         [".reggae/dcompile --objFile=other.o --depFile=other.o.dep dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path  /tmp/myproject/other/weird.d",
@@ -54,7 +54,7 @@ void testDCompileWithMultipleFilesMake() {
 }
 
 void testDCompileWithMultipleFilesNinja() {
-    const build = Build(objectFilesPerPackage(["path/to/src/foo.d", "path/to/src/bar.d", "other/weird.d"],
+    const build = Build(dlangPackageObjectFilesPerPackage(["path/to/src/foo.d", "path/to/src/bar.d", "other/weird.d"],
                                               "-O", ["path/to/src", "other/path"]));
     auto ninja = Ninja(build, "/tmp/myproject"); //can't be const because of `sort` below
     NinjaEntry[] entries;
@@ -91,6 +91,6 @@ void testLink() {
 
 
 void testObjectFilesEmpty() {
-    objectFilesPerPackage([]).shouldEqual([]);
-    objectFilesPerModule([]).shouldEqual([]);
+    dlangPackageObjectFilesPerPackage([]).shouldEqual([]);
+    dlangPackageObjectFilesPerModule([]).shouldEqual([]);
 }

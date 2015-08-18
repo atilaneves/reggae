@@ -18,15 +18,15 @@ import std.array;
 
 //generate object file(s) for a D package. By default generates one per package,
 //if reggae.config.perModule is true, generates one per module
-Target[] objectFiles(in string[] srcFiles, in string flags = "",
+Target[] dlangPackageObjectFiles(in string[] srcFiles, in string flags = "",
                      in string[] importPaths = [], in string[] stringImportPaths = [],
                      in string projDir = "$project") @safe pure {
     import reggae.config;
-    auto func = options.perModule ? &objectFilesPerModule : &objectFilesPerPackage;
+    auto func = options.perModule ? &dlangPackageObjectFilesPerModule : &dlangPackageObjectFilesPerPackage;
     return func(srcFiles, flags, importPaths, stringImportPaths, projDir);
 }
 
-Target[] objectFilesPerPackage(in string[] srcFiles, in string flags = "",
+Target[] dlangPackageObjectFilesPerPackage(in string[] srcFiles, in string flags = "",
                                in string[] importPaths = [], in string[] stringImportPaths = [],
                                in string projDir = "$project") @trusted pure {
 
@@ -37,7 +37,7 @@ Target[] objectFilesPerPackage(in string[] srcFiles, in string flags = "",
                                                a.map!(a => Target(a)).array)).array;
 }
 
-Target[] objectFilesPerModule(in string[] srcFiles, in string flags = "",
+Target[] dlangPackageObjectFilesPerModule(in string[] srcFiles, in string flags = "",
                               in string[] importPaths = [], in string[] stringImportPaths = [],
                               in string projDir = "$project") @trusted pure {
 
@@ -93,8 +93,8 @@ Target executable(in App app, in Flags flags,
                                 importPaths.value, stringImportPaths.value);
 
     const files = dMainDepSrcs(output).map!(a => a.removeProjectPath).array;
-    const dependencies = [mainObj] ~ objectFiles(files, flags.value,
-                                                 importPaths.value, stringImportPaths.value);
+    const dependencies = [mainObj] ~ dlangPackageObjectFiles(files, flags.value,
+                                                             importPaths.value, stringImportPaths.value);
 
     return link(ExeName(app.exeFileName), dependencies ~ linkWith);
 }

@@ -51,8 +51,8 @@ Target[] targetsFromSources(alias sourcesFunc = Sources!(),
     const srcFiles = sourcesToFileNames!(sourcesFunc);
     const dSrcs = srcFiles.filter!(a => a.getLanguage == Language.D).array;
     auto otherSrcs = srcFiles.filter!(a => a.getLanguage != Language.D && a.getLanguage != Language.unknown);
-    import reggae.rules.d: objectFiles;
-    return objectFiles(dSrcs, flags.value, ["."] ~ includes.value, stringImports.value) ~
+    import reggae.rules.d: dlangPackageObjectFiles;
+    return dlangPackageObjectFiles(dSrcs, flags.value, ["."] ~ includes.value, stringImports.value) ~
         otherSrcs.map!(a => objectFile(SourceFile(a), flags, includes)).array;
 }
 

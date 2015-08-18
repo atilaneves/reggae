@@ -51,7 +51,7 @@ void generateBuild(in Build build, string[] args) {
             break;
 
         case binary:
-            Binary(build, options.projectPath).run(args);
+            Binary(build, options).run();
             break;
 
         case none:
@@ -92,7 +92,7 @@ private void handleTup(in Build build) {
         throw new Exception("Tup backend support not compiled in");
     } else {
         if(!".tup".exists) execute(["tup", "init"]);
-        const tup = Tup(build, options.projectPath);
+        const tup = Tup(build, options);
         auto file = File(tup.fileName, "w");
         file.write(tup.output);
     }

@@ -3,6 +3,7 @@ module reggae.backend.tup;
 
 import reggae.build;
 import reggae.range;
+import reggae.options;
 import std.array;
 import std.typecons;
 
@@ -12,7 +13,7 @@ struct Tup {
     enum fileName = "Tupfile";
 
     Build build;
-    string projectPath;
+    const(Options) options;
 
     string output() const pure {
         return lines.join("\n") ~ "\n";
@@ -29,9 +30,9 @@ struct Tup {
             //dependency files actually causes an error, so we request
             //none to be generated
             immutable line = ": " ~
-                target.dependencyFilesString(projectPath) ~ " |> " ~
-                target.shellCommand(projectPath, No.dependencies) ~ " |> " ~
-                target.outputsInProjectPath(projectPath).join(" ");
+                target.dependencyFilesString(options.projectPath) ~ " |> " ~
+                target.shellCommand(options.projectPath, No.dependencies) ~ " |> " ~
+                target.outputsInProjectPath(options.projectPath).join(" ");
             lines ~= line;
         }
         return lines;

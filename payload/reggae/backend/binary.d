@@ -3,7 +3,7 @@ module reggae.backend.binary;
 
 import reggae.build;
 import reggae.range;
-import reggae.config;
+import reggae.options;
 import std.algorithm;
 import std.range;
 import std.file: timeLastModified, thisExePath, exists;
@@ -48,15 +48,15 @@ struct BinaryOptions {
 
 struct Binary {
     Build build;
-    string _projectPath;
+    const(Options) options;
 
-    this(Build build, string projectPath) pure {
+    this(Build build, in Options options) pure {
         this.build = build;
-        this._projectPath = projectPath;
+        this.options = options;
     }
 
-    void run(string[] args) const @system { //@system due to parallel
-        auto binaryOptions = BinaryOptions(args);
+    void run() const @system { //@system due to parallel
+        auto binaryOptions = BinaryOptions(options.args.dup);
 
         handleOptions(binaryOptions);
         if(binaryOptions.earlyReturn) return;
@@ -75,7 +75,7 @@ struct Binary {
 
             foreach(level; ByDepthLevel(topTarget)) {
                 foreach(target; level.parallel) {
-                    const outs = target.outputsInProjectPath(_projectPath);
+                    const outs = target.outputsInProjectPath(options.projectPath);
                     immutable depFileName = outs[0] ~ ".dep";
                     if(depFileName.exists) {
                         didAnything = checkDeps(target, depFileName) || didAnything;
@@ -91,7 +91,7 @@ struct Binary {
     const(Target)[] topLevelTargets(in string[] args) @trusted const pure {
         return args.empty ?
             build.defaultTargets.array :
-            build.targets.filter!(a => args.canFind(a.expandOutputs(_projectPath))).array;
+            build.targets.filter!(a => args.canFind(a.expandOutputs(options.projectPath))).array;
     }
 
     string[] listTargets(BinaryOptions binaryOptions) pure const {
@@ -99,7 +99,7 @@ struct Binary {
 
         const defaultTargets = topLevelTargets(binaryOptions.args);
         foreach(topTarget; defaultTargets)
-            result ~= "- " ~ topTarget.expandOutputs(_projectPath).join(" ");
+            result ~= "- " ~ topTarget.expandOutputs(options.projectPath).join(" ");
 
         auto optionalTargets = build.targets.filter!(a => !defaultTargets.canFind(a));
         foreach(optionalTarget; optionalTargets)
@@ -143,8 +143,8 @@ private:
         foreach(dep; chain(target.dependencies, target.implicits)) {
 
             immutable isPhony = target.getCommandType == CommandType.phony;
-            immutable anyNewer = cartesianProduct(dep.outputsInProjectPath(_projectPath),
-                                                  target.outputsInProjectPath(_projectPath)).
+            immutable anyNewer = cartesianProduct(dep.outputsInProjectPath(options.projectPath),
+                                                  target.outputsInProjectPath(options.projectPath)).
                 any!(a => a[0].newerThan(a[1]));
 
             if(isPhony || anyNewer) {
@@ -172,7 +172,7 @@ private:
         auto file = File(depFileName);
         const dependencies = file.byLine.map!(a => a.to!string).dependenciesFromFile;
 
-        if(dependencies.any!(a => a.newerThan(target.outputsInProjectPath(_projectPath)[0]))) {
+        if(dependencies.any!(a => a.newerThan(target.outputsInProjectPath(options.projectPath)[0]))) {
             executeCommand(target);
             return true;
         }
@@ -181,7 +181,7 @@ private:
 
     void executeCommand(in Target target) const @trusted {
         mkDir(target);
-        const output = target.execute(_projectPath);
+        const output = target.execute(options.projectPath);
         writeln("[build] " ~ output[0]);
         if(target.getCommandType == CommandType.phony)
             writeln("\n", output[1]);
@@ -189,7 +189,7 @@ private:
 
     //@trusted because of mkdirRecurse
     private void mkDir(in Target target) @trusted const {
-        foreach(output; target.outputsInProjectPath(_projectPath)) {
+        foreach(output; target.outputsInProjectPath(options.projectPath)) {
             import std.file: exists, mkdirRecurse;
             import std.path: dirName;
             if(!output.dirName.exists) mkdirRecurse(output.dirName);

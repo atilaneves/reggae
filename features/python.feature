@@ -1,3 +1,4 @@
+@python
 Feature: Python integration
   As a reggae user
   I want to be able to write build descriptions in Python
@@ -62,4 +63,29 @@ Feature: Python integration
         """
         The sum     of 3 and 4 is 7
         The product of 3 and 4 is 12
+        """
+
+    @tup
+    Scenario: Tup build with python
+      Given I successfully run `reggae -b tup path/to`
+      And I successfully run `tup`
+      When I successfully run `./myapp 2 3`
+      Then the output should contain:
+        """
+        The sum     of 2 and 3 is 5
+        The product of 2 and 3 is 6
+        """
+      When I run `./myapp 3 4`
+      Then the output should contain:
+        """
+        The sum     of 3 and 4 is 7
+        The product of 3 and 4 is 12
+        """
+
+    @binary
+    Scenario: Binary build with python
+      When I run `reggae -b binary path/to`
+      Then it should fail with:
+        """
+        Binary backend not supported via JSON
         """

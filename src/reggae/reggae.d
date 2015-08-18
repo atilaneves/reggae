@@ -73,7 +73,7 @@ void run(in Options options) {
 }
 
 void python(in Options options) {
-    writeln("options reggaefilepath: ", options.reggaeFilePath);
+    enforce(options.backend != Backend.binary, "Binary backend not supported via JSON");
     immutable pythonArgs = ["python", "-m", "reggae.json", options.projectPath];
     immutable res = execute(pythonArgs);
     enforce(res.status == 0, text("Could not execute ", pythonArgs.join(" "), ":\n", res.output));
@@ -104,7 +104,7 @@ void generateBuild(in Build build, in Options options) {
             break;
 
         case binary:
-            Binary(build, options.projectPath).run(options.args.dup);
+            Binary(build, options).run();
             break;
 
         case none:
@@ -145,7 +145,7 @@ private void handleTup(in Build build, in Options options) {
         throw new Exception("Tup backend support not compiled in");
     } else {
         if(!".tup".exists) execute(["tup", "init"]);
-        const tup = Tup(build, options.projectPath);
+        const tup = Tup(build, options);
         auto file = File(tup.fileName, "w");
         file.write(tup.output);
     }

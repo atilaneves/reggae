@@ -1,6 +1,10 @@
 module reggae.buildgen;
 
-import reggae;
+import reggae.build;
+import reggae.options;
+import reggae.types;
+import reggae.backend;
+
 import std.stdio;
 
 /**
@@ -19,7 +23,8 @@ mixin template BuildGenMain(string buildModule = "reggaefile") {
 
     int main(string[] args) {
         try {
-            generateBuildFor!(buildModule)(args); //the user's build description
+            import reggae.config: options;
+            generateBuildFor!(buildModule)(options, args); //the user's build description
         } catch(Exception ex) {
             stderr.writeln(ex.msg);
             return 1;
@@ -29,29 +34,29 @@ mixin template BuildGenMain(string buildModule = "reggaefile") {
     }
 }
 
-void generateBuildFor(alias module_)(string[] args) {
+void generateBuildFor(alias module_)(in Options options, string[] args) {
     const buildFunc = getBuild!(module_); //get the function to call by CT reflection
     const build = buildFunc(); //actually call the function to get the build description
-    generateBuild(build, args);
+    generateBuild(build, options);
 }
 
-void generateBuild(in Build build, string[] args) {
+void generateBuild(in Build build, in Options options, string[] args = []) {
     final switch(options.backend) with(Backend) {
 
         case make:
-            handleMake(build);
+            handleMake(build, options);
             break;
 
         case ninja:
-            handleNinja(build);
+            handleNinja(build, options);
             break;
 
         case tup:
-            handleTup(build);
+            handleTup(build, options);
             break;
 
         case binary:
-            Binary(build, options).run();
+            Binary(build, options).run(args);
             break;
 
         case none:
@@ -59,7 +64,7 @@ void generateBuild(in Build build, string[] args) {
         }
 }
 
-private void handleNinja(in Build build) {
+private void handleNinja(in Build build, in Options options) {
     version(minimal) {
         throw new Exception("Ninja backend support not compiled in");
     } else {
@@ -76,7 +81,7 @@ private void handleNinja(in Build build) {
 }
 
 
-private void handleMake(in Build build) {
+private void handleMake(in Build build, in Options options) {
     version(minimal) {
         throw new Exception("Make backend support not compiled in");
     } else {
@@ -87,7 +92,7 @@ private void handleMake(in Build build) {
     }
 }
 
-private void handleTup(in Build build) {
+private void handleTup(in Build build, in Options options) {
     version(minimal) {
         throw new Exception("Tup backend support not compiled in");
     } else {

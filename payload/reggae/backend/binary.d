@@ -55,8 +55,8 @@ struct Binary {
         this.options = options;
     }
 
-    void run() const @system { //@system due to parallel
-        auto binaryOptions = BinaryOptions(options.args.dup);
+    void run(string[] args) const @system { //@system due to parallel
+        auto binaryOptions = BinaryOptions(args);
 
         handleOptions(binaryOptions);
         if(binaryOptions.earlyReturn) return;

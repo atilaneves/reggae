@@ -32,7 +32,7 @@ Feature: Using executable for a C++ project
     And a file named "proj/reggaefile.d" with:
       """
       import reggae;
-      alias app = executable!(App(`main.cpp`, `app`),
+      alias app = executable!(App(SourceFileName(`main.cpp`), BinaryFileName(`app`)),
                               Flags(`-g -O0`),
                               IncludePaths([`.`]));
       mixin build!app;

@@ -66,7 +66,7 @@ That was just an example to illustrate the low-level primitives. To
 build D apps with no external dependencies, this will suffice and is similar to using rdmd:
 
     import reggae;
-    alias app = executable!(App("src/main.d", "myapp"),
+    alias app = executable!(App(SourceFileName("src/main.d"), BinaryFileName("myapp")),
                             Flags("-g -debug"),
                             ImportPaths(["/path/to/imports"])
                             );

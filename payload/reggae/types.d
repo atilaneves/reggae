@@ -7,18 +7,26 @@ import std.path: baseName, stripExtension, defaultExtension;
 
 @safe:
 
-struct App {
-    string srcFileName;
-    string exeFileName;
+struct SourceFileName {
+    string value;
+}
 
-    this(string srcFileName) pure {
-        immutable stripped = srcFileName.baseName.stripExtension;
-        immutable exeFileName =  exeExt == "" ? stripped : stripped.defaultExtension(exeExt);
+struct BinaryFileName {
+    string value;
+}
+
+struct App {
+    SourceFileName srcFileName;
+    BinaryFileName exeFileName;
+
+    this(SourceFileName srcFileName) pure {
+        immutable stripped = srcFileName.value.baseName.stripExtension;
+        immutable exeFileName = BinaryFileName(exeExt == "" ? stripped : stripped.defaultExtension(exeExt));
 
         this(srcFileName, exeFileName);
     }
 
-    this(string srcFileName, string exeFileName) @safe pure nothrow {
+    this(SourceFileName srcFileName, BinaryFileName exeFileName) @safe pure nothrow {
         this.srcFileName = srcFileName;
         this.exeFileName = exeFileName;
     }

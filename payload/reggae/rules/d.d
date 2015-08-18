@@ -85,18 +85,18 @@ Target executable(in App app, in Flags flags,
                   in StringImportPaths stringImportPaths,
                   in Target[] linkWith) @trusted {
 
-    if(getLanguage(app.srcFileName) != Language.D)
+    if(getLanguage(app.srcFileName.value) != Language.D)
         throw new Exception("'executable' rule only works with D files");
 
-    auto mainObj = objectFile(SourceFile(app.srcFileName), flags, importPaths, stringImportPaths);
-    const output = runDCompiler(buildPath(options.projectPath, app.srcFileName), flags.value,
+    auto mainObj = objectFile(SourceFile(app.srcFileName.value), flags, importPaths, stringImportPaths);
+    const output = runDCompiler(buildPath(options.projectPath, app.srcFileName.value), flags.value,
                                 importPaths.value, stringImportPaths.value);
 
     const files = dMainDepSrcs(output).map!(a => a.removeProjectPath).array;
     const dependencies = [mainObj] ~ dlangPackageObjectFiles(files, flags.value,
                                                              importPaths.value, stringImportPaths.value);
 
-    return link(ExeName(app.exeFileName), dependencies ~ linkWith);
+    return link(ExeName(app.exeFileName.value), dependencies ~ linkWith);
 }
 
 

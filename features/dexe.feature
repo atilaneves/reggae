@@ -58,7 +58,7 @@ Feature: Linking a D executable
                                Filter!(a => a != `cpp/extra_main.cpp`));
       alias cppObjs = objectFiles!(cppSrcs, Flags(`-pg`));
 
-      alias app = executable!(App(`d/main.d`, `calc`),
+      alias app = executable!(App(SourceFileName(`d/main.d`), BinaryFileName(`calc`)),
                               Flags(`-debug -O`),
                               ImportPaths([`d`]),
                               StringImportPaths([`resources/text`]),

@@ -64,7 +64,7 @@ private void handleNinja(in Build build) {
         throw new Exception("Ninja backend support not compiled in");
     } else {
 
-        const ninja = Ninja(build, options.projectPath);
+        const ninja = Ninja(build, options);
 
         auto buildNinja = File("build.ninja", "w");
         buildNinja.writeln("include rules.ninja\n");

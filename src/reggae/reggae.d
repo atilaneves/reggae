@@ -73,6 +73,7 @@ void run(in Options options) {
 }
 
 void python(in Options options) {
+    writeln("options reggaefilepath: ", options.reggaeFilePath);
     immutable pythonArgs = ["python", "-m", "reggae.json", options.projectPath];
     immutable res = execute(pythonArgs);
     enforce(res.status == 0, text("Could not execute ", pythonArgs.join(" "), ":\n", res.output));
@@ -116,7 +117,7 @@ private void handleNinja(in Build build, in Options options) {
         throw new Exception("Ninja backend support not compiled in");
     } else {
 
-        const ninja = Ninja(build, options.projectPath);
+        const ninja = Ninja(build, options);
 
         auto buildNinja = File("build.ninja", "w");
         buildNinja.writeln("include rules.ninja\n");

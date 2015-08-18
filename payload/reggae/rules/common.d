@@ -42,10 +42,10 @@ package string objFileName(in string srcFileName) @safe pure {
  can be used to specify source directories and source files, as well as
  a filter function to select those files that are actually wanted.
  */
-Target[] targetsFromSources(alias sourcesFunc = Sources!(),
-                            Flags flags = Flags(),
-                            ImportPaths includes = ImportPaths(),
-                            StringImportPaths stringImports = StringImportPaths(),
+Target[] objectFiles(alias sourcesFunc = Sources!(),
+                     Flags flags = Flags(),
+                     ImportPaths includes = ImportPaths(),
+                     StringImportPaths stringImports = StringImportPaths(),
     )() @trusted {
 
     const srcFiles = sourcesToFileNames!(sourcesFunc);
@@ -251,5 +251,5 @@ Target[] staticLibrary(string name,
 
     const srcFiles = sourcesToFileNames!(sourcesFunc);
     return [Target(buildPath("$builddir", name), "ar rcs $out $in",
-                   targetsFromSources!(sourcesFunc, flags, includes, stringImports)())];
+                   objectFiles!(sourcesFunc, flags, includes, stringImports)())];
 }

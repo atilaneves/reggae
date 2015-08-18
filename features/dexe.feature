@@ -56,7 +56,7 @@ Feature: Linking a D executable
       alias cppSrcs = Sources!(Dirs([`cpp`]),
                                Files([`extra/constants.cpp`]),
                                Filter!(a => a != `cpp/extra_main.cpp`));
-      alias cppObjs = targetsFromSources!(cppSrcs, Flags(`-pg`));
+      alias cppObjs = objectFiles!(cppSrcs, Flags(`-pg`));
 
       alias app = executable!(App(`d/main.d`, `calc`),
                               Flags(`-debug -O`),

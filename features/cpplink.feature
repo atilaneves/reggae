@@ -32,7 +32,7 @@ Feature: Using executable for a C++ project
     And a file named "proj/reggaefile.d" with:
       """
       import reggae;
-      alias objs = targetsFromSources!(Sources!(), Flags(`-g -O0`));
+      alias objs = objectFiles!(Sources!(), Flags(`-g -O0`));
       alias app = link!(ExeName(`app`), objs);
       mixin build!app;
       """

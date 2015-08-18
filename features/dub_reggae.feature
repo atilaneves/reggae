@@ -85,7 +85,7 @@ Feature: Augmenting dub projects with reggae builds
     And a file named "dub_reggae_proj/reggaefile.d" with:
       """
       import reggae;
-      alias utObjs = targetsFromSources!(Sources!([`tests`]), Flags(`-unittest`), ImportPaths([`source`]));
+      alias utObjs = objectFiles!(Sources!([`tests`]), Flags(`-unittest`), ImportPaths([`source`]));
       alias ut = dubConfigurationTarget!(ExeName(`ut`), Configuration(`default`), Flags(), No.main, utObjs);
       mixin build!(dubDefaultTarget, ut);
       """

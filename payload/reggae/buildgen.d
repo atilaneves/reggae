@@ -81,7 +81,7 @@ private void handleMake(in Build build) {
         throw new Exception("Make backend support not compiled in");
     } else {
 
-        const makefile = Makefile(build, options.projectPath);
+        const makefile = Makefile(build, options);
         auto file = File(makefile.fileName, "w");
         file.write(makefile.output);
     }

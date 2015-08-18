@@ -46,3 +46,20 @@ Feature: Python integration
         The sum     of 3 and 4 is 7
         The product of 3 and 4 is 12
         """
+
+    @make
+    Scenario: Make build with python
+      Given I successfully run `reggae -b make path/to`
+      And I successfully run `make`
+      When I successfully run `./myapp 2 3`
+      Then the output should contain:
+        """
+        The sum     of 2 and 3 is 5
+        The product of 2 and 3 is 6
+        """
+      When I run `./myapp 3 4`
+      Then the output should contain:
+        """
+        The sum     of 3 and 4 is 7
+        The product of 3 and 4 is 12
+        """

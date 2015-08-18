@@ -15,18 +15,6 @@ import std.algorithm;
 import std.array;
 
 
-Target[] targetsFromSourcesPerModule(alias sourcesFunc = Sources!(),
-                                     Flags flags = Flags(),
-                                     ImportPaths includes = ImportPaths(),
-                                     StringImportPaths stringImports = StringImportPaths(),
-    )() @safe {
-
-    const srcFiles = sourcesToFileNames!(sourcesFunc);
-    if(!srcFiles.filter!(a => a.getLanguage != Language.D).empty)
-        throw new Exception("targetsFromSourcesPerModules only accepts D files");
-
-    return objectFilesPerModule(srcFiles, flags.value, ["."] ~ includes.value, stringImports.value);
-}
 
 //generate object file(s) for a D package. By default generates one per package,
 //if reggae.config.perModule is true, generates one per module

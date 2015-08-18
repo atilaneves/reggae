@@ -50,6 +50,11 @@ struct Binary {
     Build build;
     const(Options) options;
 
+    this(Build build, in string projectPath) pure {
+        import reggae.config: options;
+        this(build, options);
+    }
+
     this(Build build, in Options options) pure {
         this.build = build;
         this.options = options;

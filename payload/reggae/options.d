@@ -22,6 +22,12 @@ struct Options {
     bool oldNinja;
     string[string] userVars;
 
+    Options dup() @safe pure const nothrow {
+        return Options(backend,
+                       projectPath, dflags, ranFromPath, cCompiler, cppCompiler, dCompiler,
+                       noFetch, help, perModule, isDubProject, oldNinja);
+    }
+
     //finished setup
     void finalize() @safe{
         ranFromPath = thisExePath();

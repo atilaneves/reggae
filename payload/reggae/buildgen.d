@@ -4,6 +4,7 @@ import reggae.build;
 import reggae.options;
 import reggae.types;
 import reggae.backend;
+import reggae.reflect;
 
 import std.stdio;
 

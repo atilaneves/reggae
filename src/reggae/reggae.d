@@ -87,7 +87,7 @@ enum coreFiles = [
     "options.d",
     "buildgen_main.d", "buildgen.d",
     "build.d",
-    "backend/binary.d",
+    "backend/package.d", "backend/binary.d",
     "package.d", "range.d", "reflect.d",
     "dependencies.d", "types.d", "dcompile.d",
     "ctaa.d", "sorting.d",

@@ -88,7 +88,7 @@ struct DubInfo {
         string[] paths;
         auto rng = packages.map!(a => a.packagePaths(a.importPaths));
         foreach(p; rng) paths ~= p;
-        return paths;
+        return paths ~ options.projectPath;
     }
 }
 

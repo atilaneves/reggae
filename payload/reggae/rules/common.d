@@ -10,23 +10,6 @@ import std.path;
 import std.array: array;
 import std.traits;
 
-version(Windows) {
-    immutable objExt = ".obj";
-    immutable exeExt = ".exe";
-} else {
-    immutable objExt = ".o";
-    immutable exeExt = "";
-}
-
-package string objFileName(in string srcFileName) @safe pure {
-    import std.path: stripExtension, defaultExtension, isRooted, stripDrive;
-    immutable localFileName = srcFileName.isRooted
-        ? srcFileName.stripDrive[1..$]
-        : srcFileName;
-    return localFileName.stripExtension.defaultExtension(objExt);
-}
-
-
 /**
  This template function exists so as to be referenced in a reggaefile.d
  at top-level without being called via $(D alias). That way it can be
@@ -56,6 +39,118 @@ Target[] objectFiles(alias sourcesFunc = Sources!(),
         otherSrcs.map!(a => objectFile(SourceFile(a), flags, includes)).array;
 }
 
+@safe:
+
+/**
+ An object file, typically from one source file in a certain language
+ (although for D the default is a whole package. The language is determined
+ by the file extension of the file passed in.
+ The $(D projDir) variable is best left alone; right now only the dub targets
+ make use of it (since dub packages are by definition outside of the project
+ source tree).
+*/
+Target objectFile(in SourceFile srcFile,
+                  in Flags flags = Flags(),
+                  in ImportPaths includePaths = ImportPaths(),
+                  in StringImportPaths stringImportPaths = StringImportPaths(),
+                  in string projDir = "$project") pure {
+
+    const cmd = compileCommand(srcFile.value, flags.value, includePaths.value, stringImportPaths.value, projDir);
+    return Target(srcFile.value.objFileName, cmd, [Target(srcFile.value)]);
+}
+
+/**
+ "Compile-time" link function.
+ Its parameters are compile-time so that it can be aliased and used
+ at global scope in a reggafile.
+ Links an executable from the given dependency targets. The linker used
+ depends on the file extension of the leaf nodes of the passed-in targets.
+ If any D files are found, the linker is the D compiler, and so on with
+ C++ and C. If none of those apply, the D compiler is used.
+ */
+Target link(ExeName exeName, alias dependenciesFunc, Flags flags = Flags())() @safe {
+    auto dependencies = dependenciesFunc();
+    return link(exeName, dependencies, flags);
+}
+
+/**
+ Regular run-time link function.
+ Links an executable from the given dependency targets. The linker used
+ depends on the file extension of the leaf nodes of the passed-in targets.
+ If any D files are found, the linker is the D compiler, and so on with
+ C++ and C. If none of those apply, the D compiler is used.
+ */
+Target link(in ExeName exeName, in Target[] dependencies, in Flags flags = Flags()) @safe pure {
+    const command = Command(CommandType.link, assocList([assocEntry("flags", flags.value.splitter.array)]));
+    return Target(exeName.value, command, dependencies);
+}
+
+
+/**
+ Convenience rule for creating static libraries
+ */
+Target[] staticLibrary(string name,
+                       alias sourcesFunc = Sources!(),
+                       Flags flags = Flags(),
+                       ImportPaths includes = ImportPaths(),
+                       StringImportPaths stringImports = StringImportPaths())
+    () {
+
+    version(Posix) {}
+    else
+        static assert(false, "Can only create static libraries on Posix");
+
+    const srcFiles = sourcesToFileNames!(sourcesFunc);
+    return [Target(buildPath("$builddir", name), "ar rcs $out $in",
+                   objectFiles!(sourcesFunc, flags, includes, stringImports)())];
+}
+
+/**
+ "Compile-time" target creation.
+ Its parameters are compile-time so that it can be aliased and used
+ at global scope in a reggaefile
+ */
+Target target(alias outputs,
+              alias command = "",
+              alias dependenciesFunc = () { Target[] ts; return ts; },
+              alias implicitsFunc = () { Target[] ts; return ts; })() @trusted {
+
+    auto depsRes = dependenciesFunc();
+    auto impsRes = implicitsFunc();
+
+    static if(isArray!(typeof(depsRes)))
+        auto dependencies = depsRes;
+    else
+        auto dependencies = [depsRes];
+
+    static if(isArray!(typeof(impsRes)))
+        auto implicits = impsRes;
+    else
+        auto implicits = [impsRes];
+
+
+    return Target(outputs, command, dependencies, implicits);
+}
+
+
+/**
+ * Convenience alias for appending targets without calling any runtime function.
+ * This replaces the need to manually define a function to return a `Build` struct
+ * just to concatenate targets
+ */
+Target[] targetConcat(T...)() {
+    Target[] ret;
+    foreach(target; T) {
+        static if(isCallable!target)
+            ret ~= target();
+        else
+            ret ~= target;
+    }
+    return ret;
+}
+
+
+//end of rules
 
 string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
 
@@ -88,30 +183,27 @@ string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
 }
 
 
-@safe:
+
+version(Windows) {
+    immutable objExt = ".obj";
+    immutable exeExt = ".exe";
+} else {
+    immutable objExt = ".o";
+    immutable exeExt = "";
+}
+
+package string objFileName(in string srcFileName) pure {
+    import std.path: stripExtension, defaultExtension, isRooted, stripDrive;
+    immutable localFileName = srcFileName.isRooted
+        ? srcFileName.stripDrive[1..$]
+        : srcFileName;
+    return localFileName.stripExtension.defaultExtension(objExt);
+}
 
 string removeProjectPath(in string path) pure {
     import std.path: relativePath, absolutePath;
     //relativePath is @system
     return () @trusted { return path.absolutePath.relativePath(options.projectPath.absolutePath); }();
-}
-
-/**
- An object file, typically from one source file in a certain language
- (although for D the default is a whole package. The language is determined
- by the file extension of the file passed in.
- The $(D projDir) variable is best left alone; right now only the dub targets
- make use of it (since dub packages are by definition outside of the project
- source tree).
-*/
-Target objectFile(in SourceFile srcFile,
-                  in Flags flags = Flags(),
-                  in ImportPaths includePaths = ImportPaths(),
-                  in StringImportPaths stringImportPaths = StringImportPaths(),
-                  in string projDir = "$project") pure {
-
-    const cmd = compileCommand(srcFile.value, flags.value, includePaths.value, stringImportPaths.value, projDir);
-    return Target(srcFile.value.objFileName, cmd, [Target(srcFile.value)]);
 }
 
 
@@ -163,93 +255,4 @@ Language getLanguage(in string srcFileName) pure nothrow {
     default:
         return unknown;
     }
-}
-
-/**
- "Compile-time" link function.
- Its parameters are compile-time so that it can be aliased and used
- at global scope in a reggafile.
- Links an executable from the given dependency targets. The linker used
- depends on the file extension of the leaf nodes of the passed-in targets.
- If any D files are found, the linker is the D compiler, and so on with
- C++ and C. If none of those apply, the D compiler is used.
- */
-Target link(ExeName exeName, alias dependenciesFunc, Flags flags = Flags())() @safe {
-    auto dependencies = dependenciesFunc();
-    return link(exeName, dependencies, flags);
-}
-
-/**
- Regular run-time link function.
- Links an executable from the given dependency targets. The linker used
- depends on the file extension of the leaf nodes of the passed-in targets.
- If any D files are found, the linker is the D compiler, and so on with
- C++ and C. If none of those apply, the D compiler is used.
- */
-Target link(in ExeName exeName, in Target[] dependencies, in Flags flags = Flags()) @safe pure {
-    const command = Command(CommandType.link, assocList([assocEntry("flags", flags.value.splitter.array)]));
-    return Target(exeName.value, command, dependencies);
-}
-
-/**
- * Convenience alias for appending targets without calling any runtime function.
- * This replaces the need to manually define a function to return a `Build` struct
- * just to concatenate targets
- */
-Target[] targetConcat(T...)() {
-    Target[] ret;
-    foreach(target; T) {
-        static if(isCallable!target)
-            ret ~= target();
-        else
-            ret ~= target;
-    }
-    return ret;
-}
-
-/**
- "Compile-time" target creation.
- Its parameters are compile-time so that it can be aliased and used
- at global scope in a reggaefile
- */
-Target target(alias outputs,
-              alias command = "",
-              alias dependenciesFunc = () { Target[] ts; return ts; },
-              alias implicitsFunc = () { Target[] ts; return ts; })() @trusted {
-
-    auto depsRes = dependenciesFunc();
-    auto impsRes = implicitsFunc();
-
-    static if(isArray!(typeof(depsRes)))
-        auto dependencies = depsRes;
-    else
-        auto dependencies = [depsRes];
-
-    static if(isArray!(typeof(impsRes)))
-        auto implicits = impsRes;
-    else
-        auto implicits = [impsRes];
-
-
-    return Target(outputs, command, dependencies, implicits);
-}
-
-
-/**
- Convenience rule for creating static libraries
- */
-Target[] staticLibrary(string name,
-                       alias sourcesFunc = Sources!(),
-                       Flags flags = Flags(),
-                       ImportPaths includes = ImportPaths(),
-                       StringImportPaths stringImports = StringImportPaths())
-    () {
-
-    version(Posix) {}
-    else
-        static assert(false, "Can only create static libraries on Posix");
-
-    const srcFiles = sourcesToFileNames!(sourcesFunc);
-    return [Target(buildPath("$builddir", name), "ar rcs $out $in",
-                   objectFiles!(sourcesFunc, flags, includes, stringImports)())];
 }

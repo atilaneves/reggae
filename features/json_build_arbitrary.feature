@@ -1,7 +1,7 @@
 @python
-Feature: Python integration
+Feature: Foreign language integration
   As a reggae user
-  I want to be able to write build descriptions in Python
+  I want to be able to write build descriptions in a scripting language
   So I don't have to compile the build description
 
   Background:

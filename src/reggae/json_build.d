@@ -42,12 +42,11 @@ Build jsonToBuild(in string projectPath, in string jsonString) {
 
 private Target jsonToTarget(in string projectPath, in JSONValue json) {
     immutable depsType = json.object["dependencies"].object["type"].str.to!JsonDependencyType;
-    immutable impsType = json.object["implicits"].object["type"].str.to!JsonDependencyType;
-
     const dependencies = depsType == JsonDependencyType.fixed
         ? json.object["dependencies"].object["targets"].array.map!(a => jsonToTarget(projectPath, a)).array
         : callDepsFunc(projectPath, json.object["dependencies"]);
 
+    immutable impsType = json.object["implicits"].object["type"].str.to!JsonDependencyType;
     const implicits = impsType == JsonDependencyType.fixed
         ? json.object["implicits"].object["targets"].array.map!(a => jsonToTarget(projectPath, a)).array
         : callDepsFunc(projectPath, json.object["implicits"]);

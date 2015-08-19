@@ -1,6 +1,6 @@
 /**
 High-level rules for compiling D files. For a D-only application with
-no dub dependencies, $(D executable) should suffice. If the app depends
+no dub dependencies, $(D scriptlike) should suffice. If the app depends
 on dub packages, consult the reggae.rules.dub module instead.
  */
 
@@ -49,43 +49,43 @@ Target[] dlangPackageObjectFilesPerModule(in string[] srcFiles, in string flags 
 
 
 /**
- Currently only works for D. This convenience rule builds a D executable, automatically
+ Currently only works for D. This convenience rule builds a D scriptlike, automatically
  calculating which files must be compiled in a similar way to rdmd.
  All paths are relative to projectPath.
  This template function is provided as a wrapper around the regular runtime version
  below so it can be aliased without trying to call it at runtime. Basically, it's a
- way to use the runtime executable without having define a function in reggaefile.d,
+ way to use the runtime scriptlike without having define a function in reggaefile.d,
  i.e.:
  $(D
- alias myApp = executable!(...);
+ alias myApp = scriptlike!(...);
  mixin build!(myApp);
  )
  vs.
  $(D
- Build myBuld() { return executable(..); }
+ Build myBuld() { return scriptlike(..); }
  )
  */
-Target executable(App app,
+Target scriptlike(App app,
                   Flags flags = Flags(),
                   ImportPaths importPaths = ImportPaths(),
                   StringImportPaths stringImportPaths = StringImportPaths(),
                   alias linkWithFunction = () { return cast(Target[])[];})
     () @trusted {
     auto linkWith = linkWithFunction();
-    return executable(app, flags, importPaths, stringImportPaths, linkWith);
+    return scriptlike(app, flags, importPaths, stringImportPaths, linkWith);
 }
 
 
-//regular runtime version of executable
+//regular runtime version of scriptlike
 //all paths relative to projectPath
 //@trusted because of .array
-Target executable(in App app, in Flags flags,
+Target scriptlike(in App app, in Flags flags,
                   in ImportPaths importPaths,
                   in StringImportPaths stringImportPaths,
                   in Target[] linkWith) @trusted {
 
     if(getLanguage(app.srcFileName.value) != Language.D)
-        throw new Exception("'executable' rule only works with D files");
+        throw new Exception("'scriptlike' rule only works with D files");
 
     auto mainObj = objectFile(SourceFile(app.srcFileName.value), flags, importPaths, stringImportPaths);
     const output = runDCompiler(buildPath(options.projectPath, app.srcFileName.value), flags.value,
@@ -113,6 +113,6 @@ private auto runDCompiler(in string srcFileName, in string flags,
         stringImportPaths.map!(a => "-J" ~ buildPath(options.projectPath, a)).array ~
         ["-o-", "-v", "-c", srcFileName];
     const compRes = execute(compArgs);
-    enforce(compRes.status == 0, text("executable could not run ", compArgs.join(" "), ":\n", compRes.output));
+    enforce(compRes.status == 0, text("scriptlike could not run ", compArgs.join(" "), ":\n", compRes.output));
     return compRes.output;
 }

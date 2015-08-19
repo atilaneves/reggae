@@ -2,9 +2,12 @@ module reggae.json_build;
 
 
 import reggae.build;
+import reggae.ctaa;
+
 import std.json;
 import std.algorithm;
 import std.array;
+import std.conv;
 
 
 Build jsonToBuild(in string jsonString) {
@@ -30,7 +33,18 @@ private Target jsonToTarget(in JSONValue json) pure {
                   json.object["implicits"].array.map!(a => jsonToTarget(a)).array);
 }
 
+enum JsonCommandType {
+    shell,
+    link,
+}
+
 private Command jsonToCommand(in JSONValue json) pure {
-    if(json.object["type"].str != "shell") throw new Exception("Only shell for now");
-    return Command(json.object["cmd"].str);
+    immutable type = json.object["type"].str.to!JsonCommandType;
+    final switch(type) with(JsonCommandType) {
+        case shell:
+            return Command(json.object["cmd"].str);
+        case link:
+            return Command(CommandType.link,
+                           assocList([assocEntry("flags", json.object["flags"].str.splitter.array)]));
+    }
 }

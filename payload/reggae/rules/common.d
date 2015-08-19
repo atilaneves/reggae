@@ -32,11 +32,7 @@ Target[] objectFiles(alias sourcesFunc = Sources!(),
     )() @trusted {
 
     const srcFiles = sourcesToFileNames!(sourcesFunc);
-    const dSrcs = srcFiles.filter!(a => a.getLanguage == Language.D).array;
-    auto otherSrcs = srcFiles.filter!(a => a.getLanguage != Language.D && a.getLanguage != Language.unknown);
-    import reggae.rules.d: dlangPackageObjectFiles;
-    return dlangPackageObjectFiles(dSrcs, flags.value, ["."] ~ includes.value, stringImports.value) ~
-        otherSrcs.map!(a => objectFile(SourceFile(a), flags, includes)).array;
+    return srcFilesToObjectTargets(srcFiles, flags, includes, stringImports);
 }
 
 @safe:
@@ -182,6 +178,18 @@ string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
         array;
 }
 
+private Target[] srcFilesToObjectTargets(in string[] srcFiles,
+                                         in Flags flags,
+                                         in ImportPaths includes,
+                                         in StringImportPaths stringImports) {
+
+    const dSrcs = srcFiles.filter!(a => a.getLanguage == Language.D).array;
+    auto otherSrcs = srcFiles.filter!(a => a.getLanguage != Language.D && a.getLanguage != Language.unknown);
+    import reggae.rules.d: dlangPackageObjectFiles;
+    return dlangPackageObjectFiles(dSrcs, flags.value, ["."] ~ includes.value, stringImports.value) ~
+        otherSrcs.map!(a => objectFile(SourceFile(a), flags, includes)).array;
+
+}
 
 
 version(Windows) {

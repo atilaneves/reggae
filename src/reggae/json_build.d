@@ -48,15 +48,8 @@ private Target jsonToTarget(in string projectPath, in JSONValue json) {
     if(json.object["type"].str.to!JsonTargetType == JsonTargetType.dynamic)
         return callTargetFunc(projectPath, json);
 
-    immutable depsType = json.object["dependencies"].object["type"].str.to!JsonDependencyType;
-    const dependencies = depsType == JsonDependencyType.fixed
-        ? json.object["dependencies"].object["targets"].array.map!(a => jsonToTarget(projectPath, a)).array
-        : callDepsFunc(projectPath, json.object["dependencies"]);
-
-    immutable impsType = json.object["implicits"].object["type"].str.to!JsonDependencyType;
-    const implicits = impsType == JsonDependencyType.fixed
-        ? json.object["implicits"].object["targets"].array.map!(a => jsonToTarget(projectPath, a)).array
-        : callDepsFunc(projectPath, json.object["implicits"]);
+    const dependencies = getDeps(projectPath, json.object["dependencies"]);
+    const implicits = getDeps(projectPath, json.object["implicits"]);
 
     if(isLeaf(json))
         return Target(json.object["outputs"].array.map!(a => a.str).array,
@@ -88,6 +81,14 @@ private Command jsonToCommand(in JSONValue json) pure {
     }
 }
 
+
+private Target[] getDeps(in string projectPath, in JSONValue json) {
+    immutable type = json.object["type"].str.to!JsonDependencyType;
+    return type == JsonDependencyType.fixed
+        ? json.object["targets"].array.map!(a => jsonToTarget(projectPath, a)).array
+        : callDepsFunc(projectPath, json);
+
+}
 
 private Target[] callDepsFunc(in string projectPath, in JSONValue json) {
     immutable func = json.object["func"].str.to!JsonFuncName;
@@ -129,7 +130,8 @@ private Target callTargetFunc(in string projectPath, in JSONValue json) {
     import reggae.rules.d;
     import reggae.types;
 
-    enforce(json.object["func"].str == "scriptlike", "Only scriptlike is supported for Targets");
+    enforce(json.object["func"].str == "scriptlike",
+            "Only scriptlike is supported for Targets");
 
     return scriptlike(projectPath,
                       App(SourceFileName(stringVal(json, "src_name")),

@@ -19,4 +19,4 @@ install:
 script:
   - ./bootstrap.sh make
   - bin/ut
-  - cucumber --tags ~@tup
+  - cucumber --tags ~@tup --tags ~@python

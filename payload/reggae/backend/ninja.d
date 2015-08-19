@@ -4,7 +4,7 @@ module reggae.backend.ninja;
 import reggae.build;
 import reggae.range;
 import reggae.rules;
-import reggae.config;
+import reggae.options;
 import std.array;
 import std.range;
 import std.algorithm;
@@ -78,8 +78,17 @@ struct Ninja {
     NinjaEntry[] ruleEntries;
 
     this(Build build, in string projectPath = "") @safe {
+        import reggae.config: options;
+        auto modOptions = options.dup;
+        modOptions.projectPath = projectPath;
+        this(build, modOptions);
+    }
+
+    this(Build build, in Options options) @safe {
         _build = build;
-        _projectPath = projectPath;
+        _options = options;
+        _projectPath = _options.projectPath;
+
 
         foreach(target; _build.range) {
             target.hasDefaultCommand
@@ -91,8 +100,8 @@ struct Ninja {
     }
 
     const(NinjaEntry)[] allBuildEntries() @safe const {
-        immutable files = [options.reggaeFilePath, options.ranFromPath].join(" ");
-        auto paramLines = options.oldNinja ? [] : ["pool = console"];
+        immutable files = [_options.reggaeFilePath, _options.ranFromPath].join(" ");
+        auto paramLines = _options.oldNinja ? [] : ["pool = console"];
         return buildEntries ~
             NinjaEntry("build build.ninja: _rerun | " ~ files,
                        paramLines) ~
@@ -102,7 +111,7 @@ struct Ninja {
     const(NinjaEntry)[] allRuleEntries() @safe pure const {
         return ruleEntries ~ defaultRules ~
             NinjaEntry("rule _rerun",
-                       ["command = " ~ options.rerunArgs.join(" "),
+                       ["command = " ~ _options.rerunArgs.join(" "),
                         "generator = 1"]);
     }
 
@@ -117,6 +126,7 @@ struct Ninja {
 private:
     Build _build;
     string _projectPath;
+    const(Options) _options;
     int _counter = 1;
 
     //@trusted because of join

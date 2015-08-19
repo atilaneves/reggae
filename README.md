@@ -66,7 +66,7 @@ That was just an example to illustrate the low-level primitives. To
 build D apps with no external dependencies, this will suffice and is similar to using rdmd:
 
     import reggae;
-    alias app = executable!(App("src/main.d", "myapp"),
+    alias app = scriptlike!(App(SourceFileName("src/main.d"), BinaryFileName("myapp")),
                             Flags("-g -debug"),
                             ImportPaths(["/path/to/imports"])
                             );
@@ -81,9 +81,9 @@ For C and C++, the main high-level rules to use are `targetsFromSourceFiles` and
 example C++ build:
 
     import reggae;
-    alias objs = targetsFromSources!(Sources!(["."]), // a list of directories
-                                     Flags("-g -O0"),
-                                     IncludePaths(["inc1", "inc2"]));
+    alias objs = objectFiles!(Sources!(["."]), // a list of directories
+                              Flags("-g -O0"),
+                              IncludePaths(["inc1", "inc2"]));
     alias app = link!(ExeName("app"), objs);
 
 `Sources` can also be used like so:
@@ -92,7 +92,7 @@ example C++ build:
              Files([/*list of extra files to add*/]),
              Filter!(a => a != "foo.d"))); //get rid of unwanted files
 
-`targetsFromSources` isn't specific to C++, it'll create object file targets
+`objectFiles` isn't specific to C++, it'll create object file targets
 for all supported languages (currently C, C++ and D).
 
 

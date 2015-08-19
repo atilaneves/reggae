@@ -9,7 +9,7 @@ Feature: Static library
       import reggae;
       alias lib = staticLibrary!(`maths.a`, Sources!([`libsrc`]));
       enum mainObj = objectFile(SourceFile(`src/main.d`));
-      alias app = executable!(App(`src/main.d`, `app`),
+      alias app = scriptlike!(App(SourceFileName(`src/main.d`), BinaryFileName(`app`)),
                               Flags(),
                               ImportPaths([`libsrc`]),
                               StringImportPaths(),

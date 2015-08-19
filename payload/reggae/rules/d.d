@@ -1,6 +1,6 @@
 /**
 High-level rules for compiling D files. For a D-only application with
-no dub dependencies, $(D executable) should suffice. If the app depends
+no dub dependencies, $(D scriptlike) should suffice. If the app depends
 on dub packages, consult the reggae.rules.dub module instead.
  */
 
@@ -15,30 +15,18 @@ import std.algorithm;
 import std.array;
 
 
-Target[] targetsFromSourcesPerModule(alias sourcesFunc = Sources!(),
-                                     Flags flags = Flags(),
-                                     ImportPaths includes = ImportPaths(),
-                                     StringImportPaths stringImports = StringImportPaths(),
-    )() @safe {
-
-    const srcFiles = sourcesToFileNames!(sourcesFunc);
-    if(!srcFiles.filter!(a => a.getLanguage != Language.D).empty)
-        throw new Exception("targetsFromSourcesPerModules only accepts D files");
-
-    return objectFilesPerModule(srcFiles, flags.value, ["."] ~ includes.value, stringImports.value);
-}
 
 //generate object file(s) for a D package. By default generates one per package,
 //if reggae.config.perModule is true, generates one per module
-Target[] objectFiles(in string[] srcFiles, in string flags = "",
+Target[] dlangPackageObjectFiles(in string[] srcFiles, in string flags = "",
                      in string[] importPaths = [], in string[] stringImportPaths = [],
                      in string projDir = "$project") @safe pure {
     import reggae.config;
-    auto func = options.perModule ? &objectFilesPerModule : &objectFilesPerPackage;
+    auto func = options.perModule ? &dlangPackageObjectFilesPerModule : &dlangPackageObjectFilesPerPackage;
     return func(srcFiles, flags, importPaths, stringImportPaths, projDir);
 }
 
-Target[] objectFilesPerPackage(in string[] srcFiles, in string flags = "",
+Target[] dlangPackageObjectFilesPerPackage(in string[] srcFiles, in string flags = "",
                                in string[] importPaths = [], in string[] stringImportPaths = [],
                                in string projDir = "$project") @trusted pure {
 
@@ -49,10 +37,9 @@ Target[] objectFilesPerPackage(in string[] srcFiles, in string flags = "",
                                                a.map!(a => Target(a)).array)).array;
 }
 
-Target[] objectFilesPerModule(in string[] srcFiles, in string flags = "",
+Target[] dlangPackageObjectFilesPerModule(in string[] srcFiles, in string flags = "",
                               in string[] importPaths = [], in string[] stringImportPaths = [],
                               in string projDir = "$project") @trusted pure {
-
     return srcFiles.map!(a => objectFile(const SourceFile(a),
                                          const Flags(flags),
                                          const ImportPaths(importPaths),
@@ -62,59 +49,64 @@ Target[] objectFilesPerModule(in string[] srcFiles, in string flags = "",
 
 
 /**
- Currently only works for D. This convenience rule builds a D executable, automatically
+ Currently only works for D. This convenience rule builds a D scriptlike, automatically
  calculating which files must be compiled in a similar way to rdmd.
  All paths are relative to projectPath.
  This template function is provided as a wrapper around the regular runtime version
  below so it can be aliased without trying to call it at runtime. Basically, it's a
- way to use the runtime executable without having define a function in reggaefile.d,
+ way to use the runtime scriptlike without having define a function in reggaefile.d,
  i.e.:
  $(D
- alias myApp = executable!(...);
+ alias myApp = scriptlike!(...);
  mixin build!(myApp);
  )
  vs.
  $(D
- Build myBuld() { return executable(..); }
+ Build myBuld() { return scriptlike(..); }
  )
  */
-Target executable(App app,
+Target scriptlike(App app,
                   Flags flags = Flags(),
                   ImportPaths importPaths = ImportPaths(),
                   StringImportPaths stringImportPaths = StringImportPaths(),
                   alias linkWithFunction = () { return cast(Target[])[];})
     () @trusted {
     auto linkWith = linkWithFunction();
-    return executable(app, flags, importPaths, stringImportPaths, linkWith);
+    import reggae.config;
+    return scriptlike(options.projectPath, app, flags, importPaths, stringImportPaths, linkWith);
 }
 
 
-//regular runtime version of executable
+//regular runtime version of scriptlike
 //all paths relative to projectPath
 //@trusted because of .array
-Target executable(in App app, in Flags flags,
+Target scriptlike(in string projectPath,
+                  in App app, in Flags flags,
                   in ImportPaths importPaths,
                   in StringImportPaths stringImportPaths,
                   in Target[] linkWith) @trusted {
 
-    if(getLanguage(app.srcFileName) != Language.D)
-        throw new Exception("'executable' rule only works with D files");
+    if(getLanguage(app.srcFileName.value) != Language.D)
+        throw new Exception("'scriptlike' rule only works with D files");
 
-    auto mainObj = objectFile(SourceFile(app.srcFileName), flags, importPaths, stringImportPaths);
-    const output = runDCompiler(buildPath(options.projectPath, app.srcFileName), flags.value,
+    auto mainObj = objectFile(SourceFile(app.srcFileName.value), flags, importPaths, stringImportPaths);
+    const output = runDCompiler(projectPath, buildPath(projectPath, app.srcFileName.value), flags.value,
                                 importPaths.value, stringImportPaths.value);
 
     const files = dMainDepSrcs(output).map!(a => a.removeProjectPath).array;
-    const dependencies = [mainObj] ~ objectFiles(files, flags.value,
-                                                 importPaths.value, stringImportPaths.value);
+    const dependencies = [mainObj] ~ dlangPackageObjectFiles(files, flags.value,
+                                                             importPaths.value, stringImportPaths.value);
 
-    return link(ExeName(app.exeFileName), dependencies ~ linkWith);
+    return link(ExeName(app.exeFileName.value), dependencies ~ linkWith);
 }
 
 
 //@trusted because of splitter
-private auto runDCompiler(in string srcFileName, in string flags,
-                          in string[] importPaths, in string[] stringImportPaths) @trusted {
+private auto runDCompiler(in string projectPath,
+                          in string srcFileName,
+                          in string flags,
+                          in string[] importPaths,
+                          in string[] stringImportPaths) @trusted {
 
     import std.process: execute;
     import std.exception: enforce;
@@ -122,10 +114,10 @@ private auto runDCompiler(in string srcFileName, in string flags,
 
     immutable compiler = "dmd";
     const compArgs = [compiler] ~ flags.splitter.array ~
-        importPaths.map!(a => "-I" ~ buildPath(options.projectPath, a)).array ~
-        stringImportPaths.map!(a => "-J" ~ buildPath(options.projectPath, a)).array ~
+        importPaths.map!(a => "-I" ~ buildPath(projectPath, a)).array ~
+        stringImportPaths.map!(a => "-J" ~ buildPath(projectPath, a)).array ~
         ["-o-", "-v", "-c", srcFileName];
     const compRes = execute(compArgs);
-    enforce(compRes.status == 0, text("executable could not run ", compArgs.join(" "), ":\n", compRes.output));
+    enforce(compRes.status == 0, text("scriptlike could not run ", compArgs.join(" "), ":\n", compRes.output));
     return compRes.output;
 }

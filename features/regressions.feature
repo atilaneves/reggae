@@ -53,7 +53,7 @@ Feature: Regressions
       Given a file named "project/reggaefile.d" with:
         """
         import reggae;
-        alias app = executable!(App("src/main.d", "$builddir/myapp"),
+        alias app = scriptlike!(App(SourceFileName("src/main.d"), BinaryFileName("$builddir/myapp")),
                                 Flags("-g -debug"),
                                 ImportPaths(["/path/to/imports"])
                                 );

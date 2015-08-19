@@ -17,7 +17,7 @@ version(minimal) {
     /* It's also possible for reggae to build itself with the build description below, but
       it's so ourobouros that it's always rebuilt. It works, though.
 
-      alias main = executable!(App("src/reggae/reggae_main.d", "bin/reggae"),
+      alias main = scriptlike!(App(SourceFileName("src/reggae/reggae_main.d"), BinaryFileName("bin/reggae")),
                                Flags("-version=minimal"),
                                ImportPaths(["src", "payload"]),
                                StringImportPaths(["payload/reggae"]));
@@ -29,7 +29,7 @@ version(minimal) {
 
     //the actual reggae binary
     //could also be dubConfigurationTarget(ExeName("reggae"), Configuration("executable"))
-    //or use executable to figure out dependencies itself
+    //or use scriptlike to figure out dependencies itself
     alias main = dubDefaultTargetWithFlags!(Flags("-g -debug"));
 
     //the unit test binary

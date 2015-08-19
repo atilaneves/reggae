@@ -22,6 +22,12 @@ struct Options {
     bool oldNinja;
     string[string] userVars;
 
+    Options dup() @safe pure const nothrow {
+        return Options(backend,
+                       projectPath, dflags, ranFromPath, cCompiler, cppCompiler, dCompiler,
+                       noFetch, help, perModule, isDubProject, oldNinja);
+    }
+
     //finished setup
     void finalize() @safe{
         ranFromPath = thisExePath();
@@ -43,8 +49,11 @@ struct Options {
     }
 
     string reggaeFilePath() @safe const {
-        immutable regular = projectBuildFile;
-        if(regular.exists) return regular;
+        immutable dlangFile = projectBuildFile;
+        if(dlangFile.exists) return dlangFile;
+        immutable pythonFile = buildPath(projectPath, "reggaefile.py");
+        if(pythonFile.exists) return pythonFile;
+
         immutable path = isDubProject ? "" : projectPath;
         return buildPath(path, "reggaefile.d").absolutePath;
     }
@@ -86,6 +95,11 @@ struct Options {
         args ~= projectPath;
 
         return args;
+    }
+
+    bool isScriptBuild() @safe const {
+        import reggae.rules.common: getLanguage, Language;
+        return getLanguage(reggaeFilePath) != Language.D;
     }
 }
 

@@ -32,7 +32,7 @@ Feature: Using executable for a C++ project
     And a file named "proj/reggaefile.d" with:
       """
       import reggae;
-      alias app = executable!(App(`main.cpp`, `app`),
+      alias app = scriptlike!(App(SourceFileName(`main.cpp`), BinaryFileName(`app`)),
                               Flags(`-g -O0`),
                               IncludePaths([`.`]));
       mixin build!app;
@@ -43,5 +43,5 @@ Feature: Using executable for a C++ project
       Given I run `reggae -b ninja proj`
       Then it should fail with:
         """
-        'executable' rule only works with D files
+        'scriptlike' rule only works with D files
         """

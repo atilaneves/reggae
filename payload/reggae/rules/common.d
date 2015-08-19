@@ -193,20 +193,20 @@ string[] sourcesToFileNames(in string projectPath,
     import std.array: array;
     import std.traits: isCallable;
 
-    DirEntry[] modules;
+    DirEntry[] files;
     foreach(dir; srcDirs.filter!(a => !excDirs.canFind(a)).map!(a => buildPath(projectPath, a))) {
         enforce(isDir(dir), dir ~ " is not a directory name");
         auto entries = dirEntries(dir, SpanMode.depth);
         auto normalised = entries.map!(a => DirEntry(buildNormalizedPath(a)));
 
-        modules ~= normalised.array;
+        files ~= normalised.array;
     }
 
     foreach(module_; srcFiles) {
-        modules ~= DirEntry(buildNormalizedPath(buildPath(projectPath, module_)));
+        files ~= DirEntry(buildNormalizedPath(buildPath(projectPath, module_)));
     }
 
-    return modules.
+    return files.
         map!(a => removeProjectPath(projectPath, a.name)).
         filter!(a => !excFiles.canFind(a)).
         filter!(a => a != "reggaefile.d").

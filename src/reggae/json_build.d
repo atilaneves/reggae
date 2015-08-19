@@ -10,15 +10,18 @@ import std.algorithm;
 import std.array;
 import std.conv;
 
+
 enum JsonCommandType {
     shell,
     link,
 }
 
+
 enum JsonDependencyType {
     fixed,
     dynamic,
 }
+
 
 enum JsonFuncName {
     objectFiles,
@@ -85,23 +88,31 @@ private Target[] callDepsFunc(in string projectPath, in JSONValue json) {
     final switch(func) {
     case JsonFuncName.objectFiles:
         return objectFiles(projectPath,
-                           json.object["src_dirs"].array.map!(a => a.str).array,
-                           json.object["exclude_dirs"].array.map!(a => a.str).array,
-                           json.object["src_files"].array.map!(a => a.str).array,
-                           json.object["exclude_files"].array.map!(a => a.str).array,
-                           json.object["flags"].str,
-                           json.object["includes"].array.map!(a => a.str).array,
-                           json.object["string_imports"].array.map!(a => a.str).array);
+                           strings(json, "src_dirs"),
+                           strings(json, "exclude_dirs"),
+                           strings(json, "src_files"),
+                           strings(json, "exclude_files"),
+                           stringVal(json, "flags"),
+                           strings(json, "includes"),
+                           strings(json, "string_imports"));
     case JsonFuncName.staticLibrary:
         return staticLibrary(projectPath,
-                             json.object["name"].str,
-                             json.object["src_dirs"].array.map!(a => a.str).array,
-                             json.object["exclude_dirs"].array.map!(a => a.str).array,
-                             json.object["src_files"].array.map!(a => a.str).array,
-                             json.object["exclude_files"].array.map!(a => a.str).array,
-                             json.object["flags"].str,
-                             json.object["includes"].array.map!(a => a.str).array,
-                             json.object["string_imports"].array.map!(a => a.str).array);
+                             stringVal(json, "name"),
+                             strings(json, "src_dirs"),
+                             strings(json, "exclude_dirs"),
+                             strings(json, "src_files"),
+                             strings(json, "exclude_files"),
+                             stringVal(json, "flags"),
+                             strings(json, "includes"),
+                             strings(json, "string_imports"));
 
     }
+}
+
+private const(string)[] strings(in JSONValue json, in string key) {
+    return json.object[key].array.map!(a => a.str).array;
+}
+
+private const(string) stringVal(in JSONValue json, in string key) {
+    return json.object[key].str;
 }

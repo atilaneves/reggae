@@ -64,7 +64,7 @@ void run(in Options options) {
 
     immutable pythonFile = buildPath(options.projectPath, "reggaefile.py");
     if(pythonFile.exists) {
-        python(options);
+        jsonBuild(options);
         return;
     }
 
@@ -72,7 +72,8 @@ void run(in Options options) {
     createBuild(options);
 }
 
-void python(in Options options) {
+//get JSON description of the build from a scripting language
+void jsonBuild(in Options options) {
     enforce(options.backend != Backend.binary, "Binary backend not supported via JSON");
     immutable pythonArgs = ["python", "-m", "reggae.json", options.projectPath];
     immutable res = execute(pythonArgs);

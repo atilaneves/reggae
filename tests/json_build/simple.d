@@ -11,8 +11,14 @@ immutable fooObjJson = `
   {
     "outputs": ["foo.o"],
     "command": {"type": "shell", "cmd": "dmd -of$out -c $in"},
-    "dependencies": [{"outputs": ["foo.d"], "command": {}, "dependencies": [], "implicits": []}],
-    "implicits": []
+    "dependencies": {
+        "type": "fixed",
+        "targets": [
+            {"outputs": ["foo.d"],
+             "command": {},
+             "dependencies": {"type": "fixed", "targets": []},
+             "implicits": {"type": "fixed", "targets": []}}]},
+    "implicits": {"type": "fixed", "targets": []}
   }
 ]`;
 

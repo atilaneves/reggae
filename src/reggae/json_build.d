@@ -22,20 +22,36 @@ Build jsonToBuild(in string jsonString) {
 
 
 private Target jsonToTarget(in JSONValue json) pure {
-    if(json.object["dependencies"].array.empty && json.object["implicits"].array.empty)
+    immutable depsType = json.object["dependencies"].object["type"].str.to!JsonDependencyType;
+    immutable impsType = json.object["implicits"].object["type"].str.to!JsonDependencyType;
+
+    if(depsType != JsonDependencyType.fixed || impsType != JsonDependencyType.fixed)
+        throw new Exception("Only fixed");
+
+
+    if(isLeaf(json))
         return Target(json.object["outputs"].array.map!(a => a.str).array,
                       "",
                       []);
 
     return Target(json.object["outputs"].array.map!(a => a.str).array,
                   jsonToCommand(json.object["command"]),
-                  json.object["dependencies"].array.map!(a => jsonToTarget(a)).array,
-                  json.object["implicits"].array.map!(a => jsonToTarget(a)).array);
+                  json.object["dependencies"].object["targets"].array.map!(a => jsonToTarget(a)).array,
+                  json.object["implicits"].object["targets"].array.map!(a => jsonToTarget(a)).array);
+}
+
+private bool isLeaf(in JSONValue json) pure {
+    return json.object["dependencies"].object["targets"].array.empty &&
+        json.object["implicits"].object["targets"].array.empty;
 }
 
 enum JsonCommandType {
     shell,
     link,
+}
+
+enum JsonDependencyType {
+    fixed,
 }
 
 private Command jsonToCommand(in JSONValue json) pure {

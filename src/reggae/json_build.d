@@ -22,6 +22,7 @@ enum JsonDependencyType {
 
 enum JsonFuncName {
     objectFiles,
+    staticLibrary,
 }
 
 
@@ -91,6 +92,16 @@ private Target[] callDepsFunc(in string projectPath, in JSONValue json) {
                            json.object["flags"].str,
                            json.object["includes"].array.map!(a => a.str).array,
                            json.object["string_imports"].array.map!(a => a.str).array);
+    case JsonFuncName.staticLibrary:
+        return staticLibrary(projectPath,
+                             json.object["name"].str,
+                             json.object["src_dirs"].array.map!(a => a.str).array,
+                             json.object["exclude_dirs"].array.map!(a => a.str).array,
+                             json.object["src_files"].array.map!(a => a.str).array,
+                             json.object["exclude_files"].array.map!(a => a.str).array,
+                             json.object["flags"].str,
+                             json.object["includes"].array.map!(a => a.str).array,
+                             json.object["string_imports"].array.map!(a => a.str).array);
 
     }
 }

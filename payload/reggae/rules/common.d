@@ -179,14 +179,11 @@ string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
 }
 
 //run-time version
-Target[] objectFiles(in string projectPath,
-                     in string[] srcDirs,
-                     in string[] excDirs,
-                     in string[] srcFiles,
-                     in string[] excFiles,
-                     in string flags,
-                     in string[] includes,
-                     in string[] stringImports) @trusted {
+string[] sourcesToFileNames(in string projectPath,
+                            in string[] srcDirs,
+                            in string[] excDirs,
+                            in string[] srcFiles,
+                            in string[] excFiles) @trusted {
 
 
 
@@ -209,16 +206,50 @@ Target[] objectFiles(in string projectPath,
         modules ~= DirEntry(buildNormalizedPath(buildPath(projectPath, module_)));
     }
 
-    const allFiles = modules.
+    return modules.
         map!(a => removeProjectPath(projectPath, a.name)).
         filter!(a => !excFiles.canFind(a)).
         filter!(a => a != "reggaefile.d").
         array;
+}
 
-    return srcFilesToObjectTargets(allFiles,
+
+//run-time version
+Target[] objectFiles(in string projectPath,
+                     in string[] srcDirs,
+                     in string[] excDirs,
+                     in string[] srcFiles,
+                     in string[] excFiles,
+                     in string flags,
+                     in string[] includes,
+                     in string[] stringImports) @trusted {
+
+    return srcFilesToObjectTargets(sourcesToFileNames(projectPath, srcDirs, excDirs, srcFiles, excFiles),
                                    Flags(flags),
                                    const ImportPaths(includes),
                                    const StringImportPaths(stringImports));
+}
+
+//run-time version
+Target[] staticLibrary(in string projectPath,
+                       in string name,
+                       in string[] srcDirs,
+                       in string[] excDirs,
+                       in string[] srcFiles,
+                       in string[] excFiles,
+                       in string flags,
+                       in string[] includes,
+                       in string[] stringImports) @trusted {
+
+
+    version(Posix) {}
+    else
+        static assert(false, "Can only create static libraries on Posix");
+
+    const allFiles = sourcesToFileNames(projectPath, srcDirs, excDirs, srcFiles, excFiles);
+    return [Target([buildPath("$builddir", name)],
+                   "ar rcs $out $in",
+                   objectFiles(projectPath, srcDirs, excDirs, srcFiles, excFiles, flags, includes, stringImports))];
 }
 
 

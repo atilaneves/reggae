@@ -6,5 +6,5 @@ import reggae.json_build;
 import unit_threaded;
 
 
-void testFoo() {
+void testLink() {
 }

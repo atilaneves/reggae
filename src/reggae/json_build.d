@@ -18,14 +18,19 @@ Build jsonToBuild(in string jsonString) {
 
 
 
-private Target jsonToTarget(in JSONValue json) {
+private Target jsonToTarget(in JSONValue json) pure {
     if(json.object["dependencies"].array.empty && json.object["implicits"].array.empty)
         return Target(json.object["outputs"].array.map!(a => a.str).array,
                       "",
                       []);
 
     return Target(json.object["outputs"].array.map!(a => a.str).array,
-                  json.object["command"].str,
+                  jsonToCommand(json.object["command"]),
                   json.object["dependencies"].array.map!(a => jsonToTarget(a)).array,
                   json.object["implicits"].array.map!(a => jsonToTarget(a)).array);
+}
+
+private Command jsonToCommand(in JSONValue json) pure {
+    if(json.object["type"].str != "shell") throw new Exception("Only shell for now");
+    return Command(json.object["cmd"].str);
 }

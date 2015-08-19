@@ -6,14 +6,12 @@ import reggae.json_build;
 import unit_threaded;
 
 
-
-
 immutable fooObjJson = `
 [
   {
     "outputs": ["foo.o"],
-    "command": "dmd -of$out -c $in",
-    "dependencies": [{"outputs": ["foo.d"], "command": "", "dependencies": [], "implicits": []}],
+    "command": {"type": "shell", "cmd": "dmd -of$out -c $in"},
+    "dependencies": [{"outputs": ["foo.d"], "command": {}, "dependencies": [], "implicits": []}],
     "implicits": []
   }
 ]`;

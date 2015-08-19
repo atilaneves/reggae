@@ -10,6 +10,10 @@ import std.algorithm;
 import std.array;
 import std.conv;
 
+enum JsonTargetType {
+    fixed,
+    dynamic,
+}
 
 enum JsonCommandType {
     shell,
@@ -41,6 +45,9 @@ Build jsonToBuild(in string projectPath, in string jsonString) {
 
 
 private Target jsonToTarget(in string projectPath, in JSONValue json) {
+    if(json.object["type"].str.to!JsonTargetType == JsonTargetType.dynamic)
+        return callTargetFunc(projectPath, json);
+
     immutable depsType = json.object["dependencies"].object["type"].str.to!JsonDependencyType;
     const dependencies = depsType == JsonDependencyType.fixed
         ? json.object["dependencies"].object["targets"].array.map!(a => jsonToTarget(projectPath, a)).array
@@ -114,4 +121,21 @@ private const(string)[] strings(in JSONValue json, in string key) {
 
 private const(string) stringVal(in JSONValue json, in string key) {
     return json.object[key].str;
+}
+
+
+private Target callTargetFunc(in string projectPath, in JSONValue json) {
+    import std.exception;
+    import reggae.rules.d;
+    import reggae.types;
+
+    enforce(json.object["func"].str == "scriptlike", "Only scriptlike is supported for Targets");
+
+    return scriptlike(projectPath,
+                      App(SourceFileName(stringVal(json, "src_name")),
+                          BinaryFileName(stringVal(json, "exe_name"))),
+                      Flags(stringVal(json, "flags")),
+                      const ImportPaths(strings(json, "includes")),
+                      const StringImportPaths(strings(json, "string_imports")),
+                      []);
 }

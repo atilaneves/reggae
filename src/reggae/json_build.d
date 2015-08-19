@@ -27,7 +27,7 @@ enum JsonDependencyType {
 }
 
 
-enum JsonFuncName {
+enum JsonDepsFuncName {
     objectFiles,
     staticLibrary,
 }
@@ -91,9 +91,9 @@ private Target[] getDeps(in string projectPath, in JSONValue json) {
 }
 
 private Target[] callDepsFunc(in string projectPath, in JSONValue json) {
-    immutable func = json.object["func"].str.to!JsonFuncName;
+    immutable func = json.object["func"].str.to!JsonDepsFuncName;
     final switch(func) {
-    case JsonFuncName.objectFiles:
+    case JsonDepsFuncName.objectFiles:
         return objectFiles(projectPath,
                            strings(json, "src_dirs"),
                            strings(json, "exclude_dirs"),
@@ -102,7 +102,7 @@ private Target[] callDepsFunc(in string projectPath, in JSONValue json) {
                            stringVal(json, "flags"),
                            strings(json, "includes"),
                            strings(json, "string_imports"));
-    case JsonFuncName.staticLibrary:
+    case JsonDepsFuncName.staticLibrary:
         return staticLibrary(projectPath,
                              stringVal(json, "name"),
                              strings(json, "src_dirs"),

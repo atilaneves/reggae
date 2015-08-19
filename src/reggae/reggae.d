@@ -76,7 +76,7 @@ void run(in Options options) {
 //return true if no D files are present
 bool jsonBuild(in Options options) {
     enforce(options.backend != Backend.binary, "Binary backend not supported via JSON");
-    immutable pythonArgs = ["python", "-m", "reggae.json", options.projectPath];
+    immutable pythonArgs = ["python", "-m", "reggae.json_build", options.projectPath];
     immutable res = execute(pythonArgs);
     enforce(res.status == 0, text("Could not execute ", pythonArgs.join(" "), ":\n", res.output));
 

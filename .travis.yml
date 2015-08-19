@@ -15,8 +15,12 @@ install:
   - dub build
   - export PATH=$PWD/bin:$PATH
   - cd ..
+  - git clone https://github.com/atilaneves/reggae-python
+  - cd reggae-python
+  - export PYTHONPATH=$PWD
+  - cd ..
 
 script:
   - ./bootstrap.sh make
   - bin/ut
-  - cucumber --tags ~@tup --tags ~@python
+  - cucumber --tags ~@tup

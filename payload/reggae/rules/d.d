@@ -72,31 +72,10 @@ Target scriptlike(App app,
                   alias linkWithFunction = () { return cast(Target[])[];})
     () @trusted {
     auto linkWith = linkWithFunction();
-    return scriptlike(app, flags, importPaths, stringImportPaths, linkWith);
+    import reggae.config;
+    return scriptlike(options.projectPath, app, flags, importPaths, stringImportPaths, linkWith);
 }
 
-
-//regular runtime version of scriptlike
-//all paths relative to projectPath
-//@trusted because of .array
-Target scriptlike(in App app, in Flags flags,
-                  in ImportPaths importPaths,
-                  in StringImportPaths stringImportPaths,
-                  in Target[] linkWith) @trusted {
-
-    if(getLanguage(app.srcFileName.value) != Language.D)
-        throw new Exception("'scriptlike' rule only works with D files");
-
-    auto mainObj = objectFile(SourceFile(app.srcFileName.value), flags, importPaths, stringImportPaths);
-    const output = runDCompiler(buildPath(options.projectPath, app.srcFileName.value), flags.value,
-                                importPaths.value, stringImportPaths.value);
-
-    const files = dMainDepSrcs(output).map!(a => a.removeProjectPath).array;
-    const dependencies = [mainObj] ~ dlangPackageObjectFiles(files, flags.value,
-                                                             importPaths.value, stringImportPaths.value);
-
-    return link(ExeName(app.exeFileName.value), dependencies ~ linkWith);
-}
 
 //regular runtime version of scriptlike
 //all paths relative to projectPath
@@ -111,7 +90,7 @@ Target scriptlike(in string projectPath,
         throw new Exception("'scriptlike' rule only works with D files");
 
     auto mainObj = objectFile(SourceFile(app.srcFileName.value), flags, importPaths, stringImportPaths);
-    const output = runDCompiler(buildPath(projectPath, app.srcFileName.value), flags.value,
+    const output = runDCompiler(projectPath, buildPath(projectPath, app.srcFileName.value), flags.value,
                                 importPaths.value, stringImportPaths.value);
 
     const files = dMainDepSrcs(output).map!(a => a.removeProjectPath).array;
@@ -119,25 +98,6 @@ Target scriptlike(in string projectPath,
                                                              importPaths.value, stringImportPaths.value);
 
     return link(ExeName(app.exeFileName.value), dependencies ~ linkWith);
-}
-
-
-//@trusted because of splitter
-private auto runDCompiler(in string srcFileName, in string flags,
-                          in string[] importPaths, in string[] stringImportPaths) @trusted {
-
-    import std.process: execute;
-    import std.exception: enforce;
-    import std.conv:text;
-
-    immutable compiler = "dmd";
-    const compArgs = [compiler] ~ flags.splitter.array ~
-        importPaths.map!(a => "-I" ~ buildPath(options.projectPath, a)).array ~
-        stringImportPaths.map!(a => "-J" ~ buildPath(options.projectPath, a)).array ~
-        ["-o-", "-v", "-c", srcFileName];
-    const compRes = execute(compArgs);
-    enforce(compRes.status == 0, text("scriptlike could not run ", compArgs.join(" "), ":\n", compRes.output));
-    return compRes.output;
 }
 
 

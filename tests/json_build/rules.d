@@ -6,19 +6,23 @@ import reggae.json_build;
 import unit_threaded;
 
 
+@HiddenTest
 void testLink() {
     immutable jsonStr = `
-        [{"command": {"type": "link", "flags": "-L-M"},
+        [{"type": "fixed",
+          "command": {"type": "link", "flags": "-L-M"},
           "outputs": ["myapp"],
           "dependencies": {
               "type": "fixed",
               "targets":
-              [{"command": {"type": "shell", "cmd":
+              [{"type": "fixed",
+                "command": {"type": "shell", "cmd":
                             "dmd -I$project/src -c $in -of$out"},
                 "outputs": ["main.o"],
                 "dependencies": {"type": "fixed",
                                  "targets": [
-                                     {"command": {}, "outputs": ["src/main.d"],
+                                     {"type": "fixed",
+                                      "command": {}, "outputs": ["src/main.d"],
                                       "dependencies": {
                                           "type": "fixed",
                                           "targets": []},
@@ -28,13 +32,15 @@ void testLink() {
                 "implicits": {
                     "type": "fixed",
                     "targets": []}},
-               {"command": {"type": "shell", "cmd":
+               {"type": "fixed",
+                "command": {"type": "shell", "cmd":
                             "dmd -c $in -of$out"},
                 "outputs": ["maths.o"],
                 "dependencies": {
                     "type": "fixed",
                     "targets": [
-                        {"command": {}, "outputs": ["src/maths.d"],
+                        {"type": "fixed",
+                         "command": {}, "outputs": ["src/maths.d"],
                          "dependencies": {
                              "type": "fixed",
                              "targets": []},

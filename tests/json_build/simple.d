@@ -9,12 +9,14 @@ import unit_threaded;
 immutable fooObjJson = `
 [
   {
+    "type": "fixed",
     "outputs": ["foo.o"],
     "command": {"type": "shell", "cmd": "dmd -of$out -c $in"},
     "dependencies": {
         "type": "fixed",
         "targets": [
-            {"outputs": ["foo.d"],
+            {"type": "fixed",
+             "outputs": ["foo.d"],
              "command": {},
              "dependencies": {"type": "fixed", "targets": []},
              "implicits": {"type": "fixed", "targets": []}}]},

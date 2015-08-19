@@ -64,8 +64,8 @@ void run(in Options options) {
 
     immutable pythonFile = buildPath(options.projectPath, "reggaefile.py");
     if(pythonFile.exists) {
-        jsonBuild(options);
-        return;
+        immutable haveToReturn = jsonBuild(options);
+        if(haveToReturn) return;
     }
 
     maybeCreateReggaefile(options);
@@ -73,7 +73,8 @@ void run(in Options options) {
 }
 
 //get JSON description of the build from a scripting language
-void jsonBuild(in Options options) {
+//return true if no D files are present
+bool jsonBuild(in Options options) {
     enforce(options.backend != Backend.binary, "Binary backend not supported via JSON");
     immutable pythonArgs = ["python", "-m", "reggae.json", options.projectPath];
     immutable res = execute(pythonArgs);
@@ -81,7 +82,13 @@ void jsonBuild(in Options options) {
 
     import reggae.json_build;
     import reggae.buildgen;
-    generateBuild(jsonToBuild(options.projectPath, res.output), options);
+    import reggae.rules.common: Language;
+
+    const build = jsonToBuild(options.projectPath, res.output);
+    generateBuild(build, options);
+
+    if(build.targets.canFind!(a => a.getLanguage == Language.D)) return false;
+    return true; //exit early
 }
 
 enum coreFiles = [
@@ -111,8 +118,7 @@ private string[] fileNames() @safe pure nothrow {
 
 private void createBuild(in Options options) {
 
-    immutable reggaefilePath = options.reggaeFilePath;
-    enforce(reggaefilePath.exists, text("Could not find ", reggaefilePath));
+    enforce(options.reggaeFilePath.exists, text("Could not find ", options.reggaeFilePath));
 
     //write out the library source files to be compiled with the user's
     //build description
@@ -123,6 +129,9 @@ private void createBuild(in Options options) {
 
     //binary backend has no build generator, it _is_ the build
     if(options.backend == Backend.binary) return;
+
+    //only got here to build .dcompile
+    if(options.isScriptBuild) return;
 
     //actually run the build generator
     writeln("[Reggae] Running the created binary to generate the build");
@@ -151,7 +160,9 @@ private auto compileBinaries(in Options options) {
 
     static struct Binary { string name; const(string)[] cmd; }
 
-    auto binaries = [Binary(buildGenName, compileBuildGenCmd), Binary(dcompileName, dcompileCmd)];
+    auto binaries = options.isScriptBuild
+        ? [Binary(dcompileName, dcompileCmd)]
+        : [Binary(buildGenName, compileBuildGenCmd), Binary(dcompileName, dcompileCmd)];
     foreach(bin; binaries) writeln("[Reggae] Compiling metabuild binary ", bin.name);
 
     import std.parallelism;

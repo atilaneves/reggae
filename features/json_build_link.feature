@@ -14,23 +14,20 @@ Feature: Foreign language integration - link
                  flags='-L-M')
       bld = Build(app)
       """
-    And a file named "path/to/src/main.cpp" with:
+    And a file named "path/to/src/main.d" with:
       """
-      #include <iostream>
-      #include <cstdlib>
-      using namespace std;
+      import maths;
+      import std.stdio;
+      import std.conv;
 
-      extern int adder(int, int);
-      extern int prodder(int, int);
-
-      int main(int argc, char* argv[]) {
-          const int a = atoi(argv[1]);
-          const int b = atoi(argv[2]);
-          cout << "The sum     of " << a << " and " << b << " is " << adder(a, b) << endl;
-          cout << "The product of " << a << " and " << b << " is " << prodder(a, b) << endl;
+      void main(string[] args) {
+          const a = args[1].to!int;
+          const b = args[2].to!int;
+          writeln(`The sum     of `,  a , ` and `,  b , ` is `,  adder(a, b));
+          writeln(`The product of `,  a , ` and `,  b , ` is `,  prodder(a, b));
       }
       """
-    And a file named "path/to/src/maths.cpp" with:
+    And a file named "path/to/src/maths.d" with:
       """
       int adder(int a, int b) { return a + b; }
       int prodder(int a, int b) { return a * b; }

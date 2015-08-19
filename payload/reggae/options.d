@@ -96,6 +96,11 @@ struct Options {
 
         return args;
     }
+
+    bool isScriptBuild() @safe const {
+        import reggae.rules.common: getLanguage, Language;
+        return getLanguage(reggaeFilePath) != Language.D;
+    }
 }
 
 

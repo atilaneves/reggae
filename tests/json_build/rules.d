@@ -53,6 +53,6 @@ void testLink() {
     const mathsObj = Target("maths.o", "dmd -c $in -of$out", Target("src/maths.d"));
     const app = link(ExeName("myapp"), [mainObj, mathsObj], Flags("-L-M"));
 
-    jsonToBuild(jsonStr).shouldEqual(
+    jsonToBuild("", jsonStr).shouldEqual(
         Build(app));
 }

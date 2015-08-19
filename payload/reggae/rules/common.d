@@ -178,6 +178,50 @@ string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
         array;
 }
 
+//run-time version
+Target[] objectFiles(in string projectPath,
+                     in string[] srcDirs,
+                     in string[] excDirs,
+                     in string[] srcFiles,
+                     in string[] excFiles,
+                     in string flags,
+                     in string[] includes,
+                     in string[] stringImports) @trusted {
+
+
+
+    import std.exception: enforce;
+    import std.file;
+    import std.path: buildNormalizedPath, buildPath;
+    import std.array: array;
+    import std.traits: isCallable;
+
+    DirEntry[] modules;
+    foreach(dir; srcDirs.filter!(a => !excDirs.canFind(a)).map!(a => buildPath(projectPath, a))) {
+        enforce(isDir(dir), dir ~ " is not a directory name");
+        auto entries = dirEntries(dir, SpanMode.depth);
+        auto normalised = entries.map!(a => DirEntry(buildNormalizedPath(a)));
+
+        modules ~= normalised.array;
+    }
+
+    foreach(module_; srcFiles) {
+        modules ~= DirEntry(buildNormalizedPath(buildPath(projectPath, module_)));
+    }
+
+    const allFiles = modules.
+        map!(a => removeProjectPath(projectPath, a.name)).
+        filter!(a => !excFiles.canFind(a)).
+        filter!(a => a != "reggaefile.d").
+        array;
+
+    return srcFilesToObjectTargets(allFiles,
+                                   Flags(flags),
+                                   const ImportPaths(includes),
+                                   const StringImportPaths(stringImports));
+}
+
+
 private Target[] srcFilesToObjectTargets(in string[] srcFiles,
                                          in Flags flags,
                                          in ImportPaths includes,
@@ -213,6 +257,13 @@ string removeProjectPath(in string path) pure {
     //relativePath is @system
     return () @trusted { return path.absolutePath.relativePath(options.projectPath.absolutePath); }();
 }
+
+string removeProjectPath(in string projectPath, in string path) pure {
+    import std.path: relativePath, absolutePath;
+    //relativePath is @system
+    return () @trusted { return path.absolutePath.relativePath(projectPath.absolutePath); }();
+}
+
 
 
 Command compileCommand(in string srcFileName,

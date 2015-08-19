@@ -80,7 +80,7 @@ void python(in Options options) {
 
     import reggae.json_build;
     import reggae.buildgen;
-    generateBuild(jsonToBuild(res.output), options);
+    generateBuild(jsonToBuild(options.projectPath, res.output), options);
 }
 
 enum coreFiles = [

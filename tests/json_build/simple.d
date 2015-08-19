@@ -23,6 +23,6 @@ immutable fooObjJson = `
 ]`;
 
 void testFooObj() {
-    jsonToBuild(fooObjJson).shouldEqual(
+    jsonToBuild("", fooObjJson).shouldEqual(
         Build(Target("foo.o", "dmd -of$out -c $in", Target("foo.d"))));
 }

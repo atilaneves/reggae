@@ -40,7 +40,6 @@ Target[] dlangPackageObjectFilesPerPackage(in string[] srcFiles, in string flags
 Target[] dlangPackageObjectFilesPerModule(in string[] srcFiles, in string flags = "",
                               in string[] importPaths = [], in string[] stringImportPaths = [],
                               in string projDir = "$project") @trusted pure {
-
     return srcFiles.map!(a => objectFile(const SourceFile(a),
                                          const Flags(flags),
                                          const ImportPaths(importPaths),

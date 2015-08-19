@@ -139,5 +139,5 @@ private Target callTargetFunc(in string projectPath, in JSONValue json) {
                       Flags(stringVal(json, "flags")),
                       const ImportPaths(strings(json, "includes")),
                       const StringImportPaths(strings(json, "string_imports")),
-                      []);
+                      getDeps(projectPath, json["link_with"]));
 }

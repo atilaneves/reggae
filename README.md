@@ -74,7 +74,8 @@ build D apps with no external dependencies, this will suffice and is similar to 
 
 There are also other functions and pre-built rules for C and C++ objects. There is no
 HTML documentation yet but the [package file](payload/reggae/package.d) contains the
-relevant DDoc with details. Other subpackages might contain DDoc of their own.
+relevant DDoc with details. Other subpackages might contain DDoc of their own. There is
+[detailed documentation](doc/index.md) in markdown format.
 
 For C and C++, the main high-level rules to use are `targetsFromSourceFiles` and
 `link`, but of course they can also be hand-assembled from `Target` structs. Here is an

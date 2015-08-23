@@ -9,7 +9,7 @@ changes made.
 
 Features
 --------
-* Write readable build descriptions in D or Python
+* Write readable build descriptions in D or [Python](https://github.com/atilaneves/reggae-python).
 * Out-of-tree builds
 * Backends for GNU make, ninja, tup and a custom binary executable.
 * User-defined variables like CMake in order to choose features before compile-time

@@ -9,6 +9,9 @@ Build server? In: list of changed files, out: build.
 Change to using -deps for D dependencies
 Make it work with GDC and LDC
 Code coverage for both UTs and Cucumber
+Unity builds for C/C++
+Compilation database generation
+Distributed/cached buidls?
 
 Refactoring:
   range.d

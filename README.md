@@ -9,9 +9,9 @@ changes made.
 
 Features
 --------
-* Write readable build descriptions in D
+* Write readable build descriptions in D or Python
 * Out-of-tree builds
-* Backends for GNU make, ninja, tup and a binary executable backend.
+* Backends for GNU make, ninja, tup and a custom binary executable.
 * User-defined variables like CMake in order to choose features before compile-time
 * Low-level DAG build descriptions + high-level convenience rules to build C, C++ and D
 * Automatic header/module dependency detection for C, C++ and D

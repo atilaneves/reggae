@@ -1,3 +1,2 @@
-[Basics](basics.md)
-
-[Rules](rules.md)
+* [Basics](basics.md)
+* [Rules](rules.md)

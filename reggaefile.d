@@ -30,7 +30,7 @@ version(minimal) {
     //the actual reggae binary
     //could also be dubConfigurationTarget(ExeName("reggae"), Configuration("executable"))
     //or use scriptlike to figure out dependencies itself
-    alias main = dubDefaultTargetWithFlags!(Flags("-g -debug"));
+    alias main = dubDefaultTarget!(Flags("-g -debug"));
 
     //the unit test binary
     //since it depends on unit-threaded, must use a dub configuration

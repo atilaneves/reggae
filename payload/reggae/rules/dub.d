@@ -15,21 +15,12 @@ static if(isDubProject) {
     import reggae.build;
     import reggae.rules.common;
 
-
-    /**
-     Build dub's default target, i.e. do the same as `dub build`
-     */
-    Target dubDefaultTarget() {
-        return configToDubInfo["default"].mainTarget;
-    }
-
-
     /**
      Identical to $(D dubDefaultTarget) but allows the specification
      of compiler flags (dub describe doesn't output any information)
      on the default compiler flags
     */
-    Target dubDefaultTargetWithFlags(Flags flags = Flags())() {
+    Target dubDefaultTarget(Flags flags = Flags())() {
         return configToDubInfo["default"].mainTarget(flags.value);
     }
 

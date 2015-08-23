@@ -52,9 +52,9 @@ Feature: User-defined variables
                                               `source`));
       alias ut = dubConfigurationTarget!(ExeName(`ut`), Configuration(), Flags(), No.main, utObjs);
       static if(userVars.get(`noUnitTests`, false)) {
-          mixin build!dubDefaultTarget;
+          mixin build!(dubDefaultTarget!());
       } else {
-          mixin build!(dubDefaultTarget, ut);
+          mixin build!(dubDefaultTarget!(), ut);
       }
       """
 

@@ -28,7 +28,7 @@ void createReggaefile(in Options options) {
     writeln("[Reggae] Creating reggaefile.d from dub information");
     auto file = File("reggaefile.d", "w");
     file.writeln("import reggae;");
-    file.writeln("mixin build!dubDefaultTarget;");
+    file.writeln("mixin build!(dubDefaultTarget!());");
 
     if(!options.noFetch) dubFetch(_getDubInfo(options));
 }

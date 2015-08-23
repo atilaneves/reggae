@@ -7,8 +7,8 @@ Distinguish LinkFlags vs CompilerFlags?
 Build server? In: list of changed files, out: build.
 
 Change to using -deps for D dependencies
+Make it work with GDC and LDC
 Code coverage for both UTs and Cucumber
-
 
 Refactoring:
   range.d

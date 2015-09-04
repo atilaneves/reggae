@@ -51,8 +51,13 @@ struct Options {
     string reggaeFilePath() @safe const {
         immutable dlangFile = projectBuildFile;
         if(dlangFile.exists) return dlangFile;
+
         immutable pythonFile = buildPath(projectPath, "reggaefile.py");
         if(pythonFile.exists) return pythonFile;
+
+        immutable rubyFile = buildPath(projectPath, "reggaefile.rb");
+        if(rubyFile.exists) return rubyFile;
+
 
         immutable path = isDubProject ? "" : projectPath;
         return buildPath(path, "reggaefile.d").absolutePath;

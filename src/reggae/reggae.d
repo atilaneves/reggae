@@ -58,13 +58,24 @@ mixin template ReggaeMain() {
     }
 }
 
+enum ScriptingLanguage {
+    python,
+    ruby,
+}
+
 void run(in Options options) {
     if(options.help) return;
     enforce(options.projectPath != "", "A project path must be specified");
 
     immutable pythonFile = buildPath(options.projectPath, "reggaefile.py");
     if(pythonFile.exists) {
-        immutable haveToReturn = jsonBuild(options);
+        immutable haveToReturn = jsonBuild(options, ScriptingLanguage.python);
+        if(haveToReturn) return;
+    }
+
+    immutable rubyFile = buildPath(options.projectPath, "reggaefile.rb");
+    if(rubyFile.exists) {
+        immutable haveToReturn = jsonBuild(options, ScriptingLanguage.ruby);
         if(haveToReturn) return;
     }
 
@@ -74,21 +85,39 @@ void run(in Options options) {
 
 //get JSON description of the build from a scripting language
 //return true if no D files are present
-bool jsonBuild(in Options options) {
+bool jsonBuild(in Options options, in ScriptingLanguage language) {
     enforce(options.backend != Backend.binary, "Binary backend not supported via JSON");
-    immutable pythonArgs = ["python", "-m", "reggae.json_build", options.projectPath];
-    immutable res = execute(pythonArgs);
-    enforce(res.status == 0, text("Could not execute ", pythonArgs.join(" "), ":\n", res.output));
+
+    immutable jsonOutput = getJsonOutput(options, language);
 
     import reggae.json_build;
     import reggae.buildgen;
     import reggae.rules.common: Language;
 
-    const build = jsonToBuild(options.projectPath, res.output);
+    const build = jsonToBuild(options.projectPath, jsonOutput);
     generateBuild(build, options);
 
     if(build.targets.canFind!(a => a.getLanguage == Language.D)) return false;
     return true; //exit early
+}
+
+private string getJsonOutput(in Options options, in ScriptingLanguage language) @safe {
+    string[] args;
+
+    final switch(language) {
+
+    case ScriptingLanguage.python:
+        args = ["python", "-m", "reggae.json_build", options.projectPath];
+        break;
+
+    case ScriptingLanguage.ruby:
+        args = ["ruby", "-S", "-I" ~ options.projectPath, "reggae_json_build.rb"];
+        break;
+    }
+
+    immutable res = execute(args);
+    enforce(res.status == 0, text("Could not execute ", args.join(" "), ":\n", res.output));
+    return res.output;
 }
 
 enum coreFiles = [

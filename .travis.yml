@@ -19,6 +19,11 @@ install:
   - cd reggae-python
   - export PYTHONPATH=$PWD
   - cd ..
+  - git clone https://github.com/atilaneves/reggae-ruby
+  - cd reggae-ruby
+  - export RUBYLIB=$PWD/lib
+  - export PATH=$PATH:$PWD/bin
+  - cd ..
 
 script:
   - ./bootstrap.sh make

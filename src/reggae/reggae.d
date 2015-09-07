@@ -58,24 +58,12 @@ mixin template ReggaeMain() {
     }
 }
 
-enum ScriptingLanguage {
-    python,
-    ruby,
-}
-
 void run(in Options options) {
     if(options.help) return;
     enforce(options.projectPath != "", "A project path must be specified");
 
-    immutable pythonFile = buildPath(options.projectPath, "reggaefile.py");
-    if(pythonFile.exists) {
-        immutable haveToReturn = jsonBuild(options, ScriptingLanguage.python);
-        if(haveToReturn) return;
-    }
-
-    immutable rubyFile = buildPath(options.projectPath, "reggaefile.rb");
-    if(rubyFile.exists) {
-        immutable haveToReturn = jsonBuild(options, ScriptingLanguage.ruby);
+    if(options.reggaeFileLanguage != BuildLanguage.D) {
+        immutable haveToReturn = jsonBuild(options, options.reggaeFileLanguage);
         if(haveToReturn) return;
     }
 
@@ -85,7 +73,7 @@ void run(in Options options) {
 
 //get JSON description of the build from a scripting language
 //return true if no D files are present
-bool jsonBuild(in Options options, in ScriptingLanguage language) {
+bool jsonBuild(in Options options, in BuildLanguage language) {
     enforce(options.backend != Backend.binary, "Binary backend not supported via JSON");
 
     immutable jsonOutput = getJsonOutput(options, language);
@@ -97,27 +85,29 @@ bool jsonBuild(in Options options, in ScriptingLanguage language) {
     const build = jsonToBuild(options.projectPath, jsonOutput);
     generateBuild(build, options);
 
-    if(build.targets.canFind!(a => a.getLanguage == Language.D)) return false;
-    return true; //exit early
+    //true -> exit early
+    return !build.targets.canFind!(a => a.getLanguage == Language.D);
 }
 
-private string getJsonOutput(in Options options, in ScriptingLanguage language) @safe {
-    string[] args;
-
-    final switch(language) {
-
-    case ScriptingLanguage.python:
-        args = ["python", "-m", "reggae.json_build", options.projectPath];
-        break;
-
-    case ScriptingLanguage.ruby:
-        args = ["ruby", "-S", "-I" ~ options.projectPath, "reggae_json_build.rb"];
-        break;
-    }
-
+private string getJsonOutput(in Options options, in BuildLanguage language) @safe {
+    const args = getJsonOutputArgs(options, language);
     immutable res = execute(args);
     enforce(res.status == 0, text("Could not execute ", args.join(" "), ":\n", res.output));
     return res.output;
+}
+
+private string[] getJsonOutputArgs(in Options options, in BuildLanguage language) @safe pure nothrow {
+    final switch(language) {
+
+    case BuildLanguage.D:
+        assert(0, "Cannot obtain JSON build for builds written in D");
+
+    case BuildLanguage.Python:
+        return ["python", "-m", "reggae.json_build", options.projectPath];
+
+    case BuildLanguage.Ruby:
+        return ["ruby", "-S", "-I" ~ options.projectPath, "reggae_json_build.rb"];
+    }
 }
 
 enum coreFiles = [

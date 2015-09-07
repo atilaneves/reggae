@@ -7,6 +7,13 @@ import std.conv: ConvException;
 import std.path: absolutePath, buildPath;
 import std.file: exists;
 
+
+enum BuildLanguage {
+    D,
+    Python,
+    Ruby,
+}
+
 struct Options {
     Backend backend;
     string projectPath;
@@ -105,6 +112,18 @@ struct Options {
     bool isScriptBuild() @safe const {
         import reggae.rules.common: getLanguage, Language;
         return getLanguage(reggaeFilePath) != Language.D;
+    }
+
+    BuildLanguage reggaeFileLanguage() @safe const {
+        import std.algorithm;
+
+        if(reggaeFilePath.endsWith(".d"))
+            return BuildLanguage.D;
+        else if(reggaeFilePath.endsWith(".py"))
+            return BuildLanguage.Python;
+        else if(reggaeFilePath.endsWith(".rb"))
+            return BuildLanguage.Ruby;
+        else throw new Exception("Unknown language for " ~ reggaeFilePath);
     }
 }
 

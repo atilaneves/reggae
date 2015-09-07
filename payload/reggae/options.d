@@ -56,18 +56,34 @@ struct Options {
     }
 
     string reggaeFilePath() @safe const {
-        immutable dlangFile = projectBuildFile;
+        import std.algorithm, std.array, std.exception, std.conv;
+
+        auto langs = [dlangFile, pythonFile, rubyFile].
+            filter!exists.
+            map!(a => reggaeFileLanguage(a)).
+            array;
+
+        enforce(langs.length < 2, text("Reggae builds may only use one language. Found: ",
+                                       langs.map!(to!string).join(", ")));
+
         if(dlangFile.exists) return dlangFile;
-
-        immutable pythonFile = buildPath(projectPath, "reggaefile.py");
         if(pythonFile.exists) return pythonFile;
-
-        immutable rubyFile = buildPath(projectPath, "reggaefile.rb");
         if(rubyFile.exists) return rubyFile;
-
 
         immutable path = isDubProject ? "" : projectPath;
         return buildPath(path, "reggaefile.d").absolutePath;
+    }
+
+    string dlangFile() @safe const pure nothrow {
+        return projectBuildFile;
+    }
+
+    string pythonFile() @safe const pure nothrow {
+        return buildPath(projectPath, "reggaefile.py");
+    }
+
+    string rubyFile() @safe const pure nothrow {
+        return buildPath(projectPath, "reggaefile.rb");
     }
 
     string projectBuildFile() @safe const pure nothrow {
@@ -114,17 +130,22 @@ struct Options {
         return getLanguage(reggaeFilePath) != Language.D;
     }
 
-    BuildLanguage reggaeFileLanguage() @safe const {
+    BuildLanguage reggaeFileLanguage(in string fileName) @safe const {
         import std.algorithm;
 
-        if(reggaeFilePath.endsWith(".d"))
+        if(fileName.endsWith(".d"))
             return BuildLanguage.D;
-        else if(reggaeFilePath.endsWith(".py"))
+        else if(fileName.endsWith(".py"))
             return BuildLanguage.Python;
-        else if(reggaeFilePath.endsWith(".rb"))
+        else if(fileName.endsWith(".rb"))
             return BuildLanguage.Ruby;
-        else throw new Exception("Unknown language for " ~ reggaeFilePath);
+        else throw new Exception("Unknown language for " ~ fileName);
     }
+
+    BuildLanguage reggaeFileLanguage() @safe const {
+        return reggaeFileLanguage(reggaeFilePath);
+    }
+
 }
 
 

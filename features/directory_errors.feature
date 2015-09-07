@@ -44,3 +44,24 @@ Feature: Error messages
     Then it should fail with:
       """
       """
+
+    Scenario: Too many languages
+      Given a file named "project/reggaefile.d" with:
+        """
+        """
+      And a file named "project/reggaefile.py" with:
+        """
+        """
+      When I run `reggae -b ninja project`
+      Then it should fail with:
+        """
+        Reggae builds may only use one language. Found: D, Python
+        """
+      Given a file named "project/reggaefile.rb" with:
+        """
+        """
+      When I run `reggae -b ninja project`
+      Then it should fail with:
+        """
+        Reggae builds may only use one language. Found: D, Python, Ruby
+        """

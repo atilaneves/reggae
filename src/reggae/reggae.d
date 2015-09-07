@@ -111,7 +111,7 @@ private string getJsonOutput(in Options options, in ScriptingLanguage language) 
         break;
 
     case ScriptingLanguage.ruby:
-        args = ["ruby", "-S", "-I" ~ options.projectPath, "json_build.rb"];
+        args = ["ruby", "-S", "-I" ~ options.projectPath, "reggae_json_build.rb"];
         break;
     }
 

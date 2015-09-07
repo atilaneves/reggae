@@ -102,23 +102,22 @@ bool jsonBuild(in Options options, in ScriptingLanguage language) {
 }
 
 private string getJsonOutput(in Options options, in ScriptingLanguage language) @safe {
+    string[] args;
+
     final switch(language) {
 
     case ScriptingLanguage.python:
-        immutable pythonArgs = ["python", "-m", "reggae.json_build", options.projectPath];
-        immutable res = execute(pythonArgs);
-        enforce(res.status == 0, text("Could not execute ", pythonArgs.join(" "), ":\n", res.output));
-        return res.output;
+        args = ["python", "-m", "reggae.json_build", options.projectPath];
+        break;
 
     case ScriptingLanguage.ruby:
-        immutable rubyArgs = ["ruby",
-                              "-S",
-                              "-I" ~ options.projectPath,
-                              "json_build.rb"];
-        immutable res = execute(rubyArgs);
-        enforce(res.status == 0, text("Could not execute ", rubyArgs.join(" "), ":\n", res.output));
-        return res.output;
+        args = ["ruby", "-S", "-I" ~ options.projectPath, "json_build.rb"];
+        break;
     }
+
+    immutable res = execute(args);
+    enforce(res.status == 0, text("Could not execute ", args.join(" "), ":\n", res.output));
+    return res.output;
 }
 
 enum coreFiles = [

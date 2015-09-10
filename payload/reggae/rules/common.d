@@ -39,7 +39,7 @@ Target[] objectFiles(alias sourcesFunc = Sources!(),
 
 /**
  An object file, typically from one source file in a certain language
- (although for D the default is a whole package. The language is determined
+ (although for D the default is a whole package). The language is determined
  by the file extension of the file passed in.
  The $(D projDir) variable is best left alone; right now only the dub targets
  make use of it (since dub packages are by definition outside of the project

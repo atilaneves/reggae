@@ -14,8 +14,8 @@
 module reggae.reggae;
 
 import std.stdio;
-import std.process: execute;
-import std.array: array, join, empty;
+import std.process: execute, environment;
+import std.array: array, join, empty, split;
 import std.path: absolutePath, buildPath, relativePath;
 import std.typetuple;
 import std.file;
@@ -91,7 +91,9 @@ bool jsonBuild(in Options options, in BuildLanguage language) {
 
 private string getJsonOutput(in Options options, in BuildLanguage language) @safe {
     const args = getJsonOutputArgs(options, language);
-    immutable res = execute(args);
+    const nodePaths = environment.get("NODE_PATH", "").split(":");
+    auto env = ["NODE_PATH": (nodePaths ~ options.projectPath).join(":")];
+    immutable res = execute(args, env);
     enforce(res.status == 0, text("Could not execute ", args.join(" "), ":\n", res.output));
     return res.output;
 }
@@ -107,6 +109,9 @@ private string[] getJsonOutputArgs(in Options options, in BuildLanguage language
 
     case BuildLanguage.Ruby:
         return ["ruby", "-S", "-I" ~ options.projectPath, "reggae_json_build.rb"];
+
+    case BuildLanguage.JavaScript:
+        return ["reggae_json_build.js"];
     }
 }
 

@@ -24,6 +24,9 @@ install:
   - export RUBYLIB=$PWD/lib
   - export PATH=$PATH:$PWD/bin
   - cd ..
+  - npm install reggae-js
+  - export PATH=$PATH:$PWD/node_modules/reggae-js/bin
+  - export NODE_PATH=$PWD/node_modules/reggae-js/lib
 
 script:
   - ./bootstrap.sh make

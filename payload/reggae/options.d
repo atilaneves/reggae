@@ -13,6 +13,7 @@ enum BuildLanguage {
     Python,
     Ruby,
     JavaScript,
+    Lua,
 }
 
 struct Options {
@@ -71,6 +72,7 @@ struct Options {
         if(pythonFile.exists) return pythonFile;
         if(rubyFile.exists) return rubyFile;
         if(jsFile.exists) return jsFile;
+        if(luaFile.exists) return luaFile;
 
         immutable path = isDubProject ? "" : projectPath;
         return buildPath(path, "reggaefile.d").absolutePath;
@@ -90,6 +92,10 @@ struct Options {
 
     string jsFile() @safe const pure nothrow {
         return buildPath(projectPath, "reggaefile.js");
+    }
+
+    string luaFile() @safe const pure nothrow {
+        return buildPath(projectPath, "reggaefile.lua");
     }
 
     string projectBuildFile() @safe const pure nothrow {
@@ -147,6 +153,8 @@ struct Options {
             return BuildLanguage.Ruby;
         else if(fileName.endsWith(".js"))
             return BuildLanguage.JavaScript;
+        else if(fileName.endsWith(".lua"))
+            return BuildLanguage.Lua;
         else throw new Exception("Unknown language for " ~ fileName);
     }
 

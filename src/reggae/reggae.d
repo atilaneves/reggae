@@ -92,7 +92,9 @@ bool jsonBuild(in Options options, in BuildLanguage language) {
 private string getJsonOutput(in Options options, in BuildLanguage language) @safe {
     const args = getJsonOutputArgs(options, language);
     const nodePaths = environment.get("NODE_PATH", "").split(":");
-    auto env = ["NODE_PATH": (nodePaths ~ options.projectPath).join(":")];
+    const luaPaths = environment.get("LUA_PATH", "").split(";");
+    auto env = ["NODE_PATH": (nodePaths ~ options.projectPath).join(":"),
+                "LUA_PATH": (luaPaths ~ buildPath(options.projectPath, "?.lua")).join(";")];
     immutable res = execute(args, env);
     enforce(res.status == 0, text("Could not execute ", args.join(" "), ":\n", res.output));
     return res.output;
@@ -109,6 +111,9 @@ private string[] getJsonOutputArgs(in Options options, in BuildLanguage language
 
     case BuildLanguage.Ruby:
         return ["ruby", "-S", "-I" ~ options.projectPath, "reggae_json_build.rb"];
+
+    case BuildLanguage.Lua:
+        return ["reggae_json_build.lua"];
 
     case BuildLanguage.JavaScript:
         return ["reggae_json_build.js"];

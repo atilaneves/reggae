@@ -87,3 +87,11 @@ void testUnityCppFiles() {
         [`#include "/path/to/proj/src/foo.cpp"`,
          `#include "/path/to/proj/src/bar.cpp"`]);
 }
+
+
+void testUnityCFiles() {
+    const files = ["src/foo.c", "src/bar.c"];
+    unityFileContents("/foo/bar/", files).shouldEqualLines(
+        [`#include "/foo/bar/src/foo.c"`,
+         `#include "/foo/bar/src/bar.c"`]);
+}

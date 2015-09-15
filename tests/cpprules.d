@@ -84,6 +84,6 @@ private void shouldEqualLines(string actual, string[] expected,
 void testUnityCppFiles() {
     const files = ["src/foo.cpp", "src/bar.cpp"];
     unityFileContents("/path/to/proj/", files).shouldEqualLines(
-        [`#include "src/foo.cpp"`,
-         `#include "src/bar.cpp"`]);
+        [`#include "/path/to/proj/src/foo.cpp"`,
+         `#include "/path/to/proj/src/bar.cpp"`]);
 }

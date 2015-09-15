@@ -7,10 +7,10 @@ Feature: Foreign language integration
   Background:
     Given a file named "path/to/reggaefile.js" with:
       """
-      var reggae = require('reggae')
-      mainObj = new reggae.Target('main.o', 'dmd -I$project/src -c $in -of$out', new reggae.Target('src/main.d'))
-      mathsObj = new reggae.Target('maths.o', 'dmd -c $in -of$out', new reggae.Target('src/maths.d'))
-      app = new reggae.Target('myapp', 'dmd -of$out $in', [mainObj, mathsObj])
+      var reggae = require('reggae-js')
+      var mainObj = new reggae.Target('main.o', 'dmd -I$project/src -c $in -of$out', new reggae.Target('src/main.d'))
+      var mathsObj = new reggae.Target('maths.o', 'dmd -c $in -of$out', new reggae.Target('src/maths.d'))
+      var app = new reggae.Target('myapp', 'dmd -of$out $in', [mainObj, mathsObj])
       exports.bld = new reggae.Build(app)
       """
     And a file named "path/to/src/main.d" with:

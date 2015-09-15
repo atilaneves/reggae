@@ -6,6 +6,6 @@ import reggae.rules.common;
 @safe:
 
 
-void unityFile(in string[] files) pure {
-    throw new Exception("");
+string unityFileContents(in string projectPath, in string[] files) pure {
+    throw new Exception("Cannot perform a unity build with no files");
 }

@@ -70,5 +70,20 @@ void testCCompile() {
 
 void testUnityNoFiles() {
     string[] files;
-    unityFile(files).shouldThrow;
+    immutable projectPath = "";
+    unityFileContents(projectPath, files).shouldThrow;
+}
+
+
+private void shouldEqualLines(string actual, string[] expected,
+                              in string file = __FILE__, in ulong line = __LINE__) {
+    import std.string;
+    actual.split("\n").shouldEqual(expected, file, line);
+}
+
+void testUnityCppFiles() {
+    const files = ["src/foo.cpp", "src/bar.cpp"];
+    unityFileContents("/path/to/proj/", files).shouldEqualLines(
+        [`#include "src/foo.cpp"`,
+         `#include "src/bar.cpp"`]);
 }

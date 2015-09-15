@@ -66,3 +66,9 @@ void testCCompile() {
         "gcc -m64 -fPIC -O3 -I/path/to/headers -MMD -MT src/c/maths.o -MF src/c/maths.o.dep "
         "-o src/c/maths.o -c /path/to/src/c/maths.c");
 }
+
+
+void testUnityNoFiles() {
+    string[] files;
+    unityFile(files).shouldThrow;
+}

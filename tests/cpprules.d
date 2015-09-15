@@ -95,3 +95,13 @@ void testUnityCFiles() {
         [`#include "/foo/bar/src/foo.c"`,
          `#include "/foo/bar/src/bar.c"`]);
 }
+
+void testUnityMixedLanguages() {
+    const files = ["src/foo.cpp", "src/bar.c"];
+    unityFileContents("/project", files).shouldThrow;
+}
+
+void testUnityDFiles() {
+    const files = ["src/foo.d", "src/bar.d"];
+    unityFileContents("/project", files).shouldThrow;
+}

@@ -3,20 +3,22 @@ Reggae
 [![Build Status](https://travis-ci.org/atilaneves/reggae.png?branch=master)](https://travis-ci.org/atilaneves/reggae)
 
 
-A build system in [the D programming language](http://dlang.org). This
+A build system written in [the D programming language](http://dlang.org). This
 is alpha software, only tested on Linux and likely to have breaking
 changes made.
 
 Features
 --------
-* Write readable build descriptions in D or [Python](https://github.com/atilaneves/reggae-python).
+* Write readable build descriptions in D, [Python](https://github.com/atilaneves/reggae-python),
+[Ruby](https://github.com/atilaneves/reggae-python), [JavaScript](https://github.com/atilaneves/reggae-js)
+or [Lua](https://github.com/atilaneves/reggae-lua)
 * Out-of-tree builds
 * Backends for GNU make, ninja, tup and a custom binary executable.
 * User-defined variables like CMake in order to choose features before compile-time
 * Low-level DAG build descriptions + high-level convenience rules to build C, C++ and D
 * Automatic header/module dependency detection for C, C++ and D
 * Automatically runs itself if the build description changes
-* Rules for using dub build targets in your own build decription - use dub with ninja, add to it, ...
+* Rules for using [dub](http://code.dlang.org/about) build targets in your own build decription - use dub with ninja, add to the dub description, ...
 
 Not all features are available on all backends. Executable D code commands (as opposed to shell commands)
 are only supported by the binary backend, and due to tup's nature dub support and a few other features
@@ -31,7 +33,8 @@ Reggae is actually a meta build system and works similarly to
 [CMake](http://www.cmake.org/) or
 [Premake](http://premake.github.io/). Those systems require writing
 configuration files in their own proprietary languages. The
-configuration files for Reggae are written in [D](http://dlang.org).
+configuration files for Reggae are written in [D](http://dlang.org), [Python](https://github.com/atilaneves/reggae-python), [Ruby](https://github.com/atilaneves/reggae-python), [JavaScript](https://github.com/atilaneves/reggae-js)
+or [Lua](https://github.com/atilaneves/reggae-lua)
 
 From a build directory (usually not the same as the source one), type
 `reggae -b <ninja|make|tup|binary> </path/to/project>`. This will create

@@ -10,7 +10,7 @@ changes made.
 Features
 --------
 * Write readable build descriptions in D, [Python](https://github.com/atilaneves/reggae-python),
-[Ruby](https://github.com/atilaneves/reggae-python), [JavaScript](https://github.com/atilaneves/reggae-js)
+[Ruby](https://github.com/atilaneves/reggae-ruby), [JavaScript](https://github.com/atilaneves/reggae-js)
 or [Lua](https://github.com/atilaneves/reggae-lua)
 * Out-of-tree builds
 * Backends for GNU make, ninja, tup and a custom binary executable.
@@ -33,7 +33,7 @@ Reggae is actually a meta build system and works similarly to
 [CMake](http://www.cmake.org/) or
 [Premake](http://premake.github.io/). Those systems require writing
 configuration files in their own proprietary languages. The
-configuration files for Reggae are written in [D](http://dlang.org), [Python](https://github.com/atilaneves/reggae-python), [Ruby](https://github.com/atilaneves/reggae-python), [JavaScript](https://github.com/atilaneves/reggae-js)
+configuration files for Reggae are written in [D](http://dlang.org), [Python](https://github.com/atilaneves/reggae-python), [Ruby](https://github.com/atilaneves/reggae-ruby), [JavaScript](https://github.com/atilaneves/reggae-js)
 or [Lua](https://github.com/atilaneves/reggae-lua)
 
 From a build directory (usually not the same as the source one), type

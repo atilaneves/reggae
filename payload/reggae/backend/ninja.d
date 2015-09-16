@@ -32,6 +32,13 @@ string cmdTypeToNinjaString(CommandType commandType, Language language) @safe pu
                 case C: return "_ccompile";
                 case unknown: throw new Exception("Unsupported language");
             }
+        case compileAndLink:
+            final switch(language) with(Language) {
+                case D: return "_dcompileAndLink";
+                case Cplusplus: return "_cppcompileAndLink";
+                case C: return "_ccompileAndLink";
+                case unknown: throw new Exception("Unsupported language");
+            }
     }
 }
 
@@ -260,7 +267,7 @@ private:
     string getRuleCommandLine(in Target target, in string shellCommand,
                               in string before = "", in string first = "",
                               in string between = "",
-                              in string last = "", in string after = "") @trusted pure nothrow const {
+                              in string last = "", in string after = "") @trusted pure const {
 
         auto cmdLine = "command = " ~ targetRawCommand(target);
         if(!before.empty) cmdLine ~= " $before";
@@ -319,12 +326,12 @@ private:
     }
 
     //@trusted because of splitter
-    private string targetCommand(in Target target) @trusted pure nothrow const {
+    private string targetCommand(in Target target) @trusted pure const {
         return targetRawCommand(target).sanitizeCmd;
     }
 
     //@trusted because of splitter
-    private string targetRawCommand(in Target target) @trusted pure nothrow const {
+    private string targetRawCommand(in Target target) @trusted pure const {
         return target.expandCommand(_projectPath).splitter(" ").front;
     }
 }

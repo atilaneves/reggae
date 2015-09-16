@@ -25,11 +25,11 @@ static assert(isTargetLike!Target);
 struct DepthFirst(T) if(isTargetLike!T) {
     const(T)[] targets;
 
-    this(in T target) pure nothrow {
+    this(in T target) pure {
         this.targets = depthFirstTargets(target);
     }
 
-    const(T)[] depthFirstTargets(in T target) pure nothrow {
+    const(T)[] depthFirstTargets(in T target) pure {
         //if leaf, return
         if(target.isLeaf) return target.expandCommand is null ? [] : [target];
 
@@ -54,7 +54,7 @@ struct DepthFirst(T) if(isTargetLike!T) {
     static assert(isInputRange!DepthFirst);
 }
 
-auto depthFirst(T)(in T target) pure nothrow {
+auto depthFirst(T)(in T target) pure {
     return DepthFirst!T(target);
 }
 
@@ -142,7 +142,7 @@ private:
 
 
 //TODO: a non-allocating version with no arrays
-auto flatten(R)(R range) @trusted pure nothrow {
+auto flatten(R)(R range) @trusted pure {
     alias rangeType = ElementType!R;
     alias T = ElementType!rangeType;
     T[] res;
@@ -165,7 +165,7 @@ struct UniqueDepthFirst {
     Build build;
     private const(Target)[] _targets;
 
-    this(in Build build) pure nothrow @trusted {
+    this(in Build build) pure @trusted {
         _targets = build.targets.
             map!(a => depthFirst(a)).
             flatten.

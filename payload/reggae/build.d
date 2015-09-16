@@ -64,7 +64,7 @@ struct Build {
         return defaultTargets.map!(a => a.outputsInProjectPath(projectPath).join(" ")).join(" ");
     }
 
-    auto range() @safe pure nothrow const {
+    auto range() @safe pure const {
         import reggae.range;
         return UniqueDepthFirst(this);
     }
@@ -311,7 +311,7 @@ struct Target {
     }
 
     ///replace all special variables with their expansion
-    @property string expandCommand(in string projectPath = "") @trusted pure const nothrow {
+    @property string expandCommand(in string projectPath = "") @trusted pure const {
         return _command.expand(projectPath, outputs, inputs(projectPath));
     }
 
@@ -389,11 +389,16 @@ private:
                 //leaf objects are references to source files in the project path,
                 //those need their path built. Any other dependencies are in the
                 //build path, so they don't need the same treatment
-                inputs ~= dep.isLeaf ? buildPath(projectPath, output) : output;
+                inputs ~= dep.isLeaf ? inProjectPath(projectPath, output) : output;
             }
         }
         return inputs;
     }
+}
+
+string inProjectPath(in string projectPath, in string name) @safe pure nothrow {
+    if(name.startsWith(gBuilddir)) return name;
+    return buildPath(projectPath, name);
 }
 
 
@@ -401,6 +406,7 @@ enum CommandType {
     shell,
     compile,
     link,
+    compileAndLink,
     code,
     phony,
 }
@@ -456,7 +462,7 @@ struct Command {
     }
 
     bool isDefaultCommand() @safe pure const {
-        return type == CommandType.compile || type == CommandType.link;
+        return type == CommandType.compile || type == CommandType.link || type == CommandType.compileAndLink;
     }
 
     string[] getParams(in string projectPath, in string key, string[] ifNotFound) @safe pure const {
@@ -475,12 +481,12 @@ struct Command {
     }
 
     ///Replace $in, $out, $project with values
-    string expand(in string projectPath, in string[] outputs, in string[] inputs) @safe pure nothrow const {
+    string expand(in string projectPath, in string[] outputs, in string[] inputs) @safe pure const {
         return expandCmd(command, projectPath, outputs, inputs);
     }
 
     private static string expandCmd(in string cmd, in string projectPath,
-                                    in string[] outputs, in string[] inputs) @safe pure nothrow {
+                                    in string[] outputs, in string[] inputs) @safe pure {
         auto replaceIn = cmd.dup.replace("$in", inputs.join(" "));
         auto replaceOut = replaceIn.replace("$out", outputs.join(" "));
         return replaceOut.replace("$project", projectPath).replace(gBuilddir ~ dirSeparator, "");
@@ -526,23 +532,34 @@ struct Command {
                 throw new Exception("Command type 'code' has no built-in template");
 
             case compile:
-                immutable ccParams = deps
-                    ? " $flags $includes -MMD -MT $out -MF $out.dep -o $out -c $in"
-                    : " $flags $includes -o $out -c $in";
+                return compileTemplate(type, language, deps).replace("$out $in", "$out -c $in");
 
-                final switch(language) with(Language) {
-                    case D:
-                        return deps
-                            ? ".reggae/dcompile --objFile=$out --depFile=$out.dep " ~
-                            options.dCompiler ~ " $flags $includes $stringImports $in"
-                            : options.dCompiler ~ " $flags $includes $stringImports -of$out -c $in";
-                    case Cplusplus:
-                        return options.cppCompiler ~ ccParams;
-                    case C:
-                        return options.cCompiler ~ ccParams;
-                    case unknown:
-                        throw new Exception("Unsupported language for compiling");
-                }
+            case compileAndLink:
+                return compileTemplate(type, language, deps);
+        }
+    }
+
+    private static string compileTemplate(CommandType type,
+                                          Language language,
+                                          Flag!"dependencies" deps = Yes.dependencies) @safe pure {
+        import reggae.config: options;
+
+        immutable ccParams = deps
+            ? " $flags $includes -MMD -MT $out -MF $out.dep -o $out $in"
+            : " $flags $includes -o $out $in";
+
+        final switch(language) with(Language) {
+            case D:
+                return deps
+                    ? ".reggae/dcompile --objFile=$out --depFile=$out.dep " ~
+                    options.dCompiler ~ " $flags $includes $stringImports $in"
+                    : options.dCompiler ~ " $flags $includes $stringImports -of$out $in";
+            case Cplusplus:
+                return options.cppCompiler ~ ccParams;
+            case C:
+                return options.cCompiler ~ ccParams;
+            case unknown:
+                throw new Exception("Unsupported language for compiling");
         }
     }
 
@@ -581,6 +598,7 @@ struct Command {
             case shell:
             case compile:
             case link:
+            case compileAndLink:
             case phony:
                 immutable cmd = shellCommand(projectPath, language, outputs, inputs);
                 immutable res = executeShell(cmd);

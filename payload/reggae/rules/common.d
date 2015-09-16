@@ -9,6 +9,7 @@ import std.algorithm;
 import std.path;
 import std.array: array;
 import std.traits;
+import std.typecons;
 
 /**
  This template function exists so as to be referenced in a reggaefile.d
@@ -301,13 +302,14 @@ Command compileCommand(in string srcFileName,
                        in string flags = "",
                        in string[] includePaths = [],
                        in string[] stringImportPaths = [],
-                       in string projDir = "$project") pure {
+                       in string projDir = "$project",
+                       Flag!"justCompile" justCompile = Yes.justCompile) pure {
 
-    string buildIncludeyPath(string path) {
+    string maybeExpand(string path) {
         return path.startsWith(gBuilddir) ? expandBuildDir(path) : buildPath(projDir, path);
     }
 
-    auto includeParams = includePaths.map!(a => "-I" ~ buildIncludeyPath(a)). array;
+    auto includeParams = includePaths.map!(a => "-I" ~ maybeExpand(a)). array;
     auto flagParams = flags.splitter.array;
     immutable language = getLanguage(srcFileName);
 
@@ -315,12 +317,14 @@ Command compileCommand(in string srcFileName,
                    assocEntry("flags", flagParams)];
 
     if(language == Language.D)
-        params ~= assocEntry("stringImports", stringImportPaths.map!(a => "-J" ~ buildIncludeyPath(a)).array);
+        params ~= assocEntry("stringImports", stringImportPaths.map!(a => "-J" ~ maybeExpand(a)).array);
 
     params ~= assocEntry("DEPFILE", [srcFileName.objFileName ~ ".dep"]);
 
-    return Command(CommandType.compile, assocList(params));
+    immutable type = justCompile ? CommandType.compile : CommandType.compileAndLink;
+    return Command(type, assocList(params));
 }
+
 
 enum Language {
     C,

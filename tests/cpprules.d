@@ -105,3 +105,25 @@ void testUnityDFiles() {
     const files = ["src/foo.d", "src/bar.d"];
     unityFileContents("/project", files).shouldThrow;
 }
+
+
+void testUnityTarget() @safe {
+    const files = ["src/foo.cpp", "src/bar.cpp", "src/baz.cpp"];
+    Target[] dependencies() @safe pure nothrow {
+        return [Target("$builddir/mylib.a")];
+    }
+
+    immutable projectPath = "/path/to/proj";
+    const target = unityTarget!(ExeName("leapp"),
+                                projectPath,
+                                files,
+                                Flags("-g -O0"),
+                                IncludePaths(["headers"]),
+                                dependencies);
+    target.outputs.shouldEqual(["leapp"]);
+    target.shellCommand(projectPath).shouldEqual(
+        "g++ -g -O0 -I/path/to/proj/headers -MMD -MT leapp -MF leapp.dep -o leapp " ~
+        "objs/leapp.objs/unity.cpp mylib.a");
+    target.dependencies.shouldEqual([Target("$builddir/objs/leapp.objs/unity.cpp"),
+                                     Target("$builddir/mylib.a")]);
+}

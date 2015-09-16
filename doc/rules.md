@@ -33,6 +33,14 @@ Currently only supported for D executables. Takes the name of a source file wher
 function is defined, automatically determines dependencies and returns a target with all
 compilation and linking steps defined. Does essentially the same as `rdmd`.
 
+unityBuild
+----------
+
+Only valid for pure C or pure C++ top-level source files. This rule produces an
+executable binary using a technique for speeding up builds called unity build.
+The binary is compiled as one translation unit by compiling a C/C++ file that
+`#include`s the other source files.
+
 
 dubDefaultTarget
 ----------------

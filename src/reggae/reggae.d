@@ -131,6 +131,7 @@ enum coreFiles = [
     "rules/package.d",
     "rules/common.d",
     "rules/d.d",
+    "rules/c_and_cpp.d",
     "core/package.d", "core/rules/package.d",
     ];
 enum otherFiles = [

@@ -14,4 +14,5 @@ version(minimal) {
     public import reggae.rules.common;
     public import reggae.rules.d;
     public import reggae.rules.dub;
+    public import reggae.rules.c_and_cpp;
 }

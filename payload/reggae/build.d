@@ -347,7 +347,7 @@ struct Target {
     }
 
     static Target phony(in string output, in string shellCommand,
-                        in Target[] dependencies = [], in Target[] implicits = []) {
+                        in Target[] dependencies = [], in Target[] implicits = []) @safe pure {
         return Target(output, Command.phony(shellCommand), dependencies, implicits);
     }
 

@@ -28,9 +28,6 @@ struct Makefile {
     }
 
     this(Build build, in Options options) @safe pure {
-        import std.stdio;
-        () @trusted { debug writeln("build: ", build); }();
-
         this.build = build;
         this.options = options;
     }

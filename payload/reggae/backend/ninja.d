@@ -52,7 +52,7 @@ struct NinjaEntry {
 
 
 private bool hasDepFile(in CommandType type) @safe pure nothrow {
-    return type == CommandType.compile;
+    return type == CommandType.compile || type == CommandType.compileAndLink;
 }
 
 /**
@@ -67,9 +67,9 @@ NinjaEntry[] defaultRules() @safe pure {
     }
 
     NinjaEntry[] entries;
-    foreach(type; [CommandType.compile, CommandType.link]) {
+    foreach(type; [CommandType.compile, CommandType.link, CommandType.compileAndLink]) {
         for(Language language = Language.min; language <= Language.max; ++language) {
-            if(type == CommandType.compile && language == Language.unknown) continue;
+            if(hasDepFile(type) && language == Language.unknown) continue;
             entries ~= createNinjaEntry(type, language);
         }
     }

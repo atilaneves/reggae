@@ -43,12 +43,10 @@ Feature: Unity builds for C and C++
 
   @ninja
   Scenario: Unity build with ninja
-    When I successfully run `reggae -b ninja project`
+    Given I successfully run `reggae -b ninja project`
     Then a file named "objs/unity.objs/unity.cpp" should exist
 
-    When I successfully run `ninja`
-    Then a file named "objs/unity.objs/unity.o" should exist
-
+    Given I successfully run `ninja`
     When I successfully run `./unity`
     Then the output should contain:
       """

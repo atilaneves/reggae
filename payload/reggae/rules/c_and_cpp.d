@@ -28,8 +28,6 @@ Target unityBuild(ExeName exeName,
     import reggae.config: options;
     unityFile.write(unityFileContents(options.projectPath, srcFiles));
 
-    debug writeln("unityTarget: ", unityTarget(exeName, options.projectPath, srcFiles, flags, includes,
-                                               dependenciesFunc(), implicitsFunc()));
     return unityTarget(exeName, options.projectPath, srcFiles, flags, includes,
                        dependenciesFunc(), implicitsFunc());
 }
@@ -94,7 +92,7 @@ Target unityTarget(R1, R2)(in ExeName exeName,
                                    [],
                                    projectPath,
                                    No.justCompile);
-    const unityFileTarget = Target(unityFileName, "", [], srcFiles.map!(a => Target(a)).array);
+    const unityFileTarget = Target.phony(unityFileName, "", [], srcFiles.map!(a => Target(a)).array);
     return Target(exeName.value, command, unityFileTarget ~ dependencies.array);
 }
 

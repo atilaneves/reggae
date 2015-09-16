@@ -107,7 +107,7 @@ void testUnityDFiles() {
 }
 
 
-void testUnityTarget() @safe {
+void testUnityTargetCpp() @safe {
     const files = ["src/foo.cpp", "src/bar.cpp", "src/baz.cpp"];
     Target[] dependencies() @safe pure nothrow {
         return [Target("$builddir/mylib.a")];
@@ -124,6 +124,33 @@ void testUnityTarget() @safe {
     target.shellCommand(projectPath).shouldEqual(
         "g++ -g -O0 -I/path/to/proj/headers -MMD -MT leapp -MF leapp.dep -o leapp " ~
         "objs/leapp.objs/unity.cpp mylib.a");
-    target.dependencies.shouldEqual([Target("$builddir/objs/leapp.objs/unity.cpp"),
+    target.dependencies.shouldEqual([Target("$builddir/objs/leapp.objs/unity.cpp",
+                                            "",
+                                            [],
+                                            [Target("src/foo.cpp"), Target("src/bar.cpp"), Target("src/baz.cpp")]),
+                                     Target("$builddir/mylib.a")]);
+}
+
+void testUnityTargetC() @safe {
+    const files = ["src/foo.c", "src/bar.c", "src/baz.c"];
+    Target[] dependencies() @safe pure nothrow {
+        return [Target("$builddir/mylib.a")];
+    }
+
+    immutable projectPath = "/path/to/proj";
+    const target = unityTarget!(ExeName("leapp"),
+                                projectPath,
+                                files,
+                                Flags("-g -O0"),
+                                IncludePaths(["headers"]),
+                                dependencies);
+    target.outputs.shouldEqual(["leapp"]);
+    target.shellCommand(projectPath).shouldEqual(
+        "gcc -g -O0 -I/path/to/proj/headers -MMD -MT leapp -MF leapp.dep -o leapp " ~
+        "objs/leapp.objs/unity.c mylib.a");
+    target.dependencies.shouldEqual([Target("$builddir/objs/leapp.objs/unity.c",
+                                            "",
+                                            [],
+                                            [Target("src/foo.c"), Target("src/bar.c"), Target("src/baz.c")]),
                                      Target("$builddir/mylib.a")]);
 }

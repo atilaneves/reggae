@@ -5,9 +5,35 @@ import reggae.rules.common;
 import reggae.types;
 import std.range;
 import std.traits;
-
+import std.stdio;
+import std.file;
 
 @safe:
+
+Target unityBuild(ExeName exeName,
+                  alias sourcesFunc,
+                  Flags flags = Flags(),
+                  IncludePaths includes = IncludePaths(),
+                  alias dependenciesFunc = emptyTargets,
+                  alias implicitsFunc = emptyTargets)() @trusted {
+
+    const srcFiles = sourcesToFileNames!(sourcesFunc);
+
+    immutable dirName = topLevelDirName(Target(exeName.value));
+    dirName.exists || mkdirRecurse(dirName);
+
+    immutable fileName = buildPath(dirName, "unity.cpp");
+    auto unityFile = File(fileName, "w");
+
+    import reggae.config: options;
+    unityFile.write(unityFileContents(options.projectPath, srcFiles));
+
+    debug writeln("unityTarget: ", unityTarget(exeName, options.projectPath, srcFiles, flags, includes,
+                                               dependenciesFunc(), implicitsFunc()));
+    return unityTarget(exeName, options.projectPath, srcFiles, flags, includes,
+                       dependenciesFunc(), implicitsFunc());
+}
+
 
 
 /**
@@ -38,18 +64,18 @@ string unityFileContents(in string projectPath, in string[] files) pure {
  */
 Target unityTarget(ExeName exeName,
                    string projectPath,
-                   string[] files,
+                   string[] srcFiles,
                    Flags flags = Flags(),
                    IncludePaths includes = IncludePaths(),
                    alias dependenciesFunc = emptyTargets,
                    alias implicitsFunc = emptyTargets,
     )() {
-    return unityTarget(exeName, projectPath, files, flags, includes, dependenciesFunc());
+    return unityTarget(exeName, projectPath, srcFiles, flags, includes, dependenciesFunc());
 }
 
 Target unityTarget(R1, R2)(in ExeName exeName,
                            in string projectPath,
-                           in string[] files,
+                           in string[] srcFiles,
                            in Flags flags = Flags(),
                            in IncludePaths includes = IncludePaths(),
                            R1 dependencies = emptyTargets(),
@@ -58,14 +84,18 @@ Target unityTarget(R1, R2)(in ExeName exeName,
     )
     pure if(isInputRange!R1 && is(ElementType!R1 == Target) && isInputRange!R2 && is(ElementType!R2 == Target)) {
 
-    const unityFileName = buildPath(gBuilddir, topLevelDirName(Target(exeName.value)), "unity.cpp");
+    import std.algorithm;
+
+    const justFileName = srcFiles.map!getLanguage.front == Language.C ? "unity.c" : "unity.cpp";
+    const unityFileName = buildPath(gBuilddir, topLevelDirName(Target(exeName.value)), justFileName);
     const command = compileCommand(unityFileName,
                                    flags.value,
                                    includes.value,
                                    [],
                                    projectPath,
                                    No.justCompile);
-    return Target(exeName.value, command, Target(unityFileName) ~ dependencies.array);
+    const unityFileTarget = Target(unityFileName, "", [], srcFiles.map!(a => Target(a)).array);
+    return Target(exeName.value, command, unityFileTarget ~ dependencies.array);
 }
 
 

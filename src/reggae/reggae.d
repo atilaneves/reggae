@@ -178,7 +178,10 @@ private immutable hiddenDir = ".reggae";
 private auto compileBinaries(in Options options) {
 
     immutable buildGenName = getBuildGenName(options);
-    const compileBuildGenCmd = getCompileBuildGenCmd(options);
+    auto compileBuildGenCmd = getCompileBuildGenCmd(options);
+    writeln("\n\nHear now, hear now:\n", getReggaeFileDependencies(compileBuildGenCmd), "\n\n");
+
+    compileBuildGenCmd ~= getReggaeFileDependencies(compileBuildGenCmd);
 
     immutable dcompileName = buildPath(hiddenDir, "dcompile");
     immutable dcompileCmd = ["dmd",
@@ -186,7 +189,6 @@ private auto compileBinaries(in Options options) {
                              "-of" ~ dcompileName,
                              reggaeSrcFileName("dcompile.d"),
                              reggaeSrcFileName("dependencies.d")];
-
 
     static struct Binary { string name; const(string)[] cmd; }
 
@@ -206,7 +208,18 @@ private auto compileBinaries(in Options options) {
     return buildGenName;
 }
 
-const (string[]) getCompileBuildGenCmd(in Options options) @safe {
+//returns the list of files that the `reggaefile` depends on
+//this will usually be empty, but won't be if the reggaefile imports other D files
+private string[] getReggaeFileDependencies(in string[] compilerArgs) @safe {
+    const argsForDeps = compilerArgs ~ ["-v", "-o-"];
+    immutable res = execute(argsForDeps);
+    enforce(res.status == 0,
+            text("Couldn't execute ", argsForDeps.join(" "), ":\n", execute(compilerArgs).output));
+    import reggae.dependencies;
+    return dMainDependencies(res.output);
+}
+
+private string[] getCompileBuildGenCmd(in Options options) @safe {
     const reggaeSrcs = ("config.d" ~ fileNames).
         filter!(a => a != "dcompile.d").
         map!(a => a.reggaeSrcFileName).array;

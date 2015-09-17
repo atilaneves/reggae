@@ -26,6 +26,7 @@ Feature: Re-run reggae when dependencies deem it necessary
       """
     And a file named "proj/reggaebuild/defs.d" with:
       """
+      module reggaebuild.defs;
       import reggae;
       const mainObj = Target(`main.o`,
                              `dmd -I$project/src -c $in -of$out`,

@@ -17,15 +17,23 @@ Feature: Re-run reggae when dependencies deem it necessary
     And a file named "proj/reggaefile.d" with:
       """
       import reggae;
-      const mainObj  = Target(`main.o`,  `dmd -I$project/src -c $in -of$out`, Target(`src/main.d`));
+      import reggaebuild.defs;
       const app = Target(`myapp`,
                          `dmd -of$out $in`,
                          [mainObj],
                          );
       mixin build!(app);
       """
+    And a file named "proj/reggaebuild/defs.d" with:
+      """
+      import reggae;
+      const mainObj = Target(`main.o`,
+                             `dmd -I$project/src -c $in -of$out`,
+                             Target(`src/main.d`));
+      """
 
-    Scenario: Rerun with Ninja
+    @ninja
+    Scenario: D Rerun with Ninja
       Given I successfully run `reggae -b ninja proj`
       And I successfully run `ninja`
       When I successfully run `./myapp`
@@ -66,7 +74,8 @@ Feature: Re-run reggae when dependencies deem it necessary
       Then I successfully run `ninja`
 
 
-    Scenario: Rerun with Make
+    @make
+    Scenario: D Rerun with Make
       Given I successfully run `reggae -b make proj`
       And I successfully run `make`
       When I successfully run `./myapp`
@@ -104,7 +113,8 @@ Feature: Re-run reggae when dependencies deem it necessary
         Lookee me!
         """
 
-    Scenario: Rerun with Binary
+    @binary
+    Scenario: D Rerun with Binary
       Given I successfully run `reggae -b binary proj`
       And I successfully run `./build`
       When I successfully run `./myapp`

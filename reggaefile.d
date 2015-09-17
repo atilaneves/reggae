@@ -30,13 +30,13 @@ version(minimal) {
     //the actual reggae binary
     //could also be dubConfigurationTarget(ExeName("reggae"), Configuration("executable"))
     //or use scriptlike to figure out dependencies itself
-    alias main = dubDefaultTarget!(Flags("-g -debug"));
+    alias main = dubDefaultTarget!(Flags("-g -debug -w"));
 
     //the unit test binary
     //since it depends on unit-threaded, must use a dub configuration
     alias ut = dubConfigurationTarget!(ExeName("ut"),
                                        Configuration("unittest"),
-                                       Flags("-g -debug -cov"));
+                                       Flags("-w -g -debug -cov"));
 
     enum cuke = Target.phony("cuke", "cd $project && cucumber", [main]);
 

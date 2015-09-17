@@ -107,7 +107,7 @@ struct Ninja {
     }
 
     const(NinjaEntry)[] allBuildEntries() @safe const {
-        immutable files = [_options.reggaeFilePath, _options.ranFromPath].join(" ");
+        immutable files = _options.reggaeFileDependencies.join(" ");
         auto paramLines = _options.oldNinja ? [] : ["pool = console"];
         return buildEntries ~
             NinjaEntry("build build.ninja: _rerun | " ~ files,

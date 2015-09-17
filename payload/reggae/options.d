@@ -162,6 +162,9 @@ struct Options {
         return reggaeFileLanguage(reggaeFilePath);
     }
 
+    string[] reggaeFileDependencies() @safe const {
+        return [ranFromPath, reggaeFilePath];
+    }
 }
 
 

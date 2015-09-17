@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #1st parameter is the backend to use (e.g. make, ninja)
 
 if [ "$1" != "" ]; then

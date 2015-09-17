@@ -179,8 +179,6 @@ private auto compileBinaries(in Options options) {
 
     immutable buildGenName = getBuildGenName(options);
     auto compileBuildGenCmd = getCompileBuildGenCmd(options);
-    writeln("\n\nHear now, hear now:\n", getReggaeFileDependencies(compileBuildGenCmd), "\n\n");
-
     compileBuildGenCmd ~= getReggaeFileDependencies(compileBuildGenCmd);
 
     immutable dcompileName = buildPath(hiddenDir, "dcompile");

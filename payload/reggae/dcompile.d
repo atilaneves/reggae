@@ -31,7 +31,7 @@ private void dcompile(string[] args) {
         );
     enforce(args.length >= 2, "Usage: dcompile -o <objFile> -s <srcFile> -d <depFile> <compiler> <options>");
     enforce(!depFile.empty && !objFile.empty, "The -d and -o options are mandatory");
-    const compArgs = args[1 .. $] ~ ["-of" ~ objFile, "-c", "-v"];
+    const compArgs = compilerArgs(args, objFile);
     const fewerArgs = compArgs[0..$-1]; //non-verbose
     const compRes = execute(compArgs);
     enforce(compRes.status == 0,
@@ -42,4 +42,24 @@ private void dcompile(string[] args) {
     file.write(objFile, ": \\\n");
     file.write(dMainDependencies(compRes.output).join(" "));
     file.writeln;
+}
+
+
+private string[] compilerArgs(string[] args, in string objFile) @safe pure {
+    auto compArgs = args[1 .. $] ~ ["-of" ~ objFile, "-c", "-v"];
+    return args[1] == "gdc" ? mapToGdcOptions(compArgs) : compArgs;
+}
+
+//takes a dmd command line and maps arguments to gdc ones
+private string[] mapToGdcOptions(in string[] compArgs) @safe pure {
+    string[string] options = ["-v": "-fd-verbose", "-O": "-O2", "-debug": "-fdebug", "-of": "-o"];
+
+    string doMap(string a) {
+        foreach(k, v; options) {
+            if(a.startsWith(k)) a = a.replace(k, v);
+        }
+        return a;
+    }
+
+    return compArgs.map!doMap.array;
 }

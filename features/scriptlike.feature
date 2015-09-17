@@ -1,4 +1,4 @@
-Feature: Linking a D executable
+Feature: Building a D executable by only specifying the file containing the main function
   As a reggae user
   I want reggae to determine all dependencies to build a D executable
   So that I can easily build one

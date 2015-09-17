@@ -6,21 +6,30 @@ Feature: Re-run reggae when dependencies deem it necessary
   Background:
     Given a file named "proj/src/main.d" with:
       """
+      import func;
+      void main() { myfunc(); }
+      """
+    And a file named "proj/src/func.d" with:
+      """
       import std.stdio;
-      void main() { writeln(`Mainymainy`);}
+      void myfunc() { writeln(`Mainymainy`); }
       """
     And a file named "proj/src/other.d" with:
       """
       import std.stdio;
-      void myfunc() { writeln(`Lookee me!`);}
+      void myfunc() { writeln(`Lookee me!`); }
       """
+
     And a file named "proj/reggaefile.d" with:
       """
       import reggae;
-      import reggaebuild.defs;
+      import reggaebuild.defs; //for funcObj
+      const mainObj = Target(`main.o`,
+                             `dmd -I$project/src -c $in -of$out`,
+                             Target(`src/main.d`));
       const app = Target(`myapp`,
                          `dmd -of$out $in`,
-                         [mainObj],
+                         [mainObj, funcObj],
                          );
       mixin build!(app);
       """
@@ -28,9 +37,9 @@ Feature: Re-run reggae when dependencies deem it necessary
       """
       module reggaebuild.defs;
       import reggae;
-      const mainObj = Target(`main.o`,
+      const funcObj = Target(`func.o`,
                              `dmd -I$project/src -c $in -of$out`,
-                             Target(`src/main.d`));
+                             Target(`src/func.d`));
       """
 
     @ninja
@@ -48,21 +57,13 @@ Feature: Re-run reggae when dependencies deem it necessary
         """
 
       Given I successfully run `sleep 1` for up to 2 seconds
-      And I overwrite "proj/reggaefile.d" with:
+      And I overwrite "proj/reggaebuild/defs.d" with:
         """
+        module reggaebuild.defs;
         import reggae;
-        const mainObj  = Target(`main.o`,  `dmd -I$project/src -c $in -of$out`, Target(`src/main.d`));
-        const otherObj = Target(`other.o`, `dmd -I$project/src -c $in -of$out`, Target(`src/other.d`));
-        const app = Target(`myapp`,
-                         `dmd -of$out $in`,
-                         [mainObj, otherObj],
-                         );
-        mixin build!(app);
-        """
-      And I overwrite "proj/src/main.d" with:
-        """
-        import other;
-        void main() { myfunc();}
+        const funcObj = Target(`other.o`,
+                                `dmd -I$project/src -c $in -of$out`,
+                                Target(`src/other.d`));
         """
 
       When I successfully run `ninja`
@@ -90,21 +91,13 @@ Feature: Re-run reggae when dependencies deem it necessary
         """
 
       Given I successfully run `sleep 1` for up to 2 seconds
-      And I overwrite "proj/reggaefile.d" with:
+      And I overwrite "proj/reggaebuild/defs.d" with:
         """
+        module reggaebuild.defs;
         import reggae;
-        const mainObj  = Target(`main.o`,  `dmd -I$project/src -c $in -of$out`, Target(`src/main.d`));
-        const otherObj = Target(`other.o`, `dmd -I$project/src -c $in -of$out`, Target(`src/other.d`));
-        const app = Target(`myapp`,
-                         `dmd -of$out $in`,
-                         [mainObj, otherObj],
-                         );
-        mixin build!(app);
-        """
-      And I overwrite "proj/src/main.d" with:
-        """
-        import other;
-        void main() { myfunc();}
+        const funcObj = Target(`other.o`,
+                                `dmd -I$project/src -c $in -of$out`,
+                                Target(`src/other.d`));
         """
 
       When I successfully run `make`
@@ -129,21 +122,13 @@ Feature: Re-run reggae when dependencies deem it necessary
         """
 
       Given I successfully run `sleep 1` for up to 2 seconds
-      And I overwrite "proj/reggaefile.d" with:
+      And I overwrite "proj/reggaebuild/defs.d" with:
         """
+        module reggaebuild.defs;
         import reggae;
-        const mainObj  = Target(`main.o`,  `dmd -I$project/src -c $in -of$out`, Target(`src/main.d`));
-        const otherObj = Target(`other.o`, `dmd -I$project/src -c $in -of$out`, Target(`src/other.d`));
-        const app = Target(`myapp`,
-                         `dmd -of$out $in`,
-                         [mainObj, otherObj],
-                         );
-        mixin build!(app);
-        """
-      And I overwrite "proj/src/main.d" with:
-        """
-        import other;
-        void main() { myfunc();}
+        const funcObj = Target(`other.o`,
+                                `dmd -I$project/src -c $in -of$out`,
+                                Target(`src/other.d`));
         """
 
       When I successfully run `./build`

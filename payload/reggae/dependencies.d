@@ -4,8 +4,8 @@ import std.regex;
 import std.algorithm: splitter;
 
 /**
- * Given a source file with a D main() function, return
- * The list of D files to compile to link the executable
+ * Given the output of compiling a file, return
+ * the list of D files to compile to link the executable
  * Includes all dependencies, not just source files to
  * compile.
  */
@@ -24,8 +24,8 @@ string[] dMainDependencies(in string output) @trusted {
 
 
 /**
- * Given a source file with a D main() function, return
- * The list of D files to compile to link the executable.
+ * Given the output of compiling a file, return
+ * the list of D files to compile to link the executable.
  * Only includes source files to compile
  */
 //@trusted because of splitter

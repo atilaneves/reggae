@@ -188,6 +188,12 @@ Feature: D compilation rule
       output: The result of 7 is 42
       """
 
+    When I successfully run `./build`
+    Then the output should contain:
+      """
+      [build] Nothing to do
+      """
+
   @tup
   Scenario: Using dcompile for every object file with Tup
     When I successfully run `reggae -b tup leproj`

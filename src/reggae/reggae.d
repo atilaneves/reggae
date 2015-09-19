@@ -127,7 +127,7 @@ enum coreFiles = [
     "backend/package.d", "backend/binary.d",
     "package.d", "range.d", "reflect.d",
     "dependencies.d", "types.d", "dcompile.d",
-    "ctaa.d", "sorting.d",
+    "ctaa.d", "sorting.d", "file.d",
     "rules/package.d",
     "rules/common.d",
     "rules/d.d",

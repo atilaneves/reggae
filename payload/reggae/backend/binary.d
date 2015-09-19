@@ -4,9 +4,10 @@ module reggae.backend.binary;
 import reggae.build;
 import reggae.range;
 import reggae.options;
+import reggae.file;
 import std.algorithm;
 import std.range;
-import std.file: timeLastModified, thisExePath, exists;
+import std.file: thisExePath, exists;
 import std.process: execute, executeShell;
 import std.path: absolutePath;
 import std.typecons: tuple;
@@ -202,13 +203,6 @@ private:
     }
 }
 
-bool newerThan(in string a, in string b) nothrow {
-    try {
-        return a.timeLastModified > b.timeLastModified;
-    } catch(Exception) { //file not there, so newer
-        return true;
-    }
-}
 
 string[] dependenciesFromFile(R)(R lines) @trusted if(isInputRange!R) {
     return lines.

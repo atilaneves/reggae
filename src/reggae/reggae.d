@@ -27,6 +27,7 @@ import std.algorithm;
 import reggae.options;
 import reggae.ctaa;
 import reggae.types;
+import reggae.file;
 
 
 version(minimal) {
@@ -178,8 +179,8 @@ private immutable hiddenDir = ".reggae";
 private auto compileBinaries(in Options options) {
 
     immutable buildGenName = getBuildGenName(options);
-    auto compileBuildGenCmd = getCompileBuildGenCmd(options);
-    compileBuildGenCmd ~= getReggaeFileDependencies(compileBuildGenCmd);
+    auto buildGenCmd = getCompileBuildGenCmd(options);
+    buildGenCmd ~= getReggaeFileDependencies(buildGenCmd);
 
     immutable dcompileName = buildPath(hiddenDir, "dcompile");
     immutable dcompileCmd = ["dmd",
@@ -189,12 +190,12 @@ private auto compileBinaries(in Options options) {
                              reggaeSrcFileName("dependencies.d")];
 
     static struct Binary { string name; const(string)[] cmd; }
+    Binary[] binaries;
 
-    auto binaries = options.isScriptBuild
-        ? [Binary(dcompileName, dcompileCmd)]
-        : [Binary(buildGenName, compileBuildGenCmd), Binary(dcompileName, dcompileCmd)];
+    if(!options.isScriptBuild) binaries ~= Binary(buildGenName, buildGenCmd);
+    if(thisExePath.newerThan(dcompileName)) binaries ~= Binary(dcompileName, dcompileCmd);
+
     foreach(bin; binaries) writeln("[Reggae] Compiling metabuild binary ", bin.name);
-
     import std.parallelism;
 
     foreach(bin; binaries.parallel) {

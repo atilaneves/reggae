@@ -175,11 +175,13 @@ private:
     //Checks dependencies listed in the .dep file created by the compiler
     bool checkDeps(in Target target, in string depFileName) const @trusted {
         auto file = File(depFileName);
-        const dependencies = file.byLine.map!(a => a.to!string).dependenciesFromFile;
+        auto dependencies = file.byLine.map!(a => a.to!string).dependenciesFromFile;
 
-        if(dependencies.any!(a => a.newerThan(target.outputsInProjectPath(options.projectPath)[0]))) {
-            executeCommand(target);
-            return true;
+        if(!dependencies.empty){
+            if(dependencies.front.split(" ").any!(a => a.newerThan(target.outputsInProjectPath(options.projectPath)[0]))) {
+                executeCommand(target);
+                return true;
+            }
         }
         return false;
     }

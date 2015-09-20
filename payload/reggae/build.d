@@ -351,13 +351,13 @@ struct Target {
         return Target(output, Command.phony(shellCommand), dependencies, implicits);
     }
 
-    string toString() const pure nothrow {
+    string toString(string projectPath = "") const pure nothrow {
         try {
             if(isLeaf) return outputs[0];
             immutable outputs = outputs.length == 1 ? `"` ~ outputs[0] ~ `"` : text(outputs);
             immutable depsStr = dependencies.length == 0 ? "" : text(dependencies);
             immutable impsStr = implicits.length == 0 ? "" : text(implicits);
-            auto parts = [text(outputs), `"` ~ shellCommand ~ `"`];
+            auto parts = [text(outputs), `"` ~ shellCommand(projectPath) ~ `"`];
             if(depsStr != "") parts ~= depsStr;
             if(impsStr != "") parts ~= impsStr;
             return text("Target(", parts.join(", "), ")");
@@ -365,7 +365,6 @@ struct Target {
             assert(0);
         }
     }
-
 
 private:
 

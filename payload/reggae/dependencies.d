@@ -2,6 +2,7 @@ module reggae.dependencies;
 
 import std.regex;
 import std.algorithm: splitter;
+import std.range;
 
 /**
  * Given the output of compiling a file, return
@@ -44,4 +45,17 @@ string[] dMainDepSrcs(in string output) @trusted {
     }
 
     return dependencies;
+}
+
+
+string[] dependenciesToFile(in string objFile, in string[] deps) @safe pure nothrow {
+    import std.array;
+    return [objFile ~ ": \\",
+            deps.join(" "),
+        ];
+}
+
+string[] dependenciesFromFile(R)(R lines) if(isInputRange!R) {
+    auto arr = lines.array;
+    return arr.length < 2 ? [] : arr[1].split(" ");
 }

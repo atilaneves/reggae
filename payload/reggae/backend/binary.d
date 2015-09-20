@@ -4,6 +4,7 @@ module reggae.backend.binary;
 import reggae.build;
 import reggae.range;
 import reggae.options;
+import reggae.dependencies;
 import std.algorithm;
 import std.range;
 import std.file: timeLastModified, thisExePath, exists;
@@ -175,12 +176,13 @@ private:
     //Checks dependencies listed in the .dep file created by the compiler
     bool checkDeps(in Target target, in string depFileName) const @trusted {
         auto file = File(depFileName);
-        const dependencies = file.byLine.map!(a => a.to!string).dependenciesFromFile;
+        auto dependencies = file.byLine.map!(a => a.to!string).dependenciesFromFile;
 
         if(dependencies.any!(a => a.newerThan(target.outputsInProjectPath(options.projectPath)[0]))) {
             executeCommand(target);
             return true;
         }
+
         return false;
     }
 
@@ -208,12 +210,4 @@ bool newerThan(in string a, in string b) nothrow {
     } catch(Exception) { //file not there, so newer
         return true;
     }
-}
-
-string[] dependenciesFromFile(R)(R lines) @trusted if(isInputRange!R) {
-    return lines.
-        map!(a => a.replace(" \\", "")).
-        filter!(a => !a.empty).
-        map!(a => a.strip).
-        array[1..$];
 }

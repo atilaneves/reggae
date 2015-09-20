@@ -357,7 +357,7 @@ struct Target {
             immutable outputs = outputs.length == 1 ? `"` ~ outputs[0] ~ `"` : text(outputs);
             immutable depsStr = dependencies.length == 0 ? "" : text(dependencies);
             immutable impsStr = implicits.length == 0 ? "" : text(implicits);
-            auto parts = [text(outputs), `"` ~ _command.command ~ `"`];
+            auto parts = [text(outputs), `"` ~ shellCommand ~ `"`];
             if(depsStr != "") parts ~= depsStr;
             if(impsStr != "") parts ~= impsStr;
             return text("Target(", parts.join(", "), ")");

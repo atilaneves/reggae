@@ -1,5 +1,4 @@
 Compute dependencies for reggaefile.d itself - what if it imports other modules?
-Compilation database generation
 Cache build objects for binary backend
 Use CC, CXX, LD environment variables
 Any order of parameters

@@ -286,7 +286,6 @@ private void writeConfig(in Options options) {
 }
 
 
-
 private string reggaeSrcFileName(in string fileName) @safe pure nothrow {
     return buildPath(reggaeSrcDirName, fileName);
 }

@@ -38,6 +38,7 @@ mixin template BuildGenMain(string buildModule = "reggaefile") {
 void generateBuildFor(alias module_)(in Options options, string[] args) {
     const buildFunc = getBuild!(module_); //get the function to call by CT reflection
     const build = buildFunc(); //actually call the function to get the build description
+    writeCompilationDB(build, options);
     generateBuild(build, options, args);
 }
 
@@ -102,4 +103,28 @@ private void handleTup(in Build build, in Options options) {
         auto file = File(tup.fileName, "w");
         file.write(tup.output);
     }
+}
+
+
+private void writeCompilationDB(in Build build, in Options options) {
+    import std.file;
+    import std.conv;
+    import std.algorithm;
+
+    auto file = File("compile_commands.json", "w");
+    file.writeln("[");
+
+    immutable cwd = getcwd;
+    string entry(in Target target) {
+        return
+            "    {\n" ~
+            text(`        "directory": "`, cwd, `"`) ~ ",\n" ~
+            text(`        "command": "`, target.shellCommand(options.projectPath), `"`) ~ ",\n" ~
+            text(`        "file": "`, target.outputsInProjectPath(options.projectPath).join(" "), `"`) ~ "\n" ~
+            "    }";
+    }
+
+    file.write(build.range.map!(a => entry(a)).join(",\n"));
+    file.writeln;
+    file.writeln("]");
 }

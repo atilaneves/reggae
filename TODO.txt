@@ -1,16 +1,13 @@
 Compute dependencies for reggaefile.d itself - what if it imports other modules?
-Use CC, CXX, LD environment variables
-
-Any order of parameters
-Distinguish LinkFlags vs CompilerFlags?
-
-Build server? In: list of changed files, out: build.
-
-Change to using -deps for D dependencies
-Make it work with GDC and LDC
-Code coverage for both UTs and Cucumber
-Unity builds for C/C++
 Compilation database generation
+Cache build objects for binary backend
+Use CC, CXX, LD environment variables
+Any order of parameters
+
+Distinguish LinkFlags vs CompilerFlags?
+Build server? In: list of changed files, out: build.
+Change to using -deps for D dependencies
+Code coverage for both UTs and Cucumber
 Distributed/cached buidls?
 
 Refactoring:

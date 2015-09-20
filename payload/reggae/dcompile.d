@@ -40,6 +40,7 @@ private void dcompile(string[] args) {
 
     auto file = File(depFile, "w");
     file.write(dependenciesToFile(objFile, dMainDependencies(compRes.output)).join("\n"));
+    file.writeln;
 }
 
 

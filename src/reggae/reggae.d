@@ -212,7 +212,7 @@ const (string[]) getCompileBuildGenCmd(in Options options) @safe {
         map!(a => a.reggaeSrcFileName).array;
 
     immutable buildBinFlags = options.backend == Backend.binary
-        ? ["-O"]
+        ? ["-O", "-inline"]
         : [];
     immutable commonBefore = ["dmd",
                               "-I" ~ options.projectPath,

@@ -7,7 +7,7 @@ Distinguish LinkFlags vs CompilerFlags?
 Build server? In: list of changed files, out: build.
 Change to using -deps for D dependencies
 Code coverage for both UTs and Cucumber
-Distributed/cached buidls?
+Distributed builds?
 
 Refactoring:
   range.d

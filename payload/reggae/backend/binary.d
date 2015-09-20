@@ -149,11 +149,10 @@ private:
         foreach(dep; chain(target.dependencies, target.implicits)) {
 
             immutable isPhony = target.getCommandType == CommandType.phony;
-            immutable anyNewer = cartesianProduct(dep.outputsInProjectPath(options.projectPath),
-                                                  target.outputsInProjectPath(options.projectPath)).
-                any!(a => a[0].newerThan(a[1]));
 
-            if(isPhony || anyNewer) {
+            if(isPhony || anyNewer(options.projectPath,
+                                   dep.outputsInProjectPath(options.projectPath),
+                                   target)) {
                 executeCommand(target);
                 return true;
             }
@@ -178,7 +177,7 @@ private:
         auto file = File(depFileName);
         auto dependencies = file.byLine.map!(a => a.to!string).dependenciesFromFile;
 
-        if(dependencies.any!(a => a.newerThan(target.outputsInProjectPath(options.projectPath)[0]))) {
+        if(anyNewer(options.projectPath, dependencies, target)) {
             executeCommand(target);
             return true;
         }
@@ -210,4 +209,10 @@ bool newerThan(in string a, in string b) nothrow {
     } catch(Exception) { //file not there, so newer
         return true;
     }
+}
+
+
+bool anyNewer(in string projectPath, in string[] dependencies, in Target target) @safe {
+    return cartesianProduct(dependencies, target.outputsInProjectPath(projectPath)).
+        any!(a => a[0].newerThan(a[1]));
 }

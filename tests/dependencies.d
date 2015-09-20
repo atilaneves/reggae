@@ -37,3 +37,25 @@ void testEtcLinux() {
      "import    core.sys.posix.ucontext       (/usr/include/dlang/dmd/core/sys/posix/ucontext.d)"].
         join("\n").dMainDepSrcs.shouldEqual([]);
 }
+
+
+void testToFile() {
+    auto deps = ["/foo/bar.d", "/foo/baz.d"];
+    dependenciesToFile("foo.o", deps).shouldEqual(
+        ["foo.o: \\",
+         "/foo/bar.d /foo/baz.d"]);
+}
+
+
+void testFromFile() {
+    immutable depFileLines = [
+        "objs/calc.objs/src/cpp/maths.o: \\",
+        "/home/aalvesne/coding/d/reggae/tmp/aruba/mixproj/src/cpp/maths.cpp " ~
+        "/home/aalvesne/coding/d/reggae/tmp/aruba/mixproj/headers/maths.hpp"];
+    dependenciesFromFile(depFileLines).shouldEqual(
+        [ "/home/aalvesne/coding/d/reggae/tmp/aruba/mixproj/src/cpp/maths.cpp",
+          "/home/aalvesne/coding/d/reggae/tmp/aruba/mixproj/headers/maths.hpp"]);
+
+    string[] noDeps;
+    dependenciesFromFile(noDeps).shouldEqual([]);
+}

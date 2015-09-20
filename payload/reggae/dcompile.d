@@ -39,9 +39,7 @@ private void dcompile(string[] args) {
                  execute(fewerArgs).output));
 
     auto file = File(depFile, "w");
-    file.write(objFile, ": \\\n");
-    file.write(dMainDependencies(compRes.output).join(" "));
-    file.writeln;
+    file.write(dependenciesToFile(objFile, dMainDependencies(compRes.output)).join("\n"));
 }
 
 

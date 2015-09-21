@@ -610,4 +610,11 @@ struct Command {
         }
     }
 
+    ubyte[] toBytes() @safe pure nothrow const {
+        return [];
+    }
+
+    static Command fromBytes(in ubyte[] bytes) @safe pure nothrow {
+        return Command();
+    }
 }

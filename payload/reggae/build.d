@@ -611,10 +611,12 @@ struct Command {
     }
 
     ubyte[] toBytes() @safe pure nothrow const {
-        return [];
+        return cast(ubyte[])command.dup;
     }
 
-    static Command fromBytes(in ubyte[] bytes) @safe pure nothrow {
-        return Command();
+    static Command fromBytes(in ubyte[] bytes) @trusted pure nothrow {
+        char[] chars;
+        foreach(b; bytes) chars ~= cast(char)b;
+        return Command(cast(string)chars);
     }
 }

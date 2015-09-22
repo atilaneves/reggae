@@ -80,7 +80,7 @@ struct Build {
         immutable length = getUshort(bytes);
         auto build = Build();
         foreach(_; 0 .. length) {
-            build._targets ~= createTopLevelTarget(Target.fromBytes(bytes));
+            build._targets ~= TopLevelTarget(Target.fromBytes(bytes), false);
         }
         return build;
     }

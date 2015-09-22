@@ -36,10 +36,26 @@ mixin template BuildGenMain(string buildModule = "reggaefile") {
 }
 
 void generateBuildFor(alias module_)(in Options options, string[] args) {
-    const buildFunc = getBuild!(module_); //get the function to call by CT reflection
-    const build = buildFunc(); //actually call the function to get the build description
+    const build = getBuildObject!module_(options);
     writeCompilationDB(build, options);
     generateBuild(build, options, args);
+}
+
+private Build getBuildObject(alias module_)(in Options options) {
+    immutable cacheFileName = buildPath(".reggae", "cache");
+    if(!cacheFileName.exists || thisExePath.timeLastModified > cacheFileName.timeLastModified) {
+        const buildFunc = getBuild!(module_); //get the function to call by CT reflection
+        auto build = buildFunc(); //actually call the function to get the build description
+
+        auto file = File(cacheFileName, "w");
+        file.rawWrite(build.toBytes(options.projectPath));
+
+        return build;
+    } else {
+        auto file = File(cacheFileName);
+        auto buffer = new ubyte[file.size];
+        return Build.fromBytes(file.rawRead(buffer));
+    }
 }
 
 void generateBuild(in Build build, in Options options, string[] args = []) {

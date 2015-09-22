@@ -68,6 +68,22 @@ struct Build {
         import reggae.range;
         return UniqueDepthFirst(this);
     }
+
+    ubyte[] toBytes(in string projectPath) @safe pure const {
+        ubyte[] bytes;
+        bytes ~= setUshort(cast(ushort)targets.length);
+        foreach(t; targets) bytes ~= t.toBytes(projectPath);
+        return bytes;
+    }
+
+    static Build fromBytes(ubyte[] bytes) @trusted {
+        immutable length = getUshort(bytes);
+        auto build = Build();
+        foreach(_; 0 .. length) {
+            build._targets ~= createTopLevelTarget(Target.fromBytes(bytes));
+        }
+        return build;
+    }
 }
 
 

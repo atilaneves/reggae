@@ -40,3 +40,13 @@ void testTarget() {
     Target.fromBytes(bytes).shouldEqual(
         Target("foo.o", "dmd -offoo.o -c /path/to/foo.d", Target("/path/to/foo.d")));
 }
+
+void testBuild() @trusted {
+    const foo = Target("foo.o", "dmd -of$out -c $in", Target("foo.d"));
+    const bar = Target("bar.o", "dmd -of$out -c $in", Target("bar.d"));
+    const build = Build(foo, bar);
+    auto bytes = build.toBytes("/path/to");
+    Build.fromBytes(bytes).shouldEqual(
+        Build(Target("foo.o", "dmd -offoo.o -c /path/to/foo.d", Target("/path/to/foo.d")),
+              Target("bar.o", "dmd -ofbar.o -c /path/to/bar.d", Target("/path/to/bar.d"))));
+}

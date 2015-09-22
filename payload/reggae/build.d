@@ -366,12 +366,43 @@ struct Target {
         }
     }
 
-    ubyte[] toBytes() @safe pure const nothrow {
-        return [];
+    ubyte[] toBytes(in string projectPath) @safe pure const {
+        ubyte[] bytes;
+        bytes ~= setUshort(cast(ushort)outputs.length);
+        foreach(output; outputs) {
+            bytes ~= arrayToBytes(isLeaf ? inProjectPath(projectPath, output) : output);
+        }
+
+        bytes ~= arrayToBytes(shellCommand(projectPath));
+
+        bytes ~= setUshort(cast(ushort)dependencies.length);
+        foreach(dep; dependencies) bytes ~= dep.toBytes(projectPath);
+
+        bytes ~= setUshort(cast(ushort)implicits.length);
+        foreach(imp; implicits) bytes ~= imp.toBytes(projectPath);
+
+        return bytes;
     }
 
-    static Target fromBytes(in ubyte[] bytes) @safe pure nothrow {
-        return Target();
+    static Target fromBytes(ref ubyte[] bytes) @trusted pure nothrow {
+        string[] outputs;
+        immutable numOutputs = getUshort(bytes);
+
+        foreach(i; 0 .. numOutputs) {
+            outputs ~= cast(string)bytesToArray!char(bytes);
+        }
+
+        auto command = Command(cast(string)bytesToArray!char(bytes));
+
+        Target[] dependencies;
+        immutable numDeps = getUshort(bytes);
+        foreach(i; 0..numDeps) dependencies ~= Target.fromBytes(bytes);
+
+        Target[] implicits;
+        immutable numImps = getUshort(bytes);
+        foreach(i; 0..numImps) implicits ~= Target.fromBytes(bytes);
+
+        return Target(outputs, command, dependencies, implicits);
     }
 
 private:
@@ -707,4 +738,11 @@ private ushort getUshort(ref ubyte[] bytes) @safe pure nothrow {
     immutable length = (bytes[0] << 8) + bytes[1];
     bytes = bytes[2..$];
     return length;
+}
+
+private ubyte[] setUshort(in ushort length) @safe pure nothrow {
+    auto bytes = new ubyte[2];
+    bytes[0] = length >> 8;
+    bytes[1] = length & 0xff;
+    return bytes;
 }

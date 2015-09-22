@@ -34,7 +34,9 @@ void testBuiltinCommand() {
 }
 
 
-// void testTarget() {
-//     const target = Target("foo.o", "dmd -of$out -c $in", Target("foo.d"));
-//     Target.fromBytes(target.toBytes).shouldEqual(target);
-// }
+void testTarget() {
+    const target = Target("foo.o", "dmd -of$out -c $in", Target("foo.d"));
+    auto bytes = target.toBytes("/path/to");
+    Target.fromBytes(bytes).shouldEqual(
+        Target("foo.o", "dmd -offoo.o -c /path/to/foo.d", Target("/path/to/foo.d")));
+}

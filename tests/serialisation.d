@@ -20,3 +20,15 @@ void testShellCommand() {
         Command.fromBytes(bytes).shouldEqual(command);
     }
 }
+
+
+void testBuiltinCommand() {
+    {
+        const command = Command(CommandType.compile, assocListT("foo", ["lefoo", "dasfoo"]));
+        Command.fromBytes(command.toBytes).shouldEqual(command);
+    }
+    {
+        const command = Command(CommandType.compile, assocListT("bar", ["lebar", "dasbar"]));
+        Command.fromBytes(command.toBytes).shouldEqual(command);
+    }
+}

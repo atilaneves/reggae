@@ -434,7 +434,8 @@ struct Command {
     /**Explicitly request a command of this type with these parameters
        In general to create one of the builtin high level rules*/
     this(CommandType type, Params params = Params()) @safe pure {
-        if(type == CommandType.shell) throw new Exception("Command rule cannot be shell");
+        if(type == CommandType.shell || type == CommandType.code)
+            throw new Exception("Command rule cannot be shell or code");
         this.type = type;
         this.params = params;
     }
@@ -611,12 +612,87 @@ struct Command {
     }
 
     ubyte[] toBytes() @safe pure nothrow const {
-        return cast(ubyte[])command.dup;
+        final switch(type) {
+
+        case CommandType.shell:
+            return [cast(ubyte)type] ~ cast(ubyte[])command.dup;
+
+        case CommandType.compile:
+        case CommandType.compileAndLink:
+        case CommandType.link:
+        case CommandType.phony:
+            ubyte[] bytes;
+            bytes ~= cast(ubyte)type;
+            bytes ~= cast(ubyte)(params.keys.length >> 8);
+            bytes ~= (params.keys.length & 0xff);
+            foreach(key; params.keys) {
+                bytes ~= arrayToBytes(key);
+                bytes ~= cast(ubyte)(params[key].length >> 8);
+                bytes ~= (params[key].length & 0xff);
+                foreach(value; params[key])
+                    bytes ~= arrayToBytes(value);
+            }
+            return bytes;
+
+        case CommandType.code:
+            assert(0);
+        }
     }
 
-    static Command fromBytes(in ubyte[] bytes) @trusted pure nothrow {
-        char[] chars;
-        foreach(b; bytes) chars ~= cast(char)b;
-        return Command(cast(string)chars);
+    static Command fromBytes(ubyte[] bytes) @trusted pure {
+        immutable type = cast(CommandType)bytes[0];
+        Params params;
+        final switch(type) {
+
+        case CommandType.shell:
+            char[] chars;
+            foreach(b; bytes[1..$]) chars ~= cast(char)b;
+            return Command(cast(string)chars);
+
+        case CommandType.compile:
+        case CommandType.compileAndLink:
+        case CommandType.link:
+        case CommandType.phony:
+
+            immutable numKeys = (bytes[1] << 8) + bytes[2];
+            bytes = bytes[3..$];
+            foreach(i; 0..numKeys) {
+                auto key = cast(string)bytesToArray!char(bytes);
+                bytes = bytes[key.length + 2 .. $];
+
+                immutable numValues = cast(int)(bytes[0] << 8) + bytes[1];
+                bytes = bytes[2..$];
+
+                string[] values;
+                foreach(j; 0..numValues) {
+                    values ~= bytesToArray!char(bytes);
+                    bytes = bytes[values[$-1].length + 2 .. $];
+                }
+                params[key] = values;
+            }
+            return Command(type, params);
+            //return Command(type,  assocListT("foo", ["lefoo", "dasfoo"]));
+
+        case CommandType.code:
+            assert(0);
+        }
     }
+}
+
+
+private ubyte[] arrayToBytes(T)(in T[] arr) {
+    auto bytes = new ubyte[arr.length + 2];
+    immutable length = cast(ushort)arr.length;
+    bytes[0] = length >> 8;
+    bytes[1] = length & 0xff;
+    foreach(i, c; arr) bytes[i + 2] = cast(ubyte)c;
+    return bytes;
+}
+
+
+private T[] bytesToArray(T)(in ubyte[] bytes) {
+    T[] arr;
+    arr.length = (bytes[0] << 8) + bytes[1];
+    foreach(i, b; bytes[2 .. arr.length + 2]) arr[i] = cast(T)b;
+    return arr;
 }

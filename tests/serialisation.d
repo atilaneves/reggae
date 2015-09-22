@@ -32,3 +32,9 @@ void testBuiltinCommand() {
         Command.fromBytes(command.toBytes).shouldEqual(command);
     }
 }
+
+
+// void testTarget() {
+//     const target = Target("foo.o", "dmd -of$out -c $in", Target("foo.d"));
+//     Target.fromBytes(target.toBytes).shouldEqual(target);
+// }

@@ -366,6 +366,14 @@ struct Target {
         }
     }
 
+    ubyte[] toBytes() @safe pure const nothrow {
+        return [];
+    }
+
+    static Target fromBytes(in ubyte[] bytes) @safe pure nothrow {
+        return Target();
+    }
+
 private:
 
 
@@ -641,40 +649,36 @@ struct Command {
 
     static Command fromBytes(ubyte[] bytes) @trusted pure {
         immutable type = cast(CommandType)bytes[0];
-        Params params;
+        bytes = bytes[1..$];
+
         final switch(type) {
 
         case CommandType.shell:
             char[] chars;
-            foreach(b; bytes[1..$]) chars ~= cast(char)b;
+            foreach(b; bytes) chars ~= cast(char)b;
             return Command(cast(string)chars);
 
         case CommandType.compile:
         case CommandType.compileAndLink:
         case CommandType.link:
         case CommandType.phony:
+            Params params;
 
-            immutable numKeys = (bytes[1] << 8) + bytes[2];
-            bytes = bytes[3..$];
+            immutable numKeys = getUshort(bytes);
             foreach(i; 0..numKeys) {
-                auto key = cast(string)bytesToArray!char(bytes);
-                bytes = bytes[key.length + 2 .. $];
-
-                immutable numValues = cast(int)(bytes[0] << 8) + bytes[1];
-                bytes = bytes[2..$];
+                immutable key = cast(string)bytesToArray!char(bytes);
+                immutable numValues = getUshort(bytes);
 
                 string[] values;
                 foreach(j; 0..numValues) {
                     values ~= bytesToArray!char(bytes);
-                    bytes = bytes[values[$-1].length + 2 .. $];
                 }
                 params[key] = values;
             }
             return Command(type, params);
-            //return Command(type,  assocListT("foo", ["lefoo", "dasfoo"]));
 
         case CommandType.code:
-            assert(0);
+            throw new Exception("Cannot serialise Command of type code");
         }
     }
 }
@@ -690,9 +694,17 @@ private ubyte[] arrayToBytes(T)(in T[] arr) {
 }
 
 
-private T[] bytesToArray(T)(in ubyte[] bytes) {
+private T[] bytesToArray(T)(ref ubyte[] bytes) {
     T[] arr;
-    arr.length = (bytes[0] << 8) + bytes[1];
-    foreach(i, b; bytes[2 .. arr.length + 2]) arr[i] = cast(T)b;
+    arr.length = getUshort(bytes);
+    foreach(i, b; bytes[0 .. arr.length]) arr[i] = cast(T)b;
+    bytes = bytes[arr.length .. $];
     return arr;
+}
+
+
+private ushort getUshort(ref ubyte[] bytes) @safe pure nothrow {
+    immutable length = (bytes[0] << 8) + bytes[1];
+    bytes = bytes[2..$];
+    return length;
 }

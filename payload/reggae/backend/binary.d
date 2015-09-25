@@ -127,7 +127,7 @@ private:
 
     bool checkReRun() const {
         immutable myPath = thisExePath;
-        if(options.reggaeFileDependencies.any!(a => a.newerThan(myPath))) {
+        if((options.reggaeFileDependencies ~ getReggaeFileDependencies).any!(a => a.newerThan(myPath))) {
             writeln("[build] " ~ options.rerunArgs.join(" "));
             immutable reggaeRes = execute(options.rerunArgs);
             enforce(reggaeRes.status == 0,

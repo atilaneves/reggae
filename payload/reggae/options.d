@@ -206,7 +206,10 @@ string[] getReggaeFileDependencies() @trusted {
     import std.algorithm: splitter;
     import std.array: array;
 
-    auto file = File(buildPath(hiddenDir, "reggaefile.dep"));
+    immutable fileName = buildPath(hiddenDir, "reggaefile.dep");
+    if(!fileName.exists) return [];
+
+    auto file = File(fileName);
     file.readln;
     return file.readln.chomp.splitter(" ").array;
 }

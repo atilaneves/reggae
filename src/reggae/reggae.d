@@ -205,8 +205,9 @@ private string compileBinaries(in Options options) {
     buildDCompile(options);
 
     immutable buildGenName = getBuildGenName(options);
-    const buildGenCmd = getCompileBuildGenCmd(options);
+    if(options.isScriptBuild) return buildGenName;
 
+    const buildGenCmd = getCompileBuildGenCmd(options);
     buildBinary(Binary(buildGenName ~ ".o", buildGenCmd));
 
     const reggaeFileDeps = getReggaeFileDependencies;

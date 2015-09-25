@@ -161,9 +161,11 @@ struct Options {
 //getopt is @system
 Options getOptions(string[] args) @trusted {
     import std.getopt;
+    import std.algorithm;
+    import std.array;
 
     Options options;
-    auto origArgs = args.dup;
+    auto origArgs = args.map!(a => `"` ~ a ~ `"`).array;
 
     try {
         auto helpInfo = getopt(

@@ -29,6 +29,7 @@ struct Options {
     bool perModule;
     bool isDubProject;
     bool oldNinja;
+    string[] args;
     string[string] userVars;
 
     Options dup() @safe pure const nothrow {
@@ -38,7 +39,8 @@ struct Options {
     }
 
     //finished setup
-    void finalize() @safe{
+    void finalize(string[] args) @safe{
+        this.args = args;
         ranFromPath = thisExePath();
 
         if(!cCompiler)   cCompiler   = "gcc";
@@ -121,19 +123,7 @@ struct Options {
         return repr;
     }
 
-    string[] rerunArgs() @safe pure const {
-        import std.conv: to;
-
-        auto args =  [ranFromPath, "-b", backend.to!string, ];
-
-        if(dflags != "") args ~= ["--dflags='" ~ dflags ~ "'"];
-        if(oldNinja) args ~= "--old_ninja";
-        if(cCompiler != "") args ~=  ["--cc", cCompiler];
-        if(cppCompiler != "") args ~=  ["--cxx", cppCompiler];
-        if(dCompiler != "") args ~=  ["--dc", dCompiler];
-
-        args ~= projectPath;
-
+    const (string)[] rerunArgs() @safe pure const {
         return args;
     }
 
@@ -173,6 +163,8 @@ Options getOptions(string[] args) @trusted {
     import std.getopt;
 
     Options options;
+    auto origArgs = args.dup;
+
     try {
         auto helpInfo = getopt(
             args,
@@ -198,7 +190,7 @@ Options getOptions(string[] args) @trusted {
     }
 
     if(args.length > 1) options.projectPath = args[1].absolutePath;
-    options.finalize();
+    options.finalize(origArgs);
 
     return options;
 }

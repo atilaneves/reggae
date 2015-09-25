@@ -176,34 +176,43 @@ private void createBuild(in Options options) {
 
 private immutable hiddenDir = ".reggae";
 
+
+struct Binary {
+    string name;
+    const(string)[] cmd;
+}
+
+private void buildBinary(in Binary bin) {
+    writeln("[Reggae] Compiling metabuild binary ", bin.name);
+    immutable res = execute(bin.cmd);
+    enforce(res.status == 0, text("Couldn't execute ", bin.cmd.join(" "), ":\n", res.output,
+                                  "\n", "bin.name: ", bin.name, ", bin.cmd: ", bin.cmd.join(" ")));
+
+}
+
+private auto buildDCompile(in Options options) {
+    immutable name = buildPath(hiddenDir, "dcompile");
+
+    if(!thisExePath.newerThan(name)) return;
+
+    immutable cmd = ["dmd",
+                     "-I.reggae/src",
+                     "-of" ~ name,
+                     reggaeSrcFileName("dcompile.d"),
+                     reggaeSrcFileName("dependencies.d")];
+
+    buildBinary(Binary(name, cmd));
+}
+
 private auto compileBinaries(in Options options) {
+
+    buildDCompile(options);
 
     immutable buildGenName = getBuildGenName(options);
     auto buildGenCmd = getCompileBuildGenCmd(options);
     buildGenCmd ~= getReggaeFileDependencies(buildGenCmd);
 
-    immutable dcompileName = buildPath(hiddenDir, "dcompile");
-    immutable dcompileCmd = ["dmd",
-                             "-I.reggae/src",
-                             "-of" ~ dcompileName,
-                             reggaeSrcFileName("dcompile.d"),
-                             reggaeSrcFileName("dependencies.d")];
-
-    static struct Binary { string name; const(string)[] cmd; }
-    Binary[] binaries;
-
-    if(!options.isScriptBuild) binaries ~= Binary(buildGenName, buildGenCmd);
-    if(thisExePath.newerThan(dcompileName)) binaries ~= Binary(dcompileName, dcompileCmd);
-
-    foreach(bin; binaries) writeln("[Reggae] Compiling metabuild binary ", bin.name);
-    import std.parallelism;
-
-    foreach(bin; binaries.parallel) {
-        immutable res = execute(bin.cmd);
-        enforce(res.status == 0, text("Couldn't execute ", bin.cmd.join(" "), ":\n", res.output,
-                                      "\n", "bin.name: ", bin.name, ", bin.cmd: ", bin.cmd.join(" ")));
-    }
-
+    buildBinary(Binary(buildGenName, buildGenCmd));
     return buildGenName;
 }
 
@@ -227,10 +236,11 @@ private string[] getCompileBuildGenCmd(in Options options) @safe {
         ? ["-O"]
         : [];
     immutable commonBefore = ["dmd",
+                              "-of" ~ getBuildGenName(options),
                               "-I" ~ options.projectPath,
                               "-I" ~ buildPath(hiddenDir, "src"),
-                              "-g", "-debug",
-                              "-of" ~ getBuildGenName(options)];
+                              "-g",
+                              "-debug"];
     const commonAfter = buildBinFlags ~
         options.reggaeFilePath ~ reggaeSrcs;
     version(minimal) return commonBefore ~ "-version=minimal" ~ commonAfter;

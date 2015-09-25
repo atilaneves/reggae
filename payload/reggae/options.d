@@ -194,3 +194,19 @@ Options getOptions(string[] args) @trusted {
 
     return options;
 }
+
+
+immutable hiddenDir = ".reggae";
+
+//returns the list of files that the `reggaefile` depends on
+//this will usually be empty, but won't be if the reggaefile imports other D files
+string[] getReggaeFileDependencies() @trusted {
+    import std.string: chomp;
+    import std.stdio: File;
+    import std.algorithm: splitter;
+    import std.array: array;
+
+    auto file = File(buildPath(hiddenDir, "reggaefile.dep"));
+    file.readln;
+    return file.readln.chomp.splitter(" ").array;
+}

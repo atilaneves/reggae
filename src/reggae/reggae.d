@@ -174,9 +174,6 @@ private void createBuild(in Options options) {
 }
 
 
-private immutable hiddenDir = ".reggae";
-
-
 struct Binary {
     string name;
     const(string)[] cmd;
@@ -231,14 +228,6 @@ private string compileBinaries(in Options options) {
     return buildGenName;
 }
 
-//returns the list of files that the `reggaefile` depends on
-//this will usually be empty, but won't be if the reggaefile imports other D files
-private string[] getReggaeFileDependencies() @trusted {
-    import std.string: chomp;
-    auto file = File(buildPath(hiddenDir, "reggaefile.dep"));
-    file.readln;
-    return file.readln.chomp.splitter(" ").array;
-}
 
 private string[] getCompileBuildGenCmd(in Options options) @safe {
     import reggae.rules.common: objExt;

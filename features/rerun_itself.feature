@@ -11,11 +11,13 @@ Feature: Re-run reggae when dependencies deem it necessary
       """
     And a file named "proj/src/func.d" with:
       """
+      module func;
       import std.stdio;
       void myfunc() { writeln(`Mainymainy`); }
       """
     And a file named "proj/src/other.d" with:
       """
+      module func;
       import std.stdio;
       void myfunc() { writeln(`Lookee me!`); }
       """

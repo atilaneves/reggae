@@ -119,7 +119,10 @@ struct Ninja {
         return ruleEntries ~ defaultRules ~
             NinjaEntry("rule _rerun",
                        ["command = " ~ _options.rerunArgs.join(" "),
-                        "generator = 1"]);
+                        "generator = 1",
+                        "deps = gcc",
+                        "depfile = .reggae/reggaefile.dep"
+                           ]);
     }
 
     string buildOutput() @safe const {

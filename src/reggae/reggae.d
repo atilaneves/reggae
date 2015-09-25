@@ -235,7 +235,7 @@ private string compileBinaries(in Options options) {
 //this will usually be empty, but won't be if the reggaefile imports other D files
 private string[] getReggaeFileDependencies() @trusted {
     import std.string: chomp;
-    auto file = File(buildPath(hiddenDir, "buildgen.o.dep"));
+    auto file = File(buildPath(hiddenDir, "reggaefile.dep"));
     file.readln;
     return file.readln.chomp.splitter(" ").array;
 }
@@ -252,7 +252,7 @@ private string[] getCompileBuildGenCmd(in Options options) @safe {
         : [];
     immutable commonBefore = [buildPath(hiddenDir, "dcompile"),
                               "--objFile=" ~ getBuildGenName(options) ~ objExt,
-                              "--depFile=" ~ getBuildGenName(options) ~ objExt ~ ".dep",
+                              "--depFile=" ~ buildPath(hiddenDir, "reggaefile.dep"),
                               "dmd",
                               "-I" ~ options.projectPath,
                               "-I" ~ buildPath(hiddenDir, "src"),

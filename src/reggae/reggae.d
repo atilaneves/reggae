@@ -215,10 +215,9 @@ private string compileBinaries(in Options options) {
         immutable rest = buildPath(hiddenDir, "rest.o");
         buildBinary(Binary(rest,
                            ["dmd",
-                            "-of" ~ buildPath(hiddenDir, "rest.o"),
-                            "-I" ~ options.projectPath,
-                            "-I" ~ buildPath(hiddenDir, "src"),
-                            "-c"] ~
+                            "-c",
+                            "-of" ~ buildPath(hiddenDir, "rest.o")] ~
+                           importPaths(options) ~
                            reggaeFileDeps));
         objFiles ~= rest;
     }
@@ -229,7 +228,7 @@ private string compileBinaries(in Options options) {
 }
 
 
-private string[] getCompileBuildGenCmd(in Options options) @safe {
+private const(string)[] getCompileBuildGenCmd(in Options options) @safe {
     import reggae.rules.common: objExt;
 
     const reggaeSrcs = ("config.d" ~ fileNames).
@@ -239,18 +238,23 @@ private string[] getCompileBuildGenCmd(in Options options) @safe {
     immutable buildBinFlags = options.backend == Backend.binary
         ? ["-O"]
         : [];
-    immutable commonBefore = [buildPath(hiddenDir, "dcompile"),
-                              "--objFile=" ~ getBuildGenName(options) ~ objExt,
-                              "--depFile=" ~ buildPath(hiddenDir, "reggaefile.dep"),
-                              "dmd",
-                              "-I" ~ options.projectPath,
-                              "-I" ~ buildPath(hiddenDir, "src"),
-                              "-g",
-                              "-debug"];
+    const commonBefore = [buildPath(hiddenDir, "dcompile"),
+                          "--objFile=" ~ getBuildGenName(options) ~ objExt,
+                          "--depFile=" ~ buildPath(hiddenDir, "reggaefile.dep"),
+                          "dmd"] ~
+        importPaths(options) ~
+        ["-g",
+            "-debug"];
     const commonAfter = buildBinFlags ~
         options.reggaeFilePath ~ reggaeSrcs;
     version(minimal) return commonBefore ~ "-version=minimal" ~ commonAfter;
     else return commonBefore ~ commonAfter;
+}
+
+private string[] importPaths(in Options options) @safe pure nothrow {
+    return ["-I" ~ options.projectPath,
+            "-I" ~ buildPath(hiddenDir, "src")];
+
 }
 
 string getBuildGenName(in Options options) @safe pure nothrow {

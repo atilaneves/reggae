@@ -107,7 +107,7 @@ struct Ninja {
     }
 
     const(NinjaEntry)[] allBuildEntries() @safe const {
-        immutable files = _options.reggaeFileDependencies.join(" ");
+        immutable files = (_options.reggaeFileDependencies ~ getReggaeFileDependencies).join(" ");
         auto paramLines = _options.oldNinja ? [] : ["pool = console"];
         return buildEntries ~
             NinjaEntry("build build.ninja: _rerun | " ~ files,
@@ -120,8 +120,6 @@ struct Ninja {
             NinjaEntry("rule _rerun",
                        ["command = " ~ _options.rerunArgs.join(" "),
                         "generator = 1",
-                        "deps = gcc",
-                        "depfile = .reggae/reggaefile.dep"
                            ]);
     }
 

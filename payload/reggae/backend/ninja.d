@@ -332,7 +332,7 @@ private:
 
     //@trusted because of splitter
     private string targetRawCommand(in Target target) @trusted pure const {
-        return target.expandCommand(_projectPath).splitter(" ").front;
+        return target.shellCommand(_projectPath).splitter(" ").front;
     }
 }
 

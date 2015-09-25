@@ -326,11 +326,6 @@ struct Target {
         return outputsInProjectPath(projectPath).map!(a => a.replace(gBuilddir ~ dirSeparator, ""));
     }
 
-    ///replace all special variables with their expansion
-    @property string expandCommand(in string projectPath = "") @trusted pure const {
-        return _command.expand(projectPath, outputs, inputs(projectPath));
-    }
-
     //@trusted because of replace
     string rawCmdString(in string projectPath = "") @trusted pure const {
         return _command.rawCmdString(projectPath);

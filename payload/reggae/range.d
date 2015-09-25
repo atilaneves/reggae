@@ -15,8 +15,8 @@ enum isTargetLike(T) = is(typeof(() {
     auto imps = target.implicits;
     static assert(is(Unqual!(typeof(imps[0])) == Unqual!T));
     if(target.isLeaf) {}
-    string cmd = target.expandCommand;
-    cmd = target.expandCommand("");
+    string cmd = target.shellCommand;
+    cmd = target.shellCommand("");
 }));
 
 
@@ -31,7 +31,7 @@ struct DepthFirst(T) if(isTargetLike!T) {
 
     const(T)[] depthFirstTargets(in T target) pure {
         //if leaf, return
-        if(target.isLeaf) return target.expandCommand is null ? [] : [target];
+        if(target.isLeaf) return target.shellCommand is null ? [] : [target];
 
         //if not, add ourselves to the end to get depth-first
         return reduce!((a, b) => a ~ depthFirstTargets(b))(typeof(return).init, target.dependencies) ~

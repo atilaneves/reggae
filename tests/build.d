@@ -17,7 +17,7 @@ void testInOut() {
         const target = Target("foo",
                               "createfoo -o $out $in",
                               [Target("bar.txt"), Target("baz.txt")]);
-        target.expandCommand.shouldEqual("createfoo -o foo bar.txt baz.txt");
+        target.shellCommand.shouldEqual("createfoo -o foo bar.txt baz.txt");
     }
     {
         const target = Target("tgt",
@@ -27,14 +27,14 @@ void testInOut() {
                                   Target("src2.o", "gcc -c -o $out $in", [Target("src2.c")])
                                   ],
             );
-        target.expandCommand.shouldEqual("gcc -o tgt src1.o src2.o");
+        target.shellCommand.shouldEqual("gcc -o tgt src1.o src2.o");
     }
 
     {
         const target = Target(["proto.h", "proto.c"],
                               "protocompile $out -i $in",
                               [Target("proto.idl")]);
-        target.expandCommand.shouldEqual("protocompile proto.h proto.c -i proto.idl");
+        target.shellCommand.shouldEqual("protocompile proto.h proto.c -i proto.idl");
     }
 
     {
@@ -43,7 +43,7 @@ void testInOut() {
                               [Target(["foo1.o", "foo2.o"], "cmd", [Target("tmp")]),
                                Target("bar.o"),
                                Target("baz.o")]);
-        target.expandCommand.shouldEqual("ar -olib1.a foo1.o foo2.o bar.o baz.o");
+        target.shellCommand.shouldEqual("ar -olib1.a foo1.o foo2.o bar.o baz.o");
     }
 }
 
@@ -52,14 +52,14 @@ void testProject() {
     const target = Target("foo",
                           "makefoo -i $in -o $out -p $project",
                           [Target("bar"), Target("baz")]);
-    target.expandCommand("/tmp").shouldEqual("makefoo -i /tmp/bar /tmp/baz -o foo -p /tmp");
+    target.shellCommand("/tmp").shouldEqual("makefoo -i /tmp/bar /tmp/baz -o foo -p /tmp");
 }
 
 
 void testMultipleOutputs() {
     const target = Target(["foo.hpp", "foo.cpp"], "protocomp $in", [Target("foo.proto")]);
     target.outputs.shouldEqual(["foo.hpp", "foo.cpp"]);
-    target.expandCommand("myproj").shouldEqual("protocomp myproj/foo.proto");
+    target.shellCommand("myproj").shouldEqual("protocomp myproj/foo.proto");
 
     const bld = Build(target);
     bld.targets.array[0].outputs.shouldEqual(["foo.hpp", "foo.cpp"]);

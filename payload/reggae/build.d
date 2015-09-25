@@ -68,6 +68,22 @@ struct Build {
         import reggae.range;
         return UniqueDepthFirst(this);
     }
+
+    ubyte[] toBytes(in string projectPath) @safe pure const {
+        ubyte[] bytes;
+        bytes ~= setUshort(cast(ushort)targets.length);
+        foreach(t; targets) bytes ~= t.toBytes(projectPath);
+        return bytes;
+    }
+
+    static Build fromBytes(ubyte[] bytes) @trusted {
+        immutable length = getUshort(bytes);
+        auto build = Build();
+        foreach(_; 0 .. length) {
+            build._targets ~= TopLevelTarget(Target.fromBytes(bytes), false);
+        }
+        return build;
+    }
 }
 
 
@@ -366,6 +382,45 @@ struct Target {
         }
     }
 
+    ubyte[] toBytes(in string projectPath) @safe pure const {
+        ubyte[] bytes;
+        bytes ~= setUshort(cast(ushort)outputs.length);
+        foreach(output; outputs) {
+            bytes ~= arrayToBytes(isLeaf ? inProjectPath(projectPath, output) : output);
+        }
+
+        bytes ~= arrayToBytes(shellCommand(projectPath));
+
+        bytes ~= setUshort(cast(ushort)dependencies.length);
+        foreach(dep; dependencies) bytes ~= dep.toBytes(projectPath);
+
+        bytes ~= setUshort(cast(ushort)implicits.length);
+        foreach(imp; implicits) bytes ~= imp.toBytes(projectPath);
+
+        return bytes;
+    }
+
+    static Target fromBytes(ref ubyte[] bytes) @trusted pure nothrow {
+        string[] outputs;
+        immutable numOutputs = getUshort(bytes);
+
+        foreach(i; 0 .. numOutputs) {
+            outputs ~= cast(string)bytesToArray!char(bytes);
+        }
+
+        auto command = Command(cast(string)bytesToArray!char(bytes));
+
+        Target[] dependencies;
+        immutable numDeps = getUshort(bytes);
+        foreach(i; 0..numDeps) dependencies ~= Target.fromBytes(bytes);
+
+        Target[] implicits;
+        immutable numImps = getUshort(bytes);
+        foreach(i; 0..numImps) implicits ~= Target.fromBytes(bytes);
+
+        return Target(outputs, command, dependencies, implicits);
+    }
+
 private:
 
 
@@ -434,7 +489,8 @@ struct Command {
     /**Explicitly request a command of this type with these parameters
        In general to create one of the builtin high level rules*/
     this(CommandType type, Params params = Params()) @safe pure {
-        if(type == CommandType.shell) throw new Exception("Command rule cannot be shell");
+        if(type == CommandType.shell || type == CommandType.code)
+            throw new Exception("Command rule cannot be shell or code");
         this.type = type;
         this.params = params;
     }
@@ -610,4 +666,99 @@ struct Command {
         }
     }
 
+    ubyte[] toBytes() @safe pure nothrow const {
+        final switch(type) {
+
+        case CommandType.shell:
+            return [cast(ubyte)type] ~ cast(ubyte[])command.dup;
+
+        case CommandType.compile:
+        case CommandType.compileAndLink:
+        case CommandType.link:
+        case CommandType.phony:
+            ubyte[] bytes;
+            bytes ~= cast(ubyte)type;
+            bytes ~= cast(ubyte)(params.keys.length >> 8);
+            bytes ~= (params.keys.length & 0xff);
+            foreach(key; params.keys) {
+                bytes ~= arrayToBytes(key);
+                bytes ~= cast(ubyte)(params[key].length >> 8);
+                bytes ~= (params[key].length & 0xff);
+                foreach(value; params[key])
+                    bytes ~= arrayToBytes(value);
+            }
+            return bytes;
+
+        case CommandType.code:
+            assert(0);
+        }
+    }
+
+    static Command fromBytes(ubyte[] bytes) @trusted pure {
+        immutable type = cast(CommandType)bytes[0];
+        bytes = bytes[1..$];
+
+        final switch(type) {
+
+        case CommandType.shell:
+            char[] chars;
+            foreach(b; bytes) chars ~= cast(char)b;
+            return Command(cast(string)chars);
+
+        case CommandType.compile:
+        case CommandType.compileAndLink:
+        case CommandType.link:
+        case CommandType.phony:
+            Params params;
+
+            immutable numKeys = getUshort(bytes);
+            foreach(i; 0..numKeys) {
+                immutable key = cast(string)bytesToArray!char(bytes);
+                immutable numValues = getUshort(bytes);
+
+                string[] values;
+                foreach(j; 0..numValues) {
+                    values ~= bytesToArray!char(bytes);
+                }
+                params[key] = values;
+            }
+            return Command(type, params);
+
+        case CommandType.code:
+            throw new Exception("Cannot serialise Command of type code");
+        }
+    }
+}
+
+
+private ubyte[] arrayToBytes(T)(in T[] arr) {
+    auto bytes = new ubyte[arr.length + 2];
+    immutable length = cast(ushort)arr.length;
+    bytes[0] = length >> 8;
+    bytes[1] = length & 0xff;
+    foreach(i, c; arr) bytes[i + 2] = cast(ubyte)c;
+    return bytes;
+}
+
+
+private T[] bytesToArray(T)(ref ubyte[] bytes) {
+    T[] arr;
+    arr.length = getUshort(bytes);
+    foreach(i, b; bytes[0 .. arr.length]) arr[i] = cast(T)b;
+    bytes = bytes[arr.length .. $];
+    return arr;
+}
+
+
+private ushort getUshort(ref ubyte[] bytes) @safe pure nothrow {
+    immutable length = (bytes[0] << 8) + bytes[1];
+    bytes = bytes[2..$];
+    return length;
+}
+
+private ubyte[] setUshort(in ushort length) @safe pure nothrow {
+    auto bytes = new ubyte[2];
+    bytes[0] = length >> 8;
+    bytes[1] = length & 0xff;
+    return bytes;
 }

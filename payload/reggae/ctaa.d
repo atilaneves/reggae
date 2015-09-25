@@ -1,5 +1,7 @@
 module reggae.ctaa;
 
+import std.traits;
+
 /**
 An implementation of an associative array useable at compile-time.
 Shameless copy of association lists from Lisp.
@@ -19,6 +21,10 @@ struct AssocList(K, V) {
         auto res = entries.find!(a => a.key == key);
         assert(!res.empty, "AssocList does not contain key " ~ key);
         return res.front.value;
+    }
+
+    void opIndexAssign(V value, K key) {
+        entries ~= AssocEntry!(K, V)(key, value);
     }
 
     T get(T)(in K key, T defaultValue) pure const {

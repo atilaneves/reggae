@@ -29,6 +29,7 @@ struct Options {
     bool perModule;
     bool isDubProject;
     bool oldNinja;
+    bool noCompilationDB;
     string[string] userVars;
 
     Options dup() @safe pure const nothrow {
@@ -182,6 +183,7 @@ Options getOptions(string[] args) @trusted {
             "nofetch", "Assume dub packages are present (no dub fetch).", &options.noFetch,
             "per_module", "Compile D files per module (default is per package)", &options.perModule,
             "old_ninja", "Generate a Ninja build compatible with older versions of Ninja", &options.oldNinja,
+            "no_comp_db", "Don't generate a JSON compilation database", &options.noCompilationDB,
             );
 
         if(helpInfo.helpWanted) {

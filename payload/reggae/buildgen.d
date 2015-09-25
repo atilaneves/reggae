@@ -37,7 +37,7 @@ mixin template BuildGenMain(string buildModule = "reggaefile") {
 
 void generateBuildFor(alias module_)(in Options options, string[] args) {
     const build = getBuildObject!module_(options);
-    writeCompilationDB(build, options);
+    if(!options.noCompilationDB) writeCompilationDB(build, options);
     generateBuild(build, options, args);
 }
 

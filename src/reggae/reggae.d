@@ -204,16 +204,28 @@ private auto buildDCompile(in Options options) {
     buildBinary(Binary(name, cmd));
 }
 
-private auto compileBinaries(in Options options) {
-
+private string compileBinaries(in Options options) {
     buildDCompile(options);
 
     immutable buildGenName = getBuildGenName(options);
-    auto buildGenCmd = getCompileBuildGenCmd(options);
-    buildGenCmd ~= getReggaeFileDependencies(buildGenCmd);
+    const buildGenCmd = getCompileBuildGenCmd(options);
 
     buildBinary(Binary(buildGenName ~ ".o", buildGenCmd));
-    buildBinary(Binary(buildGenName, ["dmd", "-of" ~ buildGenName, buildGenName ~ ".o"]));
+
+    const reggaeFileDeps = getReggaeFileDependencies;
+    auto objFiles = [buildGenName ~ ".o"];
+    if(!reggaeFileDeps.empty) {
+        immutable rest = buildPath(hiddenDir, "rest.o");
+        buildBinary(Binary(rest,
+                           ["dmd",
+                            "-of" ~ buildPath(hiddenDir, "rest.o"),
+                            "-I" ~ options.projectPath,
+                            "-I" ~ buildPath(hiddenDir, "src"),
+                            "-c"] ~
+                           reggaeFileDeps));
+        objFiles ~= rest;
+    }
+    buildBinary(Binary(buildGenName, ["dmd", "-of" ~ buildGenName] ~ objFiles));
 
 
     return buildGenName;
@@ -221,17 +233,15 @@ private auto compileBinaries(in Options options) {
 
 //returns the list of files that the `reggaefile` depends on
 //this will usually be empty, but won't be if the reggaefile imports other D files
-private string[] getReggaeFileDependencies(in string[] compilerArgs) @safe {
-    const argsForDeps = compilerArgs ~ ["-v", "-o-"];
-    immutable res = execute(argsForDeps);
-    enforce(res.status == 0,
-            text("Couldn't execute ", argsForDeps.join(" "), ":\n", execute(compilerArgs).output));
-    import reggae.dependencies;
-    return dMainDependencies(res.output);
+private string[] getReggaeFileDependencies() @trusted {
+    import std.string: chomp;
+    auto file = File(buildPath(hiddenDir, "buildgen.o.dep"));
+    file.readln;
+    return file.readln.chomp.splitter(" ").array;
 }
 
 private string[] getCompileBuildGenCmd(in Options options) @safe {
-    import reggae.rules.common;
+    import reggae.rules.common: objExt;
 
     const reggaeSrcs = ("config.d" ~ fileNames).
         filter!(a => a != "dcompile.d").
@@ -241,10 +251,9 @@ private string[] getCompileBuildGenCmd(in Options options) @safe {
         ? ["-O"]
         : [];
     immutable commonBefore = [buildPath(hiddenDir, "dcompile"),
-                              "--objFile=" ~ getBuildGenName(options) ~ "." ~ objExt,
-                              "--depFile=" ~ getBuildGenName(options) ~ "." ~ objExt ~ ".dep",
+                              "--objFile=" ~ getBuildGenName(options) ~ objExt,
+                              "--depFile=" ~ getBuildGenName(options) ~ objExt ~ ".dep",
                               "dmd",
-                              "-of" ~ getBuildGenName(options),
                               "-I" ~ options.projectPath,
                               "-I" ~ buildPath(hiddenDir, "src"),
                               "-g",

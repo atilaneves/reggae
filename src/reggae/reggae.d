@@ -212,7 +212,10 @@ private auto compileBinaries(in Options options) {
     auto buildGenCmd = getCompileBuildGenCmd(options);
     buildGenCmd ~= getReggaeFileDependencies(buildGenCmd);
 
-    buildBinary(Binary(buildGenName, buildGenCmd));
+    buildBinary(Binary(buildGenName ~ ".o", buildGenCmd));
+    buildBinary(Binary(buildGenName, ["dmd", "-of" ~ buildGenName, buildGenName ~ ".o"]));
+
+
     return buildGenName;
 }
 
@@ -228,6 +231,8 @@ private string[] getReggaeFileDependencies(in string[] compilerArgs) @safe {
 }
 
 private string[] getCompileBuildGenCmd(in Options options) @safe {
+    import reggae.rules.common;
+
     const reggaeSrcs = ("config.d" ~ fileNames).
         filter!(a => a != "dcompile.d").
         map!(a => a.reggaeSrcFileName).array;
@@ -235,7 +240,10 @@ private string[] getCompileBuildGenCmd(in Options options) @safe {
     immutable buildBinFlags = options.backend == Backend.binary
         ? ["-O"]
         : [];
-    immutable commonBefore = ["dmd",
+    immutable commonBefore = [buildPath(hiddenDir, "dcompile"),
+                              "--objFile=" ~ getBuildGenName(options) ~ "." ~ objExt,
+                              "--depFile=" ~ getBuildGenName(options) ~ "." ~ objExt ~ ".dep",
+                              "dmd",
                               "-of" ~ getBuildGenName(options),
                               "-I" ~ options.projectPath,
                               "-I" ~ buildPath(hiddenDir, "src"),

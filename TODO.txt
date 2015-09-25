@@ -1,22 +1,18 @@
-Compute dependencies for reggaefile.d itself - what if it imports other modules?
+Compute dependencies for reggaefile.{py,rb,js,lua} and save to reggaefile.dep
 Use CC, CXX, LD environment variables
-
 Any order of parameters
-Distinguish LinkFlags vs CompilerFlags?
 
-Build server? In: list of changed files, out: build.
-
-Change to using -deps for D dependencies
-Make it work with GDC and LDC
 Code coverage for both UTs and Cucumber
-Unity builds for C/C++
-Compilation database generation
-Distributed/cached buidls?
+dtest rule to regenerate ut.d
+Automatic selection of files based on OS/arch/etc.
+Finding of C/C++ libraries (Qt, boost, libevent)
+Distinguish LinkFlags vs CompilerFlags?
+Build server? In: list of changed files, out: build.
+Change to using -deps for D dependencies?
+Distributed/cached builds?
 
 Refactoring:
+  Make Options, Target, and Command much simpler
   range.d
   Use ranges instead of arrays where possible
   Review all uses of @trusted
-
-Automatic selection of files based on OS/arch/etc.
-Finding of C/C++ libraries (Qt, boost, libevent)

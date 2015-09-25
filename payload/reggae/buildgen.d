@@ -43,12 +43,16 @@ void generateBuildFor(alias module_)(in Options options, string[] args) {
 
 private Build getBuildObject(alias module_)(in Options options) {
     immutable cacheFileName = buildPath(".reggae", "cache");
-    if(!cacheFileName.exists || thisExePath.timeLastModified > cacheFileName.timeLastModified) {
+    if(!options.cacheBuildInfo ||
+       !cacheFileName.exists ||
+        thisExePath.timeLastModified > cacheFileName.timeLastModified) {
         const buildFunc = getBuild!(module_); //get the function to call by CT reflection
         auto build = buildFunc(); //actually call the function to get the build description
 
-        auto file = File(cacheFileName, "w");
-        file.rawWrite(build.toBytes(options.projectPath));
+        if(options.cacheBuildInfo) {
+            auto file = File(cacheFileName, "w");
+            file.rawWrite(build.toBytes(options.projectPath));
+        }
 
         return build;
     } else {

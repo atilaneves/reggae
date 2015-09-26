@@ -165,7 +165,7 @@ Options getOptions(string[] args) @trusted {
     import std.array;
 
     Options options;
-    auto origArgs = args.map!(a => `"` ~ a ~ `"`).array;
+    auto origArgs = args.map!(a => a.canFind(" ") ? `"` ~ a ~ `"` : a).array;
 
     try {
         auto helpInfo = getopt(

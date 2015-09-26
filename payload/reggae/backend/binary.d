@@ -4,10 +4,11 @@ module reggae.backend.binary;
 import reggae.build;
 import reggae.range;
 import reggae.options;
+import reggae.file;
 import reggae.dependencies;
 import std.algorithm;
 import std.range;
-import std.file: timeLastModified, thisExePath, exists;
+import std.file: thisExePath, exists;
 import std.process: execute, executeShell;
 import std.path: absolutePath;
 import std.typecons: tuple;
@@ -127,7 +128,7 @@ private:
 
     bool checkReRun() const {
         immutable myPath = thisExePath;
-        if(options.ranFromPath.newerThan(myPath) || options.reggaeFilePath.newerThan(myPath)) {
+        if((options.reggaeFileDependencies ~ getReggaeFileDependencies).any!(a => a.newerThan(myPath))) {
             writeln("[build] " ~ options.rerunArgs.join(" "));
             immutable reggaeRes = execute(options.rerunArgs);
             enforce(reggaeRes.status == 0,
@@ -203,13 +204,6 @@ private:
     }
 }
 
-bool newerThan(in string a, in string b) nothrow {
-    try {
-        return a.timeLastModified > b.timeLastModified;
-    } catch(Exception) { //file not there, so newer
-        return true;
-    }
-}
 
 
 bool anyNewer(in string projectPath, in string[] dependencies, in Target target) @safe {

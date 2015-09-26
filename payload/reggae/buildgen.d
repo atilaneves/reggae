@@ -7,6 +7,7 @@ import reggae.backend;
 import reggae.reflect;
 
 import std.stdio;
+import std.file: timeLastModified;
 
 /**
  Creates a build generator out of a module and a list of top-level targets.

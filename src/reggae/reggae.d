@@ -27,6 +27,7 @@ import std.algorithm;
 import reggae.options;
 import reggae.ctaa;
 import reggae.types;
+import reggae.file;
 
 
 version(minimal) {
@@ -127,7 +128,7 @@ enum coreFiles = [
     "backend/package.d", "backend/binary.d",
     "package.d", "range.d", "reflect.d",
     "dependencies.d", "types.d", "dcompile.d",
-    "ctaa.d", "sorting.d",
+    "ctaa.d", "sorting.d", "file.d",
     "rules/package.d",
     "rules/common.d",
     "rules/d.d",
@@ -173,40 +174,64 @@ private void createBuild(in Options options) {
 }
 
 
-private immutable hiddenDir = ".reggae";
+struct Binary {
+    string name;
+    const(string)[] cmd;
+}
 
-private auto compileBinaries(in Options options) {
+private void buildBinary(in Binary bin) {
+    writeln("[Reggae] Compiling metabuild binary ", bin.name);
+    immutable res = execute(bin.cmd);
+    enforce(res.status == 0, text("Couldn't execute ", bin.cmd.join(" "), ":\n", res.output,
+                                  "\n", "bin.name: ", bin.name, ", bin.cmd: ", bin.cmd.join(" ")));
+
+}
+
+private auto buildDCompile(in Options options) {
+    immutable name = buildPath(hiddenDir, "dcompile");
+
+    if(!thisExePath.newerThan(name)) return;
+
+    immutable cmd = ["dmd",
+                     "-I.reggae/src",
+                     "-of" ~ name,
+                     reggaeSrcFileName("dcompile.d"),
+                     reggaeSrcFileName("dependencies.d")];
+
+    buildBinary(Binary(name, cmd));
+}
+
+private string compileBinaries(in Options options) {
+    buildDCompile(options);
 
     immutable buildGenName = getBuildGenName(options);
-    const compileBuildGenCmd = getCompileBuildGenCmd(options);
+    if(options.isScriptBuild) return buildGenName;
 
-    immutable dcompileName = buildPath(hiddenDir, "dcompile");
-    immutable dcompileCmd = ["dmd",
-                             "-I.reggae/src",
-                             "-of" ~ dcompileName,
-                             reggaeSrcFileName("dcompile.d"),
-                             reggaeSrcFileName("dependencies.d")];
+    const buildGenCmd = getCompileBuildGenCmd(options);
+    buildBinary(Binary(buildGenName ~ ".o", buildGenCmd));
 
-
-    static struct Binary { string name; const(string)[] cmd; }
-
-    auto binaries = options.isScriptBuild
-        ? [Binary(dcompileName, dcompileCmd)]
-        : [Binary(buildGenName, compileBuildGenCmd), Binary(dcompileName, dcompileCmd)];
-    foreach(bin; binaries) writeln("[Reggae] Compiling metabuild binary ", bin.name);
-
-    import std.parallelism;
-
-    foreach(bin; binaries.parallel) {
-        immutable res = execute(bin.cmd);
-        enforce(res.status == 0, text("Couldn't execute ", bin.cmd.join(" "), ":\n", res.output,
-                                      "\n", "bin.name: ", bin.name, ", bin.cmd: ", bin.cmd.join(" ")));
+    const reggaeFileDeps = getReggaeFileDependencies;
+    auto objFiles = [buildGenName ~ ".o"];
+    if(!reggaeFileDeps.empty) {
+        immutable rest = buildPath(hiddenDir, "rest.o");
+        buildBinary(Binary(rest,
+                           ["dmd",
+                            "-c",
+                            "-of" ~ buildPath(hiddenDir, "rest.o")] ~
+                           importPaths(options) ~
+                           reggaeFileDeps));
+        objFiles ~= rest;
     }
+    buildBinary(Binary(buildGenName, ["dmd", "-of" ~ buildGenName] ~ objFiles));
+
 
     return buildGenName;
 }
 
-const (string[]) getCompileBuildGenCmd(in Options options) @safe {
+
+private const(string)[] getCompileBuildGenCmd(in Options options) @safe {
+    import reggae.rules.common: objExt;
+
     const reggaeSrcs = ("config.d" ~ fileNames).
         filter!(a => a != "dcompile.d").
         map!(a => a.reggaeSrcFileName).array;
@@ -214,15 +239,23 @@ const (string[]) getCompileBuildGenCmd(in Options options) @safe {
     immutable buildBinFlags = options.backend == Backend.binary
         ? ["-O", "-inline"]
         : [];
-    immutable commonBefore = ["dmd",
-                              "-I" ~ options.projectPath,
-                              "-I" ~ buildPath(hiddenDir, "src"),
-                              "-g", "-debug",
-                              "-of" ~ getBuildGenName(options)];
+    const commonBefore = [buildPath(hiddenDir, "dcompile"),
+                          "--objFile=" ~ getBuildGenName(options) ~ objExt,
+                          "--depFile=" ~ buildPath(hiddenDir, "reggaefile.dep"),
+                          "dmd"] ~
+        importPaths(options) ~
+        ["-g",
+            "-debug"];
     const commonAfter = buildBinFlags ~
         options.reggaeFilePath ~ reggaeSrcs;
     version(minimal) return commonBefore ~ "-version=minimal" ~ commonAfter;
     else return commonBefore ~ commonAfter;
+}
+
+private string[] importPaths(in Options options) @safe pure nothrow {
+    return ["-I" ~ options.projectPath,
+            "-I" ~ buildPath(hiddenDir, "src")];
+
 }
 
 string getBuildGenName(in Options options) @safe pure nothrow {

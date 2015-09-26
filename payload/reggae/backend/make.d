@@ -64,7 +64,7 @@ struct Makefile {
     //includes rerunning reggae
     string output() @safe const {
         auto ret = simpleOutput;
-        ret ~= "Makefile: " ~ options.reggaeFilePath ~ " " ~ options.ranFromPath ~ "\n";
+        ret ~= "Makefile: " ~ (options.reggaeFileDependencies ~ getReggaeFileDependencies).join(" ") ~ "\n";
         ret ~= "\t" ~ options.rerunArgs.join(" ") ~ "\n";
 
         return ret;

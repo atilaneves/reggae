@@ -31,6 +31,7 @@ struct Options {
     bool oldNinja;
     bool noCompilationDB;
     bool cacheBuildInfo;
+    string[] args;
     string[string] userVars;
 
     Options dup() @safe pure const nothrow {
@@ -40,7 +41,8 @@ struct Options {
     }
 
     //finished setup
-    void finalize() @safe{
+    void finalize(string[] args) @safe{
+        this.args = args;
         ranFromPath = thisExePath();
 
         if(!cCompiler)   cCompiler   = "gcc";
@@ -123,19 +125,7 @@ struct Options {
         return repr;
     }
 
-    string[] rerunArgs() @safe pure const {
-        import std.conv: to;
-
-        auto args =  [ranFromPath, "-b", backend.to!string, ];
-
-        if(dflags != "") args ~= ["--dflags='" ~ dflags ~ "'"];
-        if(oldNinja) args ~= "--old_ninja";
-        if(cCompiler != "") args ~=  ["--cc", cCompiler];
-        if(cppCompiler != "") args ~=  ["--cxx", cppCompiler];
-        if(dCompiler != "") args ~=  ["--dc", dCompiler];
-
-        args ~= projectPath;
-
+    const (string)[] rerunArgs() @safe pure const {
         return args;
     }
 
@@ -164,14 +154,21 @@ struct Options {
         return reggaeFileLanguage(reggaeFilePath);
     }
 
+    string[] reggaeFileDependencies() @safe const {
+        return [ranFromPath, reggaeFilePath];
+    }
 }
 
 
 //getopt is @system
 Options getOptions(string[] args) @trusted {
     import std.getopt;
+    import std.algorithm;
+    import std.array;
 
     Options options;
+    auto origArgs = args.map!(a => a.canFind(" ") ? `"` ~ a ~ `"` : a).array;
+
     try {
         auto helpInfo = getopt(
             args,
@@ -199,7 +196,26 @@ Options getOptions(string[] args) @trusted {
     }
 
     if(args.length > 1) options.projectPath = args[1].absolutePath;
-    options.finalize();
+    options.finalize(origArgs);
 
     return options;
+}
+
+
+immutable hiddenDir = ".reggae";
+
+//returns the list of files that the `reggaefile` depends on
+//this will usually be empty, but won't be if the reggaefile imports other D files
+string[] getReggaeFileDependencies() @trusted {
+    import std.string: chomp;
+    import std.stdio: File;
+    import std.algorithm: splitter;
+    import std.array: array;
+
+    immutable fileName = buildPath(hiddenDir, "reggaefile.dep");
+    if(!fileName.exists) return [];
+
+    auto file = File(fileName);
+    file.readln;
+    return file.readln.chomp.splitter(" ").array;
 }

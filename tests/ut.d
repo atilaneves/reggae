@@ -11,7 +11,6 @@ int main(string[] args) {
                           "tests.dependencies",
                           "tests.simple_foo_reggaefile",
                           "tests.code_command",
-                          "tests.options",
                           "tests.simple_bar_reggaefile",
                           "tests.ninja",
                           "tests.default_rules",

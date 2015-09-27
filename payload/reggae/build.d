@@ -131,7 +131,7 @@ Target inTopLevelObjDirOf(in Target target, string dirName, Flag!"topLevel" isTo
 
     return Target(outputs,
                   target._command.expandVariables,
-                  target.dependencies.map!(a => a.inTopLevelObjDirOf(dirName)).array,
+                  target._dependencies.map!(a => a.inTopLevelObjDirOf(dirName)).array,
                   target.implicits.map!(a => a.inTopLevelObjDirOf(dirName)).array);
 }
 
@@ -248,10 +248,10 @@ unittest {
  $(D $builddir) expands to the build directory (i.e. where reggae was run from).
  */
 struct Target {
-    const(string)[] outputs;
+    private const(string)[] _outputs;
     private const(Command) _command; ///see $(D Command) struct
-    const(Target)[] dependencies;
-    const(Target)[] implicits;
+    private const(Target)[] _dependencies;
+    private const(Target)[] _implicits;
 
     this(in string output) @safe pure nothrow {
         this(output, "", null);
@@ -276,9 +276,9 @@ struct Target {
             in Target[] dependencies,
             in Target[] implicits = []) @safe pure nothrow {
 
-        this.outputs = outputs;
-        this.dependencies = dependencies;
-        this.implicits = implicits;
+        this._outputs = outputs;
+        this._dependencies = dependencies;
+        this._implicits = implicits;
 
         static if(is(C == Command))
             this._command = command;
@@ -286,16 +286,29 @@ struct Target {
             this._command = Command(command);
     }
 
+    @property const(string)[] outputs(in string projectPath = "") @safe pure const {
+        //return outputsInProjectPath(projectPath).map!(a => a.replace(gBuilddir ~ dirSeparator, "")).array;
+        return _outputs;
+    }
+
+    @property const(Target)[] dependencies(in string projectPath = "") @safe pure const nothrow {
+        return _dependencies;
+    }
+
+    @property const(Target)[] implicits(in string projectPath = "") @safe pure const nothrow {
+        return _implicits;
+    }
+
     @property string dependencyFilesString(in string projectPath = "") @safe pure const {
-        return depFilesStringImpl(dependencies, projectPath);
+        return depFilesStringImpl(_dependencies, projectPath);
     }
 
     @property string implicitFilesString(in string projectPath = "") @safe pure const {
-        return depFilesStringImpl(implicits, projectPath);
+        return depFilesStringImpl(_implicits, projectPath);
     }
 
     bool isLeaf() @safe pure const nothrow {
-        return dependencies is null && implicits is null;
+        return _dependencies is null && _implicits is null;
     }
 
     string[] outputsInProjectPath(in string projectPath) @safe pure const {
@@ -307,7 +320,7 @@ struct Target {
                     : buildPath(projectPath, path);
         }
 
-        return outputs.map!(a => isLeaf ? inProjectPath(a) : a).
+        return _outputs.map!(a => isLeaf ? inProjectPath(a) : a).
             map!(a => a.replace("$project", projectPath)).array;
     }
 
@@ -315,7 +328,7 @@ struct Target {
         import reggae.range: Leaves;
         const leaves = () @trusted { return Leaves(this).array; }();
         foreach(language; [Language.D, Language.Cplusplus, Language.C]) {
-            if(leaves.any!(a => reggae.rules.common.getLanguage(a.outputs[0]) == language)) return language;
+            if(leaves.any!(a => reggae.rules.common.getLanguage(a._outputs[0]) == language)) return language;
         }
 
         return Language.unknown;
@@ -334,11 +347,11 @@ struct Target {
     ///returns a command string to be run by the shell
     string shellCommand(in string projectPath = "",
                         Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
-        return _command.shellCommand(projectPath, getLanguage(), outputs, inputs(projectPath), deps);
+        return _command.shellCommand(projectPath, getLanguage(), _outputs, inputs(projectPath), deps);
     }
 
     string[] execute(in string projectPath = "") @safe const {
-        return _command.execute(projectPath, getLanguage(), outputs, inputs(projectPath));
+        return _command.execute(projectPath, getLanguage(), _outputs, inputs(projectPath));
     }
 
     bool hasDefaultCommand() @safe const pure {
@@ -364,11 +377,11 @@ struct Target {
 
     string toString(string projectPath = "") const pure nothrow {
         try {
-            if(isLeaf) return outputs[0];
-            immutable outputs = outputs.length == 1 ? `"` ~ outputs[0] ~ `"` : text(outputs);
-            immutable depsStr = dependencies.length == 0 ? "" : text(dependencies);
-            immutable impsStr = implicits.length == 0 ? "" : text(implicits);
-            auto parts = [text(outputs), `"` ~ shellCommand(projectPath) ~ `"`];
+            if(isLeaf) return _outputs[0];
+            immutable _outputs = _outputs.length == 1 ? `"` ~ _outputs[0] ~ `"` : text(_outputs);
+            immutable depsStr = _dependencies.length == 0 ? "" : text(_dependencies);
+            immutable impsStr = _implicits.length == 0 ? "" : text(_implicits);
+            auto parts = [text(_outputs), `"` ~ shellCommand(projectPath) ~ `"`];
             if(depsStr != "") parts ~= depsStr;
             if(impsStr != "") parts ~= impsStr;
             return text("Target(", parts.join(", "), ")");
@@ -379,18 +392,18 @@ struct Target {
 
     ubyte[] toBytes(in string projectPath) @safe pure const {
         ubyte[] bytes;
-        bytes ~= setUshort(cast(ushort)outputs.length);
-        foreach(output; outputs) {
+        bytes ~= setUshort(cast(ushort)_outputs.length);
+        foreach(output; _outputs) {
             bytes ~= arrayToBytes(isLeaf ? inProjectPath(projectPath, output) : output);
         }
 
         bytes ~= arrayToBytes(shellCommand(projectPath));
 
-        bytes ~= setUshort(cast(ushort)dependencies.length);
-        foreach(dep; dependencies) bytes ~= dep.toBytes(projectPath);
+        bytes ~= setUshort(cast(ushort)_dependencies.length);
+        foreach(dep; _dependencies) bytes ~= dep.toBytes(projectPath);
 
-        bytes ~= setUshort(cast(ushort)implicits.length);
-        foreach(imp; implicits) bytes ~= imp.toBytes(projectPath);
+        bytes ~= setUshort(cast(ushort)_implicits.length);
+        foreach(imp; _implicits) bytes ~= imp.toBytes(projectPath);
 
         return bytes;
     }
@@ -433,8 +446,8 @@ private:
     string[] inputs(in string projectPath) @safe pure nothrow const {
         //functional didn't work here, I don't know why so sticking with loops for now
         string[] inputs;
-        foreach(dep; dependencies) {
-            foreach(output; dep.outputs) {
+        foreach(dep; _dependencies) {
+            foreach(output; dep._outputs) {
                 //leaf objects are references to source files in the project path,
                 //those need their path built. Any other dependencies are in the
                 //build path, so they don't need the same treatment

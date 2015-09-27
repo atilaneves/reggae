@@ -156,11 +156,6 @@ private:
     }
 
     void phonyRule(in Target target) @safe {
-
-        // immutable outputs = target.outputsInProjectPath(_projectPath).join(" ");
-        // return "build " ~ outputs ~ ": ";
-
-
         //no projectPath for phony rules since they don't generate output
         immutable outputs = target.outputsInProjectPath("").join(" ");
         auto buildLine = "build " ~ outputs ~ ": _phony " ~ target.dependencyFilesString(_projectPath);

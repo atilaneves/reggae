@@ -42,12 +42,14 @@ struct Options {
 
     //finished setup
     void finalize(string[] args) @safe{
+        import std.process;
+
         this.args = args;
         ranFromPath = thisExePath();
 
-        if(!cCompiler)   cCompiler   = "gcc";
-        if(!cppCompiler) cppCompiler = "g++";
-        if(!dCompiler)   dCompiler   = "dmd";
+        if(!cCompiler)   cCompiler   = environment.get("CC", "gcc");
+        if(!cppCompiler) cppCompiler = environment.get("CXX", "g++");
+        if(!dCompiler)   dCompiler   = environment.get("DC", "dmd");
 
         isDubProject = _isDubProject;
 

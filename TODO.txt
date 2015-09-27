@@ -1,5 +1,4 @@
 Compute dependencies for reggaefile.{py,rb,js,lua} and save to reggaefile.dep
-Use CC, CXX, LD environment variables
 Any order of parameters
 
 Code coverage for both UTs and Cucumber

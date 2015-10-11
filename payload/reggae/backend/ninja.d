@@ -193,7 +193,7 @@ private:
             else
                 throw new Exception(text("Could not find both $in and $out.\nCommand: ",
                                          shellCommand, "\nCaptures: ", mat.captures, "\n",
-                                         "outputs: ", target.outputs.join(" "), "\n",
+                                         "outputs: ", target.rawOutputs.join(" "), "\n",
                                          "dependencies: ", target.dependencyOutputs(_projectPath).join(" ")));
         }
 

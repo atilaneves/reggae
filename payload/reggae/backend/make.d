@@ -50,11 +50,9 @@ struct Makefile {
                 ret ~= ".PHONY: " ~ output ~ "\n";
             }
             ret ~= output ~  ": ";
-            ret ~= t.dependencyFilesString(options.projectPath);
-            immutable implicitFiles = t.implicitFilesString(options.projectPath);
-            if(!implicitFiles.empty) ret ~= " " ~ t.implicitFilesString(options.projectPath);
-            ret ~= " Makefile\n";
+            ret ~= (t.dependencyOutputs(options.projectPath) ~ t.implicitOutputs(options.projectPath)).join(" ");
 
+            ret ~= " Makefile\n";
             ret ~= "\t" ~ command(t) ~ "\n";
         }
 

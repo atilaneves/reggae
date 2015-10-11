@@ -58,11 +58,11 @@ void testProject() {
 
 void testMultipleOutputs() {
     const target = Target(["foo.hpp", "foo.cpp"], "protocomp $in", [Target("foo.proto")]);
-    target.outputs.shouldEqual(["foo.hpp", "foo.cpp"]);
+    target.rawOutputs.shouldEqual(["foo.hpp", "foo.cpp"]);
     target.shellCommand("myproj").shouldEqual("protocomp myproj/foo.proto");
 
     const bld = Build(target);
-    bld.targets.array[0].outputs.shouldEqual(["foo.hpp", "foo.cpp"]);
+    bld.targets.array[0].rawOutputs.shouldEqual(["foo.hpp", "foo.cpp"]);
 }
 
 
@@ -124,13 +124,13 @@ void testRealTargetPath() {
 
     immutable dirName = "/made/up/dir";
 
-    realTargetPath(dirName, symlink1.outputs[0]).shouldEqual("$project/weird/path/thingie1");
-    realTargetPath(dirName, symlink2.outputs[0]).shouldEqual("$project/weird/path/thingie2");
-    realTargetPath(dirName, fooLib.outputs[0]).shouldEqual("$project/foo.so");
+    realTargetPath(dirName, symlink1.rawOutputs[0]).shouldEqual("$project/weird/path/thingie1");
+    realTargetPath(dirName, symlink2.rawOutputs[0]).shouldEqual("$project/weird/path/thingie2");
+    realTargetPath(dirName, fooLib.rawOutputs[0]).shouldEqual("$project/foo.so");
 
 
-    realTargetPath(dirName, symlinkBar.outputs[0]).shouldEqual("weird/path/thingie2");
-    realTargetPath(dirName, barLib.outputs[0]).shouldEqual("bar.so");
+    realTargetPath(dirName, symlinkBar.rawOutputs[0]).shouldEqual("weird/path/thingie2");
+    realTargetPath(dirName, barLib.rawOutputs[0]).shouldEqual("bar.so");
 
 }
 
@@ -214,5 +214,5 @@ void testBuilddirInTopLevelTarget() {
     const liba = Target("$builddir/liba.a", "ar rcs liba.a a.o", [ao]);
     mixin build!(liba);
     const build = buildFunc();
-    build.targets[0].outputs.shouldEqual(["liba.a"]);
+    build.targets[0].rawOutputs.shouldEqual(["liba.a"]);
 }

@@ -121,13 +121,13 @@ Target inTopLevelObjDirOf(in Target target, string dirName, Flag!"topLevel" isTo
     //every other non-top-level target gets its outputs placed in a directory
     //specific to its top-level parent
 
-    if(target.outputs.any!(a => a.startsWith(gBuilddir) || a.startsWith(gProjdir))) {
+    if(target._outputs.any!(a => a.startsWith(gBuilddir) || a.startsWith(gProjdir))) {
          dirName = topLevelDirName(target);
     }
 
     const outputs = isTopLevel
-        ? target.outputs.map!(a => expandBuildDir(a)).array
-        : target.outputs.map!(a => realTargetPath(dirName, target, a)).array;
+        ? target._outputs.map!(a => expandBuildDir(a)).array
+        : target._outputs.map!(a => realTargetPath(dirName, target, a)).array;
 
     return Target(outputs,
                   target._command.expandVariables,
@@ -137,7 +137,7 @@ Target inTopLevelObjDirOf(in Target target, string dirName, Flag!"topLevel" isTo
 
 
 string topLevelDirName(in Target target) @safe pure {
-    return buildPath("objs", target.outputs[0].expandBuildDir ~ ".objs");
+    return buildPath("objs", target._outputs[0].expandBuildDir ~ ".objs");
 }
 
 //targets that have outputs with $builddir or $project in them want to be placed
@@ -286,8 +286,7 @@ struct Target {
             this._command = Command(command);
     }
 
-    @property const(string)[] outputs(in string projectPath = "") @safe pure const {
-        //return outputsInProjectPath(projectPath).map!(a => a.replace(gBuilddir ~ dirSeparator, "")).array;
+    @property const(string)[] rawOutputs(in string projectPath = "") @safe pure const {
         return _outputs;
     }
 
@@ -297,14 +296,6 @@ struct Target {
 
     @property const(Target)[] implicits(in string projectPath = "") @safe pure const nothrow {
         return _implicits;
-    }
-
-    @property string dependencyFilesString(in string projectPath = "") @safe pure const {
-        return depFilesStringImpl(_dependencies, projectPath);
-    }
-
-    @property string implicitFilesString(in string projectPath = "") @safe pure const {
-        return depFilesStringImpl(_implicits, projectPath);
     }
 
     @property string[] dependencyOutputs(in string projectPath) @safe pure const {

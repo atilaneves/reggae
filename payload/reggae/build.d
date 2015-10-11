@@ -320,7 +320,9 @@ struct Target {
         }
 
         return _outputs.map!(a => isLeaf ? inProjectPath(a) : a).
-            map!(a => a.replace("$project", projectPath)).array;
+            map!(a => a.replace("$project", projectPath)).
+            map!(a => a.replace(gBuilddir ~ dirSeparator, "")).
+            array;
     }
 
     Language getLanguage() @safe pure nothrow const {

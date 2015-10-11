@@ -321,7 +321,7 @@ struct Target {
 
         return _outputs.map!(a => isLeaf ? inProjectPath(a) : a).
             map!(a => a.replace("$project", projectPath)).
-            map!(a => a.replace(gBuilddir ~ dirSeparator, "")).
+            map!(a => expandBuildDir(a)).
             array;
     }
 
@@ -337,7 +337,7 @@ struct Target {
 
     ///Replace special variables and return a list of outputs thus modified
     auto expandOutputs(in string projectPath) @safe pure const {
-        return outputsInProjectPath(projectPath).map!(a => a.replace(gBuilddir ~ dirSeparator, ""));
+        return outputsInProjectPath(projectPath).map!(a => expandBuildDir(a));
     }
 
     //@trusted because of replace

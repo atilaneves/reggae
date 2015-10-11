@@ -308,11 +308,11 @@ struct Target {
     }
 
     @property string[] dependencyOutputs(in string projectPath) @safe pure const {
-        return lefoofoo(_dependencies, projectPath);
+        return depsInProjectPath(_dependencies, projectPath);
     }
 
     @property string[] implicitOutputs(in string projectPath) @safe pure const {
-        return lefoofoo(_implicits, projectPath);
+        return depsInProjectPath(_implicits, projectPath);
     }
 
     bool isLeaf() @safe pure const nothrow {
@@ -451,7 +451,7 @@ private:
         return files;
     }
 
-    string[] lefoofoo(in Target[] deps, in string projectPath) @safe pure const {
+    string[] depsInProjectPath(in Target[] deps, in string projectPath) @safe pure const {
         import reggae.range;
         return deps.map!(a => a.outputsInProjectPath(projectPath)).flatten;
     }

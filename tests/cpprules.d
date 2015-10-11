@@ -120,7 +120,7 @@ void testUnityTargetCpp() @safe {
                                 Flags("-g -O0"),
                                 IncludePaths(["headers"]),
                                 dependencies);
-    target.outputs.shouldEqual(["leapp"]);
+    target.rawOutputs.shouldEqual(["leapp"]);
     target.shellCommand(projectPath).shouldEqual(
         "g++ -g -O0 -I/path/to/proj/headers -MMD -MT leapp -MF leapp.dep -o leapp " ~
         "objs/leapp.objs/unity.cpp mylib.a");
@@ -146,7 +146,7 @@ void testUnityTargetC() @safe {
                                 Flags("-g -O0"),
                                 IncludePaths(["headers"]),
                                 dependencies);
-    target.outputs.shouldEqual(["leapp"]);
+    target.rawOutputs.shouldEqual(["leapp"]);
     target.shellCommand(projectPath).shouldEqual(
         "gcc -g -O0 -I/path/to/proj/headers -MMD -MT leapp -MF leapp.dep -o leapp " ~
         "objs/leapp.objs/unity.c mylib.a");

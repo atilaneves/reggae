@@ -110,7 +110,7 @@ struct Binary {
 
         auto optionalTargets = build.targets.filter!(a => !defaultTargets.canFind(a));
         foreach(optionalTarget; optionalTargets)
-            result ~= "- " ~ optionalTarget.outputs.map!(a => a.replace("$builddir/", "")).join(" ") ~
+            result ~= "- " ~ optionalTarget.rawOutputs.join(" ") ~
                 " (optional)";
 
         return result;

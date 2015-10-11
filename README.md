@@ -2,8 +2,7 @@ Reggae
 =======
 [![Build Status](https://travis-ci.org/atilaneves/reggae.png?branch=master)](https://travis-ci.org/atilaneves/reggae)
 
-
-A build system written in [the D programming language](http://dlang.org). This
+A (meta) build system written in [the D programming language](http://dlang.org). This
 is alpha software, only tested on Linux and likely to have breaking
 changes made.
 
@@ -12,17 +11,17 @@ Features
 * Write readable build descriptions in D, [Python](https://github.com/atilaneves/reggae-python),
 [Ruby](https://github.com/atilaneves/reggae-ruby), [JavaScript](https://github.com/atilaneves/reggae-js)
 or [Lua](https://github.com/atilaneves/reggae-lua)
-* Out-of-tree builds
-* Backends for GNU make, ninja, tup and a custom binary executable.
-* User-defined variables like CMake in order to choose features before compile-time
 * Low-level DAG build descriptions + high-level convenience rules to build C, C++ and D
 * Automatic header/module dependency detection for C, C++ and D
 * Automatically runs itself if the build description changes
+* Out-of-tree builds
+* Backends for GNU make, ninja, tup and a custom binary executable.
+* User-defined variables like CMake in order to choose features before compile-time
 * Rules for using [dub](http://code.dlang.org/about) build targets in your own build decription - use dub with ninja, add to the dub description, ...
 
 Not all features are available on all backends. Executable D code commands (as opposed to shell commands)
 are only supported by the binary backend, and due to tup's nature dub support and a few other features
-can't be supported. When using the tup backend, simple is better.
+are not available. When using the tup backend, simple is better.
 
 The recommended backends are ninja and binary.
 
@@ -33,8 +32,9 @@ Reggae is actually a meta build system and works similarly to
 [CMake](http://www.cmake.org/) or
 [Premake](http://premake.github.io/). Those systems require writing
 configuration files in their own proprietary languages. The
-configuration files for Reggae are written in [D](http://dlang.org), [Python](https://github.com/atilaneves/reggae-python), [Ruby](https://github.com/atilaneves/reggae-ruby), [JavaScript](https://github.com/atilaneves/reggae-js)
-or [Lua](https://github.com/atilaneves/reggae-lua)
+configuration files for Reggae are written in [D](http://dlang.org),
+[Python](https://github.com/atilaneves/reggae-python), [Ruby](https://github.com/atilaneves/reggae-ruby),
+[JavaScript](https://github.com/atilaneves/reggae-js) or [Lua](https://github.com/atilaneves/reggae-lua)
 
 From a build directory (usually not the same as the source one), type
 `reggae -b <ninja|make|tup|binary> </path/to/project>`. This will create
@@ -78,7 +78,7 @@ build D apps with no external dependencies, this will suffice and is similar to 
 There are also other functions and pre-built rules for C and C++ objects. There is no
 HTML documentation yet but the [package file](payload/reggae/package.d) contains the
 relevant DDoc with details. Other subpackages might contain DDoc of their own. There is
-[detailed documentation](doc/index.md) in markdown format.
+also [detailed documentation](doc/index.md) in markdown format.
 
 For C and C++, the main high-level rules to use are `targetsFromSourceFiles` and
 `link`, but of course they can also be hand-assembled from `Target` structs. Here is an
@@ -117,6 +117,17 @@ example for building production and unittest binaries concurrently is this:
 Depending on whether or not the dub project in questions uses configurations, reggae's dub
 support might not work before [this pull request](https://github.com/D-Programming-Language/dub/pull/577)
 is merged.
+
+
+Scripting language limitations
+------------------------------
+Build written in one of the scripting languages currently:
+
+* Can only detect changes to the main build description file (e.g. reggaefile.py), but not any other files that were imported/required
+* Cannot use the binary backend
+* Do not have access to the dub high-level rules
+
+These limitations are solely due to the features not having been implemented yet.
 
 
 Building Reggae

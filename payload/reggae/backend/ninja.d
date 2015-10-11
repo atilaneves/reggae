@@ -151,20 +151,15 @@ private:
 
         buildEntries ~= NinjaEntry(buildLine(target) ~
                                    cmdTypeToNinjaString(target.getCommandType, language) ~
-                                   " " ~ target.dependencyFilesString(_projectPath),
+                                   " " ~ target.dependenciesInProjectPath(_projectPath).join(" "),
                                    paramLines);
     }
 
     void phonyRule(in Target target) @safe {
-
-        // immutable outputs = target.outputsInProjectPath(_projectPath).join(" ");
-        // return "build " ~ outputs ~ ": ";
-
-
         //no projectPath for phony rules since they don't generate output
         immutable outputs = target.outputsInProjectPath("").join(" ");
-        auto buildLine = "build " ~ outputs ~ ": _phony " ~ target.dependencyFilesString(_projectPath);
-        if(!target.implicits.empty) buildLine ~= " | " ~ target.implicitFilesString(_projectPath);
+        auto buildLine = "build " ~ outputs ~ ": _phony " ~ target.dependenciesInProjectPath(_projectPath).join(" ");
+        if(!target.implicits.empty) buildLine ~= " | " ~ target.implicitsInProjectPath(_projectPath).join(" ");
         buildEntries ~= NinjaEntry(buildLine,
                                    ["cmd = " ~ target.shellCommand(_projectPath),
                                     "pool = console"]);
@@ -198,8 +193,8 @@ private:
             else
                 throw new Exception(text("Could not find both $in and $out.\nCommand: ",
                                          shellCommand, "\nCaptures: ", mat.captures, "\n",
-                                         "outputs: ", target.outputs.join(" "), "\n",
-                                         "dependencies: ", target.dependencyFilesString(_projectPath)));
+                                         "outputs: ", target.rawOutputs.join(" "), "\n",
+                                         "dependencies: ", target.dependenciesInProjectPath(_projectPath).join(" ")));
         }
 
         immutable before  = mat.captures[1].strip;
@@ -213,11 +208,11 @@ private:
         immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAddRule);
 
         immutable deps = implicitInput.empty
-            ? target.dependencyFilesString(_projectPath)
+            ? target.dependenciesInProjectPath(_projectPath).join(" ")
             : implicitInput;
 
         auto buildLine = buildLine(target) ~ ruleName ~ " " ~ deps;
-        if(!target.implicits.empty) buildLine ~= " | " ~  target.implicitFilesString(_projectPath);
+        if(!target.implicits.empty) buildLine ~= " | " ~  target.implicitsInProjectPath(_projectPath).join(" ");
 
         string[] buildParamLines;
         if(!before.empty)  buildParamLines ~= "before = "  ~ before;
@@ -237,7 +232,7 @@ private:
         immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAdd);
 
         immutable buildLine = buildLine(target) ~ ruleName ~
-            " " ~ target.dependencyFilesString(_projectPath);
+            " " ~ target.dependenciesInProjectPath(_projectPath).join(" ");
         buildEntries ~= NinjaEntry(buildLine);
 
         if(haveToAdd) {
@@ -250,8 +245,8 @@ private:
 
         immutable cmdLine = () @trusted {
             string line = shellCommand;
-            auto allDeps = (target.dependencyFilesString(_projectPath) ~ " " ~
-                            target.implicitFilesString(_projectPath)).splitter(" ");
+            auto allDeps = (target.dependenciesInProjectPath(_projectPath).join(" ") ~ " " ~
+                            target.implicitsInProjectPath(_projectPath).join(" ")).splitter(" ");
             foreach(string dep; allDeps) {
                 if(line.canFind(dep)) {
                     line = line.replace(dep, "$in");

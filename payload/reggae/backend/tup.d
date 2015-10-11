@@ -42,7 +42,7 @@ struct Tup {
             //dependency files actually causes an error, so we request
             //none to be generated
             immutable line = ": " ~
-                target.dependencyOutputs(options.projectPath).join(" ") ~ " |> " ~
+                target.dependenciesInProjectPath(options.projectPath).join(" ") ~ " |> " ~
                 target.shellCommand(options.projectPath, No.dependencies) ~ " |> " ~
                 target.outputsInProjectPath(options.projectPath).join(" ");
             lines ~= line;

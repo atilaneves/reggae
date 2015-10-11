@@ -50,7 +50,7 @@ struct Makefile {
                 ret ~= ".PHONY: " ~ output ~ "\n";
             }
             ret ~= output ~  ": ";
-            ret ~= (t.dependencyOutputs(options.projectPath) ~ t.implicitOutputs(options.projectPath)).join(" ");
+            ret ~= (t.dependenciesInProjectPath(options.projectPath) ~ t.implicitsInProjectPath(options.projectPath)).join(" ");
 
             ret ~= " Makefile\n";
             ret ~= "\t" ~ command(t) ~ "\n";

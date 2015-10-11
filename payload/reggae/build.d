@@ -132,7 +132,7 @@ Target inTopLevelObjDirOf(in Target target, string dirName, Flag!"topLevel" isTo
     return Target(outputs,
                   target._command.expandVariables,
                   target._dependencies.map!(a => a.inTopLevelObjDirOf(dirName)).array,
-                  target.implicits.map!(a => a.inTopLevelObjDirOf(dirName)).array);
+                  target._implicits.map!(a => a.inTopLevelObjDirOf(dirName)).array);
 }
 
 
@@ -298,11 +298,11 @@ struct Target {
         return _implicits;
     }
 
-    @property string[] dependencyOutputs(in string projectPath) @safe pure const {
+    @property string[] dependenciesInProjectPath(in string projectPath) @safe pure const {
         return depsInProjectPath(_dependencies, projectPath);
     }
 
-    @property string[] implicitOutputs(in string projectPath) @safe pure const {
+    @property string[] implicitsInProjectPath(in string projectPath) @safe pure const {
         return depsInProjectPath(_implicits, projectPath);
     }
 

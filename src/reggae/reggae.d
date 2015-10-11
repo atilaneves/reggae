@@ -285,7 +285,6 @@ private void writeSrcFiles(in Options options) {
         mkdirRecurse(buildPath(reggaeSrcDirName, "core", "rules"));
     }
 
-
     //this foreach has to happen at compile time due
     //to the string import below.
     foreach(fileName; FileNames!()) {
@@ -301,10 +300,10 @@ private void writeConfig(in Options options) {
     auto file = File(reggaeSrcFileName("config.d"), "w");
 
     file.writeln(q{
-        module reggae.config;
-        import reggae.ctaa;
-        import reggae.types;
-        import reggae.options;
+module reggae.config;
+import reggae.ctaa;
+import reggae.types;
+import reggae.options;
     });
 
     file.writeln("immutable options = ", options, ";");
@@ -315,7 +314,12 @@ private void writeConfig(in Options options) {
     }
     file.writeln("]);");
 
-    writeDubConfig(options, file);
+    try {
+        writeDubConfig(options, file);
+    } catch(Exception ex) {
+        stderr.writeln("Could not get dub configuration, try 'dub upgrade'");
+        throw ex;
+    }
 }
 
 

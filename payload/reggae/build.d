@@ -430,18 +430,6 @@ struct Target {
 
 private:
 
-
-    //@trusted because of join
-    string depFilesStringImpl(in Target[] deps, in string projectPath) @trusted pure const {
-        string files;
-        //join doesn't do const, resort to loops
-        foreach(i, dep; deps) {
-            files ~= text(dep.outputsInProjectPath(projectPath).join(" "));
-            if(i != deps.length - 1) files ~= " ";
-        }
-        return files;
-    }
-
     string[] depsInProjectPath(in Target[] deps, in string projectPath) @safe pure const {
         import reggae.range;
         return deps.map!(a => a.outputsInProjectPath(projectPath)).flatten;

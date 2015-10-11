@@ -216,3 +216,34 @@ void testBuilddirInTopLevelTarget() {
     const build = buildFunc();
     build.targets[0].rawOutputs.shouldEqual(["liba.a"]);
 }
+
+
+void testOutputInBuildDir() {
+    const target = Target("$builddir/foo/bar", "cmd", [Target("foo.d"), Target("bar.d")]);
+    target.outputsInProjectPath("/path/to").shouldEqual(["foo/bar"]);
+}
+
+void testOutputInProjectDir() {
+    const target = Target("$project/foo/bar", "cmd", [Target("foo.d"), Target("bar.d")]);
+    target.outputsInProjectPath("/path/to").shouldEqual(["/path/to/foo/bar"]);
+}
+
+void testCmdInBuildDir() {
+    const target = Target("output", "cmd -I$builddir/include $in $out", [Target("foo.d"), Target("bar.d")]);
+    target.shellCommand("/path/to").shouldEqual("cmd -Iinclude /path/to/foo.d /path/to/bar.d output");
+}
+
+void testCmdInProjectDir() {
+    const target = Target("output", "cmd -I$project/include $in $out", [Target("foo.d"), Target("bar.d")]);
+    target.shellCommand("/path/to").shouldEqual("cmd -I/path/to/include /path/to/foo.d /path/to/bar.d output");
+}
+
+void testDepsInBuildDir() {
+    const target = Target("output", "cmd", [Target("$builddir/foo.d"), Target("$builddir/bar.d")]);
+    target.dependenciesInProjectPath("/path/to").shouldEqual(["foo.d", "bar.d"]);
+}
+
+void testDepsInProjectDir() {
+    const target = Target("output", "cmd", [Target("$project/foo.d"), Target("$project/bar.d")]);
+    target.dependenciesInProjectPath("/path/to").shouldEqual(["/path/to/foo.d", "/path/to/bar.d"]);
+}

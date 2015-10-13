@@ -5,8 +5,10 @@
  */
 
 module reggae.build;
+
 import reggae.ctaa;
 import reggae.rules.common: Language, getLanguage;
+import reggae.options;
 
 import std.string: replace;
 import std.algorithm;
@@ -562,10 +564,20 @@ struct Command {
         return params.get(key, ifNotFound).map!(a => a.replace("$project", projectPath)).array;
     }
 
-    static string builtinTemplate(CommandType type,
-                                  Language language,
-                                  Flag!"dependencies" deps = Yes.dependencies) @safe pure {
+    static string builtinTemplate(in CommandType type,
+                                  in Language language,
+                                  in Flag!"dependencies" deps = Yes.dependencies) @safe pure {
         import reggae.config: options;
+        return builtinTemplate(type, language, options, deps);
+    }
+
+    static string builtinTemplate(in CommandType type,
+                                  in Language language,
+                                  in Options options,
+                                  in Flag!"dependencies" deps = Yes.dependencies) @safe pure {
+        import std.stdio;
+        debug writeln("c compiler in here: ", options.cCompiler);
+
 
         final switch(type) with(CommandType) {
             case phony:
@@ -589,18 +601,17 @@ struct Command {
                 throw new Exception("Command type 'code' has no built-in template");
 
             case compile:
-                return compileTemplate(type, language, deps).replace("$out $in", "$out -c $in");
+                return compileTemplate(type, language, options, deps).replace("$out $in", "$out -c $in");
 
             case compileAndLink:
-                return compileTemplate(type, language, deps);
+                return compileTemplate(type, language, options, deps);
         }
     }
 
-    private static string compileTemplate(CommandType type,
-                                          Language language,
-                                          Flag!"dependencies" deps = Yes.dependencies) @safe pure {
-        import reggae.config: options;
-
+    private static string compileTemplate(in CommandType type,
+                                          in Language language,
+                                          in Options options,
+                                          in Flag!"dependencies" deps = Yes.dependencies) @safe pure {
         immutable ccParams = deps
             ? " $flags $includes -MMD -MT $out -MF $out.dep -o $out $in"
             : " $flags $includes -o $out $in";

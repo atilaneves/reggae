@@ -58,10 +58,10 @@ private bool hasDepFile(in CommandType type) @safe pure nothrow {
 /**
  * Pre-built rules
  */
-NinjaEntry[] defaultRules() @safe pure {
+NinjaEntry[] defaultRules(in Options options) @safe pure {
 
     NinjaEntry createNinjaEntry(in CommandType type, in Language language) @safe pure {
-        string[] paramLines = ["command = " ~ Command.builtinTemplate(type, language)];
+        string[] paramLines = ["command = " ~ Command.builtinTemplate(type, language, options)];
         if(hasDepFile(type)) paramLines ~= ["deps = gcc", "depfile = $out.dep"];
         return NinjaEntry("rule " ~ cmdTypeToNinjaString(type, language), paramLines);
     }
@@ -116,7 +116,7 @@ struct Ninja {
     }
 
     const(NinjaEntry)[] allRuleEntries() @safe pure const {
-        return ruleEntries ~ defaultRules ~
+        return ruleEntries ~ defaultRules(_options) ~
             NinjaEntry("rule _rerun",
                        ["command = " ~ _options.rerunArgs.join(" "),
                         "generator = 1",

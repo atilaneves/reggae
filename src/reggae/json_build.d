@@ -32,13 +32,9 @@ enum JsonDepsFuncName {
     staticLibrary,
 }
 
-
 Build jsonToBuild(in string projectPath, in string jsonString) {
     auto json = parseJSON(jsonString);
-    Target[] targets;
-    foreach(target; json.array) {
-        targets ~= jsonToTarget(projectPath, target);
-    }
+    const targets = json.array.map!(a => jsonToTarget(projectPath, a)).array;
     return Build(targets);
 }
 
@@ -51,10 +47,11 @@ private Target jsonToTarget(in string projectPath, in JSONValue json) {
     const dependencies = getDeps(projectPath, json.object["dependencies"]);
     const implicits = getDeps(projectPath, json.object["implicits"]);
 
-    if(isLeaf(json))
+    if(isLeaf(json)) {
         return Target(json.object["outputs"].array.map!(a => a.str).array,
                       "",
                       []);
+    }
 
     return Target(json.object["outputs"].array.map!(a => a.str).array,
                   jsonToCommand(json.object["command"]),

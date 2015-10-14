@@ -359,8 +359,8 @@ struct Target {
         return _command.shellCommand(options, getLanguage(), _outputs, inputs(options.projectPath), deps);
     }
 
-    string[] execute(in string projectPath = "") @safe const {
-        return _command.execute(projectPath, getLanguage(), _outputs, inputs(projectPath));
+    string[] execute(in Options options) @safe const {
+        return _command.execute(options, getLanguage(), _outputs, inputs(options.projectPath));
     }
 
     bool hasDefaultCommand() @safe const pure {
@@ -689,7 +689,7 @@ struct Command {
 
 
 
-    string[] execute(in string projectPath, in Language language,
+    string[] execute(in Options options, in Language language,
                      in string[] outputs, in string[] inputs) const @trusted {
         import std.process;
 
@@ -699,7 +699,7 @@ struct Command {
             case link:
             case compileAndLink:
             case phony:
-                immutable cmd = shellCommand(projectPath, language, outputs, inputs);
+                immutable cmd = shellCommand(options, language, outputs, inputs);
                 immutable res = executeShell(cmd);
                 enforce(res.status == 0, "Could not execute phony " ~ cmd ~ ":\n" ~ res.output);
                 return [cmd, res.output];

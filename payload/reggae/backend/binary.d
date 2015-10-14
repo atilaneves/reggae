@@ -188,7 +188,7 @@ private:
 
     void executeCommand(in Target target) const @trusted {
         mkDir(target);
-        const output = target.execute(options.projectPath);
+        const output = target.execute(options);
         writeln("[build] " ~ output[0]);
         if(target.getCommandType == CommandType.phony)
             writeln("\n", output[1]);

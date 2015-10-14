@@ -75,10 +75,10 @@ void testBuiltinTemplateNoDeps() {
 
 void testLinkC() {
     const tgt = link(ExeName("app"), [objectFile(SourceFile("foo.c"))]);
-    tgt.shellCommand.shouldEqual("gcc -o app  foo.o");
+    tgt.shellCommand("/foo/bar").shouldEqual("gcc -o app  foo.o");
 }
 
 void testLinkCpp() {
     const tgt = link(ExeName("app"), [objectFile(SourceFile("foo.cpp"))]);
-    tgt.shellCommand.shouldEqual("g++ -o app  foo.o");
+    tgt.shellCommand("/foo/bar").shouldEqual("g++ -o app  foo.o");
 }

@@ -17,7 +17,7 @@ void testInOut() {
         const target = Target("foo",
                               "createfoo -o $out $in",
                               [Target("bar.txt"), Target("baz.txt")]);
-        target.shellCommand.shouldEqual("createfoo -o foo bar.txt baz.txt");
+        target.shellCommand("/path/to").shouldEqual("createfoo -o foo /path/to/bar.txt /path/to/baz.txt");
     }
     {
         const target = Target("tgt",
@@ -27,14 +27,14 @@ void testInOut() {
                                   Target("src2.o", "gcc -c -o $out $in", [Target("src2.c")])
                                   ],
             );
-        target.shellCommand.shouldEqual("gcc -o tgt src1.o src2.o");
+        target.shellCommand("/path/to").shouldEqual("gcc -o tgt src1.o src2.o");
     }
 
     {
         const target = Target(["proto.h", "proto.c"],
                               "protocompile $out -i $in",
                               [Target("proto.idl")]);
-        target.shellCommand.shouldEqual("protocompile proto.h proto.c -i proto.idl");
+        target.shellCommand("/path/to").shouldEqual("protocompile proto.h proto.c -i /path/to/proto.idl");
     }
 
     {
@@ -43,7 +43,7 @@ void testInOut() {
                               [Target(["foo1.o", "foo2.o"], "cmd", [Target("tmp")]),
                                Target("bar.o"),
                                Target("baz.o")]);
-        target.shellCommand.shouldEqual("ar -olib1.a foo1.o foo2.o bar.o baz.o");
+        target.shellCommand("/path/to").shouldEqual("ar -olib1.a foo1.o foo2.o /path/to/bar.o /path/to/baz.o");
     }
 }
 

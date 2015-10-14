@@ -108,7 +108,7 @@ private string[] getJsonOutputArgs(in Options options, in BuildLanguage language
         assert(0, "Cannot obtain JSON build for builds written in D");
 
     case BuildLanguage.Python:
-        return ["/bin/env", "python", "-m", "reggae.json_build", options.projectPath];
+        return ["/usr/bin/env", "python", "-m", "reggae.json_build", options.projectPath];
 
     case BuildLanguage.Ruby:
         return ["ruby", "-S", "-I" ~ options.projectPath, "reggae_json_build.rb"];

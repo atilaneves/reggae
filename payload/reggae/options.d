@@ -223,7 +223,7 @@ string[] getReggaeFileDependencies() @trusted {
 }
 
 
-Options withProjectPath(in Options options, in string projectPath) {
+Options withProjectPath(in Options options, in string projectPath) @safe pure nothrow {
     auto modOptions = options.dup;
     modOptions.projectPath = projectPath;
     return modOptions;

@@ -16,7 +16,6 @@ void testCObjectFile() {
                                    "DEPFILE", ["foo.o.dep"]));
 
     obj.shouldEqual(Target("foo.o", cmd, [Target(fileName)]));
-
 }
 
 void testCppObjectFile() {

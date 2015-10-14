@@ -82,7 +82,7 @@ struct Makefile {
         if(cmdType == CommandType.code)
             throw new Exception("Command type 'code' not supported for make backend");
 
-        immutable cmd = target.shellCommand(options.projectPath);
+        immutable cmd = target.shellCommand(options);
         immutable depfile = target.outputsInProjectPath(options.projectPath)[0] ~ ".dep";
         if(target.hasDefaultCommand) {
             return cmdType == CommandType.link ? cmd : cmd ~ makeAutoDeps(depfile);

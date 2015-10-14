@@ -161,7 +161,7 @@ private:
         auto buildLine = "build " ~ outputs ~ ": _phony " ~ target.dependenciesInProjectPath(_projectPath).join(" ");
         if(!target.implicits.empty) buildLine ~= " | " ~ target.implicitsInProjectPath(_projectPath).join(" ");
         buildEntries ~= NinjaEntry(buildLine,
-                                   ["cmd = " ~ target.shellCommand(_projectPath),
+                                   ["cmd = " ~ target.shellCommand(_options),
                                     "pool = console"]);
     }
 
@@ -328,7 +328,7 @@ private:
 
     //@trusted because of splitter
     private string targetRawCommand(in Target target) @trusted pure const {
-        return target.shellCommand(_projectPath).splitter(" ").front;
+        return target.shellCommand(_options).splitter(" ").front;
     }
 }
 

@@ -71,10 +71,10 @@ struct Build {
         return UniqueDepthFirst(this);
     }
 
-    ubyte[] toBytes(in string projectPath) @safe pure const {
+    ubyte[] toBytes(in Options options) @safe pure const {
         ubyte[] bytes;
         bytes ~= setUshort(cast(ushort)targets.length);
-        foreach(t; targets) bytes ~= t.toBytes(projectPath);
+        foreach(t; targets) bytes ~= t.toBytes(options);
         return bytes;
     }
 
@@ -348,12 +348,6 @@ struct Target {
     }
 
     ///returns a command string to be run by the shell
-    string shellCommand(in string projectPath = "",
-                        Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
-        return _command.shellCommand(projectPath, getLanguage(), _outputs, inputs(projectPath), deps);
-    }
-
-    ///returns a command string to be run by the shell
     string shellCommand(in Options options,
                         Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
         return _command.shellCommand(options, getLanguage(), _outputs, inputs(options.projectPath), deps);
@@ -384,13 +378,13 @@ struct Target {
         return Target(output, Command.phony(shellCommand), dependencies, implicits);
     }
 
-    string toString(string projectPath = "") const pure nothrow {
+    string toString(in Options options) const nothrow {
         try {
             if(isLeaf) return _outputs[0];
             immutable _outputs = _outputs.length == 1 ? `"` ~ _outputs[0] ~ `"` : text(_outputs);
             immutable depsStr = _dependencies.length == 0 ? "" : text(_dependencies);
             immutable impsStr = _implicits.length == 0 ? "" : text(_implicits);
-            auto parts = [text(_outputs), `"` ~ shellCommand(projectPath) ~ `"`];
+            auto parts = [text(_outputs), `"` ~ shellCommand(options) ~ `"`];
             if(depsStr != "") parts ~= depsStr;
             if(impsStr != "") parts ~= impsStr;
             return text("Target(", parts.join(", "), ")");
@@ -399,20 +393,20 @@ struct Target {
         }
     }
 
-    ubyte[] toBytes(in string projectPath) @safe pure const {
+    ubyte[] toBytes(in Options options) @safe pure const {
         ubyte[] bytes;
         bytes ~= setUshort(cast(ushort)_outputs.length);
         foreach(output; _outputs) {
-            bytes ~= arrayToBytes(isLeaf ? inProjectPath(projectPath, output) : output);
+            bytes ~= arrayToBytes(isLeaf ? inProjectPath(options.projectPath, output) : output);
         }
 
-        bytes ~= arrayToBytes(shellCommand(projectPath));
+        bytes ~= arrayToBytes(shellCommand(options));
 
         bytes ~= setUshort(cast(ushort)_dependencies.length);
-        foreach(dep; _dependencies) bytes ~= dep.toBytes(projectPath);
+        foreach(dep; _dependencies) bytes ~= dep.toBytes(options);
 
         bytes ~= setUshort(cast(ushort)_implicits.length);
-        foreach(imp; _implicits) bytes ~= imp.toBytes(projectPath);
+        foreach(imp; _implicits) bytes ~= imp.toBytes(options);
 
         return bytes;
     }
@@ -572,13 +566,6 @@ struct Command {
 
     static string builtinTemplate(in CommandType type,
                                   in Language language,
-                                  in Flag!"dependencies" deps = Yes.dependencies) @safe pure {
-        import reggae.config: options;
-        return builtinTemplate(type, language, options, deps);
-    }
-
-    static string builtinTemplate(in CommandType type,
-                                  in Language language,
                                   in Options options,
                                   in Flag!"dependencies" deps = Yes.dependencies) @safe pure {
 
@@ -634,21 +621,6 @@ struct Command {
         }
     }
 
-    string defaultCommand(in string projectPath,
-                          in Language language,
-                          in string[] outputs,
-                          in string[] inputs,
-                          Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
-        assert(isDefaultCommand, text("This command is not a default command: ", this));
-        auto cmd = builtinTemplate(type, language, deps);
-        foreach(key; params.keys) {
-            immutable var = "$" ~ key;
-            immutable value = getParams(projectPath, key, []).join(" ");
-            cmd = cmd.replace(var, value);
-        }
-        return expandCmd(cmd, projectPath, outputs, inputs);
-    }
-
     string defaultCommand(in Options options,
                           in Language language,
                           in string[] outputs,
@@ -664,18 +636,6 @@ struct Command {
         return expandCmd(cmd, options.projectPath, outputs, inputs);
     }
 
-
-    ///returns a command string to be run by the shell
-    string shellCommand(in string projectPath,
-                        in Language language,
-                        in string[] outputs,
-                        in string[] inputs,
-                        Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
-        return isDefaultCommand
-            ? defaultCommand(projectPath, language, outputs, inputs, deps)
-            : expand(projectPath, outputs, inputs);
-    }
-
     ///returns a command string to be run by the shell
     string shellCommand(in Options options,
                         in Language language,
@@ -686,8 +646,6 @@ struct Command {
             ? defaultCommand(options, language, outputs, inputs, deps)
             : expand(options.projectPath, outputs, inputs);
     }
-
-
 
     string[] execute(in Options options, in Language language,
                      in string[] outputs, in string[] inputs) const @trusted {

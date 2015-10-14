@@ -2,6 +2,7 @@ module tests.serialisation;
 
 
 import reggae;
+import reggae.options;
 import unit_threaded;
 
 @safe:
@@ -35,17 +36,19 @@ void testBuiltinCommand() {
 
 
 void testTarget() {
+    import reggae.config: options;
     const target = Target("foo.o", "dmd -of$out -c $in", Target("foo.d"));
-    auto bytes = target.toBytes("/path/to");
+    auto bytes = target.toBytes(options.withProjectPath("/path/to"));
     Target.fromBytes(bytes).shouldEqual(
         Target("foo.o", "dmd -offoo.o -c /path/to/foo.d", Target("/path/to/foo.d")));
 }
 
 void testBuild() @trusted {
+    import reggae.config: options;
     const foo = Target("foo.o", "dmd -of$out -c $in", Target("foo.d"));
     const bar = Target("bar.o", "dmd -of$out -c $in", Target("bar.d"));
     const build = Build(foo, bar);
-    auto bytes = build.toBytes("/path/to");
+    auto bytes = build.toBytes(options.withProjectPath("/path/to"));
     Build.fromBytes(bytes).shouldEqual(
         Build(Target("foo.o", "dmd -offoo.o -c /path/to/foo.d", Target("/path/to/foo.d")),
               Target("bar.o", "dmd -ofbar.o -c /path/to/bar.d", Target("/path/to/bar.d"))));

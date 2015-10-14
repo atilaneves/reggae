@@ -17,7 +17,7 @@ enum isTargetLike(T) = is(typeof(() {
     auto imps = target.implicits;
     static assert(is(Unqual!(typeof(imps[0])) == Unqual!T));
     if(target.isLeaf) {}
-    string cmd = target.shellCommand("");
+    string cmd = target.shellCommand(Options());
 }));
 
 

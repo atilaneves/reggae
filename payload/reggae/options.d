@@ -221,3 +221,10 @@ string[] getReggaeFileDependencies() @trusted {
     file.readln;
     return file.readln.chomp.splitter(" ").array;
 }
+
+
+Options withProjectPath(in Options options, in string projectPath) {
+    auto modOptions = options.dup;
+    modOptions.projectPath = projectPath;
+    return modOptions;
+}

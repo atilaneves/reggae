@@ -2,6 +2,7 @@ module tests.cpprules;
 
 
 import reggae;
+import reggae.options;
 import unit_threaded;
 
 
@@ -52,7 +53,7 @@ void testCppCompile() {
                                 Flags("-m64 -fPIC -O3"),
                                 IncludePaths(["headers"]));
 
-    mathsObj.shellCommand("/path/to").shouldEqual(
+    mathsObj.shellCommand(options.withProjectPath("/path/to")).shouldEqual(
         "g++ -m64 -fPIC -O3 -I/path/to/headers -MMD -MT src/cpp/maths.o -MF src/cpp/maths.o.dep "
         "-o src/cpp/maths.o -c /path/to/src/cpp/maths.cpp");
 }
@@ -62,7 +63,7 @@ void testCCompile() {
                                 Flags("-m64 -fPIC -O3"),
                                 IncludePaths(["headers"]));
 
-    mathsObj.shellCommand("/path/to").shouldEqual(
+    mathsObj.shellCommand(options.withProjectPath("/path/to")).shouldEqual(
         "gcc -m64 -fPIC -O3 -I/path/to/headers -MMD -MT src/c/maths.o -MF src/c/maths.o.dep "
         "-o src/c/maths.o -c /path/to/src/c/maths.c");
 }

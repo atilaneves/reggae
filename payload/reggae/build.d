@@ -353,6 +353,12 @@ struct Target {
         return _command.shellCommand(projectPath, getLanguage(), _outputs, inputs(projectPath), deps);
     }
 
+    ///returns a command string to be run by the shell
+    string shellCommand(in Options options,
+                        Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
+        return _command.shellCommand(options, getLanguage(), _outputs, inputs(options.projectPath), deps);
+    }
+
     string[] execute(in string projectPath = "") @safe const {
         return _command.execute(projectPath, getLanguage(), _outputs, inputs(projectPath));
     }
@@ -575,9 +581,6 @@ struct Command {
                                   in Language language,
                                   in Options options,
                                   in Flag!"dependencies" deps = Yes.dependencies) @safe pure {
-        import std.stdio;
-        debug writeln("c compiler in here: ", options.cCompiler);
-
 
         final switch(type) with(CommandType) {
             case phony:
@@ -646,6 +649,22 @@ struct Command {
         return expandCmd(cmd, projectPath, outputs, inputs);
     }
 
+    string defaultCommand(in Options options,
+                          in Language language,
+                          in string[] outputs,
+                          in string[] inputs,
+                          Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
+        assert(isDefaultCommand, text("This command is not a default command: ", this));
+        auto cmd = builtinTemplate(type, language, options, deps);
+        foreach(key; params.keys) {
+            immutable var = "$" ~ key;
+            immutable value = getParams(options.projectPath, key, []).join(" ");
+            cmd = cmd.replace(var, value);
+        }
+        return expandCmd(cmd, options.projectPath, outputs, inputs);
+    }
+
+
     ///returns a command string to be run by the shell
     string shellCommand(in string projectPath,
                         in Language language,
@@ -656,6 +675,18 @@ struct Command {
             ? defaultCommand(projectPath, language, outputs, inputs, deps)
             : expand(projectPath, outputs, inputs);
     }
+
+    ///returns a command string to be run by the shell
+    string shellCommand(in Options options,
+                        in Language language,
+                        in string[] outputs,
+                        in string[] inputs,
+                        Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
+        return isDefaultCommand
+            ? defaultCommand(options, language, outputs, inputs, deps)
+            : expand(options.projectPath, outputs, inputs);
+    }
+
 
 
     string[] execute(in string projectPath, in Language language,

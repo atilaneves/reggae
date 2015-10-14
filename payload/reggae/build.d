@@ -5,8 +5,10 @@
  */
 
 module reggae.build;
+
 import reggae.ctaa;
 import reggae.rules.common: Language, getLanguage;
+import reggae.options;
 
 import std.string: replace;
 import std.algorithm;
@@ -69,10 +71,10 @@ struct Build {
         return UniqueDepthFirst(this);
     }
 
-    ubyte[] toBytes(in string projectPath) @safe pure const {
+    ubyte[] toBytes(in Options options) @safe pure const {
         ubyte[] bytes;
         bytes ~= setUshort(cast(ushort)targets.length);
-        foreach(t; targets) bytes ~= t.toBytes(projectPath);
+        foreach(t; targets) bytes ~= t.toBytes(options);
         return bytes;
     }
 
@@ -346,13 +348,13 @@ struct Target {
     }
 
     ///returns a command string to be run by the shell
-    string shellCommand(in string projectPath = "",
+    string shellCommand(in Options options,
                         Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
-        return _command.shellCommand(projectPath, getLanguage(), _outputs, inputs(projectPath), deps);
+        return _command.shellCommand(options, getLanguage(), _outputs, inputs(options.projectPath), deps);
     }
 
-    string[] execute(in string projectPath = "") @safe const {
-        return _command.execute(projectPath, getLanguage(), _outputs, inputs(projectPath));
+    string[] execute(in Options options) @safe const {
+        return _command.execute(options, getLanguage(), _outputs, inputs(options.projectPath));
     }
 
     bool hasDefaultCommand() @safe const pure {
@@ -376,13 +378,13 @@ struct Target {
         return Target(output, Command.phony(shellCommand), dependencies, implicits);
     }
 
-    string toString(string projectPath = "") const pure nothrow {
+    string toString(in Options options) const nothrow {
         try {
             if(isLeaf) return _outputs[0];
             immutable _outputs = _outputs.length == 1 ? `"` ~ _outputs[0] ~ `"` : text(_outputs);
             immutable depsStr = _dependencies.length == 0 ? "" : text(_dependencies);
             immutable impsStr = _implicits.length == 0 ? "" : text(_implicits);
-            auto parts = [text(_outputs), `"` ~ shellCommand(projectPath) ~ `"`];
+            auto parts = [text(_outputs), `"` ~ shellCommand(options) ~ `"`];
             if(depsStr != "") parts ~= depsStr;
             if(impsStr != "") parts ~= impsStr;
             return text("Target(", parts.join(", "), ")");
@@ -391,20 +393,20 @@ struct Target {
         }
     }
 
-    ubyte[] toBytes(in string projectPath) @safe pure const {
+    ubyte[] toBytes(in Options options) @safe pure const {
         ubyte[] bytes;
         bytes ~= setUshort(cast(ushort)_outputs.length);
         foreach(output; _outputs) {
-            bytes ~= arrayToBytes(isLeaf ? inProjectPath(projectPath, output) : output);
+            bytes ~= arrayToBytes(isLeaf ? inProjectPath(options.projectPath, output) : output);
         }
 
-        bytes ~= arrayToBytes(shellCommand(projectPath));
+        bytes ~= arrayToBytes(shellCommand(options));
 
         bytes ~= setUshort(cast(ushort)_dependencies.length);
-        foreach(dep; _dependencies) bytes ~= dep.toBytes(projectPath);
+        foreach(dep; _dependencies) bytes ~= dep.toBytes(options);
 
         bytes ~= setUshort(cast(ushort)_implicits.length);
-        foreach(imp; _implicits) bytes ~= imp.toBytes(projectPath);
+        foreach(imp; _implicits) bytes ~= imp.toBytes(options);
 
         return bytes;
     }
@@ -562,10 +564,10 @@ struct Command {
         return params.get(key, ifNotFound).map!(a => a.replace("$project", projectPath)).array;
     }
 
-    static string builtinTemplate(CommandType type,
-                                  Language language,
-                                  Flag!"dependencies" deps = Yes.dependencies) @safe pure {
-        import reggae.config: options;
+    static string builtinTemplate(in CommandType type,
+                                  in Language language,
+                                  in Options options,
+                                  in Flag!"dependencies" deps = Yes.dependencies) @safe pure {
 
         final switch(type) with(CommandType) {
             case phony:
@@ -589,18 +591,17 @@ struct Command {
                 throw new Exception("Command type 'code' has no built-in template");
 
             case compile:
-                return compileTemplate(type, language, deps).replace("$out $in", "$out -c $in");
+                return compileTemplate(type, language, options, deps).replace("$out $in", "$out -c $in");
 
             case compileAndLink:
-                return compileTemplate(type, language, deps);
+                return compileTemplate(type, language, options, deps);
         }
     }
 
-    private static string compileTemplate(CommandType type,
-                                          Language language,
-                                          Flag!"dependencies" deps = Yes.dependencies) @safe pure {
-        import reggae.config: options;
-
+    private static string compileTemplate(in CommandType type,
+                                          in Language language,
+                                          in Options options,
+                                          in Flag!"dependencies" deps = Yes.dependencies) @safe pure {
         immutable ccParams = deps
             ? " $flags $includes -MMD -MT $out -MF $out.dep -o $out $in"
             : " $flags $includes -o $out $in";
@@ -620,34 +621,33 @@ struct Command {
         }
     }
 
-    string defaultCommand(in string projectPath,
+    string defaultCommand(in Options options,
                           in Language language,
                           in string[] outputs,
                           in string[] inputs,
                           Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
         assert(isDefaultCommand, text("This command is not a default command: ", this));
-        auto cmd = builtinTemplate(type, language, deps);
+        auto cmd = builtinTemplate(type, language, options, deps);
         foreach(key; params.keys) {
             immutable var = "$" ~ key;
-            immutable value = getParams(projectPath, key, []).join(" ");
+            immutable value = getParams(options.projectPath, key, []).join(" ");
             cmd = cmd.replace(var, value);
         }
-        return expandCmd(cmd, projectPath, outputs, inputs);
+        return expandCmd(cmd, options.projectPath, outputs, inputs);
     }
 
     ///returns a command string to be run by the shell
-    string shellCommand(in string projectPath,
+    string shellCommand(in Options options,
                         in Language language,
                         in string[] outputs,
                         in string[] inputs,
                         Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
         return isDefaultCommand
-            ? defaultCommand(projectPath, language, outputs, inputs, deps)
-            : expand(projectPath, outputs, inputs);
+            ? defaultCommand(options, language, outputs, inputs, deps)
+            : expand(options.projectPath, outputs, inputs);
     }
 
-
-    string[] execute(in string projectPath, in Language language,
+    string[] execute(in Options options, in Language language,
                      in string[] outputs, in string[] inputs) const @trusted {
         import std.process;
 
@@ -657,7 +657,7 @@ struct Command {
             case link:
             case compileAndLink:
             case phony:
-                immutable cmd = shellCommand(projectPath, language, outputs, inputs);
+                immutable cmd = shellCommand(options, language, outputs, inputs);
                 immutable res = executeShell(cmd);
                 enforce(res.status == 0, "Could not execute phony " ~ cmd ~ ":\n" ~ res.output);
                 return [cmd, res.output];

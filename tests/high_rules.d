@@ -2,6 +2,7 @@ module tests.high_rules;
 
 
 import reggae;
+import reggae.options;
 import unit_threaded;
 
 
@@ -17,6 +18,11 @@ void testCObjectFile() {
 
     obj.shouldEqual(Target("foo.o", cmd, [Target(fileName)]));
 
+    auto options = Options();
+    options.cCompiler = "weirdcc";
+    options.projectPath = "/project";
+    obj.shellCommand(options).shouldEqual(
+        "weirdcc -g -O0 -I/project/myhdrs -I/project/otherhdrs -MMD -MT foo.o -MF foo.o.dep -o foo.o -c /project/foo.c");
 }
 
 void testCppObjectFile() {
@@ -51,31 +57,36 @@ void testDObjectFile() {
 
 
 void testBuiltinTemplateDeps() {
-    Command.builtinTemplate(CommandType.compile, Language.C).shouldEqual(
+    import reggae.config: options;
+
+    Command.builtinTemplate(CommandType.compile, Language.C, options).shouldEqual(
         "gcc $flags $includes -MMD -MT $out -MF $out.dep -o $out -c $in");
 
-    Command.builtinTemplate(CommandType.compile, Language.D).shouldEqual(
+    Command.builtinTemplate(CommandType.compile, Language.D, options).shouldEqual(
         ".reggae/dcompile --objFile=$out --depFile=$out.dep " ~
          "dmd $flags $includes $stringImports $in");
 
 }
 
 void testBuiltinTemplateNoDeps() {
-    Command.builtinTemplate(CommandType.compile, Language.C, No.dependencies).shouldEqual(
+    import reggae.config: options;
+    Command.builtinTemplate(CommandType.compile, Language.C, options, No.dependencies).shouldEqual(
         "gcc $flags $includes -o $out -c $in");
 
-    Command.builtinTemplate(CommandType.compile, Language.D, No.dependencies).shouldEqual(
+    Command.builtinTemplate(CommandType.compile, Language.D, options, No.dependencies).shouldEqual(
         "dmd $flags $includes $stringImports -of$out -c $in");
 
 }
 
 
 void testLinkC() {
+    import reggae.config: options;
     const tgt = link(ExeName("app"), [objectFile(SourceFile("foo.c"))]);
-    tgt.shellCommand.shouldEqual("gcc -o app  foo.o");
+    tgt.shellCommand(options).shouldEqual("gcc -o app  foo.o");
 }
 
 void testLinkCpp() {
+    import reggae.config: options;
     const tgt = link(ExeName("app"), [objectFile(SourceFile("foo.cpp"))]);
-    tgt.shellCommand.shouldEqual("g++ -o app  foo.o");
+    tgt.shellCommand(options).shouldEqual("g++ -o app  foo.o");
 }

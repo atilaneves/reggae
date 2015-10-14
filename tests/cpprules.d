@@ -2,6 +2,7 @@ module tests.cpprules;
 
 
 import reggae;
+import reggae.options;
 import unit_threaded;
 
 
@@ -52,7 +53,7 @@ void testCppCompile() {
                                 Flags("-m64 -fPIC -O3"),
                                 IncludePaths(["headers"]));
 
-    mathsObj.shellCommand("/path/to").shouldEqual(
+    mathsObj.shellCommand(options.withProjectPath("/path/to")).shouldEqual(
         "g++ -m64 -fPIC -O3 -I/path/to/headers -MMD -MT src/cpp/maths.o -MF src/cpp/maths.o.dep "
         "-o src/cpp/maths.o -c /path/to/src/cpp/maths.cpp");
 }
@@ -62,7 +63,7 @@ void testCCompile() {
                                 Flags("-m64 -fPIC -O3"),
                                 IncludePaths(["headers"]));
 
-    mathsObj.shellCommand("/path/to").shouldEqual(
+    mathsObj.shellCommand(options.withProjectPath("/path/to")).shouldEqual(
         "gcc -m64 -fPIC -O3 -I/path/to/headers -MMD -MT src/c/maths.o -MF src/c/maths.o.dep "
         "-o src/c/maths.o -c /path/to/src/c/maths.c");
 }
@@ -108,6 +109,8 @@ void testUnityDFiles() {
 
 
 void testUnityTargetCpp() @safe {
+    import reggae.config: options;
+
     const files = ["src/foo.cpp", "src/bar.cpp", "src/baz.cpp"];
     Target[] dependencies() @safe pure nothrow {
         return [Target("$builddir/mylib.a")];
@@ -121,7 +124,7 @@ void testUnityTargetCpp() @safe {
                                 IncludePaths(["headers"]),
                                 dependencies);
     target.rawOutputs.shouldEqual(["leapp"]);
-    target.shellCommand(projectPath).shouldEqual(
+    target.shellCommand(options.withProjectPath(projectPath)).shouldEqual(
         "g++ -g -O0 -I/path/to/proj/headers -MMD -MT leapp -MF leapp.dep -o leapp " ~
         "objs/leapp.objs/unity.cpp mylib.a");
     target.dependencies.shouldEqual([Target.phony("$builddir/objs/leapp.objs/unity.cpp",
@@ -134,6 +137,8 @@ void testUnityTargetCpp() @safe {
 }
 
 void testUnityTargetC() @safe {
+    import reggae.config: options;
+
     const files = ["src/foo.c", "src/bar.c", "src/baz.c"];
     Target[] dependencies() @safe pure nothrow {
         return [Target("$builddir/mylib.a")];
@@ -147,7 +152,7 @@ void testUnityTargetC() @safe {
                                 IncludePaths(["headers"]),
                                 dependencies);
     target.rawOutputs.shouldEqual(["leapp"]);
-    target.shellCommand(projectPath).shouldEqual(
+    target.shellCommand(options.withProjectPath(projectPath)).shouldEqual(
         "gcc -g -O0 -I/path/to/proj/headers -MMD -MT leapp -MF leapp.dep -o leapp " ~
         "objs/leapp.objs/unity.c mylib.a");
     target.dependencies.shouldEqual([Target.phony("$builddir/objs/leapp.objs/unity.c",

@@ -43,7 +43,7 @@ struct Tup {
             //none to be generated
             immutable line = ": " ~
                 target.dependenciesInProjectPath(options.projectPath).join(" ") ~ " |> " ~
-                target.shellCommand(options.projectPath, No.dependencies) ~ " |> " ~
+                target.shellCommand(options, No.dependencies) ~ " |> " ~
                 target.outputsInProjectPath(options.projectPath).join(" ");
             lines ~= line;
         }

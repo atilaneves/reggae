@@ -52,7 +52,7 @@ private Build getBuildObject(alias module_)(in Options options) {
 
         if(options.cacheBuildInfo) {
             auto file = File(cacheFileName, "w");
-            file.rawWrite(build.toBytes(options.projectPath));
+            file.rawWrite(build.toBytes(options));
         }
 
         return build;
@@ -140,7 +140,7 @@ private void writeCompilationDB(in Build build, in Options options) {
         return
             "    {\n" ~
             text(`        "directory": "`, cwd, `"`) ~ ",\n" ~
-            text(`        "command": "`, target.shellCommand(options.projectPath), `"`) ~ ",\n" ~
+            text(`        "command": "`, target.shellCommand(options), `"`) ~ ",\n" ~
             text(`        "file": "`, target.outputsInProjectPath(options.projectPath).join(" "), `"`) ~ "\n" ~
             "    }";
     }

@@ -2,6 +2,7 @@ module tests.ninja;
 
 import unit_threaded;
 import reggae;
+import reggae.options;
 
 
 void testEmpty() {
@@ -136,7 +137,8 @@ void testImplicitDependenciesMoreThanOne() {
 
 
 void testDefaultRules() {
-    defaultRules().shouldEqual(
+    import reggae.config: options;
+    defaultRules(options).shouldEqual(
         [
             NinjaEntry("rule _ccompile",
                        ["command = gcc $flags $includes -MMD -MT $out -MF $out.dep -o $out -c $in",
@@ -176,6 +178,16 @@ void testDefaultRules() {
             ]);
 }
 
+void testDefaultRulesWeirdCCompiler() {
+    auto options = Options();
+    options.cCompiler = "weirdcc";
+    auto rules = defaultRules(options);
+    auto entry = NinjaEntry("rule _ccompile",
+                            ["command = weirdcc $flags $includes -MMD -MT $out -MF $out.dep -o $out -c $in",
+                             "deps = gcc",
+                             "depfile = $out.dep"]);
+    entry.shouldBeIn(rules);
+}
 
 void testImplicitOutput() {
     const foo = Target(["foo.h", "foo.c"], "protocomp $in", [Target("foo.proto")]);

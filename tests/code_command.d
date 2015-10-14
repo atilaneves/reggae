@@ -14,9 +14,10 @@ private void incr(in string[] inputs, in string[] outputs) {
 }
 
 void testSimpleCommand() {
+    import reggae.config: options;
     gCounter = 0;
     const tgt = Target("no output", &incr, Target("no input"));
-    tgt.execute();
+    tgt.execute(options);
     gCounter.shouldEqual(1);
     gInputs.shouldEqual(["no input"]);
     gOutputs.shouldEqual(["no output"]);
@@ -24,8 +25,9 @@ void testSimpleCommand() {
 
 
 void testRemoveBuildDir() {
+    import reggae.config: options;
     gCounter = 0;
     const cmd = Command(&incr).expandVariables;
-    cmd.execute("", Language.unknown, [], []);
+    cmd.execute(options, Language.unknown, [], []);
     gCounter.shouldEqual(1);
 }

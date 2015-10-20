@@ -34,7 +34,10 @@ enum JsonDepsFuncName {
 
 Build jsonToBuild(in string projectPath, in string jsonString) {
     auto json = parseJSON(jsonString);
-    const targets = json.array.map!(a => jsonToTarget(projectPath, a)).array;
+    const targets = json.array.
+        filter!(a => a.object["type"].str != "defaultOptions").
+        map!(a => jsonToTarget(projectPath, a)).
+        array;
     return Build(targets);
 }
 

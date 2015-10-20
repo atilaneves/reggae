@@ -51,7 +51,10 @@ string linkJsonString() @safe pure nothrow {
                     "targets": []}}]},
           "implicits": {
               "type": "fixed",
-              "targets": []}}]
+              "targets": []}},
+        {"type": "defaultOptions",
+         "cCompiler": "weirdcc"
+        }]
 `;
 }
 

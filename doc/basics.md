@@ -1,6 +1,15 @@
 Basics
 =======
 
+Import / require reggae
+----------------------
+
+    import reggae; //D
+    from reggae import * # Python
+    require 'reggae' # Ruby
+    var reggae = require('reggae-js') // Javascript
+    reggae = require('reggae') -- Lua
+
 Target
 ------
 
@@ -9,7 +18,20 @@ and all high-level rules are built on this base. A *build* is considered to be a
 A target has a collection of outputs (usually just one), a command to generate it, a list of explicit
 dependencies and a list of implicit dependencies. In D, a target may be defined as follows:
 
+    //D:
     enum target = Target("foo.o", "dmd -of$out -c $in", Target("foo.d")); //implicits left out
+
+    # Python:
+    target = Target("foo.o", "dmd -of$out -c $in", Target("foo.d")); # implicits left out
+
+    # Ruby:
+    target = Target.new("foo.o", "dmd -of$out -c $in", Target.new("foo.d"))
+
+    // Javascript:
+    target = new reggae.Target("foo.o", "dmd -of$out -c $in", new reggae.Target("foo.d"))
+
+    -- Lua
+    target = reggae.Target("foo.o", "dmd -of$out -c $in", reggae.Target("foo.d"))
 
 In general outputs and dependencies are arrays, but since it's more common for both of them to only
 contain one element, the constructor allows it to be called as above.
@@ -27,19 +49,25 @@ Build
 ------
 
 `Build` is a structure whose only purpose is to define what targets are the *top-level* ones.
-One and only one of these must be defined in the build description file (typically `reggaefile.d`).
+One and only one of these must be defined in the build description file (`reggaefile.{d,py,rb,js,lua}`).
 Top-level targets are generated in the root of the build directory. Any intermediate dependencies
 are built in a directory specific to each top-level target to avoid name clashes.
 
-For D build descriptions, the reggaefile must have a function that returns a Build object. This
+For D build descriptions, the reggaefile must have a function that returns a `Build` object. This
 function may have any name. It is usually not written by hand, for the `build` template mixin
 generates this function for the user. Usually the last line of a reggaefile will be:
 
-    mixin build!(topLevel1, topLevel2, ...);
+    //topLevelTarget1, ... have been defined before using enum or alias
+    mixin build!(topLevelTarget1, topLevelTarget2, ...);
 
 Where each target was defined before.
 
-In scripting languages such as Python, one build object should be defined at top level.
+In scripting languages, one build object should be defined at top level.
+It doesn't matter what it's called, it just has to be of the `reggae.Build` type.
+In, e.g., Python:
+
+    topLevelTarget1 = Target(...)
+    bld = Build(topLevelTarget1, topLevelTarget2, ...)
 
 
 Source and Build directories
@@ -54,12 +82,27 @@ Special variables
 
 Reggae currently has 4 special variables that get expanded when the build is generated:
 
-. $in - expands to all inputs for the current target. Should be preferred instead of explicitly listing them.
-. $out - expands to all outputs for the current target. Should be preferred instead of explicitly listing them.
-. $builddir - The build directory. Useful for generating targets in a particular place.
-. $project - The source directory. Useful for reading files in a specific place in the source tree.
+. `$in` - expands to all inputs for the current target. Should be preferred instead of explicitly listing them.
+. `$out` - expands to all outputs for the current target. Should be preferred instead of explicitly listing them.
+. `$builddir` - The build directory. Useful for generating targets in a particular place.
+. `$project` - The source directory. Useful for reading files in a specific place in the source tree.
 
 Otherwise, referring to any source file is done from the root of the project directory.
+
+Default Options
+---------------
+
+Some builds may always use the same command-line options, as is the case when using a special
+compiler for embedded development. Since it is tedious and error-prone to require users to
+always specify these options, it is possible to override defaults for a build in particular.
+In D, assign to `defaultOptions`:
+
+    defaultOptions.cCompiler = "my_weird_cc";
+
+In Python, use kwargs with the `DefaultOptions type`:
+
+    opts = DefaultOptions(cCompiler='my_weird_cc', ...)
+
 
 
 Run-time and compile-time

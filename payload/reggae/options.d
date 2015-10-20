@@ -7,6 +7,7 @@ import std.conv: ConvException;
 import std.path: absolutePath, buildPath;
 import std.file: exists;
 
+Options defaultOptions;
 
 enum BuildLanguage {
     D,
@@ -37,11 +38,11 @@ struct Options {
     Options dup() @safe pure const nothrow {
         return Options(backend,
                        projectPath, dflags, ranFromPath, cCompiler, cppCompiler, dCompiler,
-                       noFetch, help, perModule, isDubProject, oldNinja);
+                       noFetch, help, perModule, isDubProject, oldNinja, noCompilationDB, cacheBuildInfo);
     }
 
     //finished setup
-    void finalize(string[] args) @safe{
+    void finalize(string[] args) @safe {
         import std.process;
 
         this.args = args;
@@ -159,6 +160,10 @@ struct Options {
     string[] reggaeFileDependencies() @safe const {
         return [ranFromPath, reggaeFilePath];
     }
+
+    bool isJsonBuild() @safe const {
+        return reggaeFileLanguage != BuildLanguage.D;
+    }
 }
 
 
@@ -168,7 +173,9 @@ Options getOptions(string[] args) @trusted {
     import std.algorithm;
     import std.array;
 
-    Options options;
+    Options options = defaultOptions;
+
+    //escape spaces so that if we try using these arguments again the shell won't complain
     auto origArgs = args.map!(a => a.canFind(" ") ? `"` ~ a ~ `"` : a).array;
 
     try {

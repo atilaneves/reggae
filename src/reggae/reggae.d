@@ -59,11 +59,11 @@ mixin template ReggaeMain() {
     }
 }
 
-void run(in Options options) {
+void run(Options options) {
     if(options.help) return;
     enforce(options.projectPath != "", "A project path must be specified");
 
-    if(options.reggaeFileLanguage != BuildLanguage.D) {
+    if(options.isJsonBuild) {
         immutable haveToReturn = jsonBuild(options, options.reggaeFileLanguage);
         if(haveToReturn) return;
     }
@@ -73,22 +73,30 @@ void run(in Options options) {
 }
 
 //get JSON description of the build from a scripting language
+//and transform it into a build description
 //return true if no D files are present
-bool jsonBuild(in Options options, in BuildLanguage language) {
-    enforce(options.backend != Backend.binary, "Binary backend not supported via JSON");
-
+bool jsonBuild(Options options, in BuildLanguage language) {
     immutable jsonOutput = getJsonOutput(options, language);
+    return jsonBuild(options, jsonOutput);
+}
+
+//transform JSON description into a Build struct
+//return true if no D files are present
+bool jsonBuild(Options options, in string jsonOutput) {
+    enforce(options.backend != Backend.binary, "Binary backend not supported via JSON");
 
     import reggae.json_build;
     import reggae.buildgen;
     import reggae.rules.common: Language;
 
     const build = jsonToBuild(options.projectPath, jsonOutput);
+    //options = jsonToOptions(options, jsonOutput);
     generateBuild(build, options);
 
     //true -> exit early
     return !build.targets.canFind!(a => a.getLanguage == Language.D);
 }
+
 
 private string getJsonOutput(in Options options, in BuildLanguage language) @safe {
     const args = getJsonOutputArgs(options, language);

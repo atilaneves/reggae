@@ -7,6 +7,7 @@ import std.conv: ConvException;
 import std.path: absolutePath, buildPath;
 import std.file: exists;
 
+Options defaultOptions;
 
 enum BuildLanguage {
     D,
@@ -168,7 +169,7 @@ Options getOptions(string[] args) @trusted {
     import std.algorithm;
     import std.array;
 
-    Options options;
+    Options options = defaultOptions;
     auto origArgs = args.map!(a => a.canFind(" ") ? `"` ~ a ~ `"` : a).array;
 
     try {

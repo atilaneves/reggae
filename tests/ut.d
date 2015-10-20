@@ -13,6 +13,7 @@ int main(string[] args) {
                           "tests.code_command",
                           "tests.simple_bar_reggaefile",
                           "tests.ninja",
+                          "tests.default_options",
                           "tests.default_rules",
                           "tests.serialisation",
                           "tests.cpprules",

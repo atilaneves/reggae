@@ -14,3 +14,4 @@ public import reggae.ctaa;
 public import reggae.range;
 public import reggae.backend.binary;
 public import reggae.core.rules;
+public import reggae.options;

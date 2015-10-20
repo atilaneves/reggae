@@ -39,7 +39,6 @@ Build jsonToBuild(in string projectPath, in string jsonString) {
 }
 
 
-
 private Target jsonToTarget(in string projectPath, in JSONValue json) {
     if(json.object["type"].str.to!JsonTargetType == JsonTargetType.dynamic)
         return callTargetFunc(projectPath, json);

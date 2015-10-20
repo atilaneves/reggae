@@ -174,6 +174,8 @@ Options getOptions(string[] args) @trusted {
     import std.array;
 
     Options options = defaultOptions;
+
+    //escape spaces so that if we try using these arguments again the shell won't complain
     auto origArgs = args.map!(a => a.canFind(" ") ? `"` ~ a ~ `"` : a).array;
 
     try {

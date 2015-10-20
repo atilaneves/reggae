@@ -73,11 +73,17 @@ void run(in Options options) {
 }
 
 //get JSON description of the build from a scripting language
+//and transform it into a build description
 //return true if no D files are present
 bool jsonBuild(in Options options, in BuildLanguage language) {
-    enforce(options.backend != Backend.binary, "Binary backend not supported via JSON");
-
     immutable jsonOutput = getJsonOutput(options, language);
+    return jsonBuild(options, jsonOutput);
+}
+
+//transform JSON description into a Build struct
+//return true if no D files are present
+bool jsonBuild(in Options options, in string jsonOutput) {
+    enforce(options.backend != Backend.binary, "Binary backend not supported via JSON");
 
     import reggae.json_build;
     import reggae.buildgen;
@@ -89,6 +95,7 @@ bool jsonBuild(in Options options, in BuildLanguage language) {
     //true -> exit early
     return !build.targets.canFind!(a => a.getLanguage == Language.D);
 }
+
 
 private string getJsonOutput(in Options options, in BuildLanguage language) @safe {
     const args = getJsonOutputArgs(options, language);

@@ -6,7 +6,6 @@ import reggae.json_build;
 import unit_threaded;
 
 
-@HiddenTest
 void testLink() {
     immutable jsonStr = `
         [{"type": "fixed",

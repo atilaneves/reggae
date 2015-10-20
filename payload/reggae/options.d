@@ -38,7 +38,7 @@ struct Options {
     Options dup() @safe pure const nothrow {
         return Options(backend,
                        projectPath, dflags, ranFromPath, cCompiler, cppCompiler, dCompiler,
-                       noFetch, help, perModule, isDubProject, oldNinja);
+                       noFetch, help, perModule, isDubProject, oldNinja, noCompilationDB, cacheBuildInfo);
     }
 
     //finished setup

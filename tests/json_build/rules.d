@@ -66,3 +66,15 @@ void testLink() {
 
     jsonToBuild("", linkJsonString).shouldEqual(Build(app));
 }
+
+
+void testJsonToOptions() {
+    import reggae.config: options;
+    import std.json;
+
+    auto oldOptions = options.dup;
+    oldOptions.args = ["reggae", "-b", "ninja", "/path/to/my/project"];
+    auto newOptions = jsonToOptions(oldOptions, parseJSON(linkJsonString));
+    newOptions.cCompiler.shouldEqual("weirdcc");
+    newOptions.cppCompiler.shouldEqual("g++");
+}

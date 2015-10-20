@@ -42,7 +42,7 @@ struct Options {
     }
 
     //finished setup
-    void finalize(string[] args) @safe{
+    void finalize(string[] args) @safe {
         import std.process;
 
         this.args = args;

@@ -4,6 +4,7 @@ module reggae.json_build;
 import reggae.build;
 import reggae.ctaa;
 import reggae.rules.common;
+import reggae.options;
 
 import std.json;
 import std.algorithm;
@@ -139,4 +140,32 @@ private Target callTargetFunc(in string projectPath, in JSONValue json) {
                       const ImportPaths(strings(json, "includes")),
                       const StringImportPaths(strings(json, "string_imports")),
                       getDeps(projectPath, json["link_with"]));
+}
+
+
+//get "real" options based on what was passed in via the command line
+//and a json object.
+//This is needed so that scripting language build descriptions can specify
+//default values for the options
+//First the command-line parses the options, then the json can override the defaults
+Options jsonToOptions(in Options options, in JSONValue json) {
+    //first, find the JSON object we want
+    auto defaultOptionsObj = json.array.filter!(a => a.object["type"].str == "defaultOptions").front;
+    auto oldDefaultOptions = defaultOptions.dup;
+    scope(exit) defaultOptions = oldDefaultOptions;
+
+    //statically loop over members of Options
+    foreach(member; __traits(allMembers, Options)) {
+        //type alias for the current member
+        mixin(`alias T = typeof(defaultOptions.` ~ member ~ `);`);
+
+        //don't bother with functions or with these member variables
+        static if(member != "args" && member != "userVars" && !isSomeFunction!T) {
+            if(member in defaultOptionsObj) {
+                mixin("defaultOptions." ~ member ~ ` = defaultOptionsObj.object["` ~ member ~ `"].str.to!T;`);
+            }
+        }
+    }
+
+    return getOptions(options.args.dup);
 }

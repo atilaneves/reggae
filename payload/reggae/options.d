@@ -160,6 +160,10 @@ struct Options {
     string[] reggaeFileDependencies() @safe const {
         return [ranFromPath, reggaeFilePath];
     }
+
+    bool isJsonBuild() @safe const {
+        return reggaeFileLanguage != BuildLanguage.D;
+    }
 }
 
 

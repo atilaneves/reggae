@@ -63,7 +63,7 @@ void run(in Options options) {
     if(options.help) return;
     enforce(options.projectPath != "", "A project path must be specified");
 
-    if(options.reggaeFileLanguage != BuildLanguage.D) {
+    if(options.isJsonBuild) {
         immutable haveToReturn = jsonBuild(options, options.reggaeFileLanguage);
         if(haveToReturn) return;
     }

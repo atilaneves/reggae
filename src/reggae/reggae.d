@@ -90,8 +90,7 @@ bool jsonBuild(Options options, in string jsonOutput) {
     import reggae.rules.common: Language;
 
     const build = jsonToBuild(options.projectPath, jsonOutput);
-    //options = jsonToOptions(options, jsonOutput);
-    generateBuild(build, options);
+    generateBuild(build, jsonToOptions(options, jsonOutput));
 
     //true -> exit early
     return !build.targets.canFind!(a => a.getLanguage == Language.D);

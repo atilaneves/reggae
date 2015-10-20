@@ -143,14 +143,20 @@ private Target callTargetFunc(in string projectPath, in JSONValue json) {
 }
 
 
+const(Options) jsonToOptions(in Options options, in string jsonString) {
+    return jsonToOptions(options, parseJSON(jsonString));
+}
+
 //get "real" options based on what was passed in via the command line
 //and a json object.
 //This is needed so that scripting language build descriptions can specify
 //default values for the options
 //First the command-line parses the options, then the json can override the defaults
-Options jsonToOptions(in Options options, in JSONValue json) {
+const (Options) jsonToOptions(in Options options, in JSONValue json) {
     //first, find the JSON object we want
-    auto defaultOptionsObj = json.array.filter!(a => a.object["type"].str == "defaultOptions").front;
+    auto defaultOptionsRange = json.array.filter!(a => a.object["type"].str == "defaultOptions");
+    if(defaultOptionsRange.empty) return options;
+    auto defaultOptionsObj = defaultOptionsRange.front;
     auto oldDefaultOptions = defaultOptions.dup;
     scope(exit) defaultOptions = oldDefaultOptions;
 

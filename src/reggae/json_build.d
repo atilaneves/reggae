@@ -168,7 +168,15 @@ const (Options) jsonToOptions(in Options options, in JSONValue json) {
         //don't bother with functions or with these member variables
         static if(member != "args" && member != "userVars" && !isSomeFunction!T) {
             if(member in defaultOptionsObj) {
-                mixin("defaultOptions." ~ member ~ ` = defaultOptionsObj.object["` ~ member ~ `"].str.to!T;`);
+                static if(is(T == bool)) {
+                    mixin(`immutable type = defaultOptionsObj.object["` ~ member ~ `"].type;`);
+                    if(type == JSON_TYPE.TRUE)
+                        mixin("defaultOptions." ~ member ~ ` = true;`);
+                    else if(type == JSON_TYPE.FALSE)
+                        mixin("defaultOptions." ~ member ~ ` = false;`);
+                }
+                else
+                    mixin("defaultOptions." ~ member ~ ` = defaultOptionsObj.object["` ~ member ~ `"].str.to!T;`);
             }
         }
     }

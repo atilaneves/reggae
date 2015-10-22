@@ -53,7 +53,8 @@ string linkJsonString() @safe pure nothrow {
               "type": "fixed",
               "targets": []}},
         {"type": "defaultOptions",
-         "cCompiler": "weirdcc"
+         "cCompiler": "weirdcc",
+         "oldNinja": true
         }]
 `;
 }

@@ -9,7 +9,7 @@ Feature: Augmenting dub projects with reggae builds
       {
         "name": "dub_reggae",
         "targetType": "executable",
-        "dependencies": {"cerealed": ">=0.6.3"}
+        "dependencies": {"cerealed": "~>0.6.3"}
       }
 
       """

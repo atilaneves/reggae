@@ -11,7 +11,7 @@ Feature: Dub integration
         "targetType": "executable",
         "importPaths": ["imps"],
         "stringImportPaths": ["stringies"],
-        "dependencies": {"cerealed": ">=0.6.3"}
+        "dependencies": {"cerealed": "~>0.6.3"}
       }
 
       """

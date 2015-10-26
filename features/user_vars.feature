@@ -9,7 +9,7 @@ Feature: User-defined variables
       {
         "name": "var_app",
         "target_type": "executable",
-        "dependencies": {"cerealed": ">=0.6.3"}
+        "dependencies": {"cerealed": "~>0.6.3"}
       }
       """
 

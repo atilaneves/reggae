@@ -20,8 +20,8 @@ static if(isDubProject) {
      of compiler flags (dub describe doesn't output any information)
      on the default compiler flags
     */
-    Target dubDefaultTarget(Flags flags = Flags())() {
-        return configToDubInfo["default"].mainTarget(flags.value);
+    Target dubDefaultTarget(Flags compilerFlags = Flags())() {
+        return configToDubInfo["default"].mainTarget(compilerFlags.value);
     }
 
 

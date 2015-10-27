@@ -59,21 +59,21 @@ struct DubInfo {
     }
 
     //@trusted: array
-    Target mainTarget(string flagsStr = "") @trusted const {
+    Target mainTarget(string compilerFlags = "") @trusted const {
         string[] libs;
         foreach(p; packages) {
             libs ~= p.libs;
         }
 
         const pack = packages[0];
-        auto flags = flagsStr.splitter(" ").array;
-        flags ~= pack.targetType == "library" ? ["-lib"] : [];
+        string[] linkerFlags;
+        linkerFlags ~= pack.targetType == "library" ? ["-lib"] : [];
         //hacky hack for dub describe on vibe.d projects
-        flags ~= libs.filter!(a => a != "ev").map!(a => "-L-l" ~ a).array;
-        if(packages[0].targetType == "staticLibrary") flags ~= "-lib";
+        linkerFlags ~= libs.filter!(a => a != "ev").map!(a => "-L-l" ~ a).array;
+        if(packages[0].targetType == "staticLibrary") linkerFlags ~= "-lib";
         return link(ExeName(packages[0].targetFileName),
-                    toTargets(),
-                    Flags(flags.join(" ")));
+                    toTargets(Yes.main, compilerFlags),
+                    Flags(linkerFlags.join(" ")));
     }
 
     string[] mainTargetImportPaths() @trusted nothrow const {

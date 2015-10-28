@@ -147,7 +147,7 @@ string topLevelDirName(in Target target) @safe pure {
 //placed in their top-level parent's object directory
 string realTargetPath(in string dirName, in Target target, in string output) @trusted pure {
     return target.isLeaf
-        ? expandBuildDir(output)
+        ? output
         : realTargetPath(dirName, output);
 }
 
@@ -268,14 +268,14 @@ struct Target {
 
     this(C)(in string output,
             in C command,
-            in Target[] dependencies,
+            in Target[] dependencies = [],
             in Target[] implicits = []) @safe pure nothrow {
         this([output], command, dependencies, implicits);
     }
 
     this(C)(in string[] outputs,
             in C command,
-            in Target[] dependencies,
+            in Target[] dependencies = [],
             in Target[] implicits = []) @safe pure nothrow {
 
         this._outputs = outputs;
@@ -309,7 +309,7 @@ struct Target {
     }
 
     bool isLeaf() @safe pure const nothrow {
-        return _dependencies is null && _implicits is null;
+        return _dependencies is null && _implicits is null && getCommandType == CommandType.shell && _command.command == "";
     }
 
     string[] outputsInProjectPath(in string projectPath) @safe pure const {

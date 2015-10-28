@@ -325,3 +325,11 @@ void testCustomRuleInvolvingProjectPath() {
                     ["command = /path/to/proj/../dmd/src/dmd $before$out $between $in"]),
             ]);
 }
+
+
+void testTargetWithNoDependencies() {
+    const obj = Target("utmain.o", "dmd -of$out -c $in",
+                       Target("utmain.d", "/home/atila/coding/d/dtest/bin/dtest -f $out --generate"));
+    //before the fix this throws because of no $in and $out in the target
+    const ninja = Ninja(Build(obj), "/path/to/proj");
+}

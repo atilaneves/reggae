@@ -255,3 +255,11 @@ void testDepsInProjectDir() {
     const target = Target("output", "cmd", [Target("$project/foo.d"), Target("$project/bar.d")]);
     target.dependenciesInProjectPath("/path/to").shouldEqual(["/path/to/foo.d", "/path/to/bar.d"]);
 }
+
+
+void testBuildWithOneDepInBuildDir() {
+    const target = Target("output", "cmd -o $out -c $in", Target("$builddir/input.d"));
+    alias top = link!(ExeName("ut"), targetConcat!(target));
+    const build = Build(top);
+    build.targets[0].dependencies[0].dependenciesInProjectPath("/path/to").shouldEqual(["input.d"]);
+}

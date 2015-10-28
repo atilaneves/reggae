@@ -331,7 +331,8 @@ struct Target {
         import reggae.range: Leaves;
         const leaves = () @trusted { return Leaves(this).array; }();
         foreach(language; [Language.D, Language.Cplusplus, Language.C]) {
-            if(leaves.any!(a => reggae.rules.common.getLanguage(a._outputs[0]) == language)) return language;
+            if(leaves.any!(a => a._outputs.length && reggae.rules.common.getLanguage(a._outputs[0]) == language))
+                return language;
         }
 
         return Language.unknown;

@@ -247,7 +247,6 @@ Target[] staticLibrary(in string projectPath,
     else
         static assert(false, "Can only create static libraries on Posix");
 
-    const allFiles = sourcesToFileNames(projectPath, srcDirs, excDirs, srcFiles, excFiles);
     return [Target([buildPath("$builddir", name)],
                    "ar rcs $out $in",
                    objectFiles(projectPath, srcDirs, excDirs, srcFiles, excFiles, flags, includes, stringImports))];

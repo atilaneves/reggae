@@ -90,7 +90,7 @@ string targetConcatFixedJsonStr() @safe pure nothrow {
               "type": "dynamic",
               "func": "targetConcat",
               "dependencies": [
-                  {"dependencies": {
+                  {
                       "type": "fixed",
                       "targets":
                       [{"type": "fixed",
@@ -127,7 +127,7 @@ string targetConcatFixedJsonStr() @safe pure nothrow {
                                      "targets": []}}]},
                         "implicits": {
                             "type": "fixed",
-                            "targets": []}}]}}]},
+                            "targets": []}}]}]},
                   "implicits": {
                       "type": "fixed",
                       "targets": []}}]

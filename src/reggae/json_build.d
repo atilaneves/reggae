@@ -114,8 +114,9 @@ private Target[] callDepsFunc(in string projectPath, in JSONValue json) {
                              strings(json, "includes"),
                              strings(json, "string_imports"));
     case JsonDepsFuncName.targetConcat:
-        return cast(Target[])[];
-
+        import reggae.range;
+        return json.object["dependencies"].array.
+            map!(a => getDeps(projectPath, a)).flatten;
     }
 }
 

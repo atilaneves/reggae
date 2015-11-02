@@ -143,7 +143,7 @@ private:
 
 
 //TODO: a non-allocating version with no arrays
-auto flatten(R)(R range) @trusted pure {
+auto flatten(R)(R range) @trusted {
     alias rangeType = ElementType!R;
     alias T = ElementType!rangeType;
     T[] res;

@@ -108,14 +108,21 @@ private string getJsonOutput(in Options options, in BuildLanguage language) @saf
     return res.output;
 }
 
-private string[] getJsonOutputArgs(in Options options, in BuildLanguage language) @safe pure nothrow {
+private string[] getJsonOutputArgs(in Options options, in BuildLanguage language) @safe {
     final switch(language) {
 
     case BuildLanguage.D:
         assert(0, "Cannot obtain JSON build for builds written in D");
 
     case BuildLanguage.Python:
-        return ["/usr/bin/env", "python", "-m", "reggae.json_build", options.projectPath];
+        auto userVarsJsonString = () @trusted {
+            import std.json;
+            JSONValue jsonVal = options.userVars;
+            return jsonVal.toString;
+        }();
+        return ["/usr/bin/env", "python", "-m", "reggae.json_build",
+                "--dict", userVarsJsonString,
+                options.projectPath];
 
     case BuildLanguage.Ruby:
         return ["ruby", "-S", "-I" ~ options.projectPath, "reggae_json_build.rb"];

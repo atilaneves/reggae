@@ -31,6 +31,7 @@ enum JsonDependencyType {
 enum JsonDepsFuncName {
     objectFiles,
     staticLibrary,
+    targetConcat,
 }
 
 Build jsonToBuild(in string projectPath, in string jsonString) {
@@ -112,6 +113,8 @@ private Target[] callDepsFunc(in string projectPath, in JSONValue json) {
                              stringVal(json, "flags"),
                              strings(json, "includes"),
                              strings(json, "string_imports"));
+    case JsonDepsFuncName.targetConcat:
+        return cast(Target[])[];
 
     }
 }

@@ -263,3 +263,24 @@ void testBuildWithOneDepInBuildDir() {
     const build = Build(top);
     build.targets[0].dependencies[0].dependenciesInProjectPath("/path/to").shouldEqual(["input.d"]);
 }
+
+
+void testIncludeCompilerFlagInProjectDir() {
+    const obj = objectFile(SourceFile("src/foo.c"),
+                           Flags("-include $project/includes/header.h"));
+    const app = link(ExeName("app"), [obj]);
+    const bld = Build(app);
+    import reggae.config: options;
+    bld.targets[0].dependencies[0].shellCommand(options.withProjectPath("/path/to")).shouldEqual(
+        "gcc -include /path/to/includes/header.h  -MMD -MT objs/app.objs/src/foo.o -MF objs/app.objs/src/foo.o.dep -o objs/app.objs/src/foo.o -c /path/to/src/foo.c");
+}
+
+// void testIncludeCompilerFlagInProjectDirImplicit() {
+//     const obj = objectFile(SourceFile("src/foo.c"),
+//                            Flags("-include includes/header.h"));
+//     const app = link(ExeName("app"), [obj]);
+//     const bld = Build(app);
+//     import reggae.config: options;
+//     bld.targets[0].dependencies[0].shellCommand(options.withProjectPath("/path/to")).shouldEqual(
+//         "gcc -include /path/to/includes/header.h  -MMD -MT objs/app.objs/src/foo.o -MF objs/app.objs/src/foo.o.dep -o objs/app.objs/src/foo.o -c /path/to/src/foo.c");
+// }

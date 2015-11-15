@@ -82,10 +82,10 @@ Special variables
 
 Reggae currently has 4 special variables that get expanded when the build is generated:
 
-. `$in` - expands to all inputs for the current target. Should be preferred instead of explicitly listing them.
-. `$out` - expands to all outputs for the current target. Should be preferred instead of explicitly listing them.
-. `$builddir` - The build directory. Useful for generating targets in a particular place.
-. `$project` - The source directory. Useful for reading files in a specific place in the source tree.
+* `$in` - expands to all inputs for the current target. Should be preferred instead of explicitly listing them.
+* `$out` - expands to all outputs for the current target. Should be preferred instead of explicitly listing them.
+* `$builddir` - The build directory. Useful for generating targets in a particular place.
+* `$project` - The source directory. Useful for reading files in a specific place in the source tree.
 
 Otherwise, referring to any source file is done from the root of the project directory.
 

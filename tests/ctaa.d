@@ -37,3 +37,11 @@ void testKeys() {
                          "flags", ["-m64", "-fPIC", "-O3"]);
     aa.keys.shouldEqual(["includes", "flags"]);
 }
+
+
+void testIn() {
+    auto aa = assocListT("foo", 3, "bar", 5);
+    ("foo" in aa).shouldBeTrue;
+    ("bar" in aa).shouldBeTrue;
+    ("asda" in aa).shouldBeFalse;
+}

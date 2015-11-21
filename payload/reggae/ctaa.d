@@ -12,7 +12,7 @@ Shameless copy of association lists from Lisp.
 
 
 struct AssocList(K, V) {
-    import std.algorithm: find;
+    import std.algorithm: find, canFind;
     import std.array: empty, front;
 
     AssocEntry!(K, V)[] entries;
@@ -37,6 +37,10 @@ struct AssocList(K, V) {
         import std.algorithm: map;
         import std.array: array;
         return entries.map!(a => a.key).array;
+    }
+
+    bool opBinaryRight(string op)(in K key) pure const if(op == "in") {
+        return entries.canFind!(a => a.key == key);
     }
 }
 

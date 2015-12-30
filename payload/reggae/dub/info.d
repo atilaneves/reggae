@@ -60,19 +60,20 @@ struct DubInfo {
 
     //@trusted: array
     Target mainTarget(string compilerFlags = "") @trusted const {
-        string[] libs;
-        foreach(p; packages) {
-            libs ~= p.libs;
-        }
-
         const pack = packages[0];
-        string[] linkerFlags;
-        linkerFlags ~= (pack.targetType == "library" || pack.targetType == "staticLibrary") ? ["-lib"] : [];
-        //hacky hack for dub describe on vibe.d projects
-        linkerFlags ~= libs.filter!(a => a != "ev").map!(a => "-L-l" ~ a).array;
+        string[] mainLinkerFlags;
+        mainLinkerFlags ~= (pack.targetType == "library" || pack.targetType == "staticLibrary") ? ["-lib"] : [];
+        mainLinkerFlags ~= linkerFlags();
+
         return link(ExeName(packages[0].targetFileName),
                     toTargets(Yes.main, compilerFlags),
-                    Flags(linkerFlags.join(" ")));
+                    Flags(mainLinkerFlags.join(" ")));
+    }
+
+    string[] linkerFlags() @safe const pure nothrow {
+        const allLibs = packages.map!(a => a.libs).join;
+        //hacky hack for dub describe on vibe.d projects
+        return allLibs.filter!(a => a != "ev").map!(a => "-L-l" ~ a).array;
     }
 
     string[] mainTargetImportPaths() @trusted nothrow const {

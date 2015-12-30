@@ -16,9 +16,7 @@ static if(isDubProject) {
     import reggae.rules.common;
 
     /**
-     Identical to $(D dubDefaultTarget) but allows the specification
-     of compiler flags (dub describe doesn't output any information)
-     on the default compiler flags
+     Builds the main dub target (equivalent of "dub build")
     */
     Target dubDefaultTarget(Flags compilerFlags = Flags())() {
         return configToDubInfo["default"].mainTarget(compilerFlags.value);
@@ -35,8 +33,10 @@ static if(isDubProject) {
                                   alias objsFunction = () { Target[] t; return t; },
         )() if(isCallable!objsFunction) {
 
-        const dubObjs = configToDubInfo[config.value].toTargets(includeMain, compilerFlags.value);
-        return link(exeName, objsFunction() ~ dubObjs);
+        const dubInfo = configToDubInfo[config.value];
+        const dubObjs = dubInfo.toTargets(includeMain, compilerFlags.value);
+        const linkerFlags = dubInfo.linkerFlags().join(" ");
+        return link(exeName, objsFunction() ~ dubObjs, Flags(linkerFlags));
     }
 
     /**

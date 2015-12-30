@@ -67,10 +67,9 @@ struct DubInfo {
 
         const pack = packages[0];
         string[] linkerFlags;
-        linkerFlags ~= pack.targetType == "library" ? ["-lib"] : [];
+        linkerFlags ~= (pack.targetType == "library" || pack.targetType == "staticLibrary") ? ["-lib"] : [];
         //hacky hack for dub describe on vibe.d projects
         linkerFlags ~= libs.filter!(a => a != "ev").map!(a => "-L-l" ~ a).array;
-        if(packages[0].targetType == "staticLibrary") linkerFlags ~= "-lib";
         return link(ExeName(packages[0].targetFileName),
                     toTargets(Yes.main, compilerFlags),
                     Flags(linkerFlags.join(" ")));

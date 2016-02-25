@@ -7,6 +7,7 @@ import reggae.dub.json;
 
 
 immutable jsonString =
+    `WARNING: A deprecated branch based version specification is used for the dependency unit-threaded. Please use numbered versions instead. Also note that you can still use the dub.selections.json file to override a certain dependency to use a branch instead.`
     `{`
     `  "packages": [`
     `    {`

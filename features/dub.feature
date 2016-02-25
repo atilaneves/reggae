@@ -28,6 +28,10 @@ Feature: Dub integration
           writeln(enc.bytes);
           writeln(string1);
       }
+
+      unittest {
+          assert(1 == 2);
+      }
       """
 
     And a file named "dub_proj/stringies/banner.txt" with:
@@ -57,6 +61,12 @@ Feature: Dub integration
         [0, 0, 0, 4]
         I'm immortal!
         """
+      Given I successfully run `ninja ut`
+      When I run `./ut`
+      Then it should fail with:
+      """
+      oopsie
+      """
 
     @make
     Scenario: Dub/Reggae build with Make
@@ -101,3 +111,40 @@ Feature: Dub integration
         """
         dub integration not supported with the tup backend
         """
+
+  @ninja
+  Scenario: Automatic unit test binary with no unittest configuration
+    Given a file named "dub_proj/dub.json" with:
+      """
+      {
+        "name": "atest",
+        "targetType": "executable",
+      }
+
+      """
+
+    And a file named "dub_proj/source/main.d" with:
+      """
+      import std.stdio;
+      void main(string[] args) {
+          writeln(`1st arg: `, args[1]);
+      }
+
+      unittest {
+          assert(1 == 2, `oopsie`);
+      }
+      """
+
+    Given I successfully run `reggae -b ninja --dflags="-g -debug" dub_proj`
+    And I successfully run `ninja`
+    When I successfully run `./atest foo`
+    Then the output should contain:
+      """
+      1st arg: foo
+      """
+    Given I successfully run `ninja ut`
+    When I run `./ut`
+    Then it should fail with:
+    """
+    oopsie
+    """

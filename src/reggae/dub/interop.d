@@ -29,9 +29,7 @@ void createReggaefile(in Options options) {
     auto file = File("reggaefile.d", "w");
     file.writeln(q{import reggae;});
     file.writeln(q{mixin build!(dubDefaultTarget!(),
-                                dubConfigurationTarget!(ExeName("ut"),
-                                                        Configuration("default"),
-                                                        Flags("-unittest")));});
+                                dubTestTarget!());});
 
     if(!options.noFetch) dubFetch(_getDubInfo(options));
 }

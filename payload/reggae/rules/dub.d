@@ -39,6 +39,16 @@ static if(isDubProject) {
         return link(exeName, objsFunction() ~ dubObjs, Flags(linkerFlags));
     }
 
+    Target dubTestTarget(Flags compilerFlags = Flags())() {
+
+        const config = "unittest" in configToDubInfo ? "unittest" : "default";
+        const actualCompilerFlags =  "unittest" in configToDubInfo ? compilerFlags.value : compilerFlags.value ~ " -unittest";
+        const dubInfo =  configToDubInfo[config];
+        const dubObjs = dubInfo.toTargets(Yes.main, actualCompilerFlags);
+        const linkerFlags = dubInfo.linkerFlags().join(" ");
+        return link(ExeName("ut"), dubObjs, Flags(linkerFlags));
+    }
+
     /**
      All object files from a particular dub configuration (executable, unittest, etc.)
      */

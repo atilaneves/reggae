@@ -29,4 +29,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  aruba
+  aruba (~> 0.6.2)
+
+BUNDLED WITH
+   1.11.2

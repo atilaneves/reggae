@@ -8,8 +8,8 @@ install:
   - ./configure.py --bootstrap
   - export PATH=$PWD:$PATH
   - cd ..
-  - dub fetch unit-threaded --version=0.5.5
-  - dub fetch cerealed --version=0.6.3
+  - dub fetch unit-threaded
+  - dub fetch cerealed
   - git clone https://github.com/D-Programming-Language/dub.git
   - cd dub
   - dub build

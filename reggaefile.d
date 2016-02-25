@@ -28,16 +28,15 @@ version(minimal) {
     //fully featured build
 
     //the actual reggae binary
-    //could also be dubConfigurationTarget(ExeName("reggae"), Configuration("executable"))
-    //or use scriptlike to figure out dependencies itself
-    alias main = dubDefaultTarget!(Flags("-g -debug -w"));
+    //could also be dubConfigurationTarget(ExeName("reggae"), Configuration("executable"), Flags(...))
+    //or use the `scriptlike` rule to figure out dependencies itself
+    enum commonFlags = "-g -debug -w";
+    alias main = dubDefaultTarget!(Flags(commonFlags));
 
     //the unit test binary
-    //since it depends on unit-threaded, must use a dub configuration
-    alias ut = dubConfigurationTarget!(ExeName("ut"),
-                                       Configuration("unittest"),
-                                       Flags("-w -g -debug -cov"));
+    alias ut = dubTestTarget!(Flags(commonFlags ~ " -cov"));
 
+    //the cucumber test target
     enum cuke = Target.phony("cuke", "cd $project && cucumber", [main]);
 
     mixin build!(main, ut); //optional(cuke));

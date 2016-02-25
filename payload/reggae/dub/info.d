@@ -106,9 +106,12 @@ private string[] allOf(alias F)(in DubPackage pack, in DubPackage[] packages) @t
     string[] dependencies = [pack.name];
     dependencies ~= pack.dependencies;
     foreach(dependency; dependencies) {
+
         import std.range;
-        const depPack = packages.find!(a => a.name == dependency).front;
-        paths ~= F(depPack).array;
+        auto depPack = packages.find!(a => a.name == dependency);
+        if(!depPack.empty) {
+            paths ~= F(depPack.front).array;
+        }
     }
     return paths;
 }

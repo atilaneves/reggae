@@ -7,6 +7,10 @@ import std.algorithm: map, filter;
 
 
 DubInfo getDubInfo(string jsonString) @trusted {
+    import std.string: indexOf;
+
+    // The output might contain non-JSON in stderr
+    jsonString = jsonString[jsonString.indexOf("{") .. $];
     auto json = parseJSON(jsonString);
     auto packages = json.byKey("packages").array;
     return DubInfo(packages.

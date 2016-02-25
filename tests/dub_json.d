@@ -6,7 +6,7 @@ import reggae;
 import reggae.dub.json;
 
 
-auto jsonString =
+immutable jsonString =
     `{`
     `  "packages": [`
     `    {`
@@ -91,70 +91,49 @@ void testJsonToDubDescribe() {
                         "", ["v3", "v4"], [], ["liblib", "otherlib"], true)]));
 }
 
-
-@ShouldFail("old command style")
 void testDubInfoToTargets() {
     const info = getDubInfo(jsonString.dup);
-    info.toTargets.shouldEqual(
-        [Target("path/to/pkg1/src/foo.o",
-                "_dcompile "
-                "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
-                "-I/weird/path/pkg_other/moar_imports "
-                "flags=-version=v1,-version=v2,-version=v3,-version=v4 "
-                "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
-                [Target("/path/to/pkg1/src/foo.d")]),
-         Target("path/to/pkg1/src/bar.o",
-                "_dcompile "
-                "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
-                "-I/weird/path/pkg_other/moar_imports "
-                "flags=-version=v1,-version=v2,-version=v3,-version=v4 "
-                "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
-                [Target("/path/to/pkg1/src/bar.d")]),
-         Target("path/to/pkg1/src/boooo.o",
-                "_dcompile "
-                "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
-                "-I/weird/path/pkg_other/moar_imports "
-                "flags=-version=v1,-version=v2,-version=v3,-version=v4 "
-                "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
-                [Target("/path/to/pkg1/src/boooo.d")]),
-         Target("weird/path/pkg_other/source/toto.o",
-                "_dcompile "
-                "includes=-I/weird/path/pkg_other/my_imports,-I/weird/path/pkg_other/moar_imports "
-                "flags=-g,-debug,-version=v3,-version=v4 stringImports=",
-                [Target("/weird/path/pkg_other/source/toto.d")]),
-         Target("weird/path/pkg_other/source/africa.o",
-                "_dcompile "
-                "includes=-I/weird/path/pkg_other/my_imports,-I/weird/path/pkg_other/moar_imports "
-                "flags=-g,-debug,-version=v3,-version=v4 stringImports=",
-                [Target("/weird/path/pkg_other/source/africa.d")]),
-            ]);
+    info.toTargets[0].shouldEqual(
+        Target("path/to/pkg1/src/foo.o",
+               Command(CommandType.compile,
+                       assocListT("includes", ["-I/path/to/pkg1/leimports",
+                                               "-I/weird/path/pkg_other/my_imports",
+                                               "-I/weird/path/pkg_other/moar_imports",
+                                               "-I"],
+                                  "flags", ["-version=v1", "-version=v2", "-version=v3", "-version=v4"],
+                                  "stringImports", ["-J/path/to/pkg1/src/string_imports",
+                                                    "-J/path/to/pkg1/src/moar_stringies"],
+                                  "DEPFILE", ["path/to/pkg1/src/foo.o.dep"])),
+               Target("/path/to/pkg1/src/foo.d")),
+    );
+    info.toTargets[2].shouldEqual(
+        Target("path/to/pkg1/src/boooo.o",
+               Command(CommandType.compile,
+                       assocListT("includes", ["-I/path/to/pkg1/leimports",
+                                               "-I/weird/path/pkg_other/my_imports",
+                                               "-I/weird/path/pkg_other/moar_imports",
+                                               "-I"],
+                                  "flags", ["-version=v1", "-version=v2", "-version=v3", "-version=v4"],
+                                  "stringImports", ["-J/path/to/pkg1/src/string_imports",
+                                                    "-J/path/to/pkg1/src/moar_stringies"],
+                                  "DEPFILE", ["path/to/pkg1/src/boooo.o.dep"])),
+               Target("/path/to/pkg1/src/boooo.d")),
+        );
 
-    info.toTargets(No.main).shouldEqual(
-        [Target("path/to/pkg1/src/foo.o",
-                "_dcompile "
-                "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
-                "-I/weird/path/pkg_other/moar_imports "
-                "flags=-version=v1,-version=v2,-version=v3,-version=v4 "
-                "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
-                [Target("/path/to/pkg1/src/foo.d")]),
-         Target("path/to/pkg1/src/bar.o",
-                "_dcompile "
-                "includes=-I/path/to/pkg1/leimports,-I/weird/path/pkg_other/my_imports,"
-                "-I/weird/path/pkg_other/moar_imports "
-                "flags=-version=v1,-version=v2,-version=v3,-version=v4 "
-                "stringImports=-J/path/to/pkg1/src/string_imports,-J/path/to/pkg1/src/moar_stringies",
-                [Target("/path/to/pkg1/src/bar.d")]),
-         Target("weird/path/pkg_other/source/toto.o",
-                "_dcompile "
-                "includes=-I/weird/path/pkg_other/my_imports,-I/weird/path/pkg_other/moar_imports "
-                "flags=-g,-debug,-version=v3,-version=v4 stringImports=",
-                [Target("/weird/path/pkg_other/source/toto.d")]),
-         Target("weird/path/pkg_other/source/africa.o",
-                "_dcompile "
-                "includes=-I/weird/path/pkg_other/my_imports,-I/weird/path/pkg_other/moar_imports "
-                "flags=-g,-debug,-version=v3,-version=v4 stringImports=",
-                [Target("/weird/path/pkg_other/source/africa.d")]),
-            ]);
+    info.toTargets(No.main)[2].shouldEqual(
+        Target("weird/path/pkg_other/source/toto.o",
+               Command(CommandType.compile,
+                       assocListT("includes", ["-I/path/to/pkg1/leimports",
+                                               "-I/weird/path/pkg_other/my_imports",
+                                               "-I/weird/path/pkg_other/moar_imports",
+                                               "-I/weird/path/pkg_other"],
+                                  "flags", ["-g", "-debug", "-version=v3", "-version=v4"],
+                                  "stringImports", cast(string[])[],
+                                  "DEPFILE", ["weird/path/pkg_other/source/toto.o.dep"])),
+               Target("/weird/path/pkg_other/source/toto.d")),
+
+        );
+
 }
 
 

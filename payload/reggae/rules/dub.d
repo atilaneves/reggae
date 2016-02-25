@@ -33,20 +33,21 @@ static if(isDubProject) {
                                   alias objsFunction = () { Target[] t; return t; },
         )() if(isCallable!objsFunction) {
 
-        const dubInfo = configToDubInfo[config.value];
-        const dubObjs = dubInfo.toTargets(includeMain, compilerFlags.value);
-        const linkerFlags = dubInfo.linkerFlags().join(" ");
-        return link(exeName, objsFunction() ~ dubObjs, Flags(linkerFlags));
+        return dubTarget!(objsFunction)(exeName, config.value, compilerFlags.value, includeMain);
     }
 
     Target dubTestTarget(Flags compilerFlags = Flags())() {
-
         const config = "unittest" in configToDubInfo ? "unittest" : "default";
         const actualCompilerFlags =  "unittest" in configToDubInfo ? compilerFlags.value : compilerFlags.value ~ " -unittest";
+        return dubTarget!()(ExeName("ut"), config, actualCompilerFlags);
+    }
+
+    private Target dubTarget(alias objsFunction = () { Target[] t; return t;})
+                            (in ExeName exeName, in string config, in string compilerFlags, Flag!"main" includeMain = Yes.main) {
         const dubInfo =  configToDubInfo[config];
-        const dubObjs = dubInfo.toTargets(Yes.main, actualCompilerFlags);
+        const dubObjs = dubInfo.toTargets(includeMain, compilerFlags);
         const linkerFlags = dubInfo.linkerFlags().join(" ");
-        return link(ExeName("ut"), dubObjs, Flags(linkerFlags));
+        return link(exeName, objsFunction() ~ dubObjs, Flags(linkerFlags));
     }
 
     /**

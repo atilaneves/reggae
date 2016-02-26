@@ -38,7 +38,12 @@ static if(isDubProject) {
 
     Target dubTestTarget(Flags compilerFlags = Flags())() {
         const config = "unittest" in configToDubInfo ? "unittest" : "default";
-        const actualCompilerFlags =  "unittest" in configToDubInfo ? compilerFlags.value : compilerFlags.value ~ " -unittest";
+        auto actualCompilerFlags = compilerFlags.value;
+
+        if("unittest" !in configToDubInfo) actualCompilerFlags ~= " -unittest";
+        const hasMain = configToDubInfo[config].packages[0].mainSourceFile != "";
+        if(!hasMain) actualCompilerFlags ~= " -main";
+
         return dubTarget!()(ExeName("ut"), config, actualCompilerFlags, Yes.main, Yes.allTogether);
     }
 

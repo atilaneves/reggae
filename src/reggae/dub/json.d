@@ -27,6 +27,7 @@ DubInfo getDubInfo(string jsonString) @trusted {
                                         a.getOptionalList("dependencies"),
                                         a.getOptionalList("libs"),
                                         a.byOptionalKey("active", true), //true for backwards compatibility
+                                        a.getOptionalList("preBuildCommands"),
                             )).
                    filter!(a => a.active).
                    array);

@@ -28,6 +28,7 @@ struct DubPackage {
     string[] dependencies;
     string[] libs;
     bool active;
+    string[] preBuildCommands;
 }
 
 struct DubInfo {

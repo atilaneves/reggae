@@ -34,7 +34,9 @@ struct DubPackage {
 struct DubInfo {
     DubPackage[] packages;
 
-    Target[] toTargets(Flag!"main" includeMain = Yes.main, in string compilerFlags = "") @safe const {
+    Target[] toTargets(Flag!"main" includeMain = Yes.main,
+                       in string compilerFlags = "",
+                       Flag!"allTogether" allTogether = No.allTogether) @safe const {
         Target[] targets;
 
         foreach(const i, const dubPackage; packages) {
@@ -52,7 +54,10 @@ struct DubInfo {
                 filter!(a => includeMain || a != dubPackage.mainSourceFile).
                 map!(a => buildPath(dubPackage.path, a)).array;
 
-            targets ~= dlangPackageObjectFiles(files, flags, importPaths, stringImportPaths, projDir);
+            if(allTogether)
+                targets ~= dlangPackageObjectFilesTogether(files, flags, importPaths, stringImportPaths, projDir);
+            else
+                targets ~= dlangPackageObjectFiles(files, flags, importPaths, stringImportPaths, projDir);
         }
 
         return targets;

@@ -203,10 +203,11 @@ Feature: Dub integration
         "configurations": [
           { "name": "executable" },
           { "name": "unittest",
-            "preBuildCommands": ["dub fetch dtest && dub run dtest -- -f ut.d"],
+            "preBuildCommands": ["dub run unit-threaded -c gen_ut_main -- -f ut.d"],
             "mainSourceFile": "ut.d",
+            "excludedSourceFiles": ["source/main.d"],
             "dependencies": {
-              "unit-threaded": "==0.5.9"
+              "unit-threaded": "==0.5.11"
             }
           }
         ]
@@ -224,6 +225,7 @@ Feature: Dub integration
       """
       int mul(int i, int j) { return i * j; }
       unittest { assert(mul(2, 3) == 5); }
+      unittest { assert(mul(3, 4) == 12); }
       """
     When I successfully run `reggae -b ninja dub_prebuild`
     And I successfully run `ninja prebuild`
@@ -237,5 +239,5 @@ Feature: Dub integration
     When I run `./ut`
     Then it should fail with:
        """
-       foo
+       2 test(s) run, 1 failed.
        """

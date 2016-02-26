@@ -39,17 +39,17 @@ private DubInfo _getDubInfo(in Options options) {
 
     if("default" !in gDubInfos) {
         immutable dubBuildArgs = ["dub", "--annotate", "build", "--compiler=dmd", "--print-configs"];
-        immutable dubBuildOutput = _callDub(options, dubBuildArgs);
+        immutable dubBuildOutput = callDub(options, dubBuildArgs);
         immutable configs = getConfigurations(dubBuildOutput);
 
         if(configs.configurations.empty) {
             immutable descArgs = ["dub", "describe"];
-            immutable descOutput = _callDub(options, descArgs);
+            immutable descOutput = callDub(options, descArgs);
             gDubInfos["default"] = getDubInfo(descOutput);
         } else {
             foreach(config; configs.configurations) {
                 immutable descArgs = ["dub", "describe", "-c", config];
-                immutable descOutput = _callDub(options, descArgs);
+                immutable descOutput = callDub(options, descArgs);
                 gDubInfos[config] = getDubInfo(descOutput);
 
                 //dub adds certain flags to certain configurations automatically but these flags
@@ -57,6 +57,8 @@ private DubInfo _getDubInfo(in Options options) {
 
                 //unittest should only apply to the main package, hence [0]
                 if(config == "unittest") gDubInfos[config].packages[0].flags ~= " -unittest";
+
+                callPreBuildCommands(options, gDubInfos[config]);
 
             }
             gDubInfos["default"] = gDubInfos[configs.default_];
@@ -67,7 +69,7 @@ private DubInfo _getDubInfo(in Options options) {
 }
 
 
-private string _callDub(in Options options, in string[] args) {
+private string callDub(in Options options, in string[] args) {
     import std.process;
     const string[string] env = null;
     Config config = Config.none;
@@ -78,6 +80,20 @@ private string _callDub(in Options options, in string[] args) {
     enforce(ret.status == 0, text("Error calling ", args.join(" "), ":\n",
                                   ret.output));
     return ret.output;
+}
+
+private void callPreBuildCommands(in Options options, in DubInfo dubInfo) {
+    import std.process;
+    const string[string] env = null;
+    Config config = Config.none;
+    size_t maxOutput = size_t.max;
+    immutable workDir = options.projectPath;
+
+    foreach(cmd; dubInfo.packages[0].preBuildCommands) {
+        writeln("Calling dub prebuildCommand '", cmd, "'");
+        immutable ret = executeShell(cmd, env, config, maxOutput, workDir);
+        enforce(ret.status == 0, text("Error calling ", cmd, ":\n", ret.output));
+    }
 }
 
 private void dubFetch(in DubInfo dubInfo) {

@@ -19,16 +19,16 @@ import std.array;
 //generate object file(s) for a D package. By default generates one per package,
 //if reggae.config.perModule is true, generates one per module
 Target[] dlangPackageObjectFiles(in string[] srcFiles, in string flags = "",
-                     in string[] importPaths = [], in string[] stringImportPaths = [],
-                     in string projDir = "$project") @safe pure {
+                                 in string[] importPaths = [], in string[] stringImportPaths = [],
+                                 in string projDir = "$project") @safe pure {
     import reggae.config;
     auto func = options.perModule ? &dlangPackageObjectFilesPerModule : &dlangPackageObjectFilesPerPackage;
     return func(srcFiles, flags, importPaths, stringImportPaths, projDir);
 }
 
 Target[] dlangPackageObjectFilesPerPackage(in string[] srcFiles, in string flags = "",
-                               in string[] importPaths = [], in string[] stringImportPaths = [],
-                               in string projDir = "$project") @trusted pure {
+                                           in string[] importPaths = [], in string[] stringImportPaths = [],
+                                           in string projDir = "$project") @trusted pure {
 
     if(srcFiles.empty) return [];
     const command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
@@ -38,13 +38,23 @@ Target[] dlangPackageObjectFilesPerPackage(in string[] srcFiles, in string flags
 }
 
 Target[] dlangPackageObjectFilesPerModule(in string[] srcFiles, in string flags = "",
-                              in string[] importPaths = [], in string[] stringImportPaths = [],
-                              in string projDir = "$project") @trusted pure {
+                                          in string[] importPaths = [], in string[] stringImportPaths = [],
+                                          in string projDir = "$project") @trusted pure {
     return srcFiles.map!(a => objectFile(const SourceFile(a),
                                          const Flags(flags),
                                          const ImportPaths(importPaths),
                                          const StringImportPaths(stringImportPaths),
                                          projDir)).array;
+}
+
+// compiles all source files in one go
+Target[] dlangPackageObjectFilesTogether(in string[] srcFiles, in string flags = "",
+                                         in string[] importPaths = [], in string[] stringImportPaths = [],
+                                         in string projDir = "$project") @trusted pure {
+
+    if(srcFiles.empty) return [];
+    const command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
+    return [Target(srcFiles[0].packagePath.objFileName, command, srcFiles.map!(a => Target(a)).array)];
 }
 
 

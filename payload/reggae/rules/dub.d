@@ -39,13 +39,18 @@ static if(isDubProject) {
     Target dubTestTarget(Flags compilerFlags = Flags())() {
         const config = "unittest" in configToDubInfo ? "unittest" : "default";
         const actualCompilerFlags =  "unittest" in configToDubInfo ? compilerFlags.value : compilerFlags.value ~ " -unittest";
-        return dubTarget!()(ExeName("ut"), config, actualCompilerFlags);
+        return dubTarget!()(ExeName("ut"), config, actualCompilerFlags, Yes.main, Yes.allTogether);
     }
 
     private Target dubTarget(alias objsFunction = () { Target[] t; return t;})
-                            (in ExeName exeName, in string config, in string compilerFlags, Flag!"main" includeMain = Yes.main) {
+                            (in ExeName exeName,
+                             in string config,
+                             in string compilerFlags,
+                             Flag!"main" includeMain = Yes.main,
+                             Flag!"allTogether" allTogether = No.allTogether) {
+
         const dubInfo =  configToDubInfo[config];
-        const dubObjs = dubInfo.toTargets(includeMain, compilerFlags);
+        const dubObjs = dubInfo.toTargets(includeMain, compilerFlags, allTogether);
         const linkerFlags = dubInfo.linkerFlags().join(" ");
         return link(exeName, objsFunction() ~ dubObjs, Flags(linkerFlags));
     }

@@ -31,7 +31,7 @@ void createReggaefile(in Options options) {
     file.writeln(q{mixin build!(dubDefaultTarget!(),
                                 dubTestTarget!());});
 
-    if(!options.noFetch) dubFetch(_getDubInfo(options));
+    if(!options.noFetch) dubFetch(options);
 }
 
 
@@ -43,13 +43,11 @@ private DubInfo _getDubInfo(in Options options) {
         immutable configs = getConfigurations(dubBuildOutput);
 
         if(configs.configurations.empty) {
-            immutable descArgs = ["dub", "describe"];
-            immutable descOutput = callDub(options, descArgs);
+            immutable descOutput = callDub(options, ["dub", "describe"]);
             gDubInfos["default"] = getDubInfo(descOutput);
         } else {
             foreach(config; configs.configurations) {
-                immutable descArgs = ["dub", "describe", "-c", config];
-                immutable descOutput = callDub(options, descArgs);
+                immutable descOutput = callDub(options, ["dub", "describe", "-c", config]);
                 gDubInfos[config] = getDubInfo(descOutput);
 
                 //dub adds certain flags to certain configurations automatically but these flags
@@ -67,6 +65,8 @@ private DubInfo _getDubInfo(in Options options) {
 
     return gDubInfos["default"];
 }
+
+
 
 
 private string callDub(in Options options, in string[] args) {
@@ -96,17 +96,16 @@ private void callPreBuildCommands(in Options options, in DubInfo dubInfo) {
     }
 }
 
-private void dubFetch(in DubInfo dubInfo) {
+private void dubFetch(in Options options) {
+    //this must be done without _getDubInfo. The reason begin that dub --annotate
+    //fails if the packages aren't fetched, creating a chicken and egg problem
+    //so we do it independently here to make sure the dependencies are fetched
+    //first
+    const dubInfo = getDubInfo(callDub(options, ["dub", "describe"]));
     foreach(cmd; dubInfo.fetchCommands) {
         immutable cmdStr = "'" ~ cmd.join(" ") ~ "'";
         writeln("Fetching package with cmd ", cmdStr);
-        immutable ret = execute(cmd);
-        if(ret.status) {
-            () @trusted {
-                stderr.writeln("Could not execute dub fetch with:\n", cmd.join(" "), "\n",
-                               ret.output);
-            }();
-        }
+        callDub(options, cmd);
     }
 }
 

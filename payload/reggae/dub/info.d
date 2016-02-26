@@ -45,8 +45,7 @@ struct DubInfo {
             //package
             const projDir = i == 0 ? "" : dubPackage.path;
 
-            immutable flags = chain(dubPackage.flags, versions).join(" ") ~
-                " " ~ options.dflags ~ " " ~ compilerFlags;
+            immutable flags = chain(dubPackage.flags, versions, [options.dflags], [compilerFlags]).join(" ");
 
             const files = dubPackage.
                 files.

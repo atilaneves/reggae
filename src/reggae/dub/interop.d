@@ -66,9 +66,6 @@ private DubInfo _getDubInfo(in Options options) {
     return gDubInfos["default"];
 }
 
-
-
-
 private string callDub(in Options options, in string[] args) {
     import std.process;
     const string[string] env = null;

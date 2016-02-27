@@ -72,8 +72,7 @@ struct DubInfo {
 
     string[] linkerFlags() @safe const pure nothrow {
         const allLibs = packages.map!(a => a.libs).join;
-        //hacky hack for dub describe on vibe.d projects
-        return allLibs.filter!(a => a != "ev").map!(a => "-L-l" ~ a).array;
+        return allLibs.map!(a => "-L-l" ~ a).array;
     }
 
     string[] mainTargetImportPaths() @trusted nothrow const {

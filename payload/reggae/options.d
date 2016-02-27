@@ -181,7 +181,7 @@ Options getOptions(string[] args) @trusted {
     try {
         auto helpInfo = getopt(
             args,
-            "backend|b", "Backend to use (ninja|make). Mandatory.", &options.backend,
+            "backend|b", "Backend to use (ninja|make|binary|tup). Mandatory.", &options.backend,
             "dflags", "D compiler flags.", &options.dflags,
             "d", "User-defined variables (e.g. -d myvar=foo).", &options.userVars,
             "dc", "D compiler to use (default dmd).", &options.dCompiler,
@@ -195,7 +195,7 @@ Options getOptions(string[] args) @trusted {
             );
 
         if(helpInfo.helpWanted) {
-            defaultGetoptPrinter("Usage: reggae -b <ninja|make> </path/to/project>",
+            defaultGetoptPrinter("Usage: reggae -b <ninja|make|binary|tup> </path/to/project>",
                                  helpInfo.options);
             options.help = true;
         }

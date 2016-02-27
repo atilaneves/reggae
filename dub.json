@@ -17,12 +17,13 @@
         { "name": "unittest",
           "targetType": "executable",
           "sourcePaths": ["tests", "payload"],
+          "preBuildCommands": ["dub run unit-threaded -c gen_ut_main -- -f tests/ut.d tests"],
           "mainSourceFile": "tests/ut.d",
           "excludedSourceFiles": ["payload/reggae/buildgen_main.d",
                                   "payload/reggae/dcompile.d",
                                   "src/reggae/reggae_main.d"],
           "dependencies": {
-              "unit-threaded": "~>0.5.3"
+              "unit-threaded": "~>0.6.0"
           }
         }
     ]

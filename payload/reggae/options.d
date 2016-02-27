@@ -33,7 +33,8 @@ struct Options {
     bool noCompilationDB;
     bool cacheBuildInfo;
     string[] args;
-    string[string] userVars;
+    string workingDir;
+    string[string] userVars; //must always be the last member variable
 
     Options dup() @safe pure const nothrow {
         return Options(backend,
@@ -192,6 +193,7 @@ Options getOptions(string[] args) @trusted {
             "old_ninja", "Generate a Ninja build compatible with older versions of Ninja", &options.oldNinja,
             "no_comp_db", "Don't generate a JSON compilation database", &options.noCompilationDB,
             "cache_build_info", "Cache the build information for the binary backend", &options.cacheBuildInfo,
+            "C", "Change directory to run in (similar to make -C and ninja -C)", &options.workingDir,
             );
 
         if(helpInfo.helpWanted) {
@@ -206,6 +208,12 @@ Options getOptions(string[] args) @trusted {
 
     if(args.length > 1) options.projectPath = args[1].absolutePath;
     options.finalize(origArgs);
+
+    if(options.workingDir) {
+        import std.file: chdir, exists, mkdirRecurse;
+        if(!options.workingDir.exists) mkdirRecurse(options.workingDir);
+        chdir(options.workingDir);
+    }
 
     return options;
 }

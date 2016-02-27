@@ -25,7 +25,7 @@ immutable options = Options(Backend.ninja,
                             false,
                             true, //perModule only for UTs, false in real world
                             isDubProject,
-                            false
+                            false,
     );
 
 enum userVars = AssocList!(string, string)();

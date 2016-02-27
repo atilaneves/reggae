@@ -49,15 +49,12 @@ struct DubInfo {
 
             immutable flags = chain(dubPackage.flags, versions, [options.dflags], [compilerFlags]).join(" ");
 
-            const files = dubPackage.
-                files.
+            const files = dubPackage.files.
                 filter!(a => includeMain || a != dubPackage.mainSourceFile).
                 map!(a => buildPath(dubPackage.path, a)).array;
 
-            if(allTogether)
-                targets ~= dlangPackageObjectFilesTogether(files, flags, importPaths, stringImportPaths, projDir);
-            else
-                targets ~= dlangPackageObjectFiles(files, flags, importPaths, stringImportPaths, projDir);
+            auto func = allTogether ? &dlangPackageObjectFilesTogether : &dlangPackageObjectFiles;
+            targets ~= func(files, flags, importPaths, stringImportPaths, projDir);
         }
 
         return targets;

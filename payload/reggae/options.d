@@ -61,7 +61,9 @@ struct Options {
     }
 
     private bool _isDubProject() @safe nothrow {
-        return buildPath(projectPath, "dub.json").exists ||
+        return
+            buildPath(projectPath, "dub.sdl").exists ||
+            buildPath(projectPath, "dub.json").exists ||
             buildPath(projectPath, "package.json").exists;
     }
 

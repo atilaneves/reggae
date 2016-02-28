@@ -25,6 +25,7 @@ immutable jsonString =
     `        "src/moar_stringies"`
     `      ],`
     `      "active": true,`
+    `      "preBuildCommands": ["dub run dtest"],`
     `      "files": [`
     `        {`
     `          "path": "src/foo.d",`
@@ -82,7 +83,7 @@ void testJsonToDubDescribe() {
                         ["leimports"],
                         ["src/string_imports", "src/moar_stringies"],
                         ["src/foo.d", "src/bar.d", "src/boooo.d"],
-                        "executable", ["v1", "v2"], ["pkg_other"], [], true),
+                        "executable", ["v1", "v2"], ["pkg_other"], [], true, ["dub run dtest"]),
 
              DubPackage("pkg_other", "/weird/path/pkg_other", "", "",
                         ["-g", "-debug"],

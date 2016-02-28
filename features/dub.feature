@@ -192,3 +192,52 @@ Feature: Dub integration
     """
     ut no good
     """
+
+  @ninja
+  Scenario: dub project with preBuildCommands
+    Given a file named "dub_prebuild/dub.json" with:
+      """
+      {
+        "name": "prebuild",
+        "targetType": "executable",
+        "configurations": [
+          { "name": "executable" },
+          { "name": "unittest",
+            "preBuildCommands": ["dub run unit-threaded -c gen_ut_main -- -f ut.d"],
+            "mainSourceFile": "ut.d",
+            "excludedSourceFiles": ["source/main.d"],
+            "dependencies": {
+              "unit-threaded": "~>0.6.3"
+            }
+          }
+        ]
+      }
+      """
+    And a file named "dub_prebuild/source/main.d" with:
+      """
+      import std.stdio, std.conv;;
+      import maths;
+      void main(string[] args) {
+         writeln(`Result: `, mul(args[1].to!int, 2));
+      }
+      """
+    And a file named "dub_prebuild/source/maths.d" with:
+      """
+      int mul(int i, int j) { return i * j; }
+      unittest { assert(mul(2, 3) == 5); }
+      unittest { assert(mul(3, 4) == 12); }
+      """
+    When I successfully run `reggae -b ninja dub_prebuild`
+    And I successfully run `ninja prebuild`
+    And I successfully run `./prebuild 3`
+    Then the output should contain:
+      """
+      Result: 6
+      """
+
+    Given I successfully run `ninja ut`
+    When I run `./ut`
+    Then it should fail with:
+       """
+       2 test(s) run, 1 failed.
+       """

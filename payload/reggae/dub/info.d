@@ -28,12 +28,15 @@ struct DubPackage {
     string[] dependencies;
     string[] libs;
     bool active;
+    string[] preBuildCommands;
 }
 
 struct DubInfo {
     DubPackage[] packages;
 
-    Target[] toTargets(Flag!"main" includeMain = Yes.main, in string compilerFlags = "") @safe const {
+    Target[] toTargets(Flag!"main" includeMain = Yes.main,
+                       in string compilerFlags = "",
+                       Flag!"allTogether" allTogether = No.allTogether) @safe const {
         Target[] targets;
 
         foreach(const i, const dubPackage; packages) {
@@ -44,15 +47,14 @@ struct DubInfo {
             //package
             const projDir = i == 0 ? "" : dubPackage.path;
 
-            immutable flags = chain(dubPackage.flags, versions).join(" ") ~
-                " " ~ options.dflags ~ " " ~ compilerFlags;
+            immutable flags = chain(dubPackage.flags, versions, [options.dflags], [compilerFlags]).join(" ");
 
-            const files = dubPackage.
-                files.
+            const files = dubPackage.files.
                 filter!(a => includeMain || a != dubPackage.mainSourceFile).
                 map!(a => buildPath(dubPackage.path, a)).array;
 
-            targets ~= dlangPackageObjectFiles(files, flags, importPaths, stringImportPaths, projDir);
+            auto func = allTogether ? &dlangPackageObjectFilesTogether : &dlangPackageObjectFiles;
+            targets ~= func(files, flags, importPaths, stringImportPaths, projDir);
         }
 
         return targets;

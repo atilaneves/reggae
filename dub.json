@@ -23,7 +23,7 @@
                                   "payload/reggae/dcompile.d",
                                   "src/reggae/reggae_main.d"],
           "dependencies": {
-              "unit-threaded": "~>0.6.0"
+              "unit-threaded": "~>0.6.3"
           }
         }
     ]

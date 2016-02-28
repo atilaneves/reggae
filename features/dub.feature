@@ -207,7 +207,7 @@ Feature: Dub integration
             "mainSourceFile": "ut.d",
             "excludedSourceFiles": ["source/main.d"],
             "dependencies": {
-              "unit-threaded": "~>0.6.1"
+              "unit-threaded": "~>0.6.3"
             }
           }
         ]

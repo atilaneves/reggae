@@ -224,3 +224,67 @@ void testDubFetch() {
     info.fetchCommands.shouldEqual(
         [["dub", "fetch", "pkg_other"]]);
 }
+
+
+@("dub describe with empty sources")
+unittest {
+    auto jsonString = `
+Configuration 'library' of package test contains no source files. Please add {"targetType": "none"} to it's package description to avoid building it.
+{
+        "rootPackage": "test",
+        "mainPackage": "test",
+        "configuration": "library",
+        "buildType": "debug",
+        "compiler": "dmd",
+        "architecture": [
+                "x86_64"
+        ],
+        "platform": [
+                "linux",
+                "posix"
+        ],
+        "packages": [
+                {
+                        "path": "/tmp/test/",
+                        "name": "test",
+                        "version": "~master",
+                        "description": "A minimal D application.",
+                        "homepage": "",
+                        "authors": [
+                                "atila"
+                        ],
+                        "copyright": "Copyright © 2016, atila",
+                        "license": "",
+                        "dependencies": [],
+                        "active": true,
+                        "configuration": "library",
+                        "targetType": "library",
+                        "targetPath": "",
+                        "targetName": "test",
+                        "targetFileName": "libtest.a",
+                        "workingDirectory": "",
+                        "mainSourceFile": "",
+                        "dflags": [],
+                        "lflags": [],
+                        "libs": [],
+                        "copyFiles": [],
+                        "versions": [],
+                        "debugVersions": [],
+                        "importPaths": [
+                                "source/"
+                        ],
+                        "stringImportPaths": [],
+                        "preGenerateCommands": [],
+                        "postGenerateCommands": [],
+                        "preBuildCommands": [],
+                        "postBuildCommands": [],
+                        "buildRequirements": [],
+                        "options": [],
+                        "files": []
+                }
+        ],
+        "targets": []
+}
+        `;
+    getDubInfo(jsonString);
+}

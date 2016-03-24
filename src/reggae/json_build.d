@@ -1,3 +1,8 @@
+/**
+ This module is responsible for the output of a build system
+ from a JSON description
+ */
+
 module reggae.json_build;
 
 
@@ -135,7 +140,7 @@ private Target callTargetFunc(in string projectPath, in JSONValue json) {
     import reggae.types;
 
     enforce(json.object["func"].str == "scriptlike",
-            "Only scriptlike is supported for Targets");
+            "scriptlike is the only JSON function supported for Targets");
 
     return scriptlike(projectPath,
                       App(SourceFileName(stringVal(json, "src_name")),

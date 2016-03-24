@@ -60,7 +60,7 @@ mixin template ReggaeMain() {
 }
 
 void run(Options options) {
-    if(options.help) return;
+    if(options.earlyExit) return;
     enforce(options.projectPath != "", "A project path must be specified");
 
     if(options.isJsonBuild) {

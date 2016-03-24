@@ -7,6 +7,8 @@ import std.conv: ConvException;
 import std.path: absolutePath, buildPath;
 import std.file: exists;
 
+enum version_ = "0.5.2+";
+
 Options defaultOptions;
 
 enum BuildLanguage {
@@ -34,6 +36,7 @@ struct Options {
     bool cacheBuildInfo;
     string[] args;
     string workingDir;
+    bool version_;
     string[string] userVars; //must always be the last member variable
 
     Options dup() @safe pure const nothrow {
@@ -167,6 +170,10 @@ struct Options {
     bool isJsonBuild() @safe const {
         return reggaeFileLanguage != BuildLanguage.D;
     }
+
+    bool earlyExit() @safe pure const nothrow {
+        return help || version_;
+    }
 }
 
 
@@ -197,6 +204,7 @@ Options getOptions(string[] args) @trusted {
             "no_comp_db", "Don't generate a JSON compilation database", &options.noCompilationDB,
             "cache_build_info", "Cache the build information for the binary backend", &options.cacheBuildInfo,
             "C", "Change directory to run in (similar to make -C and ninja -C)", &options.workingDir,
+            "version", "Prints version information", &options.version_,
             );
 
         if(helpInfo.helpWanted) {
@@ -204,11 +212,14 @@ Options getOptions(string[] args) @trusted {
                                  helpInfo.options);
             options.help = true;
         }
-
     } catch(ConvException ex) {
         throw new Exception("Unsupported backend, -b must be one of: make|ninja|tup|binary");
     }
 
+    if(options.version_) {
+        import std.stdio;
+        writeln("reggae v", version_);
+    }
 
     if(args.length > 1) options.projectPath = args[1].absolutePath.buildNormalizedPath;
     options.finalize(origArgs);

@@ -57,6 +57,38 @@ Target objectFile(in SourceFile srcFile,
 }
 
 /**
+ A binary executable. The same as calling objectFiles and link
+ with these parameters.
+ */
+Target executable(ExeName exeName,
+                  alias sourcesFunc = Sources!(),
+                  Flags compilerFlags = Flags(),
+                  ImportPaths includes = ImportPaths(),
+                  StringImportPaths stringImports = StringImportPaths(),
+                  Flags linkerFlags = Flags())
+    () {
+    auto objs = objectFiles!(sourcesFunc, compilerFlags, includes, stringImports);
+    return link!(exeName, { return objs; }, linkerFlags);
+}
+
+Target executable(in string projectPath,
+                  in string name,
+                  in string[] srcDirs,
+                  in string[] excDirs,
+                  in string[] srcFiles,
+                  in string[] excFiles,
+                  in string compilerFlags,
+                  in string linkerFlags,
+                  in string[] includes,
+                  in string[] stringImports)
+{
+    auto objs = objectFiles(projectPath, srcDirs, excDirs, srcFiles, excFiles, compilerFlags, includes, stringImports);
+    return link(ExeName(name), objs, Flags(linkerFlags));
+}
+
+
+
+/**
  "Compile-time" link function.
  Its parameters are compile-time so that it can be aliased and used
  at global scope in a reggafile.

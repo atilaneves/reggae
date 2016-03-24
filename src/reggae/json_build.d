@@ -37,6 +37,7 @@ enum JsonDepsFuncName {
     objectFiles,
     staticLibrary,
     targetConcat,
+    executable,
 }
 
 Build jsonToBuild(in string projectPath, in string jsonString) {
@@ -118,6 +119,17 @@ private Target[] callDepsFunc(in string projectPath, in JSONValue json) {
                              stringVal(json, "flags"),
                              strings(json, "includes"),
                              strings(json, "string_imports"));
+    case JsonDepsFuncName.executable:
+        return [executable(projectPath,
+                          stringVal(json, "name"),
+                          strings(json, "src_dirs"),
+                          strings(json, "exclude_dirs"),
+                          strings(json, "src_files"),
+                          strings(json, "exclude_files"),
+                          stringVal(json, "compiler_flags"),
+                          stringVal(json, "linker_flags"),
+                          strings(json, "includes"),
+                          strings(json, "string_imports"))];
     case JsonDepsFuncName.targetConcat:
         import reggae.range;
         return json.object["dependencies"].array.

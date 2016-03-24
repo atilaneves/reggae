@@ -47,11 +47,11 @@ void testMakefilePath() {
         "CXX = g++\n"
         "DC = dmd\n"
         "objs/otherapp.objs/boo.o: /global/path/to/boo.c Makefile\n"
-        "\tgcc -c -o objs/otherapp.objs/boo.o /global/path/to/boo.c\n"
+        "\t$(CC) -c -o objs/otherapp.objs/boo.o /global/path/to/boo.c\n"
         "objs/otherapp.objs/baz.o: /global/path/to/baz.c Makefile\n"
-        "\tgcc -c -o objs/otherapp.objs/baz.o /global/path/to/baz.c\n"
+        "\t$(CC) -c -o objs/otherapp.objs/baz.o /global/path/to/baz.c\n"
         "otherapp: objs/otherapp.objs/boo.o objs/otherapp.objs/baz.o Makefile\n"
-        "\tgcc -o otherapp objs/otherapp.objs/boo.o objs/otherapp.objs/baz.o\n"
+        "\t$(CC) -o otherapp objs/otherapp.objs/boo.o objs/otherapp.objs/baz.o\n"
         );
 }
 

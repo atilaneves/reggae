@@ -45,3 +45,11 @@ Feature: Export build system
     Hello world!
     """
     And I successfully run `rm -rf hello objs`
+
+  @make
+  Scenario: Using a different compiler with make
+    When I run `make DC=foo`
+    Then it should fail with:
+    """
+    Executable file not found: foo
+    """

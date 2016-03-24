@@ -142,9 +142,13 @@ private Target callTargetFunc(in string projectPath, in JSONValue json) {
     enforce(json.object["func"].str == "scriptlike",
             "scriptlike is the only JSON function supported for Targets");
 
-    return scriptlike(projectPath,
-                      App(SourceFileName(stringVal(json, "src_name")),
-                          BinaryFileName(stringVal(json, "exe_name"))),
+    auto srcFile = SourceFileName(stringVal(json, "src_name"));
+    auto app = json.object["exe_name"].isNull
+        ? App(srcFile)
+        : App(srcFile, BinaryFileName(stringVal(json, "exe_name")));
+
+
+    return scriptlike(projectPath, app,
                       Flags(stringVal(json, "flags")),
                       const ImportPaths(strings(json, "includes")),
                       const StringImportPaths(strings(json, "string_imports")),

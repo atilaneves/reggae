@@ -73,3 +73,34 @@ Feature: Foreign language integration
         """
         Binary backend not supported via JSON
         """
+
+  @ninja
+  Scenario: No exe_name
+    Given a file named "project/reggaefile.py" with:
+      """
+      from reggae import *
+      app = scriptlike(src_name='src/script.d', flags='-g')
+      bld = Build(app)
+      """
+
+    And a file named "project/src/script.d" with:
+      """
+      import std.stdio;
+      import std.conv;
+      void main(string[] args) {
+           writeln(args[1].to!int + args[2].to!int);
+      }
+      """
+
+    Given I successfully run `reggae -b ninja project`
+    And I successfully run `ninja`
+    When I successfully run `./script 2 3`
+    Then the output should contain:
+      """
+      5
+      """
+    When I successfully run `./script 4 3`
+    Then the output should contain:
+      """
+      7
+      """

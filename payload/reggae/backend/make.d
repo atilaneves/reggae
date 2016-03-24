@@ -42,6 +42,7 @@ struct Makefile {
         auto ret = banner;
         ret ~= text("all: ", build.defaultTargetsString(options.projectPath), "\n");
         ret ~= ".SUFFIXES:\n"; //disable default rules
+        ret ~= options.compilerVariables.join("\n") ~ "\n";
 
         foreach(t; build.range) {
 

@@ -7,7 +7,10 @@ import reggae;
 
 void testEmpty() {
     const tup = Tup();
-    tup.output.shouldEqual(banner ~ "\n");
+    tup.output.shouldEqual(banner ~
+                           "CC = \n"
+                           "CXX = \n"
+                           "DC = \n");
     tup.fileName.shouldEqual("Tupfile");
 }
 

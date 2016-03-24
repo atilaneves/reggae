@@ -30,3 +30,10 @@ Feature: Backend errors
       """
       Unsupported backend, -b must be one of: make|ninja|tup|binary
       """
+
+  Scenario: Export and backend
+    When I run `reggae -b ninja --export lvl1/lvl2`
+    Then it should fail with:
+    """
+    Cannot specify a backend and export at the same time
+    """

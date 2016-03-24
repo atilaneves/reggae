@@ -175,6 +175,10 @@ struct Options {
     bool earlyExit() @safe pure const nothrow {
         return help || version_;
     }
+
+    string[] compilerVariables() @safe pure nothrow const {
+        return ["CC = " ~ cCompiler, "CXX = " ~ cppCompiler, "DC = " ~ dCompiler];
+    }
 }
 
 

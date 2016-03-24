@@ -64,6 +64,10 @@ private Build getBuildObject(alias module_)(in Options options) {
 }
 
 void generateBuild(in Build build, in Options options, string[] args = []) {
+    options.export_ ? exportBuild(build, options) : generateOneBuild(build, options, args);
+}
+
+private void generateOneBuild(in Build build, in Options options, string[] args = []) {
     final switch(options.backend) with(Backend) {
 
         case make:
@@ -85,6 +89,14 @@ void generateBuild(in Build build, in Options options, string[] args = []) {
         case none:
             throw new Exception("A backend must be specified with -b/--backend");
         }
+}
+
+private void exportBuild(in Build build, in Options options) {
+    enforce(options.backend == Backend.none, "Cannot specify a backend and export at the same time");
+
+    handleMake(build, options);
+    handleNinja(build, options);
+    handleTup(build, options);
 }
 
 private void handleNinja(in Build build, in Options options) {

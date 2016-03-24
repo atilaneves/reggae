@@ -28,7 +28,8 @@ struct Tup {
     }
 
     string output() const pure {
-        return banner ~ lines.join("\n") ~ "\n";
+        return banner ~
+            (lines ~ options.compilerVariables).join("\n") ~ "\n";
     }
 
     string[] lines() const pure {

@@ -175,6 +175,7 @@ Options getOptions(string[] args) @trusted {
     import std.getopt;
     import std.algorithm;
     import std.array;
+    import std.path;
 
     Options options = defaultOptions;
 
@@ -208,7 +209,8 @@ Options getOptions(string[] args) @trusted {
         throw new Exception("Unsupported backend, -b must be one of: make|ninja|tup|binary");
     }
 
-    if(args.length > 1) options.projectPath = args[1].absolutePath;
+
+    if(args.length > 1) options.projectPath = args[1].absolutePath.buildNormalizedPath;
     options.finalize(origArgs);
 
     if(options.workingDir) {

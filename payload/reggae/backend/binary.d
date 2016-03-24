@@ -127,6 +127,9 @@ private:
     }
 
     bool checkReRun() const {
+        // don't bother if the build system was exported
+        if(options.export_) return false;
+
         immutable myPath = thisExePath;
         if((options.reggaeFileDependencies ~ getReggaeFileDependencies).any!(a => a.newerThan(myPath))) {
             writeln("[build] " ~ options.rerunArgs.join(" "));

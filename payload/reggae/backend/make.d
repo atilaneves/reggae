@@ -41,6 +41,7 @@ struct Makefile {
 
         auto ret = banner;
         ret ~= text("all: ", build.defaultTargetsString(options.projectPath), "\n");
+        ret ~= ".SUFFIXES:\n"; //disable default rules
 
         foreach(t; build.range) {
 
@@ -53,7 +54,7 @@ struct Makefile {
             ret ~= output ~  ": ";
             ret ~= (t.dependenciesInProjectPath(options.projectPath) ~ t.implicitsInProjectPath(options.projectPath)).join(" ");
 
-            ret ~= " Makefile\n";
+            ret ~= " " ~ fileName() ~ "\n";
             ret ~= "\t" ~ command(t) ~ "\n";
         }
 
@@ -63,8 +64,13 @@ struct Makefile {
     //includes rerunning reggae
     string output() @safe const {
         auto ret = simpleOutput;
-        ret ~= "Makefile: " ~ (options.reggaeFileDependencies ~ getReggaeFileDependencies).join(" ") ~ "\n";
-        ret ~= "\t" ~ options.rerunArgs.join(" ") ~ "\n";
+
+        // add a dependency on the Makefile to reggae itself and the build description,
+        // but only if not exporting a build
+        if(!options.export_) {
+            ret ~= fileName() ~ ": " ~ (options.reggaeFileDependencies ~ getReggaeFileDependencies).join(" ") ~ "\n";
+            ret ~= "\t" ~ options.rerunArgs.join(" ") ~ "\n";
+        }
 
         return ret;
     }

@@ -106,15 +106,21 @@ struct Ninja {
         }
     }
 
+    //includes rerunning reggae
     const(NinjaEntry)[] allBuildEntries() @safe const {
         immutable files = (_options.reggaeFileDependencies ~ getReggaeFileDependencies).join(" ");
         auto paramLines = _options.oldNinja ? [] : ["pool = console"];
+
+        // if exporting the build system, don't include rerunning reggae
+        if(_options.export_) return buildEntries;
+
         return buildEntries ~
             NinjaEntry("build build.ninja: _rerun | " ~ files,
                        paramLines) ~
             NinjaEntry("default " ~ _build.defaultTargetsString(_projectPath));
     }
 
+    //includes rerunning reggae
     const(NinjaEntry)[] allRuleEntries() @safe pure const {
         return ruleEntries ~ defaultRules(_options) ~
             NinjaEntry("rule _rerun",
@@ -124,7 +130,7 @@ struct Ninja {
     }
 
     string buildOutput() @safe const {
-        return output(allBuildEntries);
+        return "include rules.ninja\n" ~ output(allBuildEntries);
     }
 
     string rulesOutput() @safe pure const {

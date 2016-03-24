@@ -95,7 +95,6 @@ private void handleNinja(in Build build, in Options options) {
         const ninja = Ninja(build, options);
 
         auto buildNinja = File("build.ninja", "w");
-        buildNinja.writeln("include rules.ninja\n");
         buildNinja.writeln(ninja.buildOutput);
 
         auto rulesNinja = File("rules.ninja", "w");

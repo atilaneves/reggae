@@ -39,7 +39,8 @@ struct Makefile {
     //only the main targets
     string simpleOutput() @safe const {
 
-        auto ret = text("all: ", build.defaultTargetsString(options.projectPath), "\n");
+        auto ret = banner;
+        ret ~= text("all: ", build.defaultTargetsString(options.projectPath), "\n");
 
         foreach(t; build.range) {
 

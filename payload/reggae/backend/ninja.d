@@ -313,7 +313,7 @@ private:
     }
 
     string output(const(NinjaEntry)[] entries) @safe pure const nothrow {
-        return entries.map!(a => a.toString).join("\n\n");
+        return banner ~ entries.map!(a => a.toString).join("\n\n");
     }
 
     string buildLine(in Target target) @safe pure const {

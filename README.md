@@ -21,7 +21,8 @@ or [Lua](https://github.com/atilaneves/reggae-lua)
 * Out-of-tree builds
 * Backends for GNU make, ninja, tup and a custom binary executable.
 * User-defined variables like CMake in order to choose features before compile-time
-* Rules for using [dub](http://code.dlang.org/about) build targets in your own build decription - use dub with ninja, add to the dub description, ...
+* For D projects, rules for using [dub](http://code.dlang.org/about) build targets
+in your own build decription - use dub with ninja, add to the dub description, ...
 
 Not all features are available on all backends. Executable D code commands (as opposed to shell commands)
 are only supported by the binary backend, and due to tup's nature dub support and a few other features
@@ -34,8 +35,8 @@ Usage
 
 Reggae is actually a meta build system and works similarly to
 [CMake](http://www.cmake.org/) or
-[Premake](http://premake.github.io/). Those systems require writing
-configuration files in their own proprietary languages. The
+[Premake](http://premake.github.io/). CMake requires writing
+configuration files in their own proprietary language. The
 configuration files for Reggae are written in [D](http://dlang.org),
 [Python](https://github.com/atilaneves/reggae-python), [Ruby](https://github.com/atilaneves/reggae-ruby),
 [JavaScript](https://github.com/atilaneves/reggae-js) or [Lua](https://github.com/atilaneves/reggae-lua)
@@ -48,14 +49,18 @@ the actual build system depending on the backend chosen, for
 [tup](http://gittup.org/tup/), or a runnable
 executable, respectively.  The project path passed must either:
 
-1. Contain a a file named `reggaefile.d` with the build configuration
+1. Contain a a file named `reggaefile.{d,py,rb,js,lua}` with the build configuration
 2. Be a [dub](http://code.dlang.org/about) project
 
-Dub projects with no `reggaefile.d` will have one generated for them in the build directory.
+Dub projects with no reggaefile will have one generated for them in the build directory.
 
 How to write build configurations
 ---------------------------------
 The best examples can be found in the [features directory](features).
+The examples below are mostly in D, but the only real difference to writing build
+descriptions in the other supported languages is the syntax. Please consult the
+[documentation](doc/index.md).
+
 Each `reggaefile.d` must contain one and only one function with a return value of type
 [Build](payload/reggae/build.d). This function can be generated automatically with the
 [build template mixin](payload/reggae/build.d). The `Build` struct is a container for
@@ -63,21 +68,38 @@ Each `reggaefile.d` must contain one and only one function with a return value o
 
 Arbritrary build rules can be used. Here is an example of a simple D build `reggaefile.d`:
 
-    import reggae;
-    const mainObj  = Target("main.o",  "dmd -I$project/src -c $in -of$out", Target("src/main.d"));
-    const mathsObj = Target("maths.o", "dmd -c $in -of$out", Target("src/maths.d"));
-    const app = Target("myapp", "dmd -of$out $in", [mainObj, mathsObj]);
-    mixin build!(app);
+```d
+import reggae;
+const mainObj  = Target("main.o",  "gcc -I$project/src -c $in -o $out", Target("src/main.c"));
+const mathsObj = Target("maths.o", "gcc -c $in -o $out", Target("src/maths.c"));
+const app = Target("myapp", "gcc -o $out $in", [mainObj, mathsObj]);
+mixin build!(app);
+```
 
-That was just an example to illustrate the low-level primitives. To
-build D apps with no external dependencies, this will suffice and is similar to using rdmd:
+Or in Python:
 
-    import reggae;
-    alias app = scriptlike!(App(SourceFileName("src/main.d"), BinaryFileName("myapp")),
-                            Flags("-g -debug"),
-                            ImportPaths(["/path/to/imports"])
-                            );
-    mixin build!(app);
+```python
+from reggae import *
+main_obj = Target("main.o",  "gcc -I$project/src -c $in -o $out", Target("src/main.c"))
+maths_obj = Target("maths.o", "gcc -c $in -o $out", Target("src/maths.c"))
+app = Target("myapp", "gcc -o $out $in", [mainObj, mathsObj])
+bld = Build(app)
+```
+
+That was just an example to illustrate the low-level primitives. There
+are high-level [convenience rules](doc/rules.md) for common tasks such
+as compiling and linking. The low-level primitives are there for
+flexibility. For instance, to build D apps with no external
+dependencies, this will suffice and is similar to using rdmd:
+
+```d
+import reggae;
+alias app = scriptlike!(App(SourceFileName("src/main.d"), BinaryFileName("myapp")),
+                        Flags("-g -debug"),
+                        ImportPaths(["/path/to/imports"])
+                        );
+mixin build!(app);
+```
 
 There are also other functions and pre-built rules for C and C++ objects. There is no
 HTML documentation yet but the [package file](payload/reggae/package.d) contains the
@@ -86,19 +108,33 @@ also [detailed documentation](doc/index.md) in markdown format.
 
 For C and C++, the main high-level rules to use are `targetsFromSourceFiles` and
 `link`, but of course they can also be hand-assembled from `Target` structs. Here is an
-example C++ build:
+example C++ build written in D:
 
-    import reggae;
-    alias objs = objectFiles!(Sources!(["."]), // a list of directories
-                              Flags("-g -O0"),
-                              IncludePaths(["inc1", "inc2"]));
-    alias app = link!(ExeName("app"), objs);
+```d
+import reggae;
+alias objs = objectFiles!(Sources!(["."]), // a list of directories
+                          Flags("-g -O0"),
+                          IncludePaths(["inc1", "inc2"]));
+alias app = link!(ExeName("app"), objs);
+mixin build!(app);
+```
 
-`Sources` can also be used like so:
+Or in Python:
 
-    Sources!(Dirs([/*directories to look for sources*/],
-             Files([/*list of extra files to add*/]),
-             Filter!(a => a != "foo.d"))); //get rid of unwanted files
+```python
+from reggae import *
+objs = object_files(src_dirs=".", flags="-g -O0", includes=["inc1", "inc2"])
+app = link(exe_name="app", dependencies=objs)
+b = Build(app)
+```
+
+In the D version, `Sources` can also be used like so:
+
+```d
+Sources!(Dirs([/*directories to look for sources*/],
+         Files([/*list of extra files to add*/]),
+         Filter!(a => a != "foo.d"))); //get rid of unwanted files
+```
 
 `objectFiles` isn't specific to C++, it'll create object file targets
 for all supported languages (currently C, C++ and D).
@@ -113,10 +149,14 @@ faster. In all likelihood a user needing reggae will need more than that, and re
 an API to use dub build information in a `reggaefile.d` build description file. A simple
 example for building production and unittest binaries concurrently is this:
 
-    import reggae;
-    alias main = dubDefaultTarget!("-g -debug");
-    alias ut = dubConfigurationTarget!(ExeName("ut"), Configuration("unittest"));
-    mixin build!(main, ut);
+```d
+import reggae;
+alias main = dubDefaultTarget!("-g -debug");
+alias ut = dubConfigurationTarget!(ExeName("ut"), Configuration("unittest"));
+mixin build!(main, ut);
+```
+
+This is equivalent to the automatically generated reggaefile if none is present.
 
 Depending on whether or not the dub project in questions uses configurations, reggae's dub
 support might not work before [this pull request](https://github.com/D-Programming-Language/dub/pull/577)
@@ -127,7 +167,8 @@ Scripting language limitations
 ------------------------------
 Build written in one of the scripting languages currently:
 
-* Can only detect changes to the main build description file (e.g. reggaefile.py), but not any other files that were imported/required
+* Can only detect changes to the main build description file (e.g. `reggaefile.py`),
+but not any other files that were imported/required
 * Cannot use the binary backend
 * Do not have access to the dub high-level rules
 

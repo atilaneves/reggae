@@ -66,9 +66,11 @@ struct Makefile {
     string output() @safe const {
         auto ret = simpleOutput;
 
-        // add a dependency on the Makefile to reggae itself and the build description,
-        // but only if not exporting a build
-        if(!options.export_) {
+        if(options.export_) {
+            ret = options.eraseProjectPath(ret);
+        } else {
+            // add a dependency on the Makefile to reggae itself and the build description,
+            // but only if not exporting a build
             ret ~= fileName() ~ ": " ~ (options.reggaeFileDependencies ~ getReggaeFileDependencies).join(" ") ~ "\n";
             ret ~= "\t" ~ options.rerunArgs.join(" ") ~ "\n";
         }

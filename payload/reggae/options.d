@@ -168,6 +168,12 @@ struct Options {
     string[] compilerVariables() @safe pure nothrow const {
         return ["CC = " ~ cCompiler, "CXX = " ~ cppCompiler, "DC = " ~ dCompiler];
     }
+
+    string eraseProjectPath(in string str) @safe pure nothrow const {
+        import std.string;
+        import std.path;
+        return str.replace(projectPath ~ dirSeparator, "");
+    }
 }
 
 

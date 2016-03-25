@@ -130,7 +130,9 @@ struct Ninja {
     }
 
     string buildOutput() @safe const {
-        return "include rules.ninja\n" ~ output(allBuildEntries);
+        auto ret = "include rules.ninja\n" ~ output(allBuildEntries);
+        if(_options.export_) ret = _options.eraseProjectPath(ret);
+        return ret;
     }
 
     string rulesOutput() @safe pure const {

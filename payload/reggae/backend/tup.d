@@ -28,8 +28,9 @@ struct Tup {
     }
 
     string output() const pure {
-        return banner ~
-            lines.join("\n") ~ "\n";
+        auto ret = banner ~ lines.join("\n") ~ "\n";
+        if(options.export_) ret = options.eraseProjectPath(ret);
+        return ret;
     }
 
     string[] lines() const pure {

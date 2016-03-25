@@ -66,7 +66,7 @@ Each `reggaefile.d` must contain one and only one function with a return value o
 [build template mixin](payload/reggae/build.d). The `Build` struct is a container for
 `Target` structs, which themselves may depend on other targets.
 
-Arbritrary build rules can be used. Here is an example of a simple D build `reggaefile.d`:
+Arbitrary build rules can be used. Here is an example of a simple D build `reggaefile.d`:
 
 ```d
 import reggae;

@@ -221,7 +221,8 @@ Options getOptions(string[] args) @trusted {
         writeln("reggae v", version_);
     }
 
-    if(args.length > 1) options.projectPath = args[1].absolutePath.buildNormalizedPath;
+    immutable argsPath = args.length > 1 ? args[1] : ".";
+    options.projectPath = argsPath.absolutePath.buildNormalizedPath;
     options.finalize(origArgs);
 
     if(options.workingDir) {

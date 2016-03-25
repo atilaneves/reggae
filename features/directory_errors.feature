@@ -3,13 +3,6 @@ Feature: Error messages
   I want to get meaningful error messages when I use the program incorrectly
   So I can accurately diagnose what went wrong
 
-  Scenario: Directory not specified
-    When I run `reggae`
-    Then it should fail with:
-      """
-      A project path must be specified
-      """
-
   Scenario: Non-existent directory
     When I run `reggae non/existent`
     Then it should fail with:

@@ -57,16 +57,22 @@ Dub projects with no reggaefile will have one generated for them in the build di
 How to write build configurations
 ---------------------------------
 The best examples can be found in the [features directory](features).
-The examples below are mostly in D, but the only real difference to writing build
+Some of the examples below are in D, but the only real difference to writing build
 descriptions in the other supported languages is the syntax. Please consult the
 [documentation](doc/index.md).
 
-Each `reggaefile.d` must contain one and only one function with a return value of type
-[Build](payload/reggae/build.d). This function can be generated automatically with the
-[build template mixin](payload/reggae/build.d). The `Build` struct is a container for
-`Target` structs, which themselves may depend on other targets.
+When writing in D, each `reggaefile.d` must contain one and only one
+function with a return value of type
+[Build](payload/reggae/build.d). This function can be generated
+automatically with the
+[build template mixin](payload/reggae/build.d). The `Build` struct is
+a container for `Target` structs, which themselves may depend on other
+targets.
 
-Arbitrary build rules can be used. Here is an example of a simple D build `reggaefile.d`:
+For scripting languages, a global object of type `reggae.Build` must exist.
+It doesn't matter what it is called.
+
+Arbitrary low-level build rules can be used. Here is an example of a simple `reggaefile.d`:
 
 ```d
 import reggae;

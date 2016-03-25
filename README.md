@@ -10,8 +10,10 @@ More information is available in the [documentation](doc/index.md).
 
 Features
 --------
-* Write readable build descriptions in D, [Python](https://github.com/atilaneves/reggae-python),
-[Ruby](https://github.com/atilaneves/reggae-ruby), [JavaScript](https://github.com/atilaneves/reggae-js)
+* Write readable build descriptions in [D](http://dlang.org/),
+[Python](https://github.com/atilaneves/reggae-python),
+[Ruby](https://github.com/atilaneves/reggae-ruby),
+[JavaScript](https://github.com/atilaneves/reggae-js)
 or [Lua](https://github.com/atilaneves/reggae-lua)
 * Low-level DAG build descriptions + high-level convenience rules to build C, C++ and D
 * Automatic header/module dependency detection for C, C++ and D

@@ -769,7 +769,7 @@ private ubyte[] setUshort(in ushort length) @safe pure nothrow {
 
 string replaceConcreteCompilersWithVars(in string cmd, in Options options) @safe pure nothrow {
     return cmd.
-        replace(options.cCompiler, "$(CC)").
+        replace(options.dCompiler, "$(DC)").
         replace(options.cppCompiler, "$(CXX)").
-        replace(options.dCompiler, "$(DC)");
+        replace(options.cCompiler, "$(CC)");
 }

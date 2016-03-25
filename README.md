@@ -68,8 +68,11 @@ Usage
 Pick a language to write your description in and place a file called
 `reggaefile.{d,py,rb,js,lua}` at the root of your project.
 
-In one of the scripting languages, a global variable with the type `reggae.Build` must exist with
-any name.
+In one of the scripting languages, a global variable with the type
+`reggae.Build` must exist with any name. Also, the relevant
+language-specific package must be installed or otherwise available on
+the system to make use of that language's API. Use pip, gem, npm or luarocks
+to install the reggae package (reggae-js for npm).
 
 In D, a function with return type `Build` must exist with any name.
 Normally this function isn't written by hand but by using the

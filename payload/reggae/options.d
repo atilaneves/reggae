@@ -139,19 +139,14 @@ struct Options {
     }
 
     BuildLanguage reggaeFileLanguage(in string fileName) @safe const {
-        import std.algorithm;
+        import std.exception;
+        import std.path;
 
-        if(fileName.endsWith(".d"))
-            return BuildLanguage.D;
-        else if(fileName.endsWith(".py"))
-            return BuildLanguage.Python;
-        else if(fileName.endsWith(".rb"))
-            return BuildLanguage.Ruby;
-        else if(fileName.endsWith(".js"))
-            return BuildLanguage.JavaScript;
-        else if(fileName.endsWith(".lua"))
-            return BuildLanguage.Lua;
-        else throw new Exception("Unknown language for " ~ fileName);
+        with(BuildLanguage) {
+            immutable extToLang = [".d": D, ".py": Python, ".rb": Ruby, ".js": JavaScript, ".lua": Lua];
+            enforce(extension(fileName) in extToLang, "Unsupported build description language in " ~ fileName);
+            return extToLang[extension(fileName)];
+        }
     }
 
     BuildLanguage reggaeFileLanguage() @safe const {

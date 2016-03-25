@@ -6,6 +6,8 @@ A (meta) build system written in [the D programming language](http://dlang.org).
 is alpha software, only tested on Linux and likely to have breaking
 changes made.
 
+More information is available in the [documentation](doc/index.md).
+
 Features
 --------
 * Write readable build descriptions in D, [Python](https://github.com/atilaneves/reggae-python),

@@ -130,7 +130,14 @@ private void handleTup(in Build build, in Options options) {
     version(minimal) {
         throw new Exception("Tup backend support not compiled in");
     } else {
-        if(!".tup".exists) execute(["tup", "init"]);
+        if(!".tup".exists) {
+            import std.process;
+            immutable args = ["tup", "init"];
+            try
+                execute(args);
+            catch(ProcessException _)
+                stderr.writeln("Could not execute '", args.join(" "), "'. tup builds need to do that first.");
+        }
         const tup = Tup(build, options);
         auto file = File(tup.fileName, "w");
         file.write(tup.output);

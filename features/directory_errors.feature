@@ -65,3 +65,21 @@ Feature: Error messages
         """
         Reggae builds may only use one language. Found: D, Python, Ruby
         """
+
+      Given a file named "project/reggaefile.js" with:
+        """
+        """
+      When I run `reggae -b ninja project`
+      Then it should fail with:
+        """
+        Reggae builds may only use one language. Found: D, Python, Ruby, JavaScript
+        """
+
+      Given a file named "project/reggaefile.lua" with:
+        """
+        """
+      When I run `reggae -b ninja project`
+      Then it should fail with:
+        """
+        Reggae builds may only use one language. Found: D, Python, Ruby, JavaScript, Lua
+        """

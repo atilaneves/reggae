@@ -74,19 +74,13 @@ struct Options {
     string reggaeFilePath() @safe const {
         import std.algorithm, std.array, std.exception, std.conv;
 
-        auto langs = [dlangFile, pythonFile, rubyFile].
-            filter!exists.
-            map!(a => reggaeFileLanguage(a)).
-            array;
+        auto langFiles = [dlangFile, pythonFile, rubyFile, jsFile, luaFile];
+        auto foundFiles = langFiles.filter!exists.array;
 
-        enforce(langs.length < 2, text("Reggae builds may only use one language. Found: ",
-                                       langs.map!(to!string).join(", ")));
+        enforce(foundFiles.length < 2, text("Reggae builds may only use one language. Found: ",
+                                            foundFiles.map!(a => reggaeFileLanguage(a).to!string).join(", ")));
 
-        if(dlangFile.exists) return dlangFile;
-        if(pythonFile.exists) return pythonFile;
-        if(rubyFile.exists) return rubyFile;
-        if(jsFile.exists) return jsFile;
-        if(luaFile.exists) return luaFile;
+        if(!foundFiles.empty) return foundFiles.front;
 
         immutable path = isDubProject ? "" : projectPath;
         return buildPath(path, "reggaefile.d").absolutePath;

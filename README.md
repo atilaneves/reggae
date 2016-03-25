@@ -70,9 +70,9 @@ Arbitrary build rules can be used. Here is an example of a simple D build `regga
 
 ```d
 import reggae;
-const mainObj  = Target("main.o",  "gcc -I$project/src -c $in -o $out", Target("src/main.c"));
-const mathsObj = Target("maths.o", "gcc -c $in -o $out", Target("src/maths.c"));
-const app = Target("myapp", "gcc -o $out $in", [mainObj, mathsObj]);
+enum mainObj  = Target("main.o",  "gcc -I$project/src -c $in -o $out", Target("src/main.c"));
+enum mathsObj = Target("maths.o", "gcc -c $in -o $out", Target("src/maths.c"));
+enum app = Target("myapp", "gcc -o $out $in", [mainObj, mathsObj]);
 mixin build!(app);
 ```
 

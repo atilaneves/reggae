@@ -1,2 +1,2 @@
-require "aruba/cucumber"
+require 'aruba/cucumber'
 World(Aruba::Api)

@@ -1,3 +1,4 @@
+
 /**
 High-level rules for compiling D files. For a D-only application with
 no dub dependencies, $(D scriptlike) should suffice. If the app depends

@@ -10,13 +10,19 @@ Import / require reggae
     var reggae = require('reggae-js') // Javascript
     reggae = require('reggae') -- Lua
 
+Convenience Rules
+----------------
+
+The rest of this document describes the low-level primitives. Most users will
+want instead to use the [high-level convenience rules](rules.md).
+
 Target
 ------
 
 Reggae provides data definitions that allow the user to specify a build. This is the core of the system
 and all high-level rules are built on this base. A *build* is considered to be a list of top-level *targets*.
 A target has a collection of outputs (usually just one), a command to generate it, a list of explicit
-dependencies and a list of implicit dependencies. In D, a target may be defined as follows:
+dependencies and a list of implicit dependencies. A target may be defined as follows:
 
     //D:
     enum target = Target("foo.o", "dmd -of$out -c $in", Target("foo.d")); //implicits left out
@@ -33,7 +39,7 @@ dependencies and a list of implicit dependencies. In D, a target may be defined 
     -- Lua
     target = reggae.Target("foo.o", "dmd -of$out -c $in", reggae.Target("foo.d"))
 
-In general outputs and dependencies are arrays, but since it's more common for both of them to only
+In general outputs and dependencies are arrays/lists, but since it's more common for both of them to only
 contain one element, the constructor allows it to be called as above.
 
 Implicit dependencies are files that, when changed, should cause the target to be rebuilt but that
@@ -66,8 +72,8 @@ In scripting languages, one build object should be defined at top level.
 It doesn't matter what it's called, it just has to be of the `reggae.Build` type.
 In, e.g., Python:
 
-    topLevelTarget1 = Target(...)
-    bld = Build(topLevelTarget1, topLevelTarget2, ...)
+    top_level_tgt1 = Target(...)
+    bld = Build(top_level_tgt1, top_level_tgt2, ...) # any name will do for this variable
 
 
 Source and Build directories

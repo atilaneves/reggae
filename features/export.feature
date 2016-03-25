@@ -4,17 +4,17 @@ Feature: Export build system
   So they don't have to install reggae
 
   Background:
-    Given a file named "project/hello.d" with:
+    Given a file named "hello.d" with:
     """
     import std.stdio;
     void main() { writeln(`Hello world!`); }
     """
-    And a file named "project/reggaefile.d" with:
+    And a file named "reggaefile.d" with:
     """
     import reggae;
     mixin build!(scriptlike!(App(SourceFileName(`hello.d`))));
     """
-    And I successfully run `reggae --export project`
+    And I successfully run `reggae --export`
 
   @ninja
   Scenario: Exporting the build system with ninja

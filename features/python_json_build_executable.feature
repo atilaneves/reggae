@@ -20,14 +20,23 @@ Feature: Foreign language integration
     And a file named "project/reggaefile.py" with:
     """
     from reggae import *
-    b = Build(executable(name='app',
-                         src_dirs=['src']))
+    b = Build(executable(name='app', src_dirs=['src']),
+              optional(executable(name='opt', src_dirs=['opt_src'])))
     """
+  And a file named "project/opt_src/opt.cpp" with:
+  """
+  #include <iostream>
+  int main() {
+     std::cout << "I'm optional!" << std::endl;
+  }
+  """
 
   @make
   Scenario: Make
     Given I successfully run `reggae -b make project`
     And I successfully run `make`
+    Then a file named "app" should exist
+    And a file named "opt" should not exist
 
     When I successfully run `./app`
     Then the output should contain:
@@ -39,4 +48,13 @@ Feature: Foreign language integration
     Then the output should contain:
     """
     Hello 6
+    """
+
+    Given I successfully run `make opt`
+    Then a file named "opt" should exist
+
+    Given I successfully run `./opt`
+    Then the output should contain:
+    """
+    I'm optional!
     """

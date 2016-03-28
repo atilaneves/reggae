@@ -42,10 +42,17 @@ enum JsonDepsFuncName {
 
 Build jsonToBuild(in string projectPath, in string jsonString) {
     auto json = parseJSON(jsonString);
+
+    Build.TopLevelTarget maybeOptional(in JSONValue json, Target target) {
+        immutable optional = ("optional" in json.object) !is null;
+        return createTopLevelTarget(target, optional);
+    }
+
     const targets = json.array.
         filter!(a => a.object["type"].str != "defaultOptions").
-        map!(a => jsonToTarget(projectPath, a)).
+        map!(a => maybeOptional(a, jsonToTarget(projectPath, a))).
         array;
+
     return Build(targets);
 }
 

@@ -38,6 +38,10 @@ struct Build {
         _targets = targets.map!createTopLevelTarget.array;
     }
 
+    this(in TopLevelTarget[] targets) {
+        _targets = targets;
+    }
+
     this(T...)(in T targets) {
         foreach(t; targets) {
             //the constructor needs to go from Target to TopLevelTarget

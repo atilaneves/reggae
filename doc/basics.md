@@ -63,8 +63,10 @@ For D build descriptions, the reggaefile must have a function that returns a `Bu
 function may have any name. It is usually not written by hand, for the `build` template mixin
 generates this function for the user. Usually the last line of a reggaefile will be:
 
-    //topLevelTarget1, ... have been defined before using enum or alias
-    mixin build!(topLevelTarget1, topLevelTarget2, ...);
+```d
+//topLevelTarget1, ... have been defined before using enum or alias
+mixin build!(topLevelTarget1, topLevelTarget2, ...);
+```
 
 Where each target was defined before.
 
@@ -72,8 +74,21 @@ In scripting languages, one build object should be defined at top level.
 It doesn't matter what it's called, it just has to be of the `reggae.Build` type.
 In, e.g., Python:
 
-    top_level_tgt1 = Target(...)
-    bld = Build(top_level_tgt1, top_level_tgt2, ...) # any name will do for this variable
+```python
+top_level_tgt1 = Target(...)
+bld = Build(top_level_tgt1, top_level_tgt2, ...) # any name will do for this variable
+```
+
+Top level targets may be made optional, which means they don't get built by default but
+can be built explicitly:
+
+```d
+mixin build!(target1, optional(target2)); // D
+```
+
+```python
+bld = Build(target1, optional(target2))  # Python
+```
 
 
 Source and Build directories

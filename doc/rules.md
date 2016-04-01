@@ -31,12 +31,11 @@ Generally will be "created" with `Sources`, a template function:
 auto Sources(Dirs = Dirs(), Files = Files(), F = Filter!(a => true))()
 ```
 
-`Dirs` and `Files` are wrapper structs around a string array.
-`Filter` can be used to filter out files that shouldn't be compiled.
-
-`flags`: The compiler flags to use.
-`includes`: The include/import paths
-`stringImports`: The string import paths (only relevant for D)
+* `Dirs` and `Files` are wrapper structs around a string array.
+* `Filter` can be used to filter out files that shouldn't be compiled.
+* `flags`: The compiler flags to use.
+* `includes`: The include/import paths
+* `stringImports`: The string import paths (only relevant for D)
 
 
 ### Python
@@ -53,11 +52,11 @@ def object_files(src_dirs=[],
 
 ```
 
-`src_dirs`: The source directories. If not specified, defaults to ".".
-`exclude_dirs`: Particular directories to exclude.
-`flags`: Compiler flags.
-`includes`: Compiler include directories.
-`string_imports`: Compiler string import directories (only relevant for D).
+* `src_dirs`: The source directories. If not specified, defaults to ".".
+* `exclude_dirs`: Particular directories to exclude.
+* `flags`: Compiler flags.
+* `includes`: Compiler include directories.
+* `string_imports`: Compiler string import directories (only relevant for D).
 
 ### Ruby
 
@@ -106,9 +105,9 @@ Generates an executable or shared object / dynamic library.
 Target link(ExeName exeName, alias dependenciesFunc, Flags flags = Flags())
 ```
 
-`exeName`: The name of the executable.
-`dependenciesFunc`: A function that, at runtime, returns an array of `Target` structs to link to
-`flags`: Linker flags.
+* `exeName`: The name of the executable.
+* `dependenciesFunc`: A function that, at runtime, returns an array of `Target` structs to link to
+* `flags`: Linker flags.
 
 ### Python
 
@@ -116,9 +115,9 @@ Target link(ExeName exeName, alias dependenciesFunc, Flags flags = Flags())
 def link(exe_name=None, flags='', dependencies=None, implicits=[]):
 ```
 
-`exe_name`: The name of the executable.
-`dependencies`: The dependencies to link to.
-`implicits`: Any implicit dependencies.
+* `exe_name`: The name of the executable.
+* `dependencies`: The dependencies to link to.
+* `implicits`: Any implicit dependencies.
 
 ### Ruby
 
@@ -132,7 +131,7 @@ Same as the Python version
 
 `function link(options)`
 
-`options`: An object/table with parameters named as in the Python/Ruby versions
+* `options`: An object/table with parameters named as in the Python/Ruby versions
 
 
 executable
@@ -159,12 +158,12 @@ Target scriptlike(App app,
                   alias linkWithFunction = () { return cast(Target[])[];})
 ```
 
-`app`: The app to build. Takes two parameters of type `SourceFileName` and `BinaryFileName`,
+* `app`: The app to build. Takes two parameters of type `SourceFileName` and `BinaryFileName`,
 both wrapper struct for strings.
-`flags`: Compiler flags to use.
-`importPaths`: A list of import paths for the compiler.
-`stringImports`: A list of string import paths for the compiler.
-`linkWithFunction`: A function that, at runtime, returns the list of `Target` structs to link to.
+* `flags`: Compiler flags to use.
+* `importPaths`: A list of import paths for the compiler.
+* `stringImports`: A list of string import paths for the compiler.
+* `linkWithFunction`: A function that, at runtime, returns the list of `Target` structs to link to.
 
 ### Python
 ```python
@@ -176,12 +175,12 @@ def scriptlike(src_name=None,
                link_with=[]):
 ```
 
-`src_name`: The name of the source file containing the `main` function
-`exe_name`: The name of the executable file to generate. Defaults to the name of `src_name`
-`flags`: Compiler flags.
-`includes`: Import paths.
-`string_imports`: String import paths.
-`link_with`: A list of targets to link with.
+* `src_name`: The name of the source file containing the `main` function
+* `exe_name`: The name of the executable file to generate. Defaults to the name of `src_name`
+* `flags`: Compiler flags.
+* `includes`: Import paths.
+* `string_imports`: String import paths.
+* `link_with`: A list of targets to link with.
 
 ### Ruby
 ```ruby
@@ -259,8 +258,8 @@ Target dubConfigurationTarget(ExeName exeName,
                               alias objsFunction = () { Target[] t; return t; },
 ```
 
-`exeName`: As elsewhere.
-`config`: The dub configuration to use.
-`compilerFlags`: Self-explanatory.
-`includeMain`: Whether or not to include the file containing the `main` function.
-`objsFunction`: Dependencies to link to.
+* `exeName`: As elsewhere.
+* `config`: The dub configuration to use.
+* `compilerFlags`: Self-explanatory.
+* `includeMain`: Whether or not to include the file containing the `main` function.
+* `objsFunction`: Dependencies to link to.

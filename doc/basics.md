@@ -50,6 +50,73 @@ So, the general way to create a target is via this pseudo-code signature:
 
     Target(string[] outputs, string command, Target[] dependencies, Target[] implicits);
 
+When writing build descriptions in D, the command may be a function pointer instead. The
+signature must be:
+
+```d
+void function(in string[] inputs, in string[] outputs);
+```
+
+Targets may also be *phony*, which means they don't generate output. This can be useful
+for commands that run tests and have dependencies on actual outputs from the build.
+To create a phony target:
+
+### D:
+
+```d
+enum tgt = Target.phony("whatever you want here", "shell command", [dependencies]);
+```
+
+### Python:
+
+Not implemented yet.
+
+### Ruby:
+
+Not implemented yet.
+
+### Javascript:
+
+Not implemented yet.
+
+### Lua:
+
+Not implemented yet.
+
+
+Optional Targets
+================
+
+Top-level targets may be made *optional*, in which case they can be built explicitly
+(by, e.g. make my_optional_target) but are not built by default. To do so:
+
+### D
+
+```d
+optional(Target(...))
+```
+
+### Python
+
+```python
+optional(Target(...))
+```
+
+### Ruby
+
+Not implemented yet.
+
+### Ruby
+
+Not implemented yet.
+
+### Javascript
+
+Not implemented yet.
+
+### Lua
+
+Not implemented yet.
 
 Build
 ------
@@ -90,7 +157,6 @@ mixin build!(target1, optional(target2)); // D
 bld = Build(target1, optional(target2))  # Python
 ```
 
-
 Source and Build directories
 ----------------------------
 
@@ -117,7 +183,7 @@ Some builds may always use the same command-line options, as is the case when us
 compiler for embedded development. Since it is tedious and error-prone to require users to
 always specify these options, it is possible to override defaults for a build in particular.
 In D, assign to `defaultOptions`:
-
+J
     defaultOptions.cCompiler = "my_weird_cc";
 
 In Python, use kwargs with the `DefaultOptions type`:

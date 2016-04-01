@@ -82,7 +82,7 @@ From the the build directory, run `reggae -b <ninja|make|tup|binary>
 /path/to/your/project`. You can now build your project using the
 appropriate command (ninja, make, tup, or ./build respectively).
 
-How to write build descriptions
+Quick Start
 ---------------------------------
 
 The API is documented [elsewhere](doc/index.md) and the best examples

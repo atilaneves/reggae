@@ -219,12 +219,12 @@ Target unityBuild(ExeName exeName,
                   alias implicitsFunc = emptyTargets)();
 ```
 
-`exeName`: Same as in `scriptlike`
-`sourcesFunc`: Same as in `objectFiles`.
-`flags`: Compiler flags.
-`includes`: Include paths.
-`dependenciesFunc`: A function that, at runtime, returns the dependencies to link to.
-`implicitsFunc`: A function that, at runtime, returns the implicit dependencies.
+* `exeName`: Same as in `scriptlike`
+* `sourcesFunc`: Same as in `objectFiles`.
+* `flags`: Compiler flags.
+* `includes`: Include paths.
+* `dependenciesFunc`: A function that, at runtime, returns the dependencies to link to.
+* `implicitsFunc`: A function that, at runtime, returns the implicit dependencies.
 
 `emptyTargets` is a pre-defined function that returns an tempty `Target[]` array.
 

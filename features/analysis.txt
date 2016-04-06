@@ -1,0 +1,28 @@
+Which features actually have to build code?
+
+arbitrary: Yep - tests the basics 47s
+backend_errors: Yep 7.5s (!)
+binary: DIT? In-test Target[] -> side-effects 51s
+code_command_error: UT
+code_command: UT
+cpp_compile: Yep, rename to cpp_dependencies 28s
+cppexe: UT, rename to cpp_scriptlike
+cpplink: DIT
+dcompile: Yep, rename to d_dependencies 24s
+default_options: UT, not even doing anything
+directory_errors: Yep 8.6s (!)
+dub.feature: DIT - dub.json -> Build
+dub_reggae: DIT - dub.json -> Build / reggaefile
+dub_target_type: DIT
+implicit_dependencies: Yep 25.3s (!)
+All scripting features: one file per language, DIT JSON to Build
+multiple_outputs: Yep 1:00 @non_essential
+optional: Yep 21.28s @non_essential
+output_in_project_path: Yep 17s @non_essential
+phony: Yep 18.8s @non_essential
+regressions: Yep 16.5s @non_essential
+rerun_itself: 38s Yep
+scriptlike: DIT
+static_library: DIT
+unity_build: DIT
+user_vars: DIT

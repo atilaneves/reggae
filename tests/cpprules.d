@@ -7,8 +7,8 @@ import unit_threaded;
 
 
 void testNoIncludePaths() {
-    const build = Build(objectFile(SourceFile("path/to/src/foo.cpp")));
-    const ninja = Ninja(build, "/tmp/myproject");
+    auto build = Build(objectFile(SourceFile("path/to/src/foo.cpp")));
+    auto ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build path/to/src/foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",
                     ["DEPFILE = path/to/src/foo.o.dep"]),
@@ -17,9 +17,9 @@ void testNoIncludePaths() {
 
 
 void testIncludePaths() {
-    const build = Build(objectFile(SourceFile("path/to/src/foo.cpp"), Flags(""),
+    auto build = Build(objectFile(SourceFile("path/to/src/foo.cpp"), Flags(""),
                                    IncludePaths(["path/to/src", "other/path"])));
-    const ninja = Ninja(build, "/tmp/myproject");
+    auto ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build path/to/src/foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",
                     ["includes = -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path",
@@ -29,8 +29,8 @@ void testIncludePaths() {
 
 
 void testFlagsCompileC() {
-    const build = Build(objectFile(SourceFile("path/to/src/foo.c"), Flags("-m64 -fPIC -O3")));
-    const ninja = Ninja(build, "/tmp/myproject");
+    auto build = Build(objectFile(SourceFile("path/to/src/foo.c"), Flags("-m64 -fPIC -O3")));
+    auto ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build path/to/src/foo.o: _ccompile /tmp/myproject/path/to/src/foo.c",
                     ["flags = -m64 -fPIC -O3",
@@ -39,8 +39,8 @@ void testFlagsCompileC() {
 }
 
 void testFlagsCompileCpp() {
-    const build = Build(objectFile(SourceFile("path/to/src/foo.cpp"), Flags("-m64 -fPIC -O3")));
-    const ninja = Ninja(build, "/tmp/myproject");
+    auto build = Build(objectFile(SourceFile("path/to/src/foo.cpp"), Flags("-m64 -fPIC -O3")));
+    auto ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build path/to/src/foo.o: _cppcompile /tmp/myproject/path/to/src/foo.cpp",
                     ["flags = -m64 -fPIC -O3",
@@ -49,7 +49,7 @@ void testFlagsCompileCpp() {
 }
 
 void testCppCompile() {
-    const mathsObj = objectFile(SourceFile("src/cpp/maths.cpp"),
+    auto mathsObj = objectFile(SourceFile("src/cpp/maths.cpp"),
                                 Flags("-m64 -fPIC -O3"),
                                 IncludePaths(["headers"]));
 
@@ -59,7 +59,7 @@ void testCppCompile() {
 }
 
 void testCCompile() {
-    const mathsObj = objectFile(SourceFile("src/c/maths.c"),
+    auto mathsObj = objectFile(SourceFile("src/c/maths.c"),
                                 Flags("-m64 -fPIC -O3"),
                                 IncludePaths(["headers"]));
 
@@ -83,7 +83,7 @@ private void shouldEqualLines(string actual, string[] expected,
 }
 
 void testUnityCppFiles() {
-    const files = ["src/foo.cpp", "src/bar.cpp"];
+    auto files = ["src/foo.cpp", "src/bar.cpp"];
     unityFileContents("/path/to/proj/", files).shouldEqualLines(
         [`#include "/path/to/proj/src/foo.cpp"`,
          `#include "/path/to/proj/src/bar.cpp"`]);
@@ -91,19 +91,19 @@ void testUnityCppFiles() {
 
 
 void testUnityCFiles() {
-    const files = ["src/foo.c", "src/bar.c"];
+    auto files = ["src/foo.c", "src/bar.c"];
     unityFileContents("/foo/bar/", files).shouldEqualLines(
         [`#include "/foo/bar/src/foo.c"`,
          `#include "/foo/bar/src/bar.c"`]);
 }
 
 void testUnityMixedLanguages() {
-    const files = ["src/foo.cpp", "src/bar.c"];
+    auto files = ["src/foo.cpp", "src/bar.c"];
     unityFileContents("/project", files).shouldThrow;
 }
 
 void testUnityDFiles() {
-    const files = ["src/foo.d", "src/bar.d"];
+    auto files = ["src/foo.d", "src/bar.d"];
     unityFileContents("/project", files).shouldThrow;
 }
 
@@ -111,13 +111,13 @@ void testUnityDFiles() {
 void testUnityTargetCpp() @safe {
     import reggae.config: options;
 
-    const files = ["src/foo.cpp", "src/bar.cpp", "src/baz.cpp"];
+    enum files = ["src/foo.cpp", "src/bar.cpp", "src/baz.cpp"];
     Target[] dependencies() @safe pure nothrow {
         return [Target("$builddir/mylib.a")];
     }
 
     immutable projectPath = "/path/to/proj";
-    const target = unityTarget!(ExeName("leapp"),
+    auto target = unityTarget!(ExeName("leapp"),
                                 projectPath,
                                 files,
                                 Flags("-g -O0"),
@@ -139,13 +139,13 @@ void testUnityTargetCpp() @safe {
 void testUnityTargetC() @safe {
     import reggae.config: options;
 
-    const files = ["src/foo.c", "src/bar.c", "src/baz.c"];
+    enum files = ["src/foo.c", "src/bar.c", "src/baz.c"];
     Target[] dependencies() @safe pure nothrow {
         return [Target("$builddir/mylib.a")];
     }
 
     immutable projectPath = "/path/to/proj";
-    const target = unityTarget!(ExeName("leapp"),
+    auto target = unityTarget!(ExeName("leapp"),
                                 projectPath,
                                 files,
                                 Flags("-g -O0"),

@@ -24,13 +24,13 @@ enum isTargetLike(T) = is(typeof(() {
 static assert(isTargetLike!Target);
 
 struct DepthFirst(T) if(isTargetLike!T) {
-    const(T)[] targets;
+    T[] targets;
 
-    this(in T target) pure {
+    this(T target) pure {
         this.targets = depthFirstTargets(target);
     }
 
-    const(T)[] depthFirstTargets(in T target) pure {
+    T[] depthFirstTargets(T target) pure {
         //if leaf, return
         if(target.isLeaf) return target.shellCommand(Options()) is null ? [] : [target];
 
@@ -55,14 +55,14 @@ struct DepthFirst(T) if(isTargetLike!T) {
     static assert(isInputRange!DepthFirst);
 }
 
-auto depthFirst(T)(in T target) pure {
+auto depthFirst(T)(T target) pure {
     return DepthFirst!T(target);
 }
 
 struct ByDepthLevel {
-    const(Target)[][] targets;
+    Target[][] targets;
 
-    this(in Target target) pure nothrow {
+    this(Target target) pure nothrow {
         this.targets = sortTargets(target);
     }
 
@@ -78,16 +78,16 @@ struct ByDepthLevel {
         return targets.empty;
     }
 
-    private const(Target)[][] sortTargets(in Target target) pure nothrow {
+    private Target[][] sortTargets(Target target) pure nothrow {
         if(target.isLeaf) return [];
 
-        const(Target)[][] targets = [[target]];
+        Target[][] targets = [[target]];
         rec(0, [target], targets);
         return targets.retro.array;
     }
 
-    private void rec(int level, in Target[] targets, ref const(Target)[][] soFar) @trusted pure nothrow {
-        const notLeaves = targets.
+    private void rec(int level, Target[] targets, ref Target[][] soFar) @trusted pure nothrow {
+        Target[] notLeaves = targets.
             map!(a => chain(a.dependencies, a.implicits)). //get all dependencies
             flatten. //flatten into a regular range
             filter!(a => !a.isLeaf). //don't care about leaves
@@ -102,7 +102,7 @@ struct ByDepthLevel {
 }
 
 struct Leaves {
-    this(in Target target) pure nothrow {
+    this(Target target) pure nothrow {
         recurse(target);
     }
 
@@ -121,9 +121,9 @@ struct Leaves {
 
 private:
 
-    const(Target)[] targets;
+    Target[] targets;
 
-    void recurse(in Target target) pure nothrow {
+    void recurse(Target target) pure nothrow {
         if(target.isLeaf) {
             targets ~= target;
             return;
@@ -164,9 +164,9 @@ auto noSortUniq(R)(R range) if(isInputRange!R) {
 //per top-level target
 struct UniqueDepthFirst {
     Build build;
-    private const(Target)[] _targets;
+    private Target[] _targets;
 
-    this(in Build build) pure @trusted {
+    this(Build build) pure @trusted {
         _targets = build.targets.
             map!(a => depthFirst(a)).
             flatten.

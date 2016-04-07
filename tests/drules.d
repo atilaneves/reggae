@@ -8,8 +8,8 @@ import std.algorithm;
 
 
 void testDCompileNoIncludePathsNinja() {
-    const build = Build(objectFile(SourceFile("path/to/src/foo.d")));
-    const ninja = Ninja(build, "/tmp/myproject");
+    auto build = Build(objectFile(SourceFile("path/to/src/foo.d")));
+    auto ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build path/to/src/foo.o: _dcompile /tmp/myproject/path/to/src/foo.d",
                     ["DEPFILE = path/to/src/foo.o.dep"])]);
@@ -17,10 +17,10 @@ void testDCompileNoIncludePathsNinja() {
 
 
 void testDCompileIncludePathsNinja() {
-    const build = Build(objectFile(SourceFile("path/to/src/foo.d"),
+    auto build = Build(objectFile(SourceFile("path/to/src/foo.d"),
                                    Flags("-O"),
                                    ImportPaths(["path/to/src", "other/path"])));
-    const ninja = Ninja(build, "/tmp/myproject");
+    auto ninja = Ninja(build, "/tmp/myproject");
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build path/to/src/foo.o: _dcompile /tmp/myproject/path/to/src/foo.d",
                     ["includes = -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path",
@@ -31,7 +31,7 @@ void testDCompileIncludePathsNinja() {
 void testDCompileIncludePathsMake() {
     import reggae.config: options;
 
-    const build = Build(objectFile(SourceFile("path/to/src/foo.d"),
+    auto build = Build(objectFile(SourceFile("path/to/src/foo.d"),
                                    Flags("-O"),
                                    ImportPaths(["path/to/src", "other/path"])));
     build.targets.array[0].shellCommand(options.withProjectPath("/tmp/myproject")).shouldEqual(".reggae/dcompile --objFile=path/to/src/foo.o --depFile=path/to/src/foo.o.dep dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path  /tmp/myproject/path/to/src/foo.d");
@@ -39,8 +39,8 @@ void testDCompileIncludePathsMake() {
 
 
 void testDLinkNinja() {
-    const build = Build(link(ExeName("bin/lefoo"), [Target("leobj.o")], Flags("-lib")));
-    const ninja = Ninja(build, "/dir/stuff");
+    auto build = Build(link(ExeName("bin/lefoo"), [Target("leobj.o")], Flags("-lib")));
+    auto ninja = Ninja(build, "/dir/stuff");
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build bin/lefoo: _ulink /dir/stuff/leobj.o",
                     ["flags = -lib"])]);
@@ -49,7 +49,7 @@ void testDLinkNinja() {
 void testDCompileWithMultipleFilesMake() {
     import reggae.config: options;
 
-    const build = Build(dlangPackageObjectFilesPerPackage(
+    auto build = Build(dlangPackageObjectFilesPerPackage(
                             ["path/to/src/foo.d", "path/to/src/bar.d", "other/weird.d"],
                             "-O", ["path/to/src", "other/path"]));
 
@@ -62,7 +62,7 @@ void testDCompileWithMultipleFilesMake() {
 }
 
 void testDCompileWithMultipleFilesNinja() {
-    const build = Build(dlangPackageObjectFilesPerPackage(["path/to/src/foo.d", "path/to/src/bar.d", "other/weird.d"],
+    auto build = Build(dlangPackageObjectFilesPerPackage(["path/to/src/foo.d", "path/to/src/bar.d", "other/weird.d"],
                                               "-O", ["path/to/src", "other/path"]));
     auto ninja = Ninja(build, "/tmp/myproject"); //can't be const because of `sort` below
     NinjaEntry[] entries;
@@ -86,14 +86,14 @@ void testDCompileWithMultipleFilesNinja() {
 
 void testLink() {
     import reggae.config: options;
-    const objTarget = link(ExeName("myapp"), [Target("foo.o"), Target("bar.o")], Flags("-L-L"));
+    auto objTarget = link(ExeName("myapp"), [Target("foo.o"), Target("bar.o")], Flags("-L-L"));
     objTarget.shellCommand(options.withProjectPath("/path/to")).shouldEqual("dmd -ofmyapp -L-L /path/to/foo.o /path/to/bar.o");
 
-    const cppTarget = link(ExeName("cppapp"), [Target("foo.o", "", Target("foo.cpp"))], Flags("--sillyflag"));
+    auto cppTarget = link(ExeName("cppapp"), [Target("foo.o", "", Target("foo.cpp"))], Flags("--sillyflag"));
     //since foo.o is not a leaf target, the path should not appear (it's created in the build dir)
     cppTarget.shellCommand(options.withProjectPath("/foo/bar")).shouldEqual("g++ -o cppapp --sillyflag foo.o");
 
-    const cTarget = link(ExeName("capp"), [Target("bar.o", "", Target("bar.c"))]);
+    auto cTarget = link(ExeName("capp"), [Target("bar.o", "", Target("bar.c"))]);
     //since foo.o is not a leaf target, the path should not appear (it's created in the build dir)
     cTarget.shellCommand(options.withProjectPath("/foo/bar")).shouldEqual("gcc -o capp  bar.o");
 }

@@ -26,9 +26,9 @@ void bar(in string[] inputs, in string[] outputs) {
 
 @HiddenTest
 void testTargetSelection() {
-    const foo = Target("foo", &foo, Target("foo.d"));
-    const bar = Target("bar", &bar, Target("bar.d"));
-    const binary = Binary(Build(foo, bar), "/path/to");
+    auto foo = Target("foo", &foo, Target("foo.d"));
+    auto bar = Target("bar", &bar, Target("bar.d"));
+    auto binary = Binary(Build(foo, bar), "/path/to");
 
     {
         scope(exit) resetCalls;
@@ -67,9 +67,9 @@ void testTargetSelection() {
 }
 
 void testTopLevelTargets() {
-    const foo = Target("foo", &foo, Target("foo.d"));
-    const bar = Target("bar", &bar, Target("bar.d"));
-    const binary = Binary(Build(foo, bar), "/path/to");
+    auto foo = Target("foo", &foo, Target("foo.d"));
+    auto bar = Target("bar", &bar, Target("bar.d"));
+    auto binary = Binary(Build(foo, bar), "/path/to");
     binary.topLevelTargets(["foo"]).shouldEqual([foo]);
     binary.topLevelTargets(["bar"]).shouldEqual([bar]);
     binary.topLevelTargets([]).shouldEqual([foo, bar]);

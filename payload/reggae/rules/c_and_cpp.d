@@ -84,15 +84,15 @@ Target unityTarget(R1, R2)(in ExeName exeName,
 
     import std.algorithm;
 
-    const justFileName = srcFiles.map!getLanguage.front == Language.C ? "unity.c" : "unity.cpp";
-    const unityFileName = buildPath(gBuilddir, topLevelDirName(Target(exeName.value)), justFileName);
-    const command = compileCommand(unityFileName,
+    auto justFileName = srcFiles.map!getLanguage.front == Language.C ? "unity.c" : "unity.cpp";
+    auto unityFileName = buildPath(gBuilddir, topLevelDirName(Target(exeName.value)), justFileName);
+    auto command = compileCommand(unityFileName,
                                    flags.value,
                                    includes.value,
                                    [],
                                    projectPath,
                                    No.justCompile);
-    const unityFileTarget = Target.phony(unityFileName, "", [], srcFiles.map!(a => Target(a)).array);
+    auto unityFileTarget = Target.phony(unityFileName, "", [], srcFiles.map!(a => Target(a)).array);
     return Target(exeName.value, command, unityFileTarget ~ dependencies.array);
 }
 

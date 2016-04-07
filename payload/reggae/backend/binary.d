@@ -62,7 +62,7 @@ struct Binary {
         this.options = options;
     }
 
-    void run(string[] args) const @system { //@system due to parallel
+    void run(string[] args) @system { //@system due to parallel
         auto binaryOptions = BinaryOptions(args);
 
         handleOptions(binaryOptions);
@@ -70,7 +70,7 @@ struct Binary {
 
         bool didAnything = checkReRun();
 
-        const topTargets = topLevelTargets(binaryOptions.args);
+        auto topTargets = topLevelTargets(binaryOptions.args);
         if(topTargets.empty)
             throw new Exception(text("Unknown target(s) ", binaryOptions.args.map!(a => "'" ~ a ~ "'").join(" ")));
 
@@ -95,13 +95,13 @@ struct Binary {
         if(!didAnything) writeln("[build] Nothing to do");
     }
 
-    const(Target)[] topLevelTargets(in string[] args) @trusted const pure {
+    Target[] topLevelTargets(string[] args) @trusted pure {
         return args.empty ?
             build.defaultTargets.array :
             build.targets.filter!(a => args.canFind(a.expandOutputs(options.projectPath))).array;
     }
 
-    string[] listTargets(BinaryOptions binaryOptions) pure const {
+    string[] listTargets(BinaryOptions binaryOptions) pure {
         string[] result;
 
         const defaultTargets = topLevelTargets(binaryOptions.args);
@@ -119,7 +119,7 @@ struct Binary {
 
 private:
 
-    void handleOptions(BinaryOptions binaryOptions) const {
+    void handleOptions(BinaryOptions binaryOptions) {
         if(binaryOptions.list) {
             writeln("List of available top-level targets:");
             foreach(l; listTargets(binaryOptions)) writeln(l);
@@ -149,7 +149,7 @@ private:
         return false;
     }
 
-    bool checkTimestamps(in Target target) const {
+    bool checkTimestamps(Target target) const {
         foreach(dep; chain(target.dependencies, target.implicits)) {
 
             immutable isPhony = target.getCommandType == CommandType.phony;
@@ -167,7 +167,7 @@ private:
 
     //always run phony rules with no dependencies at top-level
     //ByDepthLevel won't include them
-    bool checkChildlessPhony(in Target target) const {
+    bool checkChildlessPhony(Target target) const {
         if(target.getCommandType == CommandType.phony &&
            target.dependencies.empty && target.implicits.empty) {
             executeCommand(target);
@@ -177,7 +177,7 @@ private:
     }
 
     //Checks dependencies listed in the .dep file created by the compiler
-    bool checkDeps(in Target target, in string depFileName) const @trusted {
+    bool checkDeps(Target target, in string depFileName) const @trusted {
         auto file = File(depFileName);
         auto dependencies = file.byLine.map!(a => a.to!string).dependenciesFromFile;
 
@@ -189,7 +189,7 @@ private:
         return false;
     }
 
-    void executeCommand(in Target target) const @trusted {
+    void executeCommand(Target target) const @trusted {
         mkDir(target);
         const output = target.execute(options);
         writeln("[build] " ~ output[0]);
@@ -198,7 +198,7 @@ private:
     }
 
     //@trusted because of mkdirRecurse
-    private void mkDir(in Target target) @trusted const {
+    private void mkDir(Target target) @trusted const {
         foreach(output; target.outputsInProjectPath(options.projectPath)) {
             import std.file: exists, mkdirRecurse;
             import std.path: dirName;

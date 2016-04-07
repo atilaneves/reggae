@@ -107,7 +107,7 @@ struct Ninja {
     }
 
     //includes rerunning reggae
-    const(NinjaEntry)[] allBuildEntries() @safe const {
+    const(NinjaEntry)[] allBuildEntries() @safe {
         immutable files = (_options.reggaeFileDependencies ~ getReggaeFileDependencies).join(" ");
         auto paramLines = _options.oldNinja ? [] : ["pool = console"];
 
@@ -129,7 +129,7 @@ struct Ninja {
                            ]);
     }
 
-    string buildOutput() @safe const {
+    string buildOutput() @safe {
         auto ret = "include rules.ninja\n" ~ output(allBuildEntries);
         if(_options.export_) ret = _options.eraseProjectPath(ret);
         return ret;
@@ -146,7 +146,7 @@ private:
     int _counter = 1;
 
     //@trusted because of join
-    void defaultRule(in Target target) @trusted {
+    void defaultRule(Target target) @trusted {
         string[] paramLines;
 
         foreach(immutable param; target.commandParamNames) {
@@ -163,7 +163,7 @@ private:
                                    paramLines);
     }
 
-    void phonyRule(in Target target) @safe {
+    void phonyRule(Target target) @safe {
         //no projectPath for phony rules since they don't generate output
         immutable outputs = target.outputsInProjectPath("").join(" ");
         auto buildLine = "build " ~ outputs ~ ": _phony " ~ target.dependenciesInProjectPath(_projectPath).join(" ");
@@ -173,7 +173,7 @@ private:
                                     "pool = console"]);
     }
 
-    void customRule(in Target target) @safe {
+    void customRule(Target target) @safe {
         //rawCmdString is used because ninja needs to find where $in and $out are,
         //so shellCommand wouldn't work
         immutable shellCommand = target.rawCmdString(_projectPath);
@@ -189,7 +189,7 @@ private:
         }
     }
 
-    void explicitInOutRule(in Target target, in string shellCommand, in string implicitInput = "") @safe {
+    void explicitInOutRule(Target target, in string shellCommand, in string implicitInput = "") @safe {
         import std.regex;
         auto reg = regex(`^[^ ]+ +(.*?)(\$in|\$out)(.*?)(\$in|\$out)(.*?)$`);
 
@@ -234,7 +234,7 @@ private:
         }
     }
 
-    void implicitOutputRule(in Target target, in string shellCommand) @safe {
+    void implicitOutputRule(Target target, in string shellCommand) @safe {
         bool haveToAdd;
         immutable ruleCmdLine = getRuleCommandLine(target, shellCommand, "" /*before*/, "$in");
         immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAdd);
@@ -248,7 +248,7 @@ private:
         }
     }
 
-    void implicitInputRule(in Target target, in string shellCommand) @safe {
+    void implicitInputRule(Target target, in string shellCommand) @safe {
         string input;
 
         immutable cmdLine = () @trusted {
@@ -268,7 +268,7 @@ private:
     }
 
     //@trusted because of canFind
-    string getRuleCommandLine(in Target target, in string shellCommand,
+    string getRuleCommandLine(Target target, in string shellCommand,
                               in string before = "", in string first = "",
                               in string between = "",
                               in string last = "", in string after = "") @trusted pure const {
@@ -324,18 +324,18 @@ private:
         return banner ~ entries.map!(a => a.toString).join("\n\n");
     }
 
-    string buildLine(in Target target) @safe pure const {
+    string buildLine(Target target) @safe pure const {
         immutable outputs = target.outputsInProjectPath(_projectPath).join(" ");
         return "build " ~ outputs ~ ": ";
     }
 
     //@trusted because of splitter
-    private string targetCommand(in Target target) @trusted pure const {
+    private string targetCommand(Target target) @trusted pure const {
         return targetRawCommand(target).sanitizeCmd;
     }
 
     //@trusted because of splitter
-    private string targetRawCommand(in Target target) @trusted pure const {
+    private string targetRawCommand(Target target) @trusted pure const {
         return target.shellCommand(_options).splitter(" ").front;
     }
 }

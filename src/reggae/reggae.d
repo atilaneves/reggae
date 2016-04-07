@@ -89,7 +89,7 @@ bool jsonBuild(Options options, in string jsonOutput) {
     import reggae.buildgen;
     import reggae.rules.common: Language;
 
-    const build = jsonToBuild(options.projectPath, jsonOutput);
+    auto build = jsonToBuild(options.projectPath, jsonOutput);
     generateBuild(build, jsonToOptions(options, jsonOutput));
 
     //true -> exit early

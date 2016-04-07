@@ -75,7 +75,7 @@ immutable jsonString =
 
 
 void testJsonToDubDescribe() {
-    const info = getDubInfo(jsonString.dup);
+    auto info = getDubInfo(jsonString.dup);
     info.shouldEqual(
         DubInfo(
             [DubPackage("pkg1", "/path/to/pkg1", "src/boooo.d", "super_app",
@@ -94,7 +94,7 @@ void testJsonToDubDescribe() {
 }
 
 void testDubInfoToTargets() {
-    const info = getDubInfo(jsonString.dup);
+    auto info = getDubInfo(jsonString.dup);
     info.toTargets[0].shouldEqual(
         Target("path/to/pkg1/src/foo.o",
                Command(CommandType.compile,
@@ -141,7 +141,7 @@ void testDubInfoToTargets() {
 
 @ShouldFail("old command style")
 void testDubInfoToTargetsLib() {
-    const info = getDubInfo(jsonString.replace("executable", "library"));
+    auto info = getDubInfo(jsonString.replace("executable", "library"));
     info.mainTarget.shouldEqual(
         Target("super_app", "_link flags=-lib,-L-lliblib,-L-lotherlib",
                [Target("path/to/pkg1/src/foo.o",
@@ -181,7 +181,7 @@ void testDubInfoToTargetsLib() {
 
 @ShouldFail("old command style")
 void testDubInfoWithLibs() {
-    const info = getDubInfo(jsonString.dup);
+    auto info = getDubInfo(jsonString.dup);
     info.mainTarget.shouldEqual(
         Target("super_app", "_link flags=-L-lliblib,-L-lotherlib",
                [Target("path/to/pkg1/src/foo.o",
@@ -220,7 +220,7 @@ void testDubInfoWithLibs() {
 
 
 void testDubFetch() {
-    const info = getDubInfo(jsonString.dup);
+    auto info = getDubInfo(jsonString.dup);
     info.fetchCommands.shouldEqual(
         [["dub", "fetch", "pkg_other"]]);
 }

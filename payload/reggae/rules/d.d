@@ -32,7 +32,7 @@ Target[] dlangPackageObjectFilesPerPackage(in string[] srcFiles, in string flags
                                            in string projDir = "$project") @trusted pure {
 
     if(srcFiles.empty) return [];
-    const command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
+    auto command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
     return srcFiles.byPackage.map!(a => Target(a[0].packagePath.objFileName,
                                                command,
                                                a.map!(a => Target(a)).array)).array;
@@ -54,7 +54,7 @@ Target[] dlangPackageObjectFilesTogether(in string[] srcFiles, in string flags =
                                          in string projDir = "$project") @trusted pure {
 
     if(srcFiles.empty) return [];
-    const command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
+    auto command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
     return [Target(srcFiles[0].packagePath.objFileName, command, srcFiles.map!(a => Target(a)).array)];
 }
 
@@ -95,7 +95,7 @@ Target scriptlike(in string projectPath,
                   in App app, in Flags flags,
                   in ImportPaths importPaths,
                   in StringImportPaths stringImportPaths,
-                  in Target[] linkWith) @trusted {
+                  Target[] linkWith) @trusted {
 
     if(getLanguage(app.srcFileName.value) != Language.D)
         throw new Exception("'scriptlike' rule only works with D files");
@@ -105,7 +105,7 @@ Target scriptlike(in string projectPath,
                                 importPaths.value, stringImportPaths.value);
 
     const files = dMainDepSrcs(output).map!(a => a.removeProjectPath).array;
-    const dependencies = [mainObj] ~ dlangPackageObjectFiles(files, flags.value,
+    auto dependencies = [mainObj] ~ dlangPackageObjectFiles(files, flags.value,
                                                              importPaths.value, stringImportPaths.value);
 
     return link(ExeName(app.exeFileName.value), dependencies ~ linkWith);

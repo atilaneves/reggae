@@ -27,13 +27,13 @@ struct Tup {
         this.options = options;
     }
 
-    string output() const pure {
+    string output() pure {
         auto ret = banner ~ lines.join("\n") ~ "\n";
         if(options.export_) ret = options.eraseProjectPath(ret);
         return ret;
     }
 
-    string[] lines() const pure {
+    string[] lines() pure {
 
         string[] lines;
         foreach(target; build.range) {

@@ -30,9 +30,9 @@ void testValueWhenKeyNotFound() {
 
 
 void testObjectFile() {
-    const obj = objectFile(SourceFile("path/to/src/foo.c"), Flags("-m64 -fPIC -O3"));
+    auto obj = objectFile(SourceFile("path/to/src/foo.c"), Flags("-m64 -fPIC -O3"));
     obj.hasDefaultCommand.shouldBeTrue;
 
-    const build = Build(objectFile(SourceFile("path/to/src/foo.c"), Flags("-m64 -fPIC -O3")));
+    auto build = Build(objectFile(SourceFile("path/to/src/foo.c"), Flags("-m64 -fPIC -O3")));
     build.targets.array[0].hasDefaultCommand.shouldBeTrue;
 }

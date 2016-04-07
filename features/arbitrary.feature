@@ -7,9 +7,9 @@ Feature: Arbritrary rules
     Given a file named "path/to/reggaefile.d" with:
       """
       import reggae;
-      const mainObj  = Target(`main.o`,  `dmd -I$project/src -c $in -of$out`, Target(`src/main.d`));
-      const mathsObj = Target(`maths.o`, `dmd -c $in -of$out`, Target(`src/maths.d`));
-      const app = Target(`myapp`,
+      enum mainObj  = Target(`main.o`,  `dmd -I$project/src -c $in -of$out`, Target(`src/main.d`));
+      enum mathsObj = Target(`maths.o`, `dmd -c $in -of$out`, Target(`src/maths.d`));
+      enum app = Target(`myapp`,
                          `dmd -of$out $in`,
                          [mainObj, mathsObj],
                          );
@@ -21,8 +21,8 @@ Feature: Arbritrary rules
       import std.stdio;
       import std.conv;
       void main(string[] args) {
-          const a = args[1].to!int;
-          const b = args[2].to!int;
+          auto a = args[1].to!int;
+          auto b = args[2].to!int;
           writeln(`The sum     of `, a, ` and `, b, ` is `, adder(a, b));
           writeln(`The product of `, a, ` and `, b, ` is `, prodder(a, b));
       }
@@ -35,9 +35,9 @@ Feature: Arbritrary rules
     And a file named "different/path/reggaefile.d" with:
       """
       import reggae;
-      const mainObj  = Target(`main.o`, `dmd -I$project -c $in -of$out`, Target(`source/main.d`));
-      const fooObj   = Target(`foo.o`,  `dmd -c $in -of$out`, Target(`source/foo.d`));
-      const app = Target(`appp`,
+      enum mainObj  = Target(`main.o`, `dmd -I$project -c $in -of$out`, Target(`source/main.d`));
+      enum fooObj   = Target(`foo.o`,  `dmd -c $in -of$out`, Target(`source/foo.d`));
+      enum app = Target(`appp`,
                          `dmd -of$out $in`,
                          [mainObj, fooObj],
                          );

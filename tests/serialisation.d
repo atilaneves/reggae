@@ -37,7 +37,7 @@ void testBuiltinCommand() {
 
 void testTarget() {
     import reggae.config: options;
-    const target = Target("foo.o", "dmd -of$out -c $in", Target("foo.d"));
+    auto target = Target("foo.o", "dmd -of$out -c $in", Target("foo.d"));
     auto bytes = target.toBytes(options.withProjectPath("/path/to"));
     Target.fromBytes(bytes).shouldEqual(
         Target("foo.o", "dmd -offoo.o -c /path/to/foo.d", Target("/path/to/foo.d")));
@@ -45,9 +45,9 @@ void testTarget() {
 
 void testBuild() @trusted {
     import reggae.config: options;
-    const foo = Target("foo.o", "dmd -of$out -c $in", Target("foo.d"));
-    const bar = Target("bar.o", "dmd -of$out -c $in", Target("bar.d"));
-    const build = Build(foo, bar);
+    auto foo = Target("foo.o", "dmd -of$out -c $in", Target("foo.d"));
+    auto bar = Target("bar.o", "dmd -of$out -c $in", Target("bar.d"));
+    auto build = Build(foo, bar);
     auto bytes = build.toBytes(options.withProjectPath("/path/to"));
     Build.fromBytes(bytes).shouldEqual(
         Build(Target("foo.o", "dmd -offoo.o -c /path/to/foo.d", Target("/path/to/foo.d")),

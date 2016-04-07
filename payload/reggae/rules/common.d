@@ -52,7 +52,7 @@ Target objectFile(in SourceFile srcFile,
                   in StringImportPaths stringImportPaths = StringImportPaths(),
                   in string projDir = "$project") pure {
 
-    const cmd = compileCommand(srcFile.value, flags.value, includePaths.value, stringImportPaths.value, projDir);
+    auto cmd = compileCommand(srcFile.value, flags.value, includePaths.value, stringImportPaths.value, projDir);
     return Target(srcFile.value.objFileName, cmd, [Target(srcFile.value)]);
 }
 
@@ -109,8 +109,8 @@ Target link(ExeName exeName, alias dependenciesFunc, Flags flags = Flags())() @s
  If any D files are found, the linker is the D compiler, and so on with
  C++ and C. If none of those apply, the D compiler is used.
  */
-Target link(in ExeName exeName, in Target[] dependencies, in Flags flags = Flags()) @safe pure {
-    const command = Command(CommandType.link, assocList([assocEntry("flags", flags.value.splitter.array)]));
+Target link(in ExeName exeName, Target[] dependencies, in Flags flags = Flags()) @safe pure {
+    auto command = Command(CommandType.link, assocList([assocEntry("flags", flags.value.splitter.array)]));
     return Target(exeName.value, command, dependencies);
 }
 

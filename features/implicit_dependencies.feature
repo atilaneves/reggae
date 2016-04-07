@@ -7,7 +7,7 @@ Feature: Correct dependencies
     Given a file named "proj/reggaefile.d" with:
       """
       import reggae;
-      const mainObj = Target(`main.o`,
+      enum mainObj = Target(`main.o`,
                              `dmd -c -J$project/src -of$out $in`,
                              [Target(`src/main.d`)],
                              [Target(`src/string.txt`)]);

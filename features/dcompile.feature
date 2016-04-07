@@ -38,9 +38,9 @@ Feature: D compilation rule
       //constants.d is never mentioned here but changes to it
       //should trigger recompilation
       import reggae;
-      const mainObj  = objectFile(SourceFile(`source/main.d`),  Flags(``), ImportPaths([`source`]));
-      const mathsObj = objectFile(SourceFile(`source/maths.d`), Flags(``), ImportPaths([`source`]));
-      const ioObj    = objectFile(SourceFile(`source/io.d`),    Flags(``), ImportPaths([`source`]));
+      enum mainObj  = objectFile(SourceFile(`source/main.d`),  Flags(``), ImportPaths([`source`]));
+      enum mathsObj = objectFile(SourceFile(`source/maths.d`), Flags(``), ImportPaths([`source`]));
+      enum ioObj    = objectFile(SourceFile(`source/io.d`),    Flags(``), ImportPaths([`source`]));
       mixin build!(Target(`calc`, `dmd -of$out $in`, [mainObj, mathsObj, ioObj]));
       """
 

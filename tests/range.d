@@ -29,16 +29,16 @@ void testDepthFirstTwoDependencyLevels() {
 
 
 void testDepthFirstProtocolExample() {
-    const protoSrcs = Target([`$builddir/gen/protocol.c`, `$builddir/gen/protocol.h`],
+    auto protoSrcs = Target([`$builddir/gen/protocol.c`, `$builddir/gen/protocol.h`],
                              `./compiler $in`,
                              [Target(`protocol.proto`)]);
-    const protoObj = Target(`$builddir/bin/protocol.o`,
+    auto protoObj = Target(`$builddir/bin/protocol.o`,
                             `gcc -o $out -c $builddir/gen/protocol.c`,
                             [], [protoSrcs]);
-    const protoD = Target(`$builddir/gen/protocol.d`,
+    auto protoD = Target(`$builddir/gen/protocol.d`,
                           `echo "extern(C) " > $out; cat $builddir/gen/protocol.h >> $out`,
                           [], [protoSrcs]);
-    const app = Target(`app`,
+    auto app = Target(`app`,
                        `dmd -of$out $in`,
                        [Target(`src/main.d`), protoObj, protoD]);
     depthFirst(app).array.shouldEqual(
@@ -52,7 +52,7 @@ void testByDepthLevelLeaf() {
 
 
 void testByDepthLevelOneLevel() {
-    const target = Target("letarget", "lecmdfoo bar other", [Target("foo"), Target("bar")]);
+    auto target = Target("letarget", "lecmdfoo bar other", [Target("foo"), Target("bar")]);
     auto byLevel = ByDepthLevel(target);
     byLevel.array.shouldEqual([[target]]);
 }

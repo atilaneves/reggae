@@ -48,7 +48,7 @@ Build jsonToBuild(in string projectPath, in string jsonString) {
         return createTopLevelTarget(target, optional);
     }
 
-    const targets = json.array.
+    auto targets = json.array.
         filter!(a => a.object["type"].str != "defaultOptions").
         map!(a => maybeOptional(a, jsonToTarget(projectPath, a))).
         array;
@@ -57,12 +57,12 @@ Build jsonToBuild(in string projectPath, in string jsonString) {
 }
 
 
-private Target jsonToTarget(in string projectPath, in JSONValue json) {
+private Target jsonToTarget(in string projectPath, JSONValue json) {
     if(json.object["type"].str.to!JsonTargetType == JsonTargetType.dynamic)
         return callTargetFunc(projectPath, json);
 
-    const dependencies = getDeps(projectPath, json.object["dependencies"]);
-    const implicits = getDeps(projectPath, json.object["implicits"]);
+    auto dependencies = getDeps(projectPath, json.object["dependencies"]);
+    auto implicits = getDeps(projectPath, json.object["implicits"]);
 
     if(isLeaf(json)) {
         return Target(json.object["outputs"].array.map!(a => a.str).array,

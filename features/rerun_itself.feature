@@ -26,10 +26,10 @@ Feature: Re-run reggae when dependencies deem it necessary
       """
       import reggae;
       import reggaebuild.defs; //for funcObj
-      const mainObj = Target(`main.o`,
+      enum mainObj = Target(`main.o`,
                              `dmd -I$project/src -c $in -of$out`,
                              Target(`src/main.d`));
-      const app = Target(`myapp`,
+      enum app = Target(`myapp`,
                          `dmd -of$out $in`,
                          [mainObj, funcObj],
                          );
@@ -39,7 +39,7 @@ Feature: Re-run reggae when dependencies deem it necessary
       """
       module reggaebuild.defs;
       import reggae;
-      const funcObj = Target(`func.o`,
+      enum funcObj = Target(`func.o`,
                              `dmd -I$project/src -c $in -of$out`,
                              Target(`src/func.d`));
       """
@@ -63,7 +63,7 @@ Feature: Re-run reggae when dependencies deem it necessary
         """
         module reggaebuild.defs;
         import reggae;
-        const funcObj = Target(`other.o`,
+        enum funcObj = Target(`other.o`,
                                 `dmd -I$project/src -c $in -of$out`,
                                 Target(`src/other.d`));
         """
@@ -97,7 +97,7 @@ Feature: Re-run reggae when dependencies deem it necessary
         """
         module reggaebuild.defs;
         import reggae;
-        const funcObj = Target(`other.o`,
+        enum funcObj = Target(`other.o`,
                                 `dmd -I$project/src -c $in -of$out`,
                                 Target(`src/other.d`));
         """
@@ -128,7 +128,7 @@ Feature: Re-run reggae when dependencies deem it necessary
         """
         module reggaebuild.defs;
         import reggae;
-        const funcObj = Target(`other.o`,
+        enum funcObj = Target(`other.o`,
                                 `dmd -I$project/src -c $in -of$out`,
                                 Target(`src/other.d`));
         """

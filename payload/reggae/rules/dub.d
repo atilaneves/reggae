@@ -54,9 +54,9 @@ static if(isDubProject) {
                              Flag!"main" includeMain = Yes.main,
                              Flag!"allTogether" allTogether = No.allTogether) {
 
-        const dubInfo =  configToDubInfo[config];
-        const dubObjs = dubInfo.toTargets(includeMain, compilerFlags, allTogether);
-        const linkerFlags = dubInfo.linkerFlags().join(" ");
+        auto dubInfo =  configToDubInfo[config];
+        auto dubObjs = dubInfo.toTargets(includeMain, compilerFlags, allTogether);
+        auto linkerFlags = dubInfo.linkerFlags().join(" ");
         return link(exeName, objsFunction() ~ dubObjs, Flags(linkerFlags));
     }
 

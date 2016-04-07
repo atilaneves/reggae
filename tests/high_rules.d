@@ -8,10 +8,10 @@ import unit_threaded;
 
 void testCObjectFile() {
     immutable fileName = "foo.c";
-    const obj = objectFile(SourceFile(fileName),
+    auto obj = objectFile(SourceFile(fileName),
                            Flags("-g -O0"),
                            IncludePaths(["myhdrs", "otherhdrs"]));
-    const cmd = Command(CommandType.compile,
+    auto cmd = Command(CommandType.compile,
                         assocListT("includes", ["-I$project/myhdrs", "-I$project/otherhdrs"],
                                    "flags", ["-g", "-O0"],
                                    "DEPFILE", ["foo.o.dep"]));
@@ -28,10 +28,10 @@ void testCObjectFile() {
 void testCppObjectFile() {
     foreach(ext; ["cpp", "CPP", "cc", "cxx", "C", "c++"]) {
         immutable fileName = "foo." ~ ext;
-        const obj = objectFile(SourceFile(fileName),
+        auto obj = objectFile(SourceFile(fileName),
                                Flags("-g -O0"),
                                IncludePaths(["myhdrs", "otherhdrs"]));
-        const cmd = Command(CommandType.compile,
+        auto cmd = Command(CommandType.compile,
                             assocListT("includes", ["-I$project/myhdrs", "-I$project/otherhdrs"],
                                        "flags", ["-g", "-O0"],
                                        "DEPFILE", ["foo.o.dep"]));
@@ -42,11 +42,11 @@ void testCppObjectFile() {
 
 
 void testDObjectFile() {
-    const obj = objectFile(SourceFile("foo.d"),
+    auto obj = objectFile(SourceFile("foo.d"),
                            Flags("-g -debug"),
                            ImportPaths(["myhdrs", "otherhdrs"]),
                            StringImportPaths(["strings", "otherstrings"]));
-    const cmd = Command(CommandType.compile,
+    auto cmd = Command(CommandType.compile,
                         assocListT("includes", ["-I$project/myhdrs", "-I$project/otherhdrs"],
                                    "flags", ["-g", "-debug"],
                                    "stringImports", ["-J$project/strings", "-J$project/otherstrings"],
@@ -81,12 +81,12 @@ void testBuiltinTemplateNoDeps() {
 
 void testLinkC() {
     import reggae.config: options;
-    const tgt = link(ExeName("app"), [objectFile(SourceFile("foo.c"))]);
+    auto tgt = link(ExeName("app"), [objectFile(SourceFile("foo.c"))]);
     tgt.shellCommand(options).shouldEqual("gcc -o app  foo.o");
 }
 
 void testLinkCpp() {
     import reggae.config: options;
-    const tgt = link(ExeName("app"), [objectFile(SourceFile("foo.cpp"))]);
+    auto tgt = link(ExeName("app"), [objectFile(SourceFile("foo.cpp"))]);
     tgt.shellCommand(options).shouldEqual("g++ -o app  foo.o");
 }

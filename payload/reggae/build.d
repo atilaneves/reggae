@@ -32,17 +32,17 @@ struct Build {
         bool optional;
     }
 
-    private const(TopLevelTarget)[] _targets;
+    private TopLevelTarget[] _targets;
 
-    this(in Target[] targets) {
+    this(Target[] targets) {
         _targets = targets.map!createTopLevelTarget.array;
     }
 
-    this(in TopLevelTarget[] targets) {
+    this(TopLevelTarget[] targets) {
         _targets = targets;
     }
 
-    this(T...)(in T targets) {
+    this(T...)(T targets) {
         foreach(t; targets) {
             //the constructor needs to go from Target to TopLevelTarget
             //and accepts functions that return a parameter as well as parameters themselves
@@ -58,24 +58,24 @@ struct Build {
         }
     }
 
-    auto targets() @trusted pure nothrow const {
+    auto targets() @trusted pure nothrow {
         return _targets.map!(a => a.target);
     }
 
-    auto defaultTargets() @trusted pure nothrow const {
+    auto defaultTargets() @trusted pure nothrow {
         return _targets.filter!(a => !a.optional).map!(a => a.target);
     }
 
-    string defaultTargetsString(in string projectPath) @trusted pure const {
+    string defaultTargetsString(in string projectPath) @trusted pure {
         return defaultTargets.map!(a => a.outputsInProjectPath(projectPath).join(" ")).join(" ");
     }
 
-    auto range() @safe pure const {
+    auto range() @safe pure {
         import reggae.range;
         return UniqueDepthFirst(this);
     }
 
-    ubyte[] toBytes(in Options options) @safe pure const {
+    ubyte[] toBytes(in Options options) @safe pure {
         ubyte[] bytes;
         bytes ~= setUshort(cast(ushort)targets.length);
         foreach(t; targets) bytes ~= t.toBytes(options);
@@ -105,11 +105,11 @@ Build.TopLevelTarget optional(alias targetFunc)() {
 /**
  Designate a target as optional so it won't be built by default.
  */
-Build.TopLevelTarget optional(in Target target) {
+Build.TopLevelTarget optional(Target target) {
     return Build.TopLevelTarget(target, true);
 }
 
-Build.TopLevelTarget createTopLevelTarget(in Target target, bool optional = false) {
+Build.TopLevelTarget createTopLevelTarget(Target target, bool optional = false) {
     return Build.TopLevelTarget(target.inTopLevelObjDirOf(topLevelDirName(target), Yes.topLevel),
                                 optional);
 }
@@ -120,7 +120,7 @@ immutable gProjdir  = "$project";
 
 //a directory for each top-level target no avoid name clashes
 //@trusted because of map -> buildPath -> array
-Target inTopLevelObjDirOf(in Target target, string dirName, Flag!"topLevel" isTopLevel = No.topLevel) @trusted {
+Target inTopLevelObjDirOf(Target target, string dirName, Flag!"topLevel" isTopLevel = No.topLevel) @trusted {
     //leaf targets only get the $builddir expansion, nothing else
     //this is because leaf targets are by definition in the project path
 
@@ -131,7 +131,7 @@ Target inTopLevelObjDirOf(in Target target, string dirName, Flag!"topLevel" isTo
          dirName = topLevelDirName(target);
     }
 
-    const outputs = isTopLevel
+    auto outputs = isTopLevel
         ? target._outputs.map!(a => expandBuildDir(a)).array
         : target._outputs.map!(a => realTargetPath(dirName, target, a)).array;
 
@@ -254,33 +254,33 @@ unittest {
  $(D $builddir) expands to the build directory (i.e. where reggae was run from).
  */
 struct Target {
-    private const(string)[] _outputs;
-    private const(Command) _command; ///see $(D Command) struct
-    private const(Target)[] _dependencies;
-    private const(Target)[] _implicits;
+    private string[] _outputs;
+    private Command _command; ///see $(D Command) struct
+    private Target[] _dependencies;
+    private Target[] _implicits;
 
-    this(in string output) @safe pure nothrow {
+    this(string output) @safe pure nothrow {
         this(output, "", null);
     }
 
-    this(C)(in string output,
-            in C command,
-            in Target dependency,
-            in Target[] implicits = []) @safe pure nothrow {
+    this(C)(string output,
+            C command,
+            Target dependency,
+            Target[] implicits = []) @safe pure nothrow {
         this([output], command, [dependency], implicits);
     }
 
-    this(C)(in string output,
-            in C command,
-            in Target[] dependencies = [],
-            in Target[] implicits = []) @safe pure nothrow {
+    this(C)(string output,
+            C command,
+            Target[] dependencies = [],
+            Target[] implicits = []) @safe pure nothrow {
         this([output], command, dependencies, implicits);
     }
 
-    this(C)(in string[] outputs,
-            in C command,
-            in Target[] dependencies = [],
-            in Target[] implicits = []) @safe pure nothrow {
+    this(C)(string[] outputs,
+            C command,
+            Target[] dependencies = [],
+            Target[] implicits = []) @safe pure nothrow {
 
         this._outputs = outputs;
         this._dependencies = dependencies;
@@ -296,11 +296,11 @@ struct Target {
         return _outputs;
     }
 
-    @property const(Target)[] dependencies(in string projectPath = "") @safe pure const nothrow {
+    @property Target[] dependencies(in string projectPath = "") @safe pure nothrow {
         return _dependencies;
     }
 
-    @property const(Target)[] implicits(in string projectPath = "") @safe pure const nothrow {
+    @property Target[] implicits(in string projectPath = "") @safe pure nothrow {
         return _implicits;
     }
 
@@ -331,7 +331,7 @@ struct Target {
             array;
     }
 
-    Language getLanguage() @safe pure nothrow const {
+    Language getLanguage() @safe pure nothrow {
         import reggae.range: Leaves;
         const leaves = () @trusted { return Leaves(this).array; }();
         foreach(language; [Language.D, Language.Cplusplus, Language.C]) {
@@ -354,11 +354,11 @@ struct Target {
 
     ///returns a command string to be run by the shell
     string shellCommand(in Options options,
-                        Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
+                        Flag!"dependencies" deps = Yes.dependencies) @safe pure {
         return _command.shellCommand(options, getLanguage(), _outputs, inputs(options.projectPath), deps);
     }
 
-    string[] execute(in Options options) @safe const {
+    string[] execute(in Options options) @safe {
         return _command.execute(options, getLanguage(), _outputs, inputs(options.projectPath));
     }
 
@@ -378,12 +378,12 @@ struct Target {
         return _command.paramNames;
     }
 
-    static Target phony(in string output, in string shellCommand,
-                        in Target[] dependencies = [], in Target[] implicits = []) @safe pure {
+    static Target phony(string output, string shellCommand,
+                        Target[] dependencies = [], Target[] implicits = []) @safe pure {
         return Target(output, Command.phony(shellCommand), dependencies, implicits);
     }
 
-    string toString(in Options options) const nothrow {
+    string toString(in Options options) nothrow {
         try {
             if(isLeaf) return _outputs[0];
             immutable _outputs = _outputs.length == 1 ? `"` ~ _outputs[0] ~ `"` : text(_outputs);
@@ -398,7 +398,7 @@ struct Target {
         }
     }
 
-    ubyte[] toBytes(in Options options) @safe pure const {
+    ubyte[] toBytes(in Options options) @safe pure {
         ubyte[] bytes;
         bytes ~= setUshort(cast(ushort)_outputs.length);
         foreach(output; _outputs) {
@@ -533,7 +533,7 @@ struct Command {
         return getParams(projectPath, key, true, ifNotFound);
     }
 
-    const(Command) expandVariables() @safe pure const {
+    Command expandVariables() @safe pure {
         switch(type) with(CommandType) {
         case shell:
             auto cmd = Command(expandBuildDir(command));

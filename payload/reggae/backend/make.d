@@ -37,7 +37,7 @@ struct Makefile {
     }
 
     //only the main targets
-    string simpleOutput() @safe const {
+    string simpleOutput() @safe {
 
         auto ret = banner;
         ret ~= text("all: ", build.defaultTargetsString(options.projectPath), "\n");
@@ -63,7 +63,7 @@ struct Makefile {
     }
 
     //includes rerunning reggae
-    string output() @safe const {
+    string output() @safe {
         auto ret = simpleOutput;
 
         if(options.export_) {
@@ -78,7 +78,7 @@ struct Makefile {
         return ret;
     }
 
-    private void mkDir(in Target target) @trusted const {
+    private void mkDir(Target target) @trusted const {
         foreach(output; target.outputsInProjectPath(options.projectPath)) {
             import std.file;
             if(!output.dirName.exists) mkdirRecurse(output.dirName);
@@ -87,7 +87,7 @@ struct Makefile {
 
     //the only reason this is needed is to add auto dependency
     //tracking
-    string command(in Target target) @safe const {
+    string command(Target target) @safe const {
         immutable cmdType = target.getCommandType;
         if(cmdType == CommandType.code)
             throw new Exception("Command type 'code' not supported for make backend");

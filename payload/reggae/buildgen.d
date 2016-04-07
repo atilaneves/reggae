@@ -37,7 +37,7 @@ mixin template BuildGenMain(string buildModule = "reggaefile") {
 }
 
 void generateBuildFor(alias module_)(in Options options, string[] args) {
-    const build = getBuildObject!module_(options);
+    auto build = getBuildObject!module_(options);
     if(!options.noCompilationDB) writeCompilationDB(build, options);
     generateBuild(build, options, args);
 }
@@ -63,11 +63,11 @@ private Build getBuildObject(alias module_)(in Options options) {
     }
 }
 
-void generateBuild(in Build build, in Options options, string[] args = []) {
+void generateBuild(Build build, in Options options, string[] args = []) {
     options.export_ ? exportBuild(build, options) : generateOneBuild(build, options, args);
 }
 
-private void generateOneBuild(in Build build, in Options options, string[] args = []) {
+private void generateOneBuild(Build build, in Options options, string[] args = []) {
     final switch(options.backend) with(Backend) {
 
         case make:
@@ -91,7 +91,7 @@ private void generateOneBuild(in Build build, in Options options, string[] args 
         }
 }
 
-private void exportBuild(in Build build, in Options options) {
+private void exportBuild(Build build, in Options options) {
     enforce(options.backend == Backend.none, "Cannot specify a backend and export at the same time");
 
     handleMake(build, options);
@@ -99,12 +99,12 @@ private void exportBuild(in Build build, in Options options) {
     handleTup(build, options);
 }
 
-private void handleNinja(in Build build, in Options options) {
+private void handleNinja(Build build, in Options options) {
     version(minimal) {
         throw new Exception("Ninja backend support not compiled in");
     } else {
 
-        const ninja = Ninja(build, options);
+        auto ninja = Ninja(build, options);
 
         auto buildNinja = File("build.ninja", "w");
         buildNinja.writeln(ninja.buildOutput);
@@ -115,18 +115,18 @@ private void handleNinja(in Build build, in Options options) {
 }
 
 
-private void handleMake(in Build build, in Options options) {
+private void handleMake(Build build, in Options options) {
     version(minimal) {
         throw new Exception("Make backend support not compiled in");
     } else {
 
-        const makefile = Makefile(build, options);
+        auto makefile = Makefile(build, options);
         auto file = File(makefile.fileName, "w");
         file.write(makefile.output);
     }
 }
 
-private void handleTup(in Build build, in Options options) {
+private void handleTup(Build build, in Options options) {
     version(minimal) {
         throw new Exception("Tup backend support not compiled in");
     } else {
@@ -138,14 +138,14 @@ private void handleTup(in Build build, in Options options) {
             catch(ProcessException _)
                 stderr.writeln("Could not execute '", args.join(" "), "'. tup builds need to do that first.");
         }
-        const tup = Tup(build, options);
+        auto tup = Tup(build, options);
         auto file = File(tup.fileName, "w");
         file.write(tup.output);
     }
 }
 
 
-private void writeCompilationDB(in Build build, in Options options) {
+private void writeCompilationDB(Build build, in Options options) {
     import std.file;
     import std.conv;
     import std.algorithm;
@@ -154,7 +154,7 @@ private void writeCompilationDB(in Build build, in Options options) {
     file.writeln("[");
 
     immutable cwd = getcwd;
-    string entry(in Target target) {
+    string entry(Target target) {
         return
             "    {\n" ~
             text(`        "directory": "`, cwd, `"`) ~ ",\n" ~

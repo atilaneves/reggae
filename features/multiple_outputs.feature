@@ -44,19 +44,19 @@ Feature: Multiple outputs
     And a file named "proj/reggaefile_sep.d" with:
       """
       import reggae;
-      const protoC = Target(`$builddir/gen/protocol.c`,
+      enum protoC = Target(`$builddir/gen/protocol.c`,
                             `./compiler $in`,
                             [Target(`protocol.proto`)]);
-      const protoH = Target(`$builddir/gen/protocol.h`,
+      enum protoH = Target(`$builddir/gen/protocol.h`,
                             `./compiler $in`,
                             [Target(`protocol.proto`)]);
-      const protoObj = Target(`$builddir/bin/protocol.o`,
+      enum protoObj = Target(`$builddir/bin/protocol.o`,
                               `gcc -o $out -c $in`,
                               [protoC]);
-      const protoD = Target(`$builddir/gen/protocol.d`,
+      enum protoD = Target(`$builddir/gen/protocol.d`,
                             `./translator $in $out`,
                             [protoH]);
-      const app = Target(`app`,
+      enum app = Target(`app`,
                          `dmd -of$out $in`,
                          [Target(`src/main.d`), protoObj, protoD]);
       mixin build!(app);
@@ -64,16 +64,16 @@ Feature: Multiple outputs
     And a file named "proj/reggaefile_tog.d" with:
       """
       import reggae;
-      const protoSrcs = Target([`$builddir/gen/protocol.c`, `$builddir/gen/protocol.h`],
+      enum protoSrcs = Target([`$builddir/gen/protocol.c`, `$builddir/gen/protocol.h`],
                                 `./compiler $in`,
                                 [Target(`protocol.proto`)]);
-      const protoObj = Target(`$builddir/bin/protocol.o`,
+      enum protoObj = Target(`$builddir/bin/protocol.o`,
                               `gcc -o $out -c $builddir/gen/protocol.c`,
                               [], [protoSrcs]);
-      const protoD = Target(`$builddir/gen/protocol.d`,
+      enum protoD = Target(`$builddir/gen/protocol.d`,
                             `./translator $builddir/gen/protocol.h $out`,
                             [], [protoSrcs]);
-      const app = Target(`app`,
+      enum app = Target(`app`,
                          `dmd -of$out $in`,
                          [Target(`src/main.d`), protoObj, protoD]);
       mixin build!(app);

@@ -61,9 +61,9 @@ string linkJsonString() @safe pure nothrow {
 
 
 void testLink() {
-    const mainObj = Target("main.o", "dmd -I$project/src -c $in -of$out", Target("src/main.d"));
-    const mathsObj = Target("maths.o", "dmd -c $in -of$out", Target("src/maths.d"));
-    const app = link(ExeName("myapp"), [mainObj, mathsObj], Flags("-L-M"));
+    auto mainObj = Target("main.o", "dmd -I$project/src -c $in -of$out", Target("src/main.d"));
+    auto mathsObj = Target("maths.o", "dmd -c $in -of$out", Target("src/maths.d"));
+    auto app = link(ExeName("myapp"), [mainObj, mathsObj], Flags("-L-M"));
 
     jsonToBuild("", linkJsonString).shouldEqual(Build(app));
 }
@@ -135,8 +135,8 @@ string targetConcatFixedJsonStr() @safe pure nothrow {
 }
 
 void testJsonTargetConcatFixed() {
-    const mainObj = Target("main.o", "dmd -I$project/src -c $in -of$out", Target("src/main.d"));
-    const mathsObj = Target("maths.o", "dmd -c $in -of$out", Target("src/maths.d"));
-    const app = link(ExeName("myapp"), [mainObj, mathsObj], Flags("-L-M"));
+    auto mainObj = Target("main.o", "dmd -I$project/src -c $in -of$out", Target("src/main.d"));
+    auto mathsObj = Target("maths.o", "dmd -c $in -of$out", Target("src/maths.d"));
+    auto app = link(ExeName("myapp"), [mainObj, mathsObj], Flags("-L-M"));
     jsonToBuild("", targetConcatFixedJsonStr).shouldEqual(Build(app));
 }

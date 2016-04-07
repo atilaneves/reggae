@@ -11,7 +11,7 @@ Feature: Using executable for a C++ project
       extern int timesTwo(int);
       using namespace std;
       int main() {
-          const int i = 3;
+          const auto i = 3;
           cout << i << "times two is " << timesTwo(i) << endl;
           cout << STUFF << endl;
       }

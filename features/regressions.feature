@@ -38,8 +38,8 @@ Feature: Regressions
       """
       import reggae;
 
-      const ao = objectFile(SourceFile("a.c"));
-      const liba = Target("$builddir/liba.a", "ar rcs $out $in", [ao]);
+      enum ao = objectFile(SourceFile("a.c"));
+      enum liba = Target("$builddir/liba.a", "ar rcs $out $in", [ao]);
       mixin build!(liba);
       """
     And a file named "project/a.c" with:
@@ -66,8 +66,8 @@ Feature: Regressions
       import std.algorithm;
       import std.conv;
       void main(string[] args) {
-          const inFileName = args[1];
-          const outFileName = args[2];
+          auto inFileName = args[1];
+          auto outFileName = args[2];
           auto lines = File(inFileName).byLine.
                                         map!(a => a.to!string).
                                         map!(a => a ~ ` ` ~ a);

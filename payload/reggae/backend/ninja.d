@@ -336,7 +336,9 @@ private:
 
     //@trusted because of splitter
     private string targetRawCommand(Target target) @trusted pure const {
-        return target.shellCommand(_options).splitter(" ").front;
+        auto cmd = target.shellCommand(_options);
+        if(cmd == "") return "";
+        return cmd.splitter(" ").front;
     }
 }
 

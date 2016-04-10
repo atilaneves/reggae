@@ -89,7 +89,7 @@ struct ByDepthLevel {
     private void rec(int level, Target[] targets, ref Target[][] soFar) @trusted pure nothrow {
         Target[] notLeaves = targets.
             map!(a => chain(a.dependencies, a.implicits)). //get all dependencies
-            flatten. //flatten into a regular range
+            join. //flatten into a regular range
             filter!(a => !a.isLeaf). //don't care about leaves
             array;
         if(notLeaves.empty) return;
@@ -143,15 +143,6 @@ private:
 
 
 //TODO: a non-allocating version with no arrays
-auto flatten(R)(R range) @trusted {
-    alias rangeType = ElementType!R;
-    alias T = ElementType!rangeType;
-    T[] res;
-    foreach(x; range) res ~= x.array;
-    return res;
-}
-
-//TODO: a non-allocating version with no arrays
 auto noSortUniq(R)(R range) if(isInputRange!R) {
     ElementType!R[] ret;
     foreach(elt; range) {
@@ -168,8 +159,8 @@ struct UniqueDepthFirst {
 
     this(Build build) pure @trusted {
         _targets = build.targets.
-            map!(a => depthFirst(a)).
-            flatten.
+            map!depthFirst.
+            join.
             noSortUniq.
             array;
     }

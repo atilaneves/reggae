@@ -441,7 +441,7 @@ private:
 
     string[] depsInProjectPath(in Target[] deps, in string projectPath) @safe pure const {
         import reggae.range;
-        return deps.map!(a => a.outputsInProjectPath(projectPath)).flatten;
+        return deps.map!(a => a.outputsInProjectPath(projectPath)).join;
     }
 
     string[] inputs(in string projectPath) @safe pure nothrow const {

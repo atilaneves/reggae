@@ -15,6 +15,8 @@ import std.json;
 import std.algorithm;
 import std.array;
 import std.conv;
+import std.traits;
+
 
 enum JsonTargetType {
     fixed,
@@ -138,9 +140,8 @@ private Target[] callDepsFunc(in string projectPath, in JSONValue json) {
                           strings(json, "includes"),
                           strings(json, "string_imports"))];
     case JsonDepsFuncName.targetConcat:
-        import reggae.range;
         return json.object["dependencies"].array.
-            map!(a => getDeps(projectPath, a)).flatten;
+            map!(a => getDeps(projectPath, a)).join;
     }
 }
 

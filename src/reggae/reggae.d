@@ -180,7 +180,7 @@ private void createBuild(in Options options) {
 
     //actually run the build generator
     writeln("[Reggae] Running the created binary to generate the build");
-    immutable retRunBuildgen = execute([buildPath(".", buildGenName)]);
+    immutable retRunBuildgen = execute([buildPath(hiddenDir, buildGenName)]);
     enforce(retRunBuildgen.status == 0,
             text("Couldn't execute the produced ", buildGenName, " binary:\n", retRunBuildgen.output));
 
@@ -193,27 +193,6 @@ struct Binary {
     const(string)[] cmd;
 }
 
-private void buildBinary(in Binary bin) {
-    writeln("[Reggae] Compiling metabuild binary ", bin.name);
-    immutable res = execute(bin.cmd);
-    enforce(res.status == 0, text("Couldn't execute ", bin.cmd.join(" "), ":\n", res.output,
-                                  "\n", "bin.name: ", bin.name, ", bin.cmd: ", bin.cmd.join(" ")));
-
-}
-
-private auto buildDCompile(in Options options) {
-    immutable name = buildPath(hiddenDir, "dcompile");
-
-    if(!thisExePath.newerThan(name)) return;
-
-    immutable cmd = ["dmd",
-                     "-I.reggae/src",
-                     "-of" ~ name,
-                     reggaeSrcFileName("dcompile.d"),
-                     reggaeSrcFileName("dependencies.d")];
-
-    buildBinary(Binary(name, cmd));
-}
 
 private string compileBinaries(in Options options) {
     buildDCompile(options);
@@ -222,24 +201,61 @@ private string compileBinaries(in Options options) {
     if(options.isScriptBuild) return buildGenName;
 
     const buildGenCmd = getCompileBuildGenCmd(options);
-    buildBinary(Binary(buildGenName ~ ".o", buildGenCmd));
+    immutable buildObjName = "build.o";
+    buildBinary(Binary(buildObjName, buildGenCmd));
 
     const reggaeFileDeps = getReggaeFileDependencies;
-    auto objFiles = [buildGenName ~ ".o"];
+    auto objFiles = [buildObjName];
     if(!reggaeFileDeps.empty) {
         immutable rest = buildPath(hiddenDir, "rest.o");
         buildBinary(Binary(rest,
                            ["dmd",
                             "-c",
-                            "-of" ~ buildPath(hiddenDir, "rest.o")] ~
+                            "-of" ~ "rest.o"] ~
                            importPaths(options) ~
                            reggaeFileDeps));
         objFiles ~= rest;
     }
     buildBinary(Binary(buildGenName, ["dmd", "-of" ~ buildGenName] ~ objFiles));
 
-
     return buildGenName;
+}
+
+private auto buildDCompile(in Options options) {
+    immutable name = "dcompile";
+
+    if(!thisExePath.newerThan(name)) return;
+
+    immutable cmd = ["dmd",
+                     "-Isrc",
+                     "-of" ~ name,
+                     buildPath(reggaeSrcRelDirName, "dcompile.d"),
+                     buildPath(reggaeSrcRelDirName, "dependencies.d")];
+
+    buildBinary(Binary(name, cmd));
+}
+
+private bool isExecutable(in char[] path) @trusted nothrow @nogc //TODO: @safe
+{
+    import core.sys.posix.unistd;
+    import std.internal.cstring;
+    return (access(path.tempCString(), X_OK) == 0);
+}
+
+private void buildBinary(in Binary bin) {
+    import std.process;
+    string[string] env;
+    auto config = Config.none;
+    auto maxOutput = size_t.max;
+    auto workDir = hiddenDir;
+    writeln("[Reggae] Compiling metabuild binary ", bin.name, " with ", bin.cmd.join(" "));
+    // std.process.execute has a bug where using workDir and a relative path
+    // don't work (https://issues.dlang.org/show_bug.cgi?id=15915)
+    // so executeShell is used instead
+    immutable res = executeShell(bin.cmd.join(" "), env, config, maxOutput, workDir);
+    enforce(res.status == 0, text("Couldn't execute ", bin.cmd.join(" "), "\n", res.output,
+                                  "\n", "bin.name: ", bin.name, ", bin.cmd: ", bin.cmd.join(" ")));
+
 }
 
 
@@ -248,14 +264,14 @@ private const(string)[] getCompileBuildGenCmd(in Options options) @safe {
 
     const reggaeSrcs = ("config.d" ~ fileNames).
         filter!(a => a != "dcompile.d").
-        map!(a => a.reggaeSrcFileName).array;
+        map!(a => buildPath(reggaeSrcRelDirName, a)).array;
 
     immutable buildBinFlags = options.backend == Backend.binary
         ? ["-O", "-inline"]
         : [];
-    const commonBefore = [buildPath(hiddenDir, "dcompile"),
-                          "--objFile=" ~ getBuildGenName(options) ~ objExt,
-                          "--depFile=" ~ buildPath(hiddenDir, "reggaefile.dep"),
+    const commonBefore = ["./dcompile",
+                          "--objFile=" ~ "build.o",
+                          "--depFile=" ~ "reggaefile.dep",
                           "dmd"] ~
         importPaths(options) ~
         ["-g",
@@ -266,17 +282,22 @@ private const(string)[] getCompileBuildGenCmd(in Options options) @safe {
     else return commonBefore ~ commonAfter;
 }
 
-private string[] importPaths(in Options options) @safe pure nothrow {
-    return ["-I" ~ options.projectPath,
-            "-I" ~ buildPath(hiddenDir, "src")];
+private string[] importPaths(in Options options) @safe nothrow {
+    import std.file;
 
+    immutable srcDir = "-I" ~ buildPath("src");
+    // if compiling phobos, the includes for the reggaefile.d compilation
+    // will pick up the new phobos if we include the src path
+    return "std".exists ? [srcDir] : ["-I" ~ options.projectPath, srcDir];
 }
 
-string getBuildGenName(in Options options) @safe pure nothrow {
-    return options.backend == Backend.binary ? "build" : buildPath(hiddenDir, "buildgen");
+private string getBuildGenName(in Options options) @safe pure nothrow {
+    return options.backend == Backend.binary ? buildPath("..", "build") : "buildgen";
 }
 
-immutable reggaeSrcDirName = buildPath(hiddenDir, "src", "reggae");
+
+immutable reggaeSrcRelDirName = buildPath("src", "reggae");
+immutable reggaeSrcDirName = buildPath(hiddenDir, reggaeSrcRelDirName);
 
 private string filesTupleString() @safe pure nothrow {
     return "TypeTuple!(" ~ fileNames.map!(a => `"` ~ a ~ `"`).join(",") ~ ")";

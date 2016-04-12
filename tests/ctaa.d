@@ -45,3 +45,18 @@ void testIn() {
     ("bar" in aa).shouldBeTrue;
     ("asda" in aa).shouldBeFalse;
 }
+
+@("Convert to runtime AA")
+unittest {
+    assocListT("foo", "bar", "toto", "baz").toAA.shouldEqual(
+        ["foo": "bar", "toto": "baz"]);
+    assocListT("foo", 3, "toto", 5).toAA.shouldEqual(
+        ["foo": 3, "toto": 5]);
+
+}
+
+@("Convert from runtime AA")
+unittest {
+    fromAA(["foo": "bar"]).shouldEqual(assocListT("foo", "bar"));
+    fromAA(["foo": 5]).shouldEqual(assocListT("foo", 5));
+}

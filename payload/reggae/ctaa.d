@@ -42,6 +42,20 @@ struct AssocList(K, V) {
     bool opBinaryRight(string op)(in K key) pure const if(op == "in") {
         return entries.canFind!(a => a.key == key);
     }
+
+    V[K] toAA() {
+        V[K] ret;
+        foreach(entry; entries) {
+            ret[entry.key] = entry.value;
+        }
+        return ret;
+    }
+}
+
+AssocList!(K, V) fromAA(K, V)(V[K] aa) {
+    AssocEntry!(K, V)[] entries;
+    foreach(k, v; aa) entries ~= assocEntry(k, v);
+    return AssocList!(K, V)(entries);
 }
 
 struct AssocEntry(K, V) {

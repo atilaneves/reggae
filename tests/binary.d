@@ -8,17 +8,11 @@ bool fooCalled;
 bool barCalled;
 
 void resetCalls() { fooCalled = false; barCalled = false;}
-void foo(in string[] inputs, in string[] outputs) {
-    fooCalled = true;
-}
 
-void bar(in string[] inputs, in string[] outputs) {
-    barCalled = true;
-}
 
 void testTargetSelection() {
-    auto foo = Target("foo", &foo, Target("foo.d"));
-    auto bar = Target("bar", &bar, Target("bar.d"));
+    auto foo = Target("foo", (string[] i, string[] o) { fooCalled = true; }, Target("foo.d"));
+    auto bar = Target("bar", (string[] i, string[] o) { barCalled = true; }, Target("bar.d"));
     auto binary = Binary(Build(foo, bar), getOptions(["reggae", "--export"]));
 
     {
@@ -58,11 +52,15 @@ void testTargetSelection() {
 }
 
 void testTopLevelTargets() {
-    auto foo = Target("foo", &foo, Target("foo.d"));
-    auto bar = Target("bar", &bar, Target("bar.d"));
+    auto foo = Target("foo", "", Target("foo.d"));
+    auto bar = Target("bar", "", Target("bar.d"));
     auto binary = Binary(Build(foo, bar), Options());
     binary.topLevelTargets(["foo"]).shouldEqual([foo]);
     binary.topLevelTargets(["bar"]).shouldEqual([bar]);
     binary.topLevelTargets([]).shouldEqual([foo, bar]);
     binary.topLevelTargets(["oops"]).shouldEqual([]);
+}
+
+
+@("Targets should only be built once") unittest {
 }

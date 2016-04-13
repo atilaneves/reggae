@@ -474,7 +474,7 @@ enum CommandType {
     phony,
 }
 
-alias CommandFunction = void function(in string[], in string[]);
+alias CommandFunction = void function(string[], string[]);
 
 /**
  A command to be execute to produce a targets outputs from its inputs.
@@ -653,7 +653,7 @@ struct Command {
     }
 
     string[] execute(in Options options, in Language language,
-                     in string[] outputs, in string[] inputs) const @trusted {
+                     string[] outputs, string[] inputs) const @trusted {
         import std.process;
 
         final switch(type) with(CommandType) {

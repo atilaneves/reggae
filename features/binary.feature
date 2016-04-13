@@ -46,29 +46,6 @@ Feature: Binary backend
       [build] Nothing to do
       """
 
-  Scenario: Selectively build targets
-    Given I successfully run `reggae -b binary proj`
-    And I successfully run `./build foo`
-    When I run `cat copy.txt`
-    Then it should fail with:
-      """
-      """
-    When I successfully run `./foo`
-    Then the output should contain:
-      """
-      foobar
-      """
-
-    When I successfully run `./build`
-    And I successfully run `cat copy.txt`
-    Then the output should contain:
-      """
-      See the little goblin
-      See his little feet
-      And his little nosey-wose
-      Isn't the goblin sweet?
-      """
-
   Scenario: Listing targets
     Given I successfully run `reggae -b binary proj`
     And I successfully run `./build -l`

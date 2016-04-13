@@ -53,7 +53,11 @@ Feature: Running the binary on a D build description results in a working build
   @binary
   Scenario: End to end with binary
     Given I successfully run `reggae -b binary proj`
-    And I successfully run `./build`
+    Given I successfully run `./build`
+    Then the output should contain:
+    """
+    [build] dmd -ofleapp objs/leapp.objs/main.o
+    """
     When I successfully run `./leapp`
     Then the output should contain:
       """

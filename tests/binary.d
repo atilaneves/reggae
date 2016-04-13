@@ -64,3 +64,58 @@ void testTopLevelTargets() {
 
 @("Targets should only be built once") unittest {
 }
+
+private Build binaryBuild() {
+    mixin build!(Target("app", "dmd -of$out $in", [Target("foo.o"), Target("bar.o") ]),
+                 optional(Target.phony(`opt`, `echo Optional!`)));
+    return buildFunc();
+}
+
+private struct FakeFile {
+    string[] lines;
+    void writeln(T...)(T args) {
+        import std.conv;
+        lines ~= text(args);
+    }
+}
+
+@("Listing targets") unittest {
+    import std.stdio: stdout, File;
+
+    auto file = FakeFile();
+    auto binary = Binary(binaryBuild, getOptions(["./reggae", "-b", "binary"]), file);
+    binary.run(["./build", "-l"]);
+
+    file.lines.shouldEqual(
+        ["List of available top-level targets:",
+         "- app",
+         "- opt (optional)"]);
+}
+
+private void shouldThrowWithMessage(E)(lazy E expr, string msg,
+                                       string file = __FILE__, size_t line = __LINE__) {
+    try {
+        expr();
+    } catch(Exception ex) {
+        ex.msg.shouldEqual(msg);
+        return;
+    }
+
+    throw new Exception("Expression did not throw. Expected msg: " ~ msg, file, line);
+}
+
+@("Unknown target") unittest {
+    import std.stdio: stdout, File;
+
+    auto binary = Binary(binaryBuild, getOptions(["./reggae", "-b", "binary"]));
+    binary.run(["./build", "oops"]).
+        shouldThrowWithMessage("Unknown target(s) 'oops'");
+}
+
+@("Unknown targets") unittest {
+    import std.stdio: stdout, File;
+
+    auto binary = Binary(binaryBuild, getOptions(["./reggae", "-b", "binary"]));
+    binary.run(["./build", "oops", "woopsie"]).
+        shouldThrowWithMessage("Unknown target(s) 'oops' 'woopsie'");
+}

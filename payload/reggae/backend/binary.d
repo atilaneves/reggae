@@ -48,22 +48,25 @@ struct BinaryOptions {
     }
 }
 
-struct Binary {
+auto Binary(Build build, in Options options) @system {
+    return BinaryT!(File)(build, options, stdout);
+}
+
+auto Binary(T)(Build build, in Options options, ref T output) {
+    return BinaryT!(T)(build, options, output);
+}
+
+
+struct BinaryT(T) {
     Build build;
     const(Options) options;
-    File output;
+    T* output;
 
-    this(Build build, in Options options) @trusted {
-        this(build, options, stdout);
-        this.build = build;
-    }
-
-    this(Build build, in Options options, File output) @trusted {
+    this(Build build, in Options options, ref T output) @trusted {
         this.build = build;
         this.options = options;
-        this.output = output;
+        this.output = &output;
     }
-
 
     void run(string[] args) @system { //@system due to parallel
         auto binaryOptions = BinaryOptions(args);

@@ -669,7 +669,7 @@ struct Command {
             case code:
                 assert(func !is null, "Command of type code with null function");
                 func(inputs, outputs);
-                return [];
+                return ["code"];
         }
     }
 

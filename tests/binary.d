@@ -4,14 +4,6 @@ import reggae;
 import unit_threaded;
 
 
-class FooException: Exception {
-    this(string msg = "") { super(msg); }
-}
-
-class BarException: Exception {
-    this(string msg = "") { super(msg); }
-}
-
 bool fooCalled;
 bool barCalled;
 
@@ -24,11 +16,10 @@ void bar(in string[] inputs, in string[] outputs) {
     barCalled = true;
 }
 
-@HiddenTest
 void testTargetSelection() {
     auto foo = Target("foo", &foo, Target("foo.d"));
     auto bar = Target("bar", &bar, Target("bar.d"));
-    auto binary = Binary(Build(foo, bar), Options());
+    auto binary = Binary(Build(foo, bar), getOptions(["reggae", "--export"]));
 
     {
         scope(exit) resetCalls;

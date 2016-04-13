@@ -54,19 +54,36 @@ void shouldWriteToStdout(E)(lazy E expr, string[] expectedLines,
     }
 
     writeOrigFile;
-    auto binary = Binary(binaryBuild, getOptions(["./reggae", "-b", "binary"]));
-    binary.run(["./build"]);
-    copyFileName.exists.shouldBeTrue;
 
-    binary.run(["./build"]).shouldWriteToStdout(
+    {
+        auto binary = Binary(binaryBuild, getOptions(["./reggae", "-b", "binary"]));
+        binary.run(["./build"]);
+        copyFileName.exists.shouldBeTrue;
+    }
+
+    {
+        import std.stdio: File;
+        auto file = File(stdoutFileName, "w");
+        auto binary = Binary(binaryBuild, getOptions(["./reggae", "-b", "binary"]), file);
+        binary.run(["./build"]);
+    }
+
+    scope(exit) remove(stdoutFileName);
+    readText(stdoutFileName).chomp.split("\n").shouldEqual(
         ["[build] Nothing to do"]);
 }
 
 @("Listing targets") unittest {
     import std.stdio: stdout, File;
 
-    auto binary = Binary(binaryBuild, getOptions(["./reggae", "-b", "binary"]));
-    binary.run(["./build", "-l"]).shouldWriteToStdout(
+    {
+        auto file = File(stdoutFileName, "w");
+        auto binary = Binary(binaryBuild, getOptions(["./reggae", "-b", "binary"]), file);
+        binary.run(["./build", "-l"]);
+    }
+
+    scope(exit) remove(stdoutFileName);
+    readText(stdoutFileName).chomp.split("\n").shouldEqual(
         ["List of available top-level targets:",
          "- copy.txt",
          "- opt (optional)"]);

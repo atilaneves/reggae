@@ -1,4 +1,4 @@
-module tests.binary;
+module tests.ut.backend.binary;
 
 import reggae;
 import unit_threaded;

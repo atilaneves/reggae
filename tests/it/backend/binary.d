@@ -23,9 +23,19 @@ private void writeOrigFile() {
     file.writeln("See the little goblin");
 }
 
-@("Do nothing after build") unittest {
+void shouldWriteToStdout(E)(lazy E expr, string[] expectedLines,
+                            string file = __FILE__, size_t line = __LINE__) {
     import std.stdio: stdout, File;
 
+    // replace stdout so we can see what happens
+    auto oldStdout = stdout;
+    scope(exit) stdout = oldStdout;
+    stdout = File(stdoutFileName, "w");
+    expr();
+    remove(stdoutFileName);
+}
+
+@("Do nothing after build") unittest {
     scope(exit) {
         remove(copyFileName);
         remove(origFileName);
@@ -36,16 +46,8 @@ private void writeOrigFile() {
     binary.run(["./build"]);
     copyFileName.exists.shouldBeTrue;
 
-    // replace stdout so we can see what happens
-    {
-        auto oldStdout = stdout;
-        scope(exit) stdout = oldStdout;
-        stdout = File(stdoutFileName, "w");
-        binary.run(["./build"]);
-    }
-
-    readText(stdoutFileName).chomp.shouldEqual("[build] Nothing to do");
-    scope(exit) remove(stdoutFileName);
+    binary.run(["./build"]).shouldWriteToStdout(
+        ["[build] Nothing to do"]);
 }
 
 
@@ -53,18 +55,36 @@ private void writeOrigFile() {
     import std.stdio: stdout, File;
 
     auto binary = Binary(binaryBuild, getOptions(["./reggae", "-b", "binary"]));
-
-    // replace stdout so we can see what happens
-    {
-        auto oldStdout = stdout;
-        scope(exit) stdout = oldStdout;
-        stdout = File(stdoutFileName, "w");
-        binary.run(["./build", "-l"]);
-    }
-
-    readText(stdoutFileName).chomp.split("\n").shouldEqual(
+    binary.run(["./build", "-l"]).shouldWriteToStdout(
         ["List of available top-level targets:",
          "- copy.txt",
          "- opt (optional)"]);
-    scope(exit) remove(stdoutFileName);
+}
+
+private void shouldThrowWithMessage(E)(lazy E expr, string msg,
+                                       string file = __FILE__, size_t line = __LINE__) {
+    try {
+        expr();
+    } catch(Exception ex) {
+        ex.msg.shouldEqual(msg);
+        return;
+    }
+
+    throw new Exception("Expression did not throw. Expected msg: " ~ msg, file, line);
+}
+
+@("Unknown target") unittest {
+    import std.stdio: stdout, File;
+
+    auto binary = Binary(binaryBuild, getOptions(["./reggae", "-b", "binary"]));
+    binary.run(["./build", "oops"]).
+        shouldThrowWithMessage("Unknown target(s) 'oops'");
+}
+
+@("Unknown targets") unittest {
+    import std.stdio: stdout, File;
+
+    auto binary = Binary(binaryBuild, getOptions(["./reggae", "-b", "binary"]));
+    binary.run(["./build", "oops", "woopsie"]).
+        shouldThrowWithMessage("Unknown target(s) 'oops' 'woopsie'");
 }

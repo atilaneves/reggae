@@ -28,7 +28,7 @@ void bar(in string[] inputs, in string[] outputs) {
 void testTargetSelection() {
     auto foo = Target("foo", &foo, Target("foo.d"));
     auto bar = Target("bar", &bar, Target("bar.d"));
-    auto binary = Binary(Build(foo, bar), "/path/to");
+    auto binary = Binary(Build(foo, bar), Options());
 
     {
         scope(exit) resetCalls;
@@ -69,7 +69,7 @@ void testTargetSelection() {
 void testTopLevelTargets() {
     auto foo = Target("foo", &foo, Target("foo.d"));
     auto bar = Target("bar", &bar, Target("bar.d"));
-    auto binary = Binary(Build(foo, bar), "/path/to");
+    auto binary = Binary(Build(foo, bar), Options());
     binary.topLevelTargets(["foo"]).shouldEqual([foo]);
     binary.topLevelTargets(["bar"]).shouldEqual([bar]);
     binary.topLevelTargets([]).shouldEqual([foo, bar]);

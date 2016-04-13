@@ -1,3 +1,14 @@
+/**
+
+ This module implements the binary that is used to generate the build
+ in the case of the make, ninja and tup backends, i.e. it translates
+ D code into the respective output.
+
+ For the binary target this module implements the binary that actually
+ performs the build
+
+ */
+
 module reggae.buildgen;
 
 import reggae.build;

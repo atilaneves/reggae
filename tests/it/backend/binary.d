@@ -47,3 +47,24 @@ private void writeOrigFile() {
     readText(stdoutFileName).chomp.shouldEqual("[build] Nothing to do");
     scope(exit) remove(stdoutFileName);
 }
+
+
+@("Listing targets") unittest {
+    import std.stdio: stdout, File;
+
+    auto binary = Binary(binaryBuild, getOptions(["./reggae", "-b", "binary"]));
+
+    // replace stdout so we can see what happens
+    {
+        auto oldStdout = stdout;
+        scope(exit) stdout = oldStdout;
+        stdout = File(stdoutFileName, "w");
+        binary.run(["./build", "-l"]);
+    }
+
+    readText(stdoutFileName).chomp.split("\n").shouldEqual(
+        ["List of available top-level targets:",
+         "- copy.txt",
+         "- opt (optional)"]);
+    scope(exit) remove(stdoutFileName);
+}

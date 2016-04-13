@@ -64,8 +64,8 @@ Feature: Re-run reggae when dependencies deem it necessary
         module reggaebuild.defs;
         import reggae;
         enum funcObj = Target(`other.o`,
-                                `dmd -I$project/src -c $in -of$out`,
-                                Target(`src/other.d`));
+                              `dmd -I$project/src -c $in -of$out`,
+                              Target(`src/other.d`));
         """
 
       When I successfully run `ninja`

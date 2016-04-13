@@ -207,7 +207,7 @@ private string compileBinaries(in Options options) {
     const reggaeFileDeps = getReggaeFileDependencies;
     auto objFiles = [buildObjName];
     if(!reggaeFileDeps.empty) {
-        immutable rest = buildPath(hiddenDir, "rest.o");
+        immutable rest = "rest.o";
         buildBinary(options,
                     Binary(rest,
                            ["dmd",

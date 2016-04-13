@@ -3,6 +3,7 @@ module tests.build;
 import unit_threaded;
 import reggae;
 import reggae.options;
+import std.array;
 
 
 void testIsLeaf() {

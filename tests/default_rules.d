@@ -3,6 +3,7 @@ module tests.default_rules;
 
 import reggae;
 import unit_threaded;
+import std.array;
 
 
 void testNoDefaultRule() {

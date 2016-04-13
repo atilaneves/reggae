@@ -83,6 +83,7 @@ Target unityTarget(R1, R2)(in ExeName exeName,
     pure if(isInputRange!R1 && is(ElementType!R1 == Target) && isInputRange!R2 && is(ElementType!R2 == Target)) {
 
     import std.algorithm;
+    import std.path;
 
     auto justFileName = srcFiles.map!getLanguage.front == Language.C ? "unity.c" : "unity.cpp";
     auto unityFileName = buildPath(gBuilddir, topLevelDirName(Target(exeName.value)), justFileName);

@@ -1,3 +1,14 @@
+/**
+
+ This module implements the binary that is used to generate the build
+ in the case of the make, ninja and tup backends, i.e. it translates
+ D code into the respective output.
+
+ For the binary target this module implements the binary that actually
+ performs the build
+
+ */
+
 module reggae.buildgen;
 
 import reggae.build;
@@ -92,6 +103,8 @@ private void generateOneBuild(Build build, in Options options, string[] args = [
 }
 
 private void exportBuild(Build build, in Options options) {
+    import std.exception;
+
     enforce(options.backend == Backend.none, "Cannot specify a backend and export at the same time");
 
     handleMake(build, options);
@@ -130,6 +143,9 @@ private void handleTup(Build build, in Options options) {
     version(minimal) {
         throw new Exception("Tup backend support not compiled in");
     } else {
+        import std.file;
+        import std.string;
+
         if(!".tup".exists) {
             import std.process;
             immutable args = ["tup", "init"];
@@ -149,6 +165,7 @@ private void writeCompilationDB(Build build, in Options options) {
     import std.file;
     import std.conv;
     import std.algorithm;
+    import std.string;
 
     auto file = File("compile_commands.json", "w");
     file.writeln("[");

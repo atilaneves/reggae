@@ -4,6 +4,7 @@ module tests.dub_json;
 import unit_threaded;
 import reggae;
 import reggae.dub.json;
+import std.string;
 
 
 immutable jsonString =

@@ -5,6 +5,7 @@ import reggae;
 import reggae.options;
 import unit_threaded;
 import std.algorithm;
+import std.array;
 
 
 void testDCompileNoIncludePathsNinja() {

@@ -103,6 +103,8 @@ private void generateOneBuild(Build build, in Options options, string[] args = [
 }
 
 private void exportBuild(Build build, in Options options) {
+    import std.exception;
+
     enforce(options.backend == Backend.none, "Cannot specify a backend and export at the same time");
 
     handleMake(build, options);
@@ -141,6 +143,9 @@ private void handleTup(Build build, in Options options) {
     version(minimal) {
         throw new Exception("Tup backend support not compiled in");
     } else {
+        import std.file;
+        import std.string;
+
         if(!".tup".exists) {
             import std.process;
             immutable args = ["tup", "init"];
@@ -160,6 +165,7 @@ private void writeCompilationDB(Build build, in Options options) {
     import std.file;
     import std.conv;
     import std.algorithm;
+    import std.string;
 
     auto file = File("compile_commands.json", "w");
     file.writeln("[");

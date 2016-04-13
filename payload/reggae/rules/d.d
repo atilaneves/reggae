@@ -97,6 +97,8 @@ Target scriptlike(in string projectPath,
                   in StringImportPaths stringImportPaths,
                   Target[] linkWith) @trusted {
 
+    import std.path;
+
     if(getLanguage(app.srcFileName.value) != Language.D)
         throw new Exception("'scriptlike' rule only works with D files");
 

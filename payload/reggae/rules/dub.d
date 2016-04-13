@@ -6,7 +6,7 @@
 
 module reggae.rules.dub;
 
-import reggae.config;
+import reggae.config; // isDubProject
 
 static if(isDubProject) {
 
@@ -14,6 +14,7 @@ static if(isDubProject) {
     import reggae.types;
     import reggae.build;
     import reggae.rules.common;
+    import std.typecons;
 
     /**
      Builds the main dub target (equivalent of "dub build")

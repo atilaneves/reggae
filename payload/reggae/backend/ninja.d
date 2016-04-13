@@ -113,8 +113,8 @@ struct Ninja {
 
         const(NinjaEntry)[] rerunEntries() {
             // if exporting the build system, don't include rerunning reggae
-            return options.export_ ? [] : [NinjaEntry("build build.ninja: _rerun | " ~ files,
-                                                     paramLines)];
+            return _options.export_ ? [] : [NinjaEntry("build build.ninja: _rerun | " ~ files,
+                                                       paramLines)];
         }
 
         return buildEntries ~ rerunEntries ~ NinjaEntry("default " ~ _build.defaultTargetsString(_projectPath));

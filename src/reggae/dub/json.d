@@ -9,6 +9,7 @@ import std.algorithm: map, filter;
 DubInfo getDubInfo(string origString) @trusted {
     import std.string: indexOf;
     import core.exception: RangeError;
+    import std.array;
 
     string nextOpenCurly(string str) {
         return str[str.indexOf("{") .. $];
@@ -62,6 +63,8 @@ DubInfo getDubInfo(string origString) @trusted {
 
 
 private string[] jsonValueToFiles(JSONValue files) @trusted {
+    import std.array;
+
     return files.array.
         filter!(a => a.byKey("type").str == "source").
         map!(a => a.byKey("path").str).
@@ -69,6 +72,7 @@ private string[] jsonValueToFiles(JSONValue files) @trusted {
 }
 
 private string[] jsonValueToStrings(JSONValue json) @trusted {
+    import std.array;
     return json.array.map!(a => a.str).array;
 }
 

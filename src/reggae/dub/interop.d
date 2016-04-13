@@ -13,12 +13,14 @@ import std.exception;
 import std.conv;
 import std.process;
 
+
 DubInfo[string] gDubInfos;
 
 
 @safe:
 
 void maybeCreateReggaefile(in Options options) {
+    import std.file;
     if(options.isDubProject && !options.projectBuildFile.exists) {
         createReggaefile(options);
     }
@@ -36,6 +38,7 @@ void createReggaefile(in Options options) {
 
 
 private DubInfo _getDubInfo(in Options options) {
+    import std.array;
 
     if("default" !in gDubInfos) {
         immutable dubBuildArgs = ["dub", "--annotate", "build", "--compiler=dmd", "--print-configs"];
@@ -68,6 +71,9 @@ private DubInfo _getDubInfo(in Options options) {
 
 private string callDub(in Options options, in string[] args) {
     import std.process;
+    import std.exception;
+    import std.string;
+
     const string[string] env = null;
     Config config = Config.none;
     size_t maxOutput = size_t.max;
@@ -94,6 +100,8 @@ private void callPreBuildCommands(in Options options, in DubInfo dubInfo) {
 }
 
 private void dubFetch(in Options options) {
+    import std.string;
+
     //this must be done without _getDubInfo. The reason begin that dub --annotate
     //fails if the packages aren't fetched, creating a chicken and egg problem
     //so we do it independently here to make sure the dependencies are fetched

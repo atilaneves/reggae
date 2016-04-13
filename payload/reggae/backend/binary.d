@@ -52,6 +52,7 @@ struct Binary {
     Build build;
     const(Options) options;
 
+    // unittest constructor
     this(Build build, in string projectPath) pure {
         import reggae.config: options;
         this(build, options);

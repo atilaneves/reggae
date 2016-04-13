@@ -9,7 +9,12 @@ import std.string;
 
 enum origFileName = "original.txt";
 enum copyFileName = "copy.txt";
-enum stdoutFileName = "stdout.txt";
+
+string stdoutFileName() {
+    import std.concurrency;
+    import std.conv;
+    return "stdout" ~ thisTid.to!string ~ ".txt";
+}
 
 private Build binaryBuild() {
     mixin build!(Target(copyFileName, `cp $in $out`, Target(origFileName)),
@@ -28,11 +33,18 @@ void shouldWriteToStdout(E)(lazy E expr, string[] expectedLines,
     import std.stdio: stdout, File;
 
     // replace stdout so we can see what happens
-    auto oldStdout = stdout;
-    scope(exit) stdout = oldStdout;
-    stdout = File(stdoutFileName, "w");
-    expr();
-    remove(stdoutFileName);
+    {
+        auto oldStdout = stdout;
+
+        scope(exit) stdout = oldStdout;
+        auto fileName = stdoutFileName;
+        stdout = File(stdoutFileName, "w");
+        expr();
+    }
+
+    auto lines = readText(stdoutFileName).chomp.split("\n");
+    scope(exit) remove(stdoutFileName);
+    lines.shouldEqual(expectedLines, file, line);
 }
 
 @("Do nothing after build") unittest {
@@ -49,7 +61,6 @@ void shouldWriteToStdout(E)(lazy E expr, string[] expectedLines,
     binary.run(["./build"]).shouldWriteToStdout(
         ["[build] Nothing to do"]);
 }
-
 
 @("Listing targets") unittest {
     import std.stdio: stdout, File;

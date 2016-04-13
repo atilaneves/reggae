@@ -202,13 +202,14 @@ private string compileBinaries(in Options options) {
 
     const buildGenCmd = getCompileBuildGenCmd(options);
     immutable buildObjName = "build.o";
-    buildBinary(Binary(buildObjName, buildGenCmd));
+    buildBinary(options, Binary(buildObjName, buildGenCmd));
 
     const reggaeFileDeps = getReggaeFileDependencies;
     auto objFiles = [buildObjName];
     if(!reggaeFileDeps.empty) {
         immutable rest = buildPath(hiddenDir, "rest.o");
-        buildBinary(Binary(rest,
+        buildBinary(options,
+                    Binary(rest,
                            ["dmd",
                             "-c",
                             "-of" ~ "rest.o"] ~
@@ -216,7 +217,7 @@ private string compileBinaries(in Options options) {
                            reggaeFileDeps));
         objFiles ~= rest;
     }
-    buildBinary(Binary(buildGenName, ["dmd", "-of" ~ buildGenName] ~ objFiles));
+    buildBinary(options, Binary(buildGenName, ["dmd", "-of" ~ buildGenName] ~ objFiles));
 
     return buildGenName;
 }
@@ -232,7 +233,7 @@ private auto buildDCompile(in Options options) {
                      buildPath(reggaeSrcRelDirName, "dcompile.d"),
                      buildPath(reggaeSrcRelDirName, "dependencies.d")];
 
-    buildBinary(Binary(name, cmd));
+    buildBinary(options, Binary(name, cmd));
 }
 
 private bool isExecutable(in char[] path) @trusted nothrow @nogc //TODO: @safe
@@ -242,13 +243,15 @@ private bool isExecutable(in char[] path) @trusted nothrow @nogc //TODO: @safe
     return (access(path.tempCString(), X_OK) == 0);
 }
 
-private void buildBinary(in Binary bin) {
+private void buildBinary(in Options options, in Binary bin) {
     import std.process;
     string[string] env;
     auto config = Config.none;
     auto maxOutput = size_t.max;
     auto workDir = hiddenDir;
-    writeln("[Reggae] Compiling metabuild binary ", bin.name, " with ", bin.cmd.join(" "));
+    std.stdio.write("[Reggae] Compiling metabuild binary ", bin.name);
+    if(options.verbose) std.stdio.write(" with ", bin.cmd.join(" "));
+    writeln;
     // std.process.execute has a bug where using workDir and a relative path
     // don't work (https://issues.dlang.org/show_bug.cgi?id=15915)
     // so executeShell is used instead

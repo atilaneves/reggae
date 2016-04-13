@@ -38,6 +38,7 @@ struct Options {
     string workingDir;
     bool version_;
     bool export_;
+    bool verbose;
     string[string] userVars; //must always be the last member variable
 
     Options dup() @safe pure const nothrow {
@@ -206,6 +207,7 @@ Options getOptions(string[] args) @trusted {
             "C", "Change directory to run in (similar to make -C and ninja -C)", &options.workingDir,
             "version", "Prints version information", &options.version_,
             "export", "Export build system - removes dependencies on reggae itself", &options.export_,
+            "verbose", "Verbose output", &options.verbose,
             );
 
         if(helpInfo.helpWanted) {

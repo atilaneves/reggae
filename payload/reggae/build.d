@@ -474,7 +474,7 @@ enum CommandType {
     phony,
 }
 
-alias CommandFunction = void function(string[], string[]);
+alias CommandFunction = void delegate(string[], string[]);
 
 /**
  A command to be execute to produce a targets outputs from its inputs.
@@ -508,6 +508,12 @@ struct Command {
     this(CommandFunction func) @safe pure nothrow {
         type = CommandType.code;
         this.func = func;
+    }
+
+    ///A D function call command
+    this(void function(string[], string[]) func) @safe pure nothrow {
+        type = CommandType.code;
+        this.func = (i, o){ func(i, o); };
     }
 
     static Command phony(in string shellCommand) @safe pure nothrow {

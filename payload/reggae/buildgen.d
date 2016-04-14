@@ -132,10 +132,7 @@ private void handleMake(Build build, in Options options) {
     version(minimal) {
         throw new Exception("Make backend support not compiled in");
     } else {
-
-        auto makefile = Makefile(build, options);
-        auto file = File(makefile.fileName, "w");
-        file.write(makefile.output);
+        Makefile(build, options).writeFile;
     }
 }
 

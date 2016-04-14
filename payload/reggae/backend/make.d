@@ -78,11 +78,10 @@ struct Makefile {
         return ret;
     }
 
-    private void mkDir(Target target) @trusted const {
-        foreach(output; target.outputsInProjectPath(options.projectPath)) {
-            import std.file;
-            if(!output.dirName.exists) mkdirRecurse(output.dirName);
-        }
+    void writeFile() @safe {
+        import std.stdio;
+        auto file = File(fileName, "w");
+        file.write(output);
     }
 
     //the only reason this is needed is to add auto dependency
@@ -98,6 +97,13 @@ struct Makefile {
             return cmdType == CommandType.link ? cmd : cmd ~ makeAutoDeps(depfile);
         } else {
             return cmd;
+        }
+    }
+
+    private void mkDir(Target target) @trusted const {
+        foreach(output; target.outputsInProjectPath(options.projectPath)) {
+            import std.file;
+            if(!output.dirName.exists) mkdirRecurse(output.dirName);
         }
     }
 }

@@ -474,7 +474,8 @@ enum CommandType {
     phony,
 }
 
-alias CommandFunction = void delegate(string[], string[]);
+alias CommandFunction = void function(string[], string[]);
+alias CommandDelegate = void delegate(string[], string[]);
 
 /**
  A command to be execute to produce a targets outputs from its inputs.
@@ -487,7 +488,8 @@ struct Command {
     private string command;
     private CommandType type;
     private Params params;
-    private CommandFunction func;
+    private CommandFunction function_;
+    private CommandDelegate delegate_;
 
     ///If constructed with a string, it's a shell command
     this(string shellCommand) @safe pure nothrow {
@@ -505,15 +507,15 @@ struct Command {
     }
 
     ///A D function call command
-    this(CommandFunction func) @safe pure nothrow {
+    this(CommandDelegate dg) @safe pure nothrow {
         type = CommandType.code;
-        this.func = func;
+        this.delegate_ = dg;
     }
 
     ///A D function call command
-    this(void function(string[], string[]) func) @safe pure nothrow {
+    this(CommandFunction func) @safe pure nothrow {
         type = CommandType.code;
-        this.func = (i, o){ func(i, o); };
+        this.function_ = func;
     }
 
     static Command phony(in string shellCommand) @safe pure nothrow {
@@ -674,8 +676,9 @@ struct Command {
                 enforce(res.status == 0, "Could not execute phony " ~ cmd ~ ":\n" ~ res.output);
                 return [cmd, res.output];
             case code:
-                assert(func !is null, "Command of type code with null function");
-                func(inputs, outputs);
+                assert(function_ !is null || delegate_ !is null,
+                       "Command of type code with null function");
+                function_ !is null ? function_(inputs, outputs) : delegate_(inputs, outputs);
                 return ["code"];
         }
     }

@@ -8,7 +8,7 @@ Feature: D code as a target command
       """
       import reggae;
       import std.stdio;
-      void func(in string[], in string[]) { writeln(`func was called`); }
+      void func(string[], string[]) { writeln(`func was called`); }
       mixin build!(Target(`copy.txt`, &func, Target(`original.txt`)));
       """
 

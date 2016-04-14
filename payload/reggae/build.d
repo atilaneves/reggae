@@ -669,6 +669,7 @@ struct Command {
             case compileAndLink:
             case phony:
                 immutable cmd = shellCommand(options, language, outputs, inputs);
+                if(cmd == "") return outputs;
                 immutable res = executeShell(cmd);
                 enforce(res.status == 0, "Could not execute phony " ~ cmd ~ ":\n" ~ res.output);
                 return [cmd, res.output];
@@ -739,6 +740,19 @@ struct Command {
 
         case CommandType.code:
             throw new Exception("Cannot serialise Command of type code");
+        }
+    }
+
+    string toString() const pure @safe {
+        final switch(type) with(CommandType) {
+            case shell:
+            case phony:
+                return `Command("` ~ command ~ `")`;
+            case compile:
+            case link:
+            case compileAndLink:
+            case code:
+                return `Command(` ~ type.to!string ~ `)`;
         }
     }
 }

@@ -62,7 +62,7 @@ auto depthFirst(T)(T target) pure {
 struct ByDepthLevel {
     Target[][] targets;
 
-    this(Target target) pure nothrow {
+    this(Target target) pure {
         this.targets = sortTargets(target);
     }
 
@@ -78,12 +78,17 @@ struct ByDepthLevel {
         return targets.empty;
     }
 
-    private Target[][] sortTargets(Target target) pure nothrow {
+    private Target[][] sortTargets(Target target) pure {
         if(target.isLeaf) return [];
 
         Target[][] targets = [[target]];
         rec(0, [target], targets);
-        return targets.retro.array;
+        return targets.
+            retro.
+            map!(a =>
+                 a.sort!((x, y) => x.rawOutputs < y.rawOutputs).
+                 uniq!((x, y) => equal(x.rawOutputs, y.rawOutputs)).array).
+            array;
     }
 
     private void rec(int level, Target[] targets, ref Target[][] soFar) @trusted pure nothrow {

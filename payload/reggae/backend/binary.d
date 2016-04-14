@@ -199,7 +199,7 @@ private:
         mkDir(target);
         auto targetOutput = target.execute(options);
         output.writeln("[build] ", targetOutput[0]);
-        if(target.getCommandType == CommandType.phony)
+        if(target.getCommandType == CommandType.phony && targetOutput.length > 1)
             output.writeln("\n", targetOutput[1]);
     }
 

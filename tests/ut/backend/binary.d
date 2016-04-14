@@ -61,9 +61,6 @@ void testTopLevelTargets() {
 }
 
 
-@("Targets should only be built once") unittest {
-}
-
 private Build binaryBuild() {
     mixin build!(Target("app", "dmd -of$out $in", [Target("foo.o"), Target("bar.o") ]),
                  optional(Target.phony(`opt`, `echo Optional!`)));

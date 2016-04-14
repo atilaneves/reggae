@@ -7,6 +7,7 @@ module reggae.config;
 
 import reggae.types;
 import reggae.options;
+import reggae.ctaa;
 
 version(minimal) {
     enum isDubProject = false;

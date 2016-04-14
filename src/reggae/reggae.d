@@ -85,15 +85,19 @@ bool jsonBuild(Options options, in BuildLanguage language) {
 bool jsonBuild(Options options, in string jsonOutput) {
     enforce(options.backend != Backend.binary, "Binary backend not supported via JSON");
 
-    import reggae.json_build;
-    import reggae.buildgen;
-    import reggae.rules.common: Language;
+    version(minimal)
+        assert(0, "JSON builds not supported in minimal version");
+    else {
+        import reggae.json_build;
+        import reggae.buildgen;
+        import reggae.rules.common: Language;
 
-    auto build = jsonToBuild(options.projectPath, jsonOutput);
-    generateBuild(build, jsonToOptions(options, jsonOutput));
+        auto build = jsonToBuild(options.projectPath, jsonOutput);
+        generateBuild(build, jsonToOptions(options, jsonOutput));
 
-    //true -> exit early
-    return !build.targets.canFind!(a => a.getLanguage == Language.D);
+        //true -> exit early
+        return !build.targets.canFind!(a => a.getLanguage == Language.D);
+    }
 }
 
 
@@ -344,6 +348,7 @@ import reggae.types;
 import reggae.options;
     });
 
+    version(minimal) file.writeln("enum isDubProject = false;");
     file.writeln("immutable options = ", options, ";");
 
     file.writeln("enum userVars = AssocList!(string, string)([");

@@ -51,4 +51,21 @@ struct Tup {
         }
         return lines;
     }
+
+    void writeBuild() @system {
+        import std.file;
+        import std.string;
+        import std.stdio;
+
+        if(!".tup".exists) {
+            import std.process;
+            immutable args = ["tup", "init"];
+            try
+                execute(args);
+            catch(ProcessException _)
+                stderr.writeln("Could not execute '", args.join(" "), "'. tup builds need to do that first.");
+        }
+        auto file = File(fileName, "w");
+        file.write(output);
+    }
 }

@@ -78,7 +78,7 @@ struct Makefile {
         return ret;
     }
 
-    void writeFile() @safe {
+    void writeBuild() @safe {
         import std.stdio;
         auto file = File(fileName, "w");
         file.write(output);

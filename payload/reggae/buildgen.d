@@ -82,15 +82,15 @@ private void generateOneBuild(Build build, in Options options, string[] args = [
     final switch(options.backend) with(Backend) {
 
         case make:
-            handleMake(build, options);
+            writeBuild!Makefile(build, options);
             break;
 
         case ninja:
-            handleNinja(build, options);
+            writeBuild!Ninja(build, options);
             break;
 
         case tup:
-            handleTup(build, options);
+            writeBuild!Tup(build, options);
             break;
 
         case binary:
@@ -104,57 +104,19 @@ private void generateOneBuild(Build build, in Options options, string[] args = [
 
 private void exportBuild(Build build, in Options options) {
     import std.exception;
+    import std.meta;
 
     enforce(options.backend == Backend.none, "Cannot specify a backend and export at the same time");
 
-    handleMake(build, options);
-    handleNinja(build, options);
-    handleTup(build, options);
+    foreach(backend; AliasSeq!(Makefile, Ninja, Tup))
+        writeBuild!backend(build, options);
 }
 
-private void handleNinja(Build build, in Options options) {
-    version(minimal) {
-        throw new Exception("Ninja backend support not compiled in");
-    } else {
-
-        auto ninja = Ninja(build, options);
-
-        auto buildNinja = File("build.ninja", "w");
-        buildNinja.writeln(ninja.buildOutput);
-
-        auto rulesNinja = File("rules.ninja", "w");
-        rulesNinja.writeln(ninja.rulesOutput);
-    }
-}
-
-
-private void handleMake(Build build, in Options options) {
-    version(minimal) {
-        throw new Exception("Make backend support not compiled in");
-    } else {
-        Makefile(build, options).writeFile;
-    }
-}
-
-private void handleTup(Build build, in Options options) {
-    version(minimal) {
-        throw new Exception("Tup backend support not compiled in");
-    } else {
-        import std.file;
-        import std.string;
-
-        if(!".tup".exists) {
-            import std.process;
-            immutable args = ["tup", "init"];
-            try
-                execute(args);
-            catch(ProcessException _)
-                stderr.writeln("Could not execute '", args.join(" "), "'. tup builds need to do that first.");
-        }
-        auto tup = Tup(build, options);
-        auto file = File(tup.fileName, "w");
-        file.write(tup.output);
-    }
+private void writeBuild(T)(Build build, in Options options) {
+    version(minimal)
+        throw new Exception(T.stringof ~ " backend support not compiled in");
+    else
+        T(build, options).writeBuild;
 }
 
 

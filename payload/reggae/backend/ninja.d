@@ -139,6 +139,16 @@ struct Ninja {
         return output(allRuleEntries);
     }
 
+    void writeBuild() @safe {
+        import std.stdio;
+
+        auto buildNinja = File("build.ninja", "w");
+        buildNinja.writeln(buildOutput);
+
+        auto rulesNinja = File("rules.ninja", "w");
+        rulesNinja.writeln(rulesOutput);
+    }
+
 private:
     Build _build;
     string _projectPath;

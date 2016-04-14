@@ -54,6 +54,9 @@ void generateBuildFor(alias module_)(in Options options, string[] args) {
 }
 
 private Build getBuildObject(alias module_)(in Options options) {
+    import std.path;
+    import std.file;
+
     immutable cacheFileName = buildPath(".reggae", "cache");
     if(!options.cacheBuildInfo ||
        !cacheFileName.exists ||
@@ -78,20 +81,31 @@ void generateBuild(Build build, in Options options, string[] args = []) {
     options.export_ ? exportBuild(build, options) : generateOneBuild(build, options, args);
 }
 
+
 private void generateOneBuild(Build build, in Options options, string[] args = []) {
     final switch(options.backend) with(Backend) {
 
-        case make:
-            writeBuild!Makefile(build, options);
-            break;
+        version(minimal) {
+            import std.conv;
 
-        case ninja:
-            writeBuild!Ninja(build, options);
-            break;
+            case make:
+            case ninja:
+            case tup:
+                throw new Exception(text("Support for ", options.backend, " not compiled in"));
+        } else {
 
-        case tup:
-            writeBuild!Tup(build, options);
-            break;
+            case make:
+                writeBuild!Makefile(build, options);
+                break;
+
+            case ninja:
+                writeBuild!Ninja(build, options);
+                break;
+
+            case tup:
+                writeBuild!Tup(build, options);
+                break;
+        }
 
         case binary:
             Binary(build, options).run(args);
@@ -108,8 +122,11 @@ private void exportBuild(Build build, in Options options) {
 
     enforce(options.backend == Backend.none, "Cannot specify a backend and export at the same time");
 
-    foreach(backend; AliasSeq!(Makefile, Ninja, Tup))
-        writeBuild!backend(build, options);
+    version(minimal)
+        throw new Exception("export not supported in minimal version");
+    else
+        foreach(backend; AliasSeq!(Makefile, Ninja, Tup))
+            writeBuild!backend(build, options);
 }
 
 private void writeBuild(T)(Build build, in Options options) {

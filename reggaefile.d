@@ -6,7 +6,7 @@ version(minimal) {
     //not the high level ones that do this automatically
     //This is a repetition in D of what's in minimal_bootstrap.sh
     enum flags = "-version=minimal -I$project/src -I$project/payload -J$project/payload/reggae";
-    enum srcs = [Target("src/reggae/reggae_main.d"), Target("src/reggae/reggae.d"), Target("src/reggae/options.d"),
+    enum srcs = [Target("src/reggae/reggae_main.d"), Target("src/reggae/reggae.d"), Target("payload/reggae/options.d"),
                 Target("payload/reggae/types.d"), Target("payload/reggae/build.d"),
                 Target("payload/reggae/config.d"), Target("payload/reggae/rules/common.d"),
                 Target("payload/reggae/rules/defaults.d")];

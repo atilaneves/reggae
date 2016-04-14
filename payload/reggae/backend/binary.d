@@ -24,6 +24,7 @@ import std.getopt;
 
 struct BinaryOptions {
     bool list;
+    bool norerun;
     private bool _earlyReturn;
     string[] args;
 
@@ -31,6 +32,7 @@ struct BinaryOptions {
         auto optInfo = getopt(
             args,
             "list|l", "List available build targets", &list,
+            "norerun|n", "Don't check for rerun", &norerun,
             );
         if(optInfo.helpWanted) {
             defaultGetoptPrinter("Usage: build <targets>", optInfo.options);
@@ -74,7 +76,7 @@ struct BinaryT(T) {
         handleOptions(binaryOptions);
         if(binaryOptions.earlyReturn) return;
 
-        bool didAnything = checkReRun();
+        bool didAnything = binaryOptions.norerun ? false : checkReRun();
 
         auto topTargets = topLevelTargets(binaryOptions.args);
         if(topTargets.empty)

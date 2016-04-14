@@ -80,6 +80,7 @@ struct Makefile {
 
     void writeBuild() @safe {
         import std.stdio;
+        auto output = output();
         auto file = File(fileName, "w");
         file.write(output);
     }

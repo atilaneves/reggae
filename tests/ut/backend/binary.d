@@ -2,7 +2,7 @@ module tests.ut.backend.binary;
 
 import reggae;
 import unit_threaded;
-
+import tests.utils;
 
 void testTargetSelection() {
 
@@ -88,17 +88,6 @@ private struct FakeFile {
          "- opt (optional)"]);
 }
 
-private void shouldThrowWithMessage(E)(lazy E expr, string msg,
-                                       string file = __FILE__, size_t line = __LINE__) {
-    try {
-        expr();
-    } catch(Exception ex) {
-        ex.msg.shouldEqual(msg);
-        return;
-    }
-
-    throw new Exception("Expression did not throw. Expected msg: " ~ msg, file, line);
-}
 
 @("Unknown target") unittest {
     import std.stdio: stdout, File;

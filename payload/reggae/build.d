@@ -378,9 +378,9 @@ struct Target {
         return _command.paramNames;
     }
 
-    static Target phony(string output, string shellCommand,
+    static Target phony(string name, string shellCommand,
                         Target[] dependencies = [], Target[] implicits = []) @safe pure {
-        return Target(output, Command.phony(shellCommand), dependencies, implicits);
+        return Target(name, Command.phony(shellCommand), dependencies, implicits);
     }
 
     string toString(in Options options) nothrow {

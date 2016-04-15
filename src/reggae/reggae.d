@@ -49,7 +49,7 @@ mixin template ReggaeMain() {
 
     int main(string[] args) {
         try {
-            run(getOptions(args));
+            run(args);
         } catch(Exception ex) {
             stderr.writeln(ex.msg);
             return 1;
@@ -57,6 +57,10 @@ mixin template ReggaeMain() {
 
         return 0;
     }
+}
+
+void run(string[] args) {
+    run(getOptions(args));
 }
 
 void run(Options options) {

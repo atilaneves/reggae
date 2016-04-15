@@ -228,13 +228,16 @@ Options getOptions(string[] args) @trusted {
     options.projectPath = argsPath.absolutePath.buildNormalizedPath;
     options.finalize(origArgs);
 
+    return options;
+}
+
+
+void changeToDir(in Options options) {
     if(options.workingDir) {
         import std.file: chdir, exists, mkdirRecurse;
         if(!options.workingDir.exists) mkdirRecurse(options.workingDir);
         chdir(options.workingDir);
     }
-
-    return options;
 }
 
 

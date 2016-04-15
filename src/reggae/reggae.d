@@ -60,7 +60,9 @@ mixin template ReggaeMain() {
 }
 
 void run(string[] args) {
-    run(getOptions(args));
+    auto options = getOptions(args);
+    changeToDir(options);
+    run(options);
 }
 
 void run(Options options) {

@@ -16,35 +16,35 @@ void testTargetSelection() {
 
     {
         scope(exit) resetCalls;
-        binary.run(["prog"]);
+        binary.run(["prog", "--norerun"]);
         fooCalled.shouldBeTrue;
         barCalled.shouldBeTrue;
     }
 
     {
         scope(exit) resetCalls;
-        binary.run(["prog", "foo", "bar"]);
+        binary.run(["prog", "--norerun", "foo", "bar"]);
         fooCalled.shouldBeTrue;
         barCalled.shouldBeTrue;
     }
 
     {
         scope(exit) resetCalls;
-        binary.run(["prog", "foo"]);
+        binary.run(["prog", "--norerun", "foo"]);
         fooCalled.shouldBeTrue;
         barCalled.shouldBeFalse;
     }
 
     {
         scope(exit) resetCalls;
-        binary.run(["prog", "bar"]);
+        binary.run(["prog", "--norerun", "bar"]);
         fooCalled.shouldBeFalse;
         barCalled.shouldBeTrue;
     }
 
     {
         scope(exit) resetCalls;
-        binary.run(["prog", "nonexistent"]).shouldThrow;
+        binary.run(["prog", "--norerun", "nonexistent"]).shouldThrow;
         fooCalled.shouldBeFalse;
         barCalled.shouldBeFalse;
     }
@@ -67,20 +67,12 @@ private Build binaryBuild() {
     return buildFunc();
 }
 
-private struct FakeFile {
-    string[] lines;
-    void writeln(T...)(T args) {
-        import std.conv;
-        lines ~= text(args);
-    }
-}
-
 @("Listing targets") unittest {
     import std.stdio: stdout, File;
 
     auto file = FakeFile();
     auto binary = Binary(binaryBuild, getOptions(["./reggae", "-b", "binary"]), file);
-    binary.run(["./build", "-l"]);
+    binary.run(["./build", "--norerun", "-l"]);
 
     file.lines.shouldEqual(
         ["List of available top-level targets:",
@@ -93,7 +85,7 @@ private struct FakeFile {
     import std.stdio: stdout, File;
 
     auto binary = Binary(binaryBuild, getOptions(["./reggae", "-b", "binary"]));
-    binary.run(["./build", "oops"]).
+    binary.run(["./build", "--norerun", "oops"]).
         shouldThrowWithMessage("Unknown target(s) 'oops'");
 }
 
@@ -101,6 +93,6 @@ private struct FakeFile {
     import std.stdio: stdout, File;
 
     auto binary = Binary(binaryBuild, getOptions(["./reggae", "-b", "binary"]));
-    binary.run(["./build", "oops", "woopsie"]).
+    binary.run(["./build", "--norerun", "oops", "woopsie"]).
         shouldThrowWithMessage("Unknown target(s) 'oops' 'woopsie'");
 }

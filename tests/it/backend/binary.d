@@ -42,11 +42,13 @@ private struct FakeFile {
 
     auto file = FakeFile();
     auto binary = Binary(binaryBuild, getOptions(["./reggae", "-b", "binary"]), file);
-    binary.run(["./build"]);
+    auto args = ["./build", "--norerun"];
+    binary.run(args);
+
     copyFileName.exists.shouldBeTrue;
 
     file.lines = [];
-    binary.run(["./build"]);
+    binary.run(args);
     file.lines.shouldEqual(["[build] Nothing to do"]);
 }
 

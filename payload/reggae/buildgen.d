@@ -49,7 +49,7 @@ mixin template BuildGenMain(string buildModule = "reggaefile") {
     }
 }
 
-void doBuildFor(alias module_)(in Options options, string[] args = []) {
+void doBuildFor(alias module_ = "reggaefile")(in Options options, string[] args = []) {
     auto build = getBuildObject!module_(options);
     if(!options.noCompilationDB) writeCompilationDB(build, options);
     doBuild(build, options, args);

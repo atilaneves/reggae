@@ -51,7 +51,13 @@ struct BinaryOptions {
 }
 
 auto Binary(Build build, in Options options) @system {
-    return BinaryT!(File)(build, options, stdout);
+    version(unittest) {
+        import tests.utils;
+        auto file = new FakeFile;
+        return Binary(build, options, *file);
+    }
+    else
+        return Binary(build, options, stdout);
 }
 
 auto Binary(T)(Build build, in Options options, ref T output) {
@@ -65,6 +71,14 @@ struct BinaryT(T) {
     T* output;
 
     this(Build build, in Options options, ref T output) @trusted {
+        version(unittest) {
+            static if(is(T == File)) {
+                assert(&output != &stdout,
+                       "stdio not allowed for Binary output in testing, "
+                       "use tests.utils.FakeFile instead");
+            }
+        }
+
         this.build = build;
         this.options = options;
         this.output = &output;

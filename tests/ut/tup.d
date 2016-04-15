@@ -1,4 +1,4 @@
-module tests.tup;
+module tests.ut.tup;
 
 
 import unit_threaded;

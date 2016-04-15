@@ -1,4 +1,4 @@
-module tests.serialisation;
+module tests.ut.serialisation;
 
 
 import reggae;

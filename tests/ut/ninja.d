@@ -1,4 +1,4 @@
-module tests.ninja;
+module tests.ut.ninja;
 
 import unit_threaded;
 import reggae;

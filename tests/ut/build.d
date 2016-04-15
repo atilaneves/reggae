@@ -1,4 +1,4 @@
-module tests.build;
+module tests.ut.build;
 
 import unit_threaded;
 import reggae;

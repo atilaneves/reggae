@@ -1,4 +1,4 @@
-module tests.reflect;
+module tests.ut.reflect;
 
 import unit_threaded;
 import reggae;
@@ -6,19 +6,19 @@ import reggae;
 
 void testSimpleBuild() {
     {
-        import tests.simple_foo_reggaefile;
-        const build = getBuild!(tests.simple_foo_reggaefile);
+        import tests.ut.simple_foo_reggaefile;
+        const build = getBuild!(tests.ut.simple_foo_reggaefile);
         build().shouldEqual(Build(Target("foo.txt")));
     }
     {
-        import tests.simple_bar_reggaefile;
-        const build = getBuild!(tests.simple_bar_reggaefile);
+        import tests.ut.simple_bar_reggaefile;
+        const build = getBuild!(tests.ut.simple_bar_reggaefile);
         build().shouldEqual(Build(Target("bar.txt")));
     }
 }
 
 void testRealisticBuild() {
-    const build = getBuild!"tests.realistic_build";
+    const build = getBuild!"tests.ut.realistic_build";
     build().shouldEqual(Build(Target("leapp",
                                      "dmd -ofleapp foo.o bar.o",
                                      [Target("foo.o", "dmd -c -offoo.o foo.d", [Target("foo.d")]),

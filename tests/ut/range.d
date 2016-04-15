@@ -1,4 +1,4 @@
-module tests.range;
+module tests.ut.range;
 
 import reggae;
 import unit_threaded;

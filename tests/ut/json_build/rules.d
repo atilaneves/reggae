@@ -1,4 +1,4 @@
-module tests.json_build.rules;
+module tests.ut.json_build.rules;
 
 
 import reggae;

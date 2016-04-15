@@ -1,4 +1,4 @@
-module tests.simple_foo_reggaefile;
+module tests.ut.simple_foo_reggaefile;
 
 import reggae;
 

@@ -1,4 +1,4 @@
-module tests.dub_call;
+module tests.ut.dub_call;
 
 
 import unit_threaded;

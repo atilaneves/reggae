@@ -1,4 +1,4 @@
-module tests.make;
+module tests.ut.make;
 
 import unit_threaded;
 import reggae;

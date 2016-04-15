@@ -1,4 +1,4 @@
-module tests.ctaa;
+module tests.ut.ctaa;
 
 import unit_threaded;
 import reggae.ctaa;

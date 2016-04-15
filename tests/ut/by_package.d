@@ -1,4 +1,4 @@
-module tests.by_package;
+module tests.ut.by_package;
 
 
 import unit_threaded;

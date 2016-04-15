@@ -232,7 +232,7 @@ private string compileBinaries(in Options options) {
     return buildGenName;
 }
 
-private auto buildDCompile(in Options options) {
+private void buildDCompile(in Options options) {
     immutable name = "dcompile";
 
     if(!thisExePath.newerThan(name)) return;

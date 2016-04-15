@@ -1,4 +1,4 @@
-module tests.code_command;
+module tests.ut.code_command;
 
 import reggae;
 import unit_threaded;

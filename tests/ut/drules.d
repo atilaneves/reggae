@@ -1,4 +1,4 @@
-module tests.drules;
+module tests.ut.drules;
 
 
 import reggae;

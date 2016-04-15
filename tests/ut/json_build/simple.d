@@ -1,4 +1,4 @@
-module tests.json_build.simple;
+module tests.ut.json_build.simple;
 
 
 import reggae;

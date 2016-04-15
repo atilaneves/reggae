@@ -1,4 +1,4 @@
-module tests.realistic_build;
+module tests.ut.realistic_build;
 
 import reggae;
 

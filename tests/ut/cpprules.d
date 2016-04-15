@@ -1,4 +1,4 @@
-module tests.cpprules;
+module tests.ut.cpprules;
 
 
 import reggae;

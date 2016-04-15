@@ -1,4 +1,4 @@
-module tests.dependencies;
+module tests.ut.dependencies;
 
 import unit_threaded;
 import reggae.dependencies;

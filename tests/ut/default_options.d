@@ -1,4 +1,4 @@
-module tests.default_options;
+module tests.ut.default_options;
 
 import unit_threaded;
 

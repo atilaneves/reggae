@@ -1,4 +1,4 @@
-module tests.default_rules;
+module tests.ut.default_rules;
 
 
 import reggae;

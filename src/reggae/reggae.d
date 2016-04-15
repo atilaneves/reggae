@@ -68,7 +68,7 @@ void run(Options options) {
     enforce(options.projectPath != "", "A project path must be specified");
 
     if(options.isJsonBuild) {
-        immutable haveToReturn = jsonBuild(options, options.reggaeFileLanguage);
+        immutable haveToReturn = jsonBuild(options);
         if(haveToReturn) return;
     }
 
@@ -79,8 +79,8 @@ void run(Options options) {
 //get JSON description of the build from a scripting language
 //and transform it into a build description
 //return true if no D files are present
-bool jsonBuild(Options options, in BuildLanguage language) {
-    immutable jsonOutput = getJsonOutput(options, language);
+bool jsonBuild(Options options) {
+    immutable jsonOutput = getJsonOutput(options);
     return jsonBuild(options, jsonOutput);
 }
 
@@ -105,8 +105,8 @@ bool jsonBuild(Options options, in string jsonOutput) {
 }
 
 
-private string getJsonOutput(in Options options, in BuildLanguage language) @safe {
-    const args = getJsonOutputArgs(options, language);
+private string getJsonOutput(in Options options) @safe {
+    const args = getJsonOutputArgs(options);
     const nodePaths = environment.get("NODE_PATH", "").split(":");
     const luaPaths = environment.get("LUA_PATH", "").split(";");
     auto env = ["NODE_PATH": (nodePaths ~ options.projectPath).join(":"),
@@ -116,8 +116,8 @@ private string getJsonOutput(in Options options, in BuildLanguage language) @saf
     return res.output;
 }
 
-private string[] getJsonOutputArgs(in Options options, in BuildLanguage language) @safe {
-    final switch(language) {
+private string[] getJsonOutputArgs(in Options options) @safe {
+    final switch(options.reggaeFileLanguage) {
 
     case BuildLanguage.D:
         assert(0, "Cannot obtain JSON build for builds written in D");
@@ -164,8 +164,10 @@ enum otherFiles = [
 
 //all files that need to be written out and compiled
 private string[] fileNames() @safe pure nothrow {
-    version(minimal) return coreFiles;
-    else return coreFiles ~ otherFiles;
+    version(minimal)
+        return coreFiles;
+    else
+        return coreFiles ~ otherFiles;
 }
 
 

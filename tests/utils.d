@@ -1,5 +1,6 @@
 module tests.utils;
 
+import reggae;
 import unit_threaded;
 
 void shouldThrowWithMessage(E)(lazy E expr, string expectedMsg,
@@ -15,4 +16,11 @@ void shouldThrowWithMessage(E)(lazy E expr, string expectedMsg,
 
     if(!threw) throw new Exception("Expression did not throw. Expected msg: " ~ msg, file, line);
     msg.shouldEqual(expectedMsg);
+}
+
+
+void doTestBuildFor(string module_ = __MODULE__)(string[] extraArgs = []) {
+    auto args = ["reggae", "--no_comp_db"] ~ extraArgs;
+    auto options = getOptions(args);
+    doBuildFor!(module_)(options, args);
 }

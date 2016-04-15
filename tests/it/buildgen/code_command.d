@@ -16,9 +16,7 @@ mixin build!(Target(`copy.txt`, &func, Target(`original.txt`)));
 unittest {
     auto backend = getValue!string;
     writelnUt(backend);
-    auto args = ["reggae", "-b", backend, "--no_comp_db"];
-    auto options = getOptions(args);
-    generateBuildFor!(__MODULE__)(options, args).
+    doTestBuildFor(["-b", backend]).
         shouldThrowWithMessage("Command type 'code' not supported for " ~ backend ~ " backend");
 }
 
@@ -26,9 +24,7 @@ unittest {
 @("ninja", "make", "tup")
 void testCommandsShouldFailWithBackendsOtherThanBinary(string backend) {
     writelnUt(backend);
-    auto args = ["reggae", "-b", backend, "--no_comp_db"];
-    auto options = getOptions(args);
-    generateBuildFor!(__MODULE__)(options, args).
+    doTestBuildFor(["-b", backend]).
         shouldThrowWithMessage("Command type 'code' not supported for " ~ backend ~ " backend");
 
 }
@@ -36,9 +32,7 @@ void testCommandsShouldFailWithBackendsOtherThanBinary(string backend) {
 @("make", "ninja")
 void testCommandsShouldFailWithBackend(string backend) {
     writelnUt(backend);
-    auto args = ["reggae", "-b", backend, "--no_comp_db"];
-    auto options = getOptions(args);
-    generateBuildFor!(__MODULE__)(options, args).
+    doTestBuildFor(["-b", backend]).
         shouldThrowWithMessage("Command type 'code' not supported for " ~ backend ~ " backend");
 
 }

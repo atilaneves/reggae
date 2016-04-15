@@ -34,10 +34,12 @@ mixin template buildGen(string buildModule, targets...) {
 mixin template BuildGenMain(string buildModule = "reggaefile") {
     import std.stdio;
 
+    // args is empty except for the binary backend,
+    // in which case it's used for runtime options
     int main(string[] args) {
         try {
             import reggae.config: options;
-            generateBuildFor!(buildModule)(options, args); //the user's build description
+            doBuildFor!(buildModule)(options, args); //the user's build description
         } catch(Exception ex) {
             stderr.writeln(ex.msg);
             return 1;
@@ -47,12 +49,14 @@ mixin template BuildGenMain(string buildModule = "reggaefile") {
     }
 }
 
-void generateBuildFor(alias module_)(in Options options, string[] args) {
+void doBuildFor(alias module_)(in Options options, string[] args = []) {
     auto build = getBuildObject!module_(options);
     if(!options.noCompilationDB) writeCompilationDB(build, options);
-    generateBuild(build, options, args);
+    doBuild(build, options, args);
 }
 
+// calls the build function or loads it from the cache and returns
+// the Build object
 private Build getBuildObject(alias module_)(in Options options) {
     import std.path;
     import std.file;
@@ -77,12 +81,12 @@ private Build getBuildObject(alias module_)(in Options options) {
     }
 }
 
-void generateBuild(Build build, in Options options, string[] args = []) {
-    options.export_ ? exportBuild(build, options) : generateOneBuild(build, options, args);
+void doBuild(Build build, in Options options, string[] args = []) {
+    options.export_ ? exportBuild(build, options) : doOneBuild(build, options, args);
 }
 
 
-private void generateOneBuild(Build build, in Options options, string[] args = []) {
+private void doOneBuild(Build build, in Options options, string[] args = []) {
     final switch(options.backend) with(Backend) {
 
         version(minimal) {

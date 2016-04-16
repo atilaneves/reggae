@@ -20,22 +20,22 @@ void shouldThrowWithMessage(E)(lazy E expr, string expectedMsg,
 }
 
 
-void doTestBuildFor(string module_ = __MODULE__)(string[] extraArgs = []) {
-    auto args = ["reggae", "--no_comp_db"] ~ extraArgs;
-    auto options = getOptions(args);
-    doBuildFor!(module_)(options, args);
-}
-
-
-auto shouldExecuteOk(string[] args, string file = __FILE__, size_t line = __LINE__) {
+auto shouldExecuteOk(string[] args, string workDir,
+                     string file = __FILE__, size_t line = __LINE__) {
     import std.process;
     import std.array;
     import std.string;
 
-    immutable res = execute(args);
+    const string[string] env = null;
+    Config config = Config.none;
+    size_t maxOutput = size_t.max;
+
+    immutable res = execute(args, env, config, maxOutput, workDir);
+
     auto lines = res.output.chomp.split("\n");
     if(res.status != 0)
-        throw new UnitTestException(["Could not execute '" ~ args.join(" ") ~ "':"] ~
+        throw new UnitTestException(["Could not execute '" ~ args.join(" ") ~
+                                     "' in path " ~ workDir ~ ":"] ~
                                     "" ~ lines,
                                     file, line);
     return lines;

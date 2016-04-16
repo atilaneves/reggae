@@ -146,8 +146,9 @@ private void writeCompilationDB(Build build, in Options options) {
     import std.conv;
     import std.algorithm;
     import std.string;
+    import std.path;
 
-    auto file = File("compile_commands.json", "w");
+    auto file = File(buildPath(options.workingDir, "compile_commands.json"), "w");
     file.writeln("[");
 
     immutable cwd = getcwd;

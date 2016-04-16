@@ -141,11 +141,12 @@ struct Ninja {
 
     void writeBuild() @safe {
         import std.stdio;
+        import std.path;
 
-        auto buildNinja = File("build.ninja", "w");
+        auto buildNinja = File(buildPath(_options.workingDir, "build.ninja"), "w");
         buildNinja.writeln(buildOutput);
 
-        auto rulesNinja = File("rules.ninja", "w");
+        auto rulesNinja = File(buildPath(_options.workingDir, "rules.ninja"), "w");
         rulesNinja.writeln(rulesOutput);
     }
 

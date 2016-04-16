@@ -672,7 +672,12 @@ struct Command {
             case phony:
                 immutable cmd = shellCommand(options, language, outputs, inputs);
                 if(cmd == "") return outputs;
-                immutable res = executeShell(cmd);
+
+                const string[string] env = null;
+                Config config = Config.none;
+                size_t maxOutput = size_t.max;
+
+                immutable res = executeShell(cmd, env, config, maxOutput, options.workingDir);
                 enforce(res.status == 0, "Could not execute phony " ~ cmd ~ ":\n" ~ res.output);
                 return [cmd, res.output];
             case code:

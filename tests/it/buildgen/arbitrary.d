@@ -7,13 +7,13 @@ import tests.it;
 
 
 @("1st project builds")
-@Values("ninja", "make")
+@Values("ninja", "make", "binary")
 unittest {
     auto backend = getValue!string;
     auto options = testOptions(["-b", backend, inOrigPath("tests", "projects", "project1")]);
+    doTestBuildFor!"project1.reggaefile"(options);
+
     auto testPath = options.workingDir;
-    doBuildFor!"project1.reggaefile"(options);
-    buildCmd(backend, testPath).shouldExecuteOk(testPath);
     auto appPath = inPath(testPath, "myapp");
     [appPath, "2", "3"].shouldExecuteOk(testPath).shouldEqual(
         ["The sum     of 2 and 3 is 5",
@@ -27,15 +27,15 @@ unittest {
 
 
 @("2nd project builds")
-@Values("ninja", "make")
+@Values("ninja", "make", "binary")
 unittest {
     auto backend = getValue!string;
     auto options = testOptions(["-b", backend, inOrigPath("tests", "projects", "project2")]);
-    auto testPath = options.workingDir;
+    doTestBuildFor!"project2.reggaefile"(options);
 
-    doBuildFor!"project2.reggaefile"(options);
-    buildCmd(backend, testPath).shouldExecuteOk(testPath);
+    auto testPath = options.workingDir;
     auto appPath = inPath(testPath, "appp");
+
     [appPath, "hello"].shouldExecuteOk(testPath).shouldEqual(
         ["Appending to hello yields hello appended!",
       ]);

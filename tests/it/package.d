@@ -16,7 +16,7 @@ shared static this() {
 string testPath() @safe {
     import std.file;
     import std.path;
-    return buildPath(tempDir, "reggae");
+    return buildPath(origPath, "tmp");
 }
 
 
@@ -65,9 +65,8 @@ string[] binary(string path, string[] args = []) {
     return [buildPath(path, "build"), "--norerun"] ~ args;
 }
 
-string[] buildCmd(string backend, string path, string[] args = []) {
-    import std.conv;
-    final switch(backend.to!Backend) {
+string[] buildCmd(Backend backend, string path, string[] args = []) {
+    final switch(backend) {
     case Backend.ninja:
         return ninja(args);
     case Backend.make:
@@ -79,4 +78,14 @@ string[] buildCmd(string backend, string path, string[] args = []) {
     case Backend.none:
         throw new Exception("No buildCmd for none");
     }
+}
+
+
+void doTestBuildFor(alias module_ = __MODULE__)(in Options options, string[] args = []) {
+    import tests.utils;
+    auto cmdArgs = buildCmd(options.backend, options.workingDir, args);
+    doBuildFor!module_(options, cmdArgs);
+    if(options.backend != Backend.binary)
+        cmdArgs.shouldExecuteOk(options.workingDir);
+
 }

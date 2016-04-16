@@ -81,7 +81,7 @@ struct Makefile {
     void writeBuild() @safe {
         import std.stdio;
         auto output = output();
-        auto file = File(fileName, "w");
+        auto file = File(buildPath(options.workingDir, fileName), "w");
         file.write(output);
     }
 

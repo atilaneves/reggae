@@ -5,11 +5,15 @@ import unit_threaded;
 import tests.utils;
 import tests.it;
 
-@("1st project builds with ninja") unittest {
-    auto options = testOptions(["-b", "ninja", inOrigPath("tests", "projects", "project1")]);
+
+@("1st project builds")
+@Values("ninja", "make")
+unittest {
+    auto backend = getValue!string;
+    auto options = testOptions(["-b", backend, inOrigPath("tests", "projects", "project1")]);
     auto testPath = options.workingDir;
     doBuildFor!"project1.reggaefile"(options);
-    ["ninja", "-j1"].shouldExecuteOk(testPath);
+    buildCmd(backend, testPath).shouldExecuteOk(testPath);
     auto appPath = inPath(testPath, "myapp");
     [appPath, "2", "3"].shouldExecuteOk(testPath).shouldEqual(
         ["The sum     of 2 and 3 is 5",
@@ -21,12 +25,16 @@ import tests.it;
             ]);
 }
 
-@("2nd project builds with ninja") unittest {
-    auto options = testOptions(["-b", "ninja", inOrigPath("tests", "projects", "project2")]);
+
+@("2nd project builds")
+@Values("ninja", "make")
+unittest {
+    auto backend = getValue!string;
+    auto options = testOptions(["-b", backend, inOrigPath("tests", "projects", "project2")]);
     auto testPath = options.workingDir;
 
     doBuildFor!"project2.reggaefile"(options);
-    ["ninja", "-j1"].shouldExecuteOk(testPath);
+    buildCmd(backend, testPath).shouldExecuteOk(testPath);
     auto appPath = inPath(testPath, "appp");
     [appPath, "hello"].shouldExecuteOk(testPath).shouldEqual(
         ["Appending to hello yields hello appended!",

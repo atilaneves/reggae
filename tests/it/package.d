@@ -47,3 +47,36 @@ Options testOptions(string[] args) {
     auto testPath = newTestDir;
     return getOptions(["reggae", "-C", testPath] ~ args);
 }
+
+string[] ninja(string[] args = []) {
+    return ["ninja", "-j1"] ~ args;
+}
+
+string[] make(string[] args = []) {
+    return ["make"] ~ args;
+}
+
+string[] tup(string[] args = []) {
+    return ["tup"] ~ args;
+}
+
+string[] binary(string path, string[] args = []) {
+    import std.path;
+    return [buildPath(path, "build"), "--norerun"] ~ args;
+}
+
+string[] buildCmd(string backend, string path, string[] args = []) {
+    import std.conv;
+    final switch(backend.to!Backend) {
+    case Backend.ninja:
+        return ninja(args);
+    case Backend.make:
+        return make(args);
+    case Backend.tup:
+        return tup(args);
+    case Backend.binary:
+        return binary(path, args);
+    case Backend.none:
+        throw new Exception("No buildCmd for none");
+    }
+}

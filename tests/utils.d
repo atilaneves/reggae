@@ -34,7 +34,8 @@ auto shouldExecuteOk(string[] args, string workDir,
 
     auto lines = res.output.chomp.split("\n");
     if(res.status != 0)
-        throw new UnitTestException(["Could not execute '" ~ args.join(" ") ~ "':"] ~
+        throw new UnitTestException(["Could not execute '" ~ args.join(" ") ~
+                                     "' in path " ~ workDir ~ ":"] ~
                                     "" ~ lines,
                                     file, line);
     return lines;

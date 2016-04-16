@@ -56,16 +56,22 @@ struct Tup {
         import std.file;
         import std.string;
         import std.stdio;
+        import std.path;
+        import std.process;
 
         if(!".tup".exists) {
-            import std.process;
             immutable args = ["tup", "init"];
+            const string[string] env = null;
+            Config config = Config.none;
+            size_t maxOutput = size_t.max;
+
             try
-                execute(args);
+                execute(args, env, config, maxOutput, options.workingDir);
             catch(ProcessException _)
-                stderr.writeln("Could not execute '", args.join(" "), "'. tup builds need to do that first.");
+                stderr.writeln("Could not execute '", args.join(" "),
+                               "'. tup builds need to do that first.");
         }
-        auto file = File(fileName, "w");
+        auto file = File(buildPath(options.workingDir, fileName), "w");
         file.write(output);
     }
 }

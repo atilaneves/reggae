@@ -80,9 +80,35 @@ string[] buildCmd(Backend backend, string path, string[] args = []) {
     }
 }
 
-
-void doTestBuildFor(alias module_ = __MODULE__)(in Options options, string[] args = []) {
+// do a build in the integration test context
+void doTestBuildFor(alias module_ = __MODULE__)(Options options, string[] args = []) {
     import tests.utils;
+    import std.file;
+    import std.string;
+    import std.path;
+
+    // tup needs special treatment - it's ok with absolute file paths
+    // but only if relative to the build path, so copy the project files
+    // to the build directory
+    if(options.backend == Backend.tup) {
+        immutable projectsPath = buildPath(origPath, "tests", "projects");
+        immutable projectName = module_.split(".")[0];
+        immutable projectPath = buildPath(projectsPath, projectName);
+
+        // change the directory of the project to be where the build dir is
+        options.projectPath = buildPath(origPath, (options.workingDir).relativePath(origPath));
+        auto modulePath = buildPath(projectsPath, module_.split(".").join(dirSeparator));
+
+        // copy all project files over to the build directory
+        foreach(entry; dirEntries(dirName(modulePath), SpanMode.depth)) {
+            if(entry.isDir) continue;
+            auto tgtName = buildPath(options.workingDir, entry.relativePath(projectPath));
+            auto dir = dirName(tgtName);
+            if(!dir.exists) mkdirRecurse(dir);
+            copy(entry, buildPath(options.workingDir, tgtName));
+        }
+    }
+
     auto cmdArgs = buildCmd(options.backend, options.workingDir, args);
     doBuildFor!module_(options, cmdArgs);
     if(options.backend != Backend.binary)

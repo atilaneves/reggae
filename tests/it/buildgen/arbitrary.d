@@ -7,7 +7,7 @@ import tests.it;
 
 
 @("1st project builds")
-@Values("ninja", "make", "binary")
+@Values("ninja", "make", "tup", "binary")
 unittest {
     auto backend = getValue!string;
     auto options = testOptions(["-b", backend, inOrigPath("tests", "projects", "project1")]);
@@ -27,7 +27,7 @@ unittest {
 
 
 @("2nd project builds")
-@Values("ninja", "make", "binary")
+@Values("ninja", "make", "tup", "binary")
 unittest {
     auto backend = getValue!string;
     auto options = testOptions(["-b", backend, inOrigPath("tests", "projects", "project2")]);

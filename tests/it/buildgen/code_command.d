@@ -2,6 +2,7 @@ module tests.it.buildgen.code_command;
 
 import reggae;
 import unit_threaded;
+import tests.it;
 import tests.utils;
 
 void func(string[], string[]) {  }
@@ -16,7 +17,7 @@ mixin build!(Target(`copy.txt`, &func, Target(`original.txt`)));
 unittest {
     auto backend = getValue!string;
     writelnUt(backend);
-    doTestBuildFor(["-b", backend]).
+    doBuildFor!(__MODULE__)(testOptions(["-b", backend])).
         shouldThrowWithMessage("Command type 'code' not supported for " ~ backend ~ " backend");
 }
 
@@ -24,7 +25,7 @@ unittest {
 @("ninja", "make", "tup")
 void testCommandsShouldFailWithBackendsOtherThanBinary(string backend) {
     writelnUt(backend);
-    doTestBuildFor(["-b", backend]).
+    doBuildFor!(__MODULE__)(testOptions(["-b", backend])).
         shouldThrowWithMessage("Command type 'code' not supported for " ~ backend ~ " backend");
 
 }
@@ -32,7 +33,7 @@ void testCommandsShouldFailWithBackendsOtherThanBinary(string backend) {
 @("make", "ninja")
 void testCommandsShouldFailWithBackend(string backend) {
     writelnUt(backend);
-    doTestBuildFor(["-b", backend]).
+    doBuildFor!(__MODULE__)(testOptions(["-b", backend])).
         shouldThrowWithMessage("Command type 'code' not supported for " ~ backend ~ " backend");
 
 }

@@ -7,7 +7,12 @@ immutable string origPath;
 shared static this() {
     import std.file;
     import std.path;
-    origPath = getcwd.absolutePath;
+    import std.algorithm;
+    import std.range;
+
+    auto paths = [".", ".."].map!(a => buildNormalizedPath(getcwd, a)).find!(a => buildNormalizedPath(a, "dub.json").exists);
+    assert(!paths.empty, "Error: Cannot find reggae top dir using dub.json");
+    origPath = paths.front.absolutePath;
     if(testPath.exists) rmdirRecurse(testPath);
     mkdirRecurse(testPath);
 }
@@ -16,7 +21,7 @@ shared static this() {
 string testPath() @safe {
     import std.file;
     import std.path;
-    return buildPath(origPath, "tmp");
+    return buildNormalizedPath(origPath, "tmp");
 }
 
 

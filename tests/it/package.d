@@ -81,7 +81,7 @@ string[] buildCmd(Backend backend, string path, string[] args = []) {
     case Backend.binary:
         return binary(path, args);
     case Backend.none:
-        throw new Exception("No buildCmd for none");
+        return [];
     }
 }
 

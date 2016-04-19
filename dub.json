@@ -26,7 +26,7 @@
                                   "tests/projects/project2/source/main.d"
                                  ],
           "dependencies": {
-              "unit-threaded": "~>0.6.7"
+              "unit-threaded": "~>0.6.8"
           }
         }
     ]

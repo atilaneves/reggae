@@ -15,6 +15,36 @@ shared static this() {
     origPath = paths.front.absolutePath;
     if(testPath.exists) rmdirRecurse(testPath);
     mkdirRecurse(testPath);
+    buildDCompile();
+}
+
+private void buildDCompile() {
+    import std.meta;
+    import std.process;
+    import std.exception;
+    import std.conv;
+    import std.array;
+
+    enum fileNames = ["dcompile.d", "dependencies.d"];
+    foreach(fileName; aliasSeqOf!fileNames) {
+        writeFile!fileName;
+    }
+
+    enum args = ["dmd", "-ofdcompile"] ~ fileNames;
+    const string[string] env = null;
+    Config config = Config.none;
+    size_t maxOutput = size_t.max;
+    const workDir = testPath;
+
+    immutable res = execute(args, env, config, maxOutput, workDir);
+    enforce(res.status == 0, text("Could not execute '", args.join(" "), "':\n", res.output));
+}
+
+private void writeFile(string fileName)() {
+    import std.stdio;
+    import std.path;
+    auto file = File(buildPath(testPath, fileName), "w");
+    file.write(import(fileName));
 }
 
 

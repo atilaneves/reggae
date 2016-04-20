@@ -17,8 +17,8 @@ unittest {
     import std.path;
 
     mkdirRecurse(buildPath(options.workingDir, ".reggae"));
-    writeSrcFiles(options);
-    buildDCompile(options);
+    symlink(buildPath(testPath, "dcompile"), buildPath(options.workingDir, ".reggae", "dcompile"));
+
     doTestBuildFor!"d_and_cpp.reggaefile"(options);
 
     auto testPath = options.workingDir;

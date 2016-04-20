@@ -7,6 +7,7 @@ import tests.it;
 
 
 @("1st project builds")
+@AutoTags
 @Values("ninja", "make", "tup", "binary")
 unittest {
     auto backend = getValue!string;
@@ -27,6 +28,7 @@ unittest {
 
 
 @("2nd project builds")
+@AutoTags
 @Values("ninja", "make", "tup", "binary")
 unittest {
     auto backend = getValue!string;

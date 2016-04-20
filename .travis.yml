@@ -31,5 +31,5 @@ install:
 script:
   - ./bootstrap.sh make
   # the Travis CI machines don't like tup
-  - bin/ut tests.ut
+  - bin/ut tests.ut ~@tup
   - cucumber --tags ~@tup --tags ~@ruby --tags ~@lua

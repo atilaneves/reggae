@@ -97,7 +97,11 @@ string[] tup(string[] args = []) {
 
 string[] binary(string path, string[] args = []) {
     import std.path;
-    return [buildPath(path, "build"), "--norerun"] ~ args;
+    return [buildPath(path, "build"), "--norerun", "--single"] ~ args;
+}
+
+string[] buildCmd(in Options options, string[] args = []) {
+    return buildCmd(options.backend, options.workingDir, args);
 }
 
 string[] buildCmd(Backend backend, string path, string[] args = []) {
@@ -116,28 +120,27 @@ string[] buildCmd(Backend backend, string path, string[] args = []) {
 }
 
 // do a build in the integration test context
-void doTestBuildFor(alias module_ = __MODULE__)(Options options, string[] args = []) {
+void doTestBuildFor(alias module_ = __MODULE__)(ref Options options, string[] args = []) {
     import tests.utils;
     import std.file;
     import std.string;
     import std.path;
+    import std.algorithm: canFind;
 
     mkdirRecurse(buildPath(options.workingDir, ".reggae"));
     symlink(buildPath(testPath, "dcompile"), buildPath(options.workingDir, ".reggae", "dcompile"));
 
-    // tup needs special treatment - it's ok with absolute file paths
-    // but only if relative to the build path, so copy the project files
-    // to the build directory
-    if(options.backend == Backend.tup) {
-        immutable projectsPath = buildPath(origPath, "tests", "projects");
-        immutable projectName = module_.split(".")[0];
-        immutable projectPath = buildPath(projectsPath, projectName);
+    // copy the project files over, that way the tests can modify them
+    immutable projectsPath = buildPath(origPath, "tests", "projects");
+    immutable projectName = module_.split(".")[0];
+    immutable projectPath = buildPath(projectsPath, projectName);
 
-        // change the directory of the project to be where the build dir is
-        options.projectPath = buildPath(origPath, (options.workingDir).relativePath(origPath));
-        auto modulePath = buildPath(projectsPath, module_.split(".").join(dirSeparator));
+    // change the directory of the project to be where the build dir is
+    options.projectPath = buildPath(origPath, (options.workingDir).relativePath(origPath));
+    auto modulePath = buildPath(projectsPath, module_.split(".").join(dirSeparator));
 
-        // copy all project files over to the build directory
+    // copy all project files over to the build directory
+    if(module_.canFind("reggaefile")) {
         foreach(entry; dirEntries(dirName(modulePath), SpanMode.depth)) {
             if(entry.isDir) continue;
             auto tgtName = buildPath(options.workingDir, entry.relativePath(projectPath));
@@ -145,11 +148,20 @@ void doTestBuildFor(alias module_ = __MODULE__)(Options options, string[] args =
             if(!dir.exists) mkdirRecurse(dir);
             copy(entry, buildPath(options.workingDir, tgtName));
         }
+        options.projectPath = options.workingDir;
     }
 
-    auto cmdArgs = buildCmd(options.backend, options.workingDir, args);
+    auto cmdArgs = buildCmd(options, args);
     doBuildFor!module_(options, cmdArgs);
     if(options.backend != Backend.binary)
         cmdArgs.shouldExecuteOk(options.workingDir);
 
+}
+
+void buildCmdShouldRunOk(alias module_ = __MODULE__)(in Options options, string file = __FILE__, ulong line = __LINE__ ) {
+    import tests.utils;
+    // the binary backend in the tests isn't a separate executable, but make, ninja and tup are
+    options.backend == Backend.binary
+        ? doBuildFor!module_(options, buildCmd(options))
+        : buildCmd(options).shouldExecuteOk(options.workingDir, file, line);
 }

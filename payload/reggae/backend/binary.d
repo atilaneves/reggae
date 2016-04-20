@@ -25,6 +25,7 @@ import std.getopt;
 struct BinaryOptions {
     bool list;
     bool norerun;
+    bool singleThreaded;
     private bool _earlyReturn;
     string[] args;
 
@@ -33,6 +34,7 @@ struct BinaryOptions {
             args,
             "list|l", "List available build targets", &list,
             "norerun|n", "Don't check for rerun", &norerun,
+            "single|s", "Use only one thread", &singleThreaded,
             );
         if(optInfo.helpWanted) {
             defaultGetoptPrinter("Usage: build <targets>", optInfo.options);
@@ -103,15 +105,12 @@ struct BinaryT(T) {
             if(didPhony) continue;
 
             foreach(level; ByDepthLevel(topTarget)) {
-                foreach(target; level.parallel) {
-                    const outs = target.outputsInProjectPath(options.projectPath);
-                    immutable depFileName = outs[0] ~ ".dep";
-                    if(depFileName.exists) {
-                        didAnything = checkDeps(target, depFileName) || didAnything;
-                    }
-
-                    didAnything = checkTimestamps(target) || didAnything;
-                }
+                if(binaryOptions.singleThreaded)
+                    foreach(target; level)
+                        handleTarget(target, didAnything);
+                else
+                    foreach(target; level.parallel)
+                        handleTarget(target, didAnything);
             }
         }
         if(!didAnything) output.writeln("[build] Nothing to do");
@@ -140,6 +139,16 @@ struct BinaryT(T) {
 
 
 private:
+
+    void handleTarget(Target target, ref bool didAnything) {
+        const outs = target.outputsInProjectPath(options.projectPath);
+        immutable depFileName = outs[0] ~ ".dep";
+        if(depFileName.exists) {
+            didAnything = checkDeps(target, depFileName) || didAnything;
+        }
+
+        didAnything = checkTimestamps(target) || didAnything;
+    }
 
     void handleOptions(BinaryOptions binaryOptions) {
         if(binaryOptions.list) {

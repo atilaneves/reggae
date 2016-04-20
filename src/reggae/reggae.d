@@ -234,7 +234,7 @@ private string compileBinaries(in Options options) {
     return buildGenName;
 }
 
-private void buildDCompile(in Options options) {
+void buildDCompile(in Options options) {
     immutable name = "dcompile";
 
     if(!thisExePath.newerThan(name)) return;
@@ -242,8 +242,8 @@ private void buildDCompile(in Options options) {
     immutable cmd = ["dmd",
                      "-Isrc",
                      "-of" ~ name,
-                     buildPath(reggaeSrcRelDirName, "dcompile.d"),
-                     buildPath(reggaeSrcRelDirName, "dependencies.d")];
+                     buildPath(options.workingDir, reggaeSrcRelDirName, "dcompile.d"),
+                     buildPath(options.workingDir, reggaeSrcRelDirName, "dependencies.d")];
 
     buildBinary(options, Binary(name, cmd));
 }

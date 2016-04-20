@@ -228,6 +228,11 @@ Options getOptions(string[] args) @trusted {
     options.projectPath = argsPath.absolutePath.buildNormalizedPath;
     options.finalize(origArgs);
 
+    if(options.workingDir == "") {
+        import std.file;
+        options.workingDir = getcwd.absolutePath;
+    }
+
     return options;
 }
 

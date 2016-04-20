@@ -9,12 +9,21 @@ shared static this() {
     import std.path;
     import std.algorithm;
     import std.range;
+    import std.stdio: writeln;
 
     auto paths = [".", ".."].map!(a => buildNormalizedPath(getcwd, a)).find!(a => buildNormalizedPath(a, "dub.json").exists);
     assert(!paths.empty, "Error: Cannot find reggae top dir using dub.json");
     origPath = paths.front.absolutePath;
-    if(testPath.exists) rmdirRecurse(testPath);
+
+    if(testPath.exists) {
+        writeln("[IT] Removing old test path");
+        rmdirRecurse(testPath);
+    }
+
+    writeln("[IT] Creating new test path");
     mkdirRecurse(testPath);
+
+    writeln("[IT] Building dcompile");
     buildDCompile();
 }
 

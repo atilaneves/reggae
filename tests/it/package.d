@@ -17,13 +17,16 @@ shared static this() {
 
     if(testPath.exists) {
         writeln("[IT] Removing old test path");
-        rmdirRecurse(testPath);
+        foreach(entry; dirEntries(testPath, SpanMode.shallow)) {
+            if(isDir(entry.name)) {
+                rmdirRecurse(entry);
+            }
+        }
     }
 
     writeln("[IT] Creating new test path");
     mkdirRecurse(testPath);
 
-    writeln("[IT] Building dcompile");
     buildDCompile();
 }
 
@@ -33,8 +36,20 @@ private void buildDCompile() {
     import std.exception;
     import std.conv;
     import std.array;
+    import std.stdio: writeln;
+    import std.algorithm: any;
+    import reggae.file;
 
     enum fileNames = ["dcompile.d", "dependencies.d"];
+
+    immutable needToRecompile = fileNames.
+        any!(a => buildPath(origPath, "payload", "reggae", a).newerThan(buildPath(testPath, a)));
+
+    if(!needToRecompile)
+        return;
+
+    writeln("[IT] Building dcompile");
+
     foreach(fileName; aliasSeqOf!fileNames) {
         writeFile!fileName;
     }

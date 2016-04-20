@@ -234,7 +234,7 @@ private string compileBinaries(in Options options) {
     return buildGenName;
 }
 
-private void buildDCompile(in Options options) {
+void buildDCompile(in Options options) {
     immutable name = "dcompile";
 
     if(!thisExePath.newerThan(name)) return;
@@ -242,8 +242,8 @@ private void buildDCompile(in Options options) {
     immutable cmd = ["dmd",
                      "-Isrc",
                      "-of" ~ name,
-                     buildPath(reggaeSrcRelDirName, "dcompile.d"),
-                     buildPath(reggaeSrcRelDirName, "dependencies.d")];
+                     buildPath(options.workingDir, hiddenDir, reggaeSrcRelDirName, "dcompile.d"),
+                     buildPath(options.workingDir, hiddenDir, reggaeSrcRelDirName, "dependencies.d")];
 
     buildBinary(options, Binary(name, cmd));
 }
@@ -260,7 +260,7 @@ private void buildBinary(in Options options, in Binary bin) {
     string[string] env;
     auto config = Config.none;
     auto maxOutput = size_t.max;
-    auto workDir = hiddenDir;
+    auto workDir = buildPath(options.workingDir, hiddenDir);
     std.stdio.write("[Reggae] Compiling metabuild binary ", bin.name);
     if(options.verbose) std.stdio.write(" with ", bin.cmd.join(" "));
     writeln;
@@ -312,7 +312,10 @@ private string getBuildGenName(in Options options) @safe pure nothrow {
 
 
 immutable reggaeSrcRelDirName = buildPath("src", "reggae");
-immutable reggaeSrcDirName = buildPath(hiddenDir, reggaeSrcRelDirName);
+
+string reggaeSrcDirName(in Options options) @safe pure nothrow {
+    return buildPath(options.workingDir, hiddenDir, reggaeSrcRelDirName);
+}
 
 private string filesTupleString() @safe pure nothrow {
     return "TypeTuple!(" ~ fileNames.map!(a => `"` ~ a ~ `"`).join(",") ~ ")";
@@ -323,10 +326,11 @@ template FileNames() {
 }
 
 
-private void writeSrcFiles(in Options options) {
+void writeSrcFiles(in Options options) {
     writeln("[Reggae] Writing reggae source files");
 
     import std.file: mkdirRecurse;
+    immutable reggaeSrcDirName = reggaeSrcDirName(options);
     if(!reggaeSrcDirName.exists) {
         mkdirRecurse(reggaeSrcDirName);
         mkdirRecurse(buildPath(reggaeSrcDirName, "dub"));
@@ -338,7 +342,7 @@ private void writeSrcFiles(in Options options) {
     //this foreach has to happen at compile time due
     //to the string import below.
     foreach(fileName; FileNames!()) {
-        auto file = File(reggaeSrcFileName(fileName), "w");
+        auto file = File(reggaeSrcFileName(options, fileName), "w");
         file.write(import(fileName));
     }
 
@@ -347,7 +351,7 @@ private void writeSrcFiles(in Options options) {
 
 
 private void writeConfig(in Options options) {
-    auto file = File(reggaeSrcFileName("config.d"), "w");
+    auto file = File(reggaeSrcFileName(options, "config.d"), "w");
 
     file.writeln(q{
 module reggae.config;
@@ -374,6 +378,6 @@ import reggae.options;
 }
 
 
-private string reggaeSrcFileName(in string fileName) @safe pure nothrow {
-    return buildPath(reggaeSrcDirName, fileName);
+private string reggaeSrcFileName(in Options options, in string fileName) @safe pure nothrow {
+    return buildPath(reggaeSrcDirName(options), fileName);
 }

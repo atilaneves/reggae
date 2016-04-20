@@ -122,6 +122,9 @@ void doTestBuildFor(alias module_ = __MODULE__)(Options options, string[] args =
     import std.string;
     import std.path;
 
+    mkdirRecurse(buildPath(options.workingDir, ".reggae"));
+    symlink(buildPath(testPath, "dcompile"), buildPath(options.workingDir, ".reggae", "dcompile"));
+
     // tup needs special treatment - it's ok with absolute file paths
     // but only if relative to the build path, so copy the project files
     // to the build directory

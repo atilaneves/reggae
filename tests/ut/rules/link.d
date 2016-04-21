@@ -29,3 +29,11 @@ import unit_threaded;
     bld.targets[0].dependencies[0].shellCommand(options.withProjectPath("/path/to")).shouldEqual(
         "gcc -include /path/to/includes/header.h  -MMD -MT objs/app.objs/src/foo.o -MF objs/app.objs/src/foo.o.dep -o objs/app.objs/src/foo.o -c /path/to/src/foo.c");
 }
+
+@("template link") unittest {
+    string[] flags;
+    link!(ExeName("app"), () => [Target("foo.o"), Target("bar.o")]).shouldEqual(
+        Target("app",
+               Command(CommandType.link, assocListT("flags", flags)),
+               [Target("foo.o"), Target("bar.o")]));
+}

@@ -77,16 +77,3 @@ void testBuiltinTemplateNoDeps() {
         "dmd $flags $includes $stringImports -of$out -c $in");
 
 }
-
-
-void testLinkC() {
-    import reggae.config: options;
-    auto tgt = link(ExeName("app"), [objectFile(SourceFile("foo.c"))]);
-    tgt.shellCommand(options).shouldEqual("gcc -o app  foo.o");
-}
-
-void testLinkCpp() {
-    import reggae.config: options;
-    auto tgt = link(ExeName("app"), [objectFile(SourceFile("foo.cpp"))]);
-    tgt.shellCommand(options).shouldEqual("g++ -o app  foo.o");
-}

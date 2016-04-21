@@ -266,27 +266,6 @@ void testBuildWithOneDepInBuildDir() {
 }
 
 
-void testIncludeCompilerFlagInProjectDir() {
-    auto obj = objectFile(SourceFile("src/foo.c"),
-                           Flags("-include $project/includes/header.h"));
-    auto app = link(ExeName("app"), [obj]);
-    auto bld = Build(app);
-    import reggae.config: options;
-    bld.targets[0].dependencies[0].shellCommand(options.withProjectPath("/path/to")).shouldEqual(
-        "gcc -include /path/to/includes/header.h  -MMD -MT objs/app.objs/src/foo.o -MF objs/app.objs/src/foo.o.dep -o objs/app.objs/src/foo.o -c /path/to/src/foo.c");
-}
-
-// void testIncludeCompilerFlagInProjectDirImplicit() {
-//     auto obj = objectFile(SourceFile("src/foo.c"),
-//                            Flags("-include includes/header.h"));
-//     auto app = link(ExeName("app"), [obj]);
-//     auto bld = Build(app);
-//     import reggae.config: options;
-//     bld.targets[0].dependencies[0].shellCommand(options.withProjectPath("/path/to")).shouldEqual(
-//         "gcc -include /path/to/includes/header.h  -MMD -MT objs/app.objs/src/foo.o -MF objs/app.objs/src/foo.o.dep -o objs/app.objs/src/foo.o -c /path/to/src/foo.c");
-// }
-
-
 @("Replace concrete compiler with variables")
 unittest {
     immutable str = "\n"

@@ -238,11 +238,12 @@ Options getOptions(string[] args) @trusted {
 
 
 void changeToDir(in Options options) {
-    if(options.workingDir) {
-        import std.file: chdir, exists, mkdirRecurse;
-        if(!options.workingDir.exists) mkdirRecurse(options.workingDir);
-        chdir(options.workingDir);
-    }
+    if(options.workingDir == "")
+        return;
+
+    import std.file: chdir, exists, mkdirRecurse;
+    if(!options.workingDir.exists) mkdirRecurse(options.workingDir);
+    chdir(options.workingDir);
 }
 
 

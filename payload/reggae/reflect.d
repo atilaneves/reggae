@@ -24,7 +24,7 @@ auto getBuild(alias Module)() if(!is(typeof(Module))) {
         }
     }
 
-    enforce(!builds.empty, "Could not find a public Build object in " ~ fullyQualifiedName!Module);
+    enforce(!builds.empty, "Could not find a public function with return type Build in " ~ fullyQualifiedName!Module);
     enforce(builds.length == 1, text("Only one build object allowed per module, ",
                                      fullyQualifiedName!Module, " has ", builds.length));
 

@@ -50,6 +50,13 @@ struct AssocList(K, V) {
         }
         return ret;
     }
+
+    string toString() const pure @safe {
+        import std.conv;
+        import std.algorithm;
+        import std.range;
+        return `{` ~ entries.map!(a => text(a.key, ": ", a.value)).join(", ") ~ `}`;
+    }
 }
 
 AssocList!(K, V) fromAA(K, V)(V[K] aa) {

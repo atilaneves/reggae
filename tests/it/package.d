@@ -99,12 +99,14 @@ string newTestDir() {
     std.algorithm.copy(buildPath(testPath, "XXXXXX") ~ '\0', template_[]);
     auto ret = mkdtemp(&template_[0]).to!string;
 
-    return ret;
+    return ret.absolutePath;
 }
 
 Options testOptions(string[] args) {
-    auto testPath = newTestDir;
-    return getOptions(["reggae", "-C", testPath] ~ args);
+    import reggae.config: setOptions;
+    auto options = getOptions(["reggae", "-C", newTestDir] ~ args);
+    setOptions(options);
+    return options;
 }
 
 string[] ninja(string[] args = []) {

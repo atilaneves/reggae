@@ -20,7 +20,7 @@ struct Makefile {
         this(build, Options());
     }
 
-    this(Build build, in string projectPath) @safe pure {
+    this(Build build, in string projectPath) @safe {
         import reggae.config: options;
         auto modOptions = options.dup;
         modOptions.projectPath = projectPath;

@@ -21,8 +21,8 @@ import std.array;
 //if reggae.config.perModule is true, generates one per module
 Target[] dlangPackageObjectFiles(in string[] srcFiles, in string flags = "",
                                  in string[] importPaths = [], in string[] stringImportPaths = [],
-                                 in string projDir = "$project") @safe pure {
-    import reggae.config;
+                                 in string projDir = "$project") @safe {
+    import reggae.config: options;
     auto func = options.perModule ? &dlangPackageObjectFilesPerModule : &dlangPackageObjectFilesPerPackage;
     return func(srcFiles, flags, importPaths, stringImportPaths, projDir);
 }
@@ -83,7 +83,7 @@ Target scriptlike(App app,
                   alias linkWithFunction = () { return cast(Target[])[];})
     () @trusted {
     auto linkWith = linkWithFunction();
-    import reggae.config;
+    import reggae.config: options;
     return scriptlike(options.projectPath, app, flags, importPaths, stringImportPaths, linkWith);
 }
 

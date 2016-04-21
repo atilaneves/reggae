@@ -392,7 +392,7 @@ struct Target {
             auto parts = [text(_outputs), `"` ~ shellCommand(options) ~ `"`];
             if(depsStr != "") parts ~= depsStr;
             if(impsStr != "") parts ~= impsStr;
-            return text("Target(", parts.join(", "), ")");
+            return text("Target(", parts.join(",\n"), ")");
         } catch(Exception) {
             assert(0);
         }
@@ -760,7 +760,9 @@ struct Command {
             case link:
             case compileAndLink:
             case code:
-                return `Command(` ~ type.to!string ~ `)`;
+                return `Command(` ~ type.to!string ~
+                    (params.keys.length ? ", " ~ text(params) : "") ~
+                    `)`;
         }
     }
 }

@@ -57,7 +57,7 @@ void doBuildFor(alias module_ = "reggaefile")(in Options options, string[] args 
 
 // calls the build function or loads it from the cache and returns
 // the Build object
-private Build getBuildObject(alias module_)(in Options options) {
+Build getBuildObject(alias module_)(in Options options) {
     import std.path;
     import std.file;
 

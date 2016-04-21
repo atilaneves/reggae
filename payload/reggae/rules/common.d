@@ -2,7 +2,6 @@ module reggae.rules.common;
 
 
 import reggae.build;
-import reggae.config: options;
 import reggae.ctaa;
 import reggae.types;
 import std.algorithm;
@@ -32,6 +31,7 @@ Target[] objectFiles(alias sourcesFunc = Sources!(),
                      StringImportPaths stringImports = StringImportPaths(),
     )() @trusted {
 
+    import std.stdio;
     const srcFiles = sourcesToFileNames!(sourcesFunc);
     return srcFilesToObjectTargets(srcFiles, flags, includes, stringImports);
 }
@@ -188,10 +188,13 @@ string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
     import std.path: buildNormalizedPath, buildPath;
     import std.array: array;
     import std.traits: isCallable;
+    import reggae.config: options;
 
     auto srcs = sourcesFunc();
 
     DirEntry[] modules;
+    import std.stdio;
+    writeln("project path: ", options.projectPath);
     foreach(dir; srcs.dirs.value.map!(a => buildPath(options.projectPath, a))) {
         enforce(isDir(dir), dir ~ " is not a directory name");
         auto entries = dirEntries(dir, SpanMode.depth);
@@ -253,9 +256,9 @@ Target[] objectFiles(in string projectPath,
                      in string[] excDirs,
                      in string[] srcFiles,
                      in string[] excFiles,
-                     in string flags,
-                     in string[] includes,
-                     in string[] stringImports) @trusted {
+                     in string flags = "",
+                     in string[] includes = [],
+                     in string[] stringImports = []) @trusted {
 
     return srcFilesToObjectTargets(sourcesToFileNames(projectPath, srcDirs, excDirs, srcFiles, excFiles),
                                    Flags(flags),
@@ -315,8 +318,9 @@ package string objFileName(in string srcFileName) pure {
     return localFileName.stripExtension.defaultExtension(objExt);
 }
 
-string removeProjectPath(in string path) pure {
+string removeProjectPath(in string path) {
     import std.path: relativePath, absolutePath;
+    import reggae.config: options;
     //relativePath is @system
     return () @trusted { return path.absolutePath.relativePath(options.projectPath.absolutePath); }();
 }

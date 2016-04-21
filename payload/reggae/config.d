@@ -15,19 +15,27 @@ version(minimal) {
     enum isDubProject = true;
 }
 
-immutable options = Options(Backend.ninja,
-                            "",
-                            "",
-                            "",
-                            "gcc",
-                            "g++",
-                            "dmd",
-                            false,
-                            false,
-                            true, //perModule only for UTs, false in real world
-                            isDubProject,
-                            false,
-    );
+Options gOptions = Options(Backend.ninja,
+            "",
+            "",
+            "",
+            "gcc",
+            "g++",
+            "dmd",
+            false,
+            false,
+            true, //perModule only for UTs, false in real world
+            isDubProject,
+            false,
+);
+
+Options options() @safe nothrow {
+    return gOptions;
+}
+
+void setOptions(Options options) {
+    gOptions = options;
+}
 
 enum userVars = AssocList!(string, string)();
 

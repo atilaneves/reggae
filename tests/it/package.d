@@ -144,8 +144,12 @@ string[] buildCmd(Backend backend, string path, string[] args = []) {
 }
 
 // do a build in the integration test context
-void doTestBuildFor(alias module_ = __MODULE__)(ref Options options, string[] args = []) {
-    import tests.utils;
+void doTestBuildFor(string module_ = __MODULE__)(ref Options options, string[] args = []) {
+    prepareTestBuild!module_(options);
+    justDoTestBuild!module_(options, args);
+}
+
+void prepareTestBuild(string module_ = __MODULE__)(ref Options options) {
     import std.file;
     import std.string;
     import std.path;
@@ -174,12 +178,15 @@ void doTestBuildFor(alias module_ = __MODULE__)(ref Options options, string[] ar
         }
         options.projectPath = options.workingDir;
     }
+}
+
+void justDoTestBuild(string module_ = __MODULE__)(in Options options, string[] args = []) {
+    import tests.utils;
 
     auto cmdArgs = buildCmd(options, args);
     doBuildFor!module_(options, cmdArgs);
     if(options.backend != Backend.binary)
         cmdArgs.shouldExecuteOk(options.workingDir);
-
 }
 
 void buildCmdShouldRunOk(alias module_ = __MODULE__)(in Options options, string file = __FILE__, ulong line = __LINE__ ) {

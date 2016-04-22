@@ -1,0 +1,1 @@
+int protoFunc(int n) { return n * 2; }

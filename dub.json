@@ -24,7 +24,10 @@
                                   "src/reggae/reggae_main.d",
                                   "tests/projects/project1/src/main.d",
                                   "tests/projects/project2/source/main.d",
-                                  "tests/projects/d_and_cpp/src/main.d"
+                                  "tests/projects/d_and_cpp/src/main.d",
+                                  "tests/projects/multiple_outputs/main.d",
+                                  "tests/projects/multiple_outputs/compiler.d",
+                                  "tests/projects/multiple_outputs/translator.d"
                                  ],
           "dependencies": {
               "unit-threaded": "~>0.6.9"

@@ -30,7 +30,7 @@
                                   "tests/projects/multiple_outputs/translator.d"
                                  ],
           "dependencies": {
-              "unit-threaded": "~>0.6.10"
+              "unit-threaded": "~>0.6.11"
           }
         }
     ]

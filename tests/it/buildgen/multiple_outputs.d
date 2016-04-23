@@ -9,31 +9,37 @@ import std.path;
 import std.process;
 
 
-@("separate")
-@AutoTags
-@Values("ninja", "make", "binary")
-unittest {
-    const backend = getValue!string;
-    auto options = testProjectOptions(backend, "multiple_outputs");
-    const testPath = options.workingDir;
-    enum module_ = "multiple_outputs.reggaefile_sep";
-
+private void doBuild(string module_)(in string reggaefileName, ref Options options) {
     prepareTestBuild!module_(options);
+
+    const testPath = options.workingDir;
     remove(buildPath(testPath, "protocol.d"));
-    rename(buildPath(testPath, "reggaefile_sep.d"), buildPath(testPath, "reggaefile.d"));
+    rename(buildPath(testPath, reggaefileName), buildPath(testPath, "reggaefile.d"));
     ["dmd", buildPath(testPath, "compiler.d")].shouldExecuteOk(testPath);
     ["dmd", buildPath(testPath, "translator.d")].shouldExecuteOk(testPath);
 
     justDoTestBuild!module_(options);
-    auto appPath = inPath(testPath, "app");
+}
 
-    [appPath, "2"].shouldExecuteOk(testPath).shouldEqual(
+
+@("separate")
+@AutoTags
+@Values("ninja", "make", "binary")
+unittest {
+    auto options = testProjectOptions("multiple_outputs");
+
+    enum module_ = "multiple_outputs.reggaefile_sep";
+    doBuild!module_("reggaefile_sep.d", options);
+
+    auto appPath = inPath(options, "app");
+
+    [appPath, "2"].shouldExecuteOk(options).shouldEqual(
         ["I call protoFunc(2) and get 4"]);
 
     overwrite(options, "protocol.proto", "int protoFunc(int n) { return n * 3; }");
     buildCmdShouldRunOk!module_(options);
 
-    [appPath, "3"].shouldExecuteOk(testPath).shouldEqual(
+    [appPath, "3"].shouldExecuteOk(options).shouldEqual(
         ["I call protoFunc(3) and get 9"]);
 
 }
@@ -43,26 +49,19 @@ unittest {
 @AutoTags
 @Values("ninja", "make", "binary")
 unittest {
-    const backend = getValue!string;
-    auto options = testProjectOptions(backend, "multiple_outputs");
-    const testPath = options.workingDir;
+    auto options = testProjectOptions("multiple_outputs");
     enum module_ = "multiple_outputs.reggaefile_tog";
 
-    prepareTestBuild!module_(options);
-    remove(buildPath(testPath, "protocol.d"));
-    rename(buildPath(testPath, "reggaefile_tog.d"), buildPath(testPath, "reggaefile.d"));
-    ["dmd", buildPath(testPath, "compiler.d")].shouldExecuteOk(testPath);
-    ["dmd", buildPath(testPath, "translator.d")].shouldExecuteOk(testPath);
+    doBuild!module_("reggaefile_tog.d", options);
 
-    justDoTestBuild!module_(options);
-    auto appPath = inPath(testPath, "app");
+    auto appPath = inPath(options, "app");
 
-    [appPath, "2"].shouldExecuteOk(testPath).shouldEqual(
+    [appPath, "2"].shouldExecuteOk(options).shouldEqual(
         ["I call protoFunc(2) and get 4"]);
 
     overwrite(options, "protocol.proto", "int protoFunc(int n) { return n * 3; }");
     buildCmdShouldRunOk!module_(options);
 
-    [appPath, "3"].shouldExecuteOk(testPath).shouldEqual(
+    [appPath, "3"].shouldExecuteOk(options).shouldEqual(
         ["I call protoFunc(3) and get 9"]);
 }

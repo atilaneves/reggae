@@ -83,10 +83,15 @@ string inOrigPath(T...)(T parts) {
     return inPath(origPath, parts);
 }
 
-string inPath(T...)(string path, T parts) {
+string inPath(T...)(in string path, T parts) {
     import std.path;
     return buildPath(path, parts).absolutePath;
 }
+
+string inPath(T...)(in Options options, T parts) {
+    return inPath(options.workingDir, parts);
+}
+
 
 string projectPath(in string name) {
     import std.path;
@@ -117,6 +122,12 @@ Options testOptions(string[] args) {
 Options testProjectOptions(in string backend, in string projectName) {
     return testOptions(["-b", backend, projectPath(projectName)]);
 }
+
+Options testProjectOptions(in string projectName) {
+    import unit_threaded;
+    return testOptions(["-b", getValue!string, projectPath(projectName)]);
+}
+
 
 // used to change files and cause a rebuild
 void overwrite(in Options options, in string fileName, in string newContents) {

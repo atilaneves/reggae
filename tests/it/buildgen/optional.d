@@ -8,8 +8,10 @@ import tests.utils;
 @("optional")
 @Values("ninja", "make", "binary")
 unittest {
+    import std.file;
+
     enum module_ = "opt.reggaefile";
-    auto options = testProjectOptions("opt");
+    auto options = testProjectOptions!module_;
 
     // default build only produces foo, not bar
     doTestBuildFor!module_(options);

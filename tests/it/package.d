@@ -128,6 +128,10 @@ Options testProjectOptions(in string projectName) {
     return testOptions(["-b", getValue!string, projectPath(projectName)]);
 }
 
+Options testProjectOptions(string module_)() {
+    import std.string;
+    return testProjectOptions(module_.split(".")[0]);
+}
 
 // used to change files and cause a rebuild
 void overwrite(in Options options, in string fileName, in string newContents) {

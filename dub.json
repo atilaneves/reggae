@@ -27,7 +27,9 @@
                                   "tests/projects/d_and_cpp/src/main.d",
                                   "tests/projects/multiple_outputs/main.d",
                                   "tests/projects/multiple_outputs/compiler.d",
-                                  "tests/projects/multiple_outputs/translator.d"
+                                  "tests/projects/multiple_outputs/translator.d",
+                                  "tests/projects/opt/foo.d",
+                                  "tests/projects/opt/bar.d"
                                  ],
           "dependencies": {
               "unit-threaded": "~>0.6.11"

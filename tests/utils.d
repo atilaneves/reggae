@@ -29,6 +29,11 @@ auto shouldExecuteOk(string[] args, in Options options, string file = __FILE__, 
     return shouldExecuteOk(args, options.workingDir, file, line);
 }
 
+auto shouldExecuteOk(string arg, in Options options, string file = __FILE__, size_t line = __LINE__) {
+    return shouldExecuteOk([arg], options, file, line);
+}
+
+
 struct FakeFile {
     string[] lines;
     void writeln(T...)(T args) {

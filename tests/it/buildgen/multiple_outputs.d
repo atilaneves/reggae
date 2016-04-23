@@ -41,7 +41,6 @@ unittest {
 
     [appPath, "3"].shouldExecuteOk(options).shouldEqual(
         ["I call protoFunc(3) and get 9"]);
-
 }
 
 

@@ -1,6 +1,7 @@
 module tests.it;
 
-import reggae;
+public import reggae;
+public import unit_threaded;
 
 immutable string origPath;
 
@@ -124,7 +125,6 @@ Options testProjectOptions(in string backend, in string projectName) {
 }
 
 Options testProjectOptions(in string projectName) {
-    import unit_threaded;
     return testOptions(["-b", getValue!string, projectPath(projectName)]);
 }
 

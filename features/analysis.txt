@@ -8,7 +8,6 @@ All scripting features: one file per language, DIT JSON to Build
 phony: Yep 18.8s @non_essential
 regressions: Yep 16.5s @non_essential
 rerun_itself: 38s Yep
-scriptlike: DIT
 static_library: DIT
 unity_build: DIT
 user_vars: DIT

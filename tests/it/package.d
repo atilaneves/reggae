@@ -133,6 +133,12 @@ Options testProjectOptions(string module_)() {
     return testProjectOptions(module_.split(".")[0]);
 }
 
+Options testProjectOptions(string module_)(string backend) {
+    import std.string;
+    return testProjectOptions(backend, module_.split(".")[0]);
+}
+
+
 // used to change files and cause a rebuild
 void overwrite(in Options options, in string fileName, in string newContents) {
     import core.thread;

@@ -1,3 +1,4 @@
+
 module tests.it.rules.object_files;
 
 

@@ -88,6 +88,11 @@ string inPath(T...)(string path, T parts) {
     return buildPath(path, parts).absolutePath;
 }
 
+string projectPath(in string name) {
+    import std.path;
+    return inOrigPath("tests", "projects", name);
+}
+
 extern(C) char* mkdtemp(char*);
 
 string newTestDir() {
@@ -107,6 +112,25 @@ Options testOptions(string[] args) {
     auto options = getOptions(["reggae", "-C", newTestDir] ~ args);
     setOptions(options);
     return options;
+}
+
+Options testProjectOptions(in string backend, in string projectName) {
+    return testOptions(["-b", backend, projectPath(projectName)]);
+}
+
+// used to change files and cause a rebuild
+void overwrite(in Options options, in string fileName, in string newContents) {
+    import core.thread;
+    import std.stdio;
+    import std.path;
+
+    // ninja has problems with timestamp differences that are less than a second apart
+    if(options.backend == Backend.ninja) {
+        Thread.sleep(1.seconds);
+    }
+
+    auto file = File(buildPath(options.workingDir, fileName), "w");
+    file.writeln(newContents);
 }
 
 string[] ninja(string[] args = []) {
@@ -146,6 +170,8 @@ string[] buildCmd(Backend backend, string path, string[] args = []) {
 }
 
 // do a build in the integration test context
+// this uses the build description to generate the build
+// then runs the build command
 void doTestBuildFor(string module_ = __MODULE__)(ref Options options, string[] args = []) {
     prepareTestBuild!module_(options);
     justDoTestBuild!module_(options, args);
@@ -186,15 +212,17 @@ void justDoTestBuild(string module_ = __MODULE__)(in Options options, string[] a
     import tests.utils;
 
     auto cmdArgs = buildCmd(options, args);
-    doBuildFor!module_(options, cmdArgs);
+    doBuildFor!module_(options, cmdArgs); // generate build
     if(options.backend != Backend.binary)
         cmdArgs.shouldExecuteOk(options.workingDir);
 }
 
-void buildCmdShouldRunOk(alias module_ = __MODULE__)(in Options options, string file = __FILE__, ulong line = __LINE__ ) {
+void buildCmdShouldRunOk(alias module_ = __MODULE__)(in Options options, string[] args = [],
+                                                     string file = __FILE__, ulong line = __LINE__ ) {
     import tests.utils;
+    auto cmdArgs = buildCmd(options, args);
     // the binary backend in the tests isn't a separate executable, but make, ninja and tup are
     options.backend == Backend.binary
-        ? doBuildFor!module_(options, buildCmd(options))
-        : buildCmd(options).shouldExecuteOk(options.workingDir, file, line);
+        ? doBuildFor!module_(options, cmdArgs)
+        : cmdArgs.shouldExecuteOk(options.workingDir, file, line);
 }

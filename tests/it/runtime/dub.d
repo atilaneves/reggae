@@ -25,7 +25,7 @@ unittest {
     }
 
     buildPath(testPath, "reggaefile.d").exists.shouldBeFalse;
-    run(["reggae", "-C", testPath, "-b", "ninja", `--dflags=-g -debug`, projPath]);
+    run(["reggae", "-C", testPath, "-b", "ninja", `--dflags=-g -debug`, testPath]);
     buildPath(testPath, "reggaefile.d").exists.shouldBeTrue;
 
     auto output = ninja.shouldExecuteOk(testPath);
@@ -58,6 +58,27 @@ unittest {
     }
 
     buildPath(testPath, "reggaefile.d").exists.shouldBeFalse;
-    run(["reggae", "-C", testPath, "-b", "tup", `--dflags=-g -debug`, projPath]).
+    run(["reggae", "-C", testPath, "-b", "tup", `--dflags=-g -debug`, testPath]).
         shouldThrowWithMessage("dub integration not supported with the tup backend");
+}
+
+@("dub project with prebuild command")
+@Tags(["dub", "ninja"])
+unittest {
+
+    const testPath = newTestDir;
+    const projPath = buildPath(origPath, "tests", "projects", "dub_prebuild");
+
+    foreach(entry; dirEntries(projPath, SpanMode.depth)) {
+        if(entry.isDir) continue;
+        auto tgtName = buildPath(testPath, entry.relativePath(projPath));
+        auto dir = dirName(tgtName);
+        if(!dir.exists) mkdirRecurse(dir);
+        copy(entry, buildPath(testPath, tgtName));
+    }
+
+    run(["reggae", "-C", testPath, "-b", "ninja", `--dflags=-g -debug`, testPath]);
+
+    ninja.shouldExecuteOk(testPath);
+    inPath(testPath, "ut").shouldExecuteOk(testPath);
 }

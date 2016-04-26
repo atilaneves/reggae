@@ -3,7 +3,6 @@ Which features actually have to build code?
 regressions: Yep 16.5s @non_essential
 
 user_vars: DIT runtime
-unity_build: DIT rules
 
 implicit_dependencies: Yep 25.3s (!) buildgen
 phony: Yep 18.8s @non_essential buildgen

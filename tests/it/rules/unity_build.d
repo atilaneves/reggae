@@ -1,0 +1,29 @@
+module tests.it.rules.unity_build;
+
+import tests.it;
+
+@("template") unittest {
+    import reggae.buildgen;
+    import std.file;
+    import std.string;
+
+    auto options = testProjectOptions("binary", "unity");
+    string[] noFlags;
+
+    getBuildObject!"unity.reggaefile"(options).shouldEqual(
+        Build(Target("unity",
+                     compileCommand("$builddir/objs/unity.objs/unity.cpp", "-g", [], [], options.projectPath, No.justCompile),
+                     [Target.phony("unity.cpp",
+                                   "",
+                                   [],
+                                   [Target("src/main.cpp"), Target("src/maths.cpp")])]
+                  )));
+
+    // should be
+    // #include "1st.cpp"
+    // #include "2nd.cpp"
+    // ...
+    readText(buildPath(options.workingDir, "objs", "unity.objs", "unity.cpp")).chomp.split("\n").shouldEqual(
+        ["main.cpp", "maths.cpp"].map!(a => `#include "` ~ buildPath(options.projectPath, "src", a) ~ `"`));
+
+}

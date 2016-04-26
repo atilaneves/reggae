@@ -17,16 +17,18 @@ Target unityBuild(ExeName exeName,
                   alias dependenciesFunc = emptyTargets,
                   alias implicitsFunc = emptyTargets)() @trusted {
 
+    import std.path;
+    import reggae.config: options;
+
     const srcFiles = sourcesToFileNames!(sourcesFunc);
 
-    immutable dirName = topLevelDirName(Target(exeName.value));
+    immutable dirName = buildPath(options.workingDir, topLevelDirName(Target(exeName.value)));
     dirName.exists || mkdirRecurse(dirName);
 
     immutable fileName = buildPath(dirName, "unity.cpp");
     auto unityFile = File(fileName, "w");
 
-    import reggae.config: options;
-    unityFile.write(unityFileContents(options.projectPath, srcFiles));
+    unityFile.writeln(unityFileContents(options.projectPath, srcFiles));
 
     return unityTarget(exeName, options.projectPath, srcFiles, flags, includes,
                        dependenciesFunc(), implicitsFunc());

@@ -231,19 +231,11 @@ Options getOptions(string[] args) @trusted {
     if(options.workingDir == "") {
         import std.file;
         options.workingDir = getcwd.absolutePath;
+    } else {
+        options.workingDir = options.workingDir.absolutePath;
     }
 
     return options;
-}
-
-
-void changeToDir(in Options options) {
-    if(options.workingDir == "")
-        return;
-
-    import std.file: chdir, exists, mkdirRecurse;
-    if(!options.workingDir.exists) mkdirRecurse(options.workingDir);
-    chdir(options.workingDir);
 }
 
 

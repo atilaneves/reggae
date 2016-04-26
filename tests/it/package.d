@@ -16,9 +16,9 @@ shared static this() {
     assert(!paths.empty, "Error: Cannot find reggae top dir using dub.json");
     origPath = paths.front.absolutePath;
 
-    if(testPath.exists) {
+    if(testsPath.exists) {
         writeln("[IT] Removing old test path");
-        foreach(entry; dirEntries(testPath, SpanMode.shallow)) {
+        foreach(entry; dirEntries(testsPath, SpanMode.shallow)) {
             if(isDir(entry.name)) {
                 rmdirRecurse(entry);
             }
@@ -26,7 +26,7 @@ shared static this() {
     }
 
     writeln("[IT] Creating new test path");
-    mkdirRecurse(testPath);
+    mkdirRecurse(testsPath);
 
     buildDCompile();
 }
@@ -44,7 +44,7 @@ private void buildDCompile() {
     enum fileNames = ["dcompile.d", "dependencies.d"];
 
     immutable needToRecompile = fileNames.
-        any!(a => buildPath(origPath, "payload", "reggae", a).newerThan(buildPath(testPath, a)));
+        any!(a => buildPath(origPath, "payload", "reggae", a).newerThan(buildPath(testsPath, a)));
 
     if(!needToRecompile)
         return;
@@ -59,7 +59,7 @@ private void buildDCompile() {
     const string[string] env = null;
     Config config = Config.none;
     size_t maxOutput = size_t.max;
-    const workDir = testPath;
+    const workDir = testsPath;
 
     immutable res = execute(args, env, config, maxOutput, workDir);
     enforce(res.status == 0, text("Could not execute '", args.join(" "), "':\n", res.output));
@@ -68,12 +68,12 @@ private void buildDCompile() {
 private void writeFile(string fileName)() {
     import std.stdio;
     import std.path;
-    auto file = File(buildPath(testPath, fileName), "w");
+    auto file = File(buildPath(testsPath, fileName), "w");
     file.write(import(fileName));
 }
 
 
-string testPath() @safe {
+string testsPath() @safe {
     import std.file;
     import std.path;
     return buildNormalizedPath(origPath, "tmp");
@@ -107,7 +107,7 @@ string newTestDir() {
     import std.algorithm;
 
     char[100] template_;
-    std.algorithm.copy(buildPath(testPath, "XXXXXX") ~ '\0', template_[]);
+    std.algorithm.copy(buildPath(testsPath, "XXXXXX") ~ '\0', template_[]);
     auto ret = mkdtemp(&template_[0]).to!string;
 
     return ret.absolutePath;
@@ -205,7 +205,7 @@ void prepareTestBuild(string module_ = __MODULE__)(ref Options options) {
     import std.algorithm: canFind;
 
     mkdirRecurse(buildPath(options.workingDir, ".reggae"));
-    symlink(buildPath(testPath, "dcompile"), buildPath(options.workingDir, ".reggae", "dcompile"));
+    symlink(buildPath(testsPath, "dcompile"), buildPath(options.workingDir, ".reggae", "dcompile"));
 
     // copy the project files over, that way the tests can modify them
     immutable projectsPath = buildPath(origPath, "tests", "projects");
@@ -218,13 +218,7 @@ void prepareTestBuild(string module_ = __MODULE__)(ref Options options) {
 
     // copy all project files over to the build directory
     if(module_.canFind("reggaefile")) {
-        foreach(entry; dirEntries(dirName(modulePath), SpanMode.depth)) {
-            if(entry.isDir) continue;
-            auto tgtName = buildPath(options.workingDir, entry.relativePath(projectPath));
-            auto dir = dirName(tgtName);
-            if(!dir.exists) mkdirRecurse(dir);
-            copy(entry, buildPath(options.workingDir, tgtName));
-        }
+        copyProjectFiles(projectPath, options.workingDir);
         options.projectPath = options.workingDir;
     }
 }
@@ -246,4 +240,18 @@ void buildCmdShouldRunOk(alias module_ = __MODULE__)(in Options options, string[
     options.backend == Backend.binary
         ? doBuildFor!module_(options, cmdArgs)
         : cmdArgs.shouldExecuteOk(options.workingDir, file, line);
+}
+
+// copy one of the test projects to a temporary test directory
+void copyProjectFiles(in string projectPath, in string testPath) {
+    import std.file;
+    import std.path;
+    foreach(entry; dirEntries(projectPath, SpanMode.depth)) {
+        if(entry.isDir) continue;
+        auto tgtName = buildPath(testPath, entry.relativePath(projectPath));
+        auto dir = dirName(tgtName);
+        if(!dir.exists) mkdirRecurse(dir);
+        copy(entry, buildPath(testPath, tgtName));
+    }
+
 }

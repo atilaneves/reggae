@@ -2,6 +2,7 @@ module tests.utils;
 
 import reggae;
 import unit_threaded;
+import std.file;
 
 
 auto shouldExecuteOk(string[] args, string workDir,
@@ -31,6 +32,23 @@ auto shouldExecuteOk(string[] args, in Options options, string file = __FILE__, 
 
 auto shouldExecuteOk(string arg, in Options options, string file = __FILE__, size_t line = __LINE__) {
     return shouldExecuteOk([arg], options, file, line);
+}
+
+auto shouldExecuteOk(string arg, string file = __FILE__, size_t line = __LINE__) {
+    import std.file;
+    return shouldExecuteOk([arg], getcwd(), file, line);
+}
+
+auto shouldFailToExecute(string arg, string workDir = getcwd(), string file = __FILE__, size_t line = __LINE__) {
+    import std.process;
+
+    const string[string] env = null;
+    Config config = Config.none;
+    size_t maxOutput = size_t.max;
+
+    immutable res = execute([arg], env, config, maxOutput, workDir);
+    if(res.status == 0)
+        throw new UnitTestException([arg ~ " executed ok but was expected to fail"], file, line);
 }
 
 

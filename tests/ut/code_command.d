@@ -13,11 +13,15 @@ private void incr(string[] inputs, string[] outputs) {
     gCounter++;
 }
 
-void testSimpleCommand() {
-    import reggae.config: options;
+private void reset() {
     gCounter = 0;
+    gInputs = gOutputs = [];
+}
+
+void testSimpleCommand() {
+    reset;
     auto tgt = Target("no output", &incr, Target("no input"));
-    tgt.execute(options);
+    tgt.execute(Options());
     gCounter.shouldEqual(1);
     gInputs.shouldEqual(["no input"]);
     gOutputs.shouldEqual(["no output"]);
@@ -25,9 +29,8 @@ void testSimpleCommand() {
 
 
 void testRemoveBuildDir() {
-    import reggae.config: options;
-    gCounter = 0;
+    reset;
     auto cmd = Command(&incr).expandVariables;
-    cmd.execute(options, Language.unknown, [], []);
+    cmd.execute(Options(), Language.unknown, [], []);
     gCounter.shouldEqual(1);
 }

@@ -31,7 +31,8 @@
                                   "tests/projects/opt/foo.d",
                                   "tests/projects/opt/bar.d",
                                   "tests/projects/scriptlike/d/main.d",
-                                  "tests/projects/static_lib/src/main.d"
+                                  "tests/projects/static_lib/src/main.d",
+                                  "tests/projects/dub/source/main.d"
                                  ],
           "dependencies": {
               "unit-threaded": "~>0.6.11"

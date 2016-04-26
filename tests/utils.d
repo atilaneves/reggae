@@ -33,6 +33,11 @@ auto shouldExecuteOk(string arg, in Options options, string file = __FILE__, siz
     return shouldExecuteOk([arg], options, file, line);
 }
 
+auto shouldExecuteOk(string arg, string file = __FILE__, size_t line = __LINE__) {
+    import std.file;
+    return shouldExecuteOk([arg], getcwd(), file, line);
+}
+
 
 struct FakeFile {
     string[] lines;

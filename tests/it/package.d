@@ -218,13 +218,7 @@ void prepareTestBuild(string module_ = __MODULE__)(ref Options options) {
 
     // copy all project files over to the build directory
     if(module_.canFind("reggaefile")) {
-        foreach(entry; dirEntries(dirName(modulePath), SpanMode.depth)) {
-            if(entry.isDir) continue;
-            auto tgtName = buildPath(options.workingDir, entry.relativePath(projectPath));
-            auto dir = dirName(tgtName);
-            if(!dir.exists) mkdirRecurse(dir);
-            copy(entry, buildPath(options.workingDir, tgtName));
-        }
+        copyProjectFiles(projectPath, options.workingDir);
         options.projectPath = options.workingDir;
     }
 }
@@ -246,4 +240,18 @@ void buildCmdShouldRunOk(alias module_ = __MODULE__)(in Options options, string[
     options.backend == Backend.binary
         ? doBuildFor!module_(options, cmdArgs)
         : cmdArgs.shouldExecuteOk(options.workingDir, file, line);
+}
+
+// copy one of the test projects to a temporary test directory
+void copyProjectFiles(in string projectPath, in string testPath) {
+    import std.file;
+    import std.path;
+    foreach(entry; dirEntries(projectPath, SpanMode.depth)) {
+        if(entry.isDir) continue;
+        auto tgtName = buildPath(testPath, entry.relativePath(projectPath));
+        auto dir = dirName(tgtName);
+        if(!dir.exists) mkdirRecurse(dir);
+        copy(entry, buildPath(testPath, tgtName));
+    }
+
 }

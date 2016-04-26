@@ -194,8 +194,6 @@ string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
     auto srcs = sourcesFunc();
 
     DirEntry[] modules;
-    import std.stdio;
-    writeln("project path: ", options.projectPath);
     foreach(dir; srcs.dirs.value.map!(a => buildPath(options.projectPath, a))) {
         enforce(isDir(dir), dir ~ " is not a directory name");
         auto entries = dirEntries(dir, SpanMode.depth);

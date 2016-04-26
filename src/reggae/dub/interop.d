@@ -41,6 +41,9 @@ void createReggaefile(in Options options) {
 private DubInfo _getDubInfo(in Options options) {
     import std.array;
 
+    version(unittest)
+        gDubInfos = null;
+
     if("default" !in gDubInfos) {
         immutable dubBuildArgs = ["dub", "--annotate", "build", "--compiler=dmd", "--print-configs"];
         immutable dubBuildOutput = callDub(options, dubBuildArgs);

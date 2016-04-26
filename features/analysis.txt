@@ -1,15 +1,17 @@
 Which features actually have to build code?
 
-dub.feature: DIT - dub.json -> getBuild.shouldEqual(Build(...))
-dub_reggae: DIT  - dub.json -> getBuild.shouldEqual(Build(...))
-dub_target_type: DIT dub.json -> exception
-unity_build: DIT
-
 regressions: Yep 16.5s @non_essential
+
+dub_reggae: runtime IT
+dub_target_type: runtime IT
+user_vars: DIT runtime
+
 implicit_dependencies: Yep 25.3s (!) buildgen
 phony: Yep 18.8s @non_essential buildgen
 
-user_vars: DIT runtime
+unity_build: DIT
 
-All scripting features: one file per language, DIT JSON to Build
-rerun_itself: 38s Yep
+
+
+All scripting features: one feature file per language, DIT JSON to Build extensively
+rerun_itself: 38s Has to be end-to-end test

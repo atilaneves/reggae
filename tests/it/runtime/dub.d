@@ -58,3 +58,22 @@ unittest {
     ninja.shouldExecuteOk(testPath);
     inPath(testPath, "ut").shouldExecuteOk(testPath);
 }
+
+@("dub project with no target type")
+@Tags(["dub", "ninja"])
+unittest {
+    import std.stdio;
+    const testPath = newTestDir;
+
+    {
+        File(buildPath(testPath, "dub.json"), "w").writeln(`
+{
+  "name": "notargettype",
+  "license": "MIT",
+  "targetType": "none"
+}`);
+    }
+
+    testRun(["reggae", "-C", testPath, "-b", "ninja", `--dflags=-g -debug`, testPath]).shouldThrowWithMessage(
+        "Unsupported dub targetType 'none'");
+}

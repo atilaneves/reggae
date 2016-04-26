@@ -31,13 +31,15 @@ unittest {
     auto output = ninja.shouldExecuteOk(testPath);
     output.canFind!(a => a.canFind("-g -debug")).shouldBeTrue;
 
-    const appPath = inPath(testPath, "atest");
-    appPath.shouldExecuteOk.shouldEqual(
+    inPath(testPath, "atest").shouldExecuteOk.shouldEqual(
         ["Why hello!",
          "",
          "[0, 0, 0, 4]",
          "I'm immortal!"]
         );
+
+    // there's only one UT in main.d which always fails
+    inPath(testPath, "ut").shouldFailToExecute(testPath);
 }
 
 @("dub project with no reggaefile tup")

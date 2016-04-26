@@ -2,10 +2,10 @@ module tests.it.runtime.error_messages;
 
 import reggae.reggae;
 import unit_threaded;
-import tests.it;
+import tests.it.runtime;
 
 @("Non-existent directory error message") unittest {
-    run(["reggae", "-b", "binary", "/non/existent"]).shouldThrowWithMessage(
+    testRun(["reggae", "-b", "binary", "/non/existent"]).shouldThrowWithMessage(
         "Could not find /non/existent/reggaefile.d");
 }
 
@@ -17,7 +17,7 @@ import tests.it;
     {
         File(buildPath(testPath, "foo.txt"), "w").writeln;
     }
-    run(["reggae", "-b", "binary", testPath]).shouldThrowWithMessage(
+    testRun(["reggae", "-b", "binary", testPath]).shouldThrowWithMessage(
         "Could not find " ~ buildPath(testPath, "reggaefile.d")
         );
 }
@@ -37,22 +37,22 @@ import tests.it;
     writeFile("reggaefile.d");
     writeFile("reggaefile.py");
 
-    run(args).shouldThrowWithMessage(
+    testRun(args).shouldThrowWithMessage(
         "Reggae builds may only use one language. Found: D, Python"
     );
 
     writeFile("reggaefile.rb");
-    run(args).shouldThrowWithMessage(
+    testRun(args).shouldThrowWithMessage(
         "Reggae builds may only use one language. Found: D, Python, Ruby"
     );
 
     writeFile("reggaefile.js");
-    run(args).shouldThrowWithMessage(
+    testRun(args).shouldThrowWithMessage(
         "Reggae builds may only use one language. Found: D, Python, Ruby, JavaScript"
     );
 
     writeFile("reggaefile.lua");
-    run(args).shouldThrowWithMessage(
+    testRun(args).shouldThrowWithMessage(
         "Reggae builds may only use one language. Found: D, Python, Ruby, JavaScript, Lua"
         );
 

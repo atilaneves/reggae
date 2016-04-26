@@ -45,11 +45,11 @@ mixin template reggaeGen(targets...) {
 
 mixin template ReggaeMain() {
     import reggae.options: getOptions;
-    import std.stdio: stderr;
+    import std.stdio: stdout, stderr;
 
     int main(string[] args) {
         try {
-            run(args);
+            run(stdout, args);
         } catch(Exception ex) {
             stderr.writeln(ex.msg);
             return 1;
@@ -59,12 +59,12 @@ mixin template ReggaeMain() {
     }
 }
 
-void run(string[] args) {
+void run(T)(T output, string[] args) {
     auto options = getOptions(args);
-    run(options);
+    run(output, options);
 }
 
-void run(Options options) {
+void run(T)(T output, Options options) {
     if(options.earlyExit) return;
     enforce(options.projectPath != "", "A project path must be specified");
 
@@ -74,7 +74,7 @@ void run(Options options) {
     }
 
     maybeCreateReggaefile(options);
-    createBuild(options);
+    createBuild(output, options);
 }
 
 //get JSON description of the build from a scripting language
@@ -172,16 +172,16 @@ private string[] fileNames() @safe pure nothrow {
 }
 
 
-private void createBuild(in Options options) {
+private void createBuild(T)(T output, in Options options) {
 
     enforce(options.reggaeFilePath.exists, text("Could not find ", options.reggaeFilePath));
 
     //write out the library source files to be compiled with the user's
     //build description
-    writeSrcFiles(options);
+    writeSrcFiles(output, options);
 
     //compile the binaries (the build generator and dcompile)
-    immutable buildGenName = compileBinaries(options);
+    immutable buildGenName = compileBinaries(output, options);
 
     //binary backend has no build generator, it _is_ the build
     if(options.backend == Backend.binary) return;
@@ -190,12 +190,12 @@ private void createBuild(in Options options) {
     if(options.isScriptBuild) return;
 
     //actually run the build generator
-    writeln("[Reggae] Running the created binary to generate the build");
+    output.writeln("[Reggae] Running the created binary to generate the build");
     immutable retRunBuildgen = execute([buildPath(options.workingDir, hiddenDir, buildGenName)]);
     enforce(retRunBuildgen.status == 0,
             text("Couldn't execute the produced ", buildGenName, " binary:\n", retRunBuildgen.output));
 
-    writeln(retRunBuildgen.output);
+    output.writeln(retRunBuildgen.output);
 }
 
 
@@ -205,21 +205,22 @@ struct Binary {
 }
 
 
-private string compileBinaries(in Options options) {
-    buildDCompile(options);
+private string compileBinaries(T)(T output, in Options options) {
+    buildDCompile(output, options);
 
     immutable buildGenName = getBuildGenName(options);
     if(options.isScriptBuild) return buildGenName;
 
     const buildGenCmd = getCompileBuildGenCmd(options);
     immutable buildObjName = "build.o";
-    buildBinary(options, Binary(buildObjName, buildGenCmd));
+    buildBinary(output, options, Binary(buildObjName, buildGenCmd));
 
     const reggaeFileDeps = getReggaeFileDependencies;
     auto objFiles = [buildObjName];
     if(!reggaeFileDeps.empty) {
         immutable rest = "rest.o";
-        buildBinary(options,
+        buildBinary(output,
+                    options,
                     Binary(rest,
                            ["dmd",
                             "-c",
@@ -228,12 +229,12 @@ private string compileBinaries(in Options options) {
                            reggaeFileDeps));
         objFiles ~= rest;
     }
-    buildBinary(options, Binary(buildGenName, ["dmd", "-of" ~ buildGenName] ~ objFiles));
+    buildBinary(output, options, Binary(buildGenName, ["dmd", "-of" ~ buildGenName] ~ objFiles));
 
     return buildGenName;
 }
 
-void buildDCompile(in Options options) {
+void buildDCompile(T)(T output, in Options options) {
     immutable name = "dcompile";
 
     if(!thisExePath.newerThan(name)) return;
@@ -244,7 +245,7 @@ void buildDCompile(in Options options) {
                      buildPath(options.workingDir, hiddenDir, reggaeSrcRelDirName, "dcompile.d"),
                      buildPath(options.workingDir, hiddenDir, reggaeSrcRelDirName, "dependencies.d")];
 
-    buildBinary(options, Binary(name, cmd));
+    buildBinary(output, options, Binary(name, cmd));
 }
 
 private bool isExecutable(in char[] path) @trusted nothrow @nogc //TODO: @safe
@@ -254,7 +255,7 @@ private bool isExecutable(in char[] path) @trusted nothrow @nogc //TODO: @safe
     return (access(path.tempCString(), X_OK) == 0);
 }
 
-private void buildBinary(in Options options, in Binary bin) {
+private void buildBinary(T)(T output, in Options options, in Binary bin) {
     import std.process;
     string[string] env;
     auto config = Config.none;
@@ -262,7 +263,7 @@ private void buildBinary(in Options options, in Binary bin) {
     auto workDir = buildPath(options.workingDir, hiddenDir);
     std.stdio.write("[Reggae] Compiling metabuild binary ", bin.name);
     if(options.verbose) std.stdio.write(" with ", bin.cmd.join(" "));
-    writeln;
+    output.writeln;
     // std.process.execute has a bug where using workDir and a relative path
     // don't work (https://issues.dlang.org/show_bug.cgi?id=15915)
     // so executeShell is used instead
@@ -326,8 +327,8 @@ template FileNames() {
 }
 
 
-void writeSrcFiles(in Options options) {
-    writeln("[Reggae] Writing reggae source files");
+void writeSrcFiles(T)(T output, in Options options) {
+    output.writeln("[Reggae] Writing reggae source files");
 
     import std.file: mkdirRecurse;
     immutable reggaeSrcDirName = reggaeSrcDirName(options);

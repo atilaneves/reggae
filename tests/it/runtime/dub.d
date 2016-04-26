@@ -1,8 +1,7 @@
 module tests.it.runtime.dub;
 
 
-import tests.it;
-import tests.utils;
+import tests.it.runtime;
 import reggae.reggae;
 import std.path;
 
@@ -23,7 +22,7 @@ unittest {
     const testPath = prepareTestPath("dub");
 
     buildPath(testPath, "reggaefile.d").exists.shouldBeFalse;
-    run(["reggae", "-C", testPath, "-b", "ninja", `--dflags=-g -debug`, testPath]);
+    testRun(["reggae", "-C", testPath, "-b", "ninja", `--dflags=-g -debug`, testPath]);
     buildPath(testPath, "reggaefile.d").exists.shouldBeTrue;
 
     auto output = ninja.shouldExecuteOk(testPath);
@@ -45,7 +44,7 @@ unittest {
 unittest {
     const testPath = prepareTestPath("dub");
 
-    run(["reggae", "-C", testPath, "-b", "tup", `--dflags=-g -debug`, testPath]).
+    testRun(["reggae", "-C", testPath, "-b", "tup", `--dflags=-g -debug`, testPath]).
         shouldThrowWithMessage("dub integration not supported with the tup backend");
 }
 
@@ -54,7 +53,7 @@ unittest {
 unittest {
 
     const testPath = prepareTestPath("dub_prebuild");
-    run(["reggae", "-C", testPath, "-b", "ninja", `--dflags=-g -debug`, testPath]);
+    testRun(["reggae", "-C", testPath, "-b", "ninja", `--dflags=-g -debug`, testPath]);
 
     ninja.shouldExecuteOk(testPath);
     inPath(testPath, "ut").shouldExecuteOk(testPath);

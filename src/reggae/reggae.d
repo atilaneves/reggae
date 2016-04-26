@@ -61,7 +61,6 @@ mixin template ReggaeMain() {
 
 void run(string[] args) {
     auto options = getOptions(args);
-    changeToDir(options);
     run(options);
 }
 
@@ -192,7 +191,7 @@ private void createBuild(in Options options) {
 
     //actually run the build generator
     writeln("[Reggae] Running the created binary to generate the build");
-    immutable retRunBuildgen = execute([buildPath(hiddenDir, buildGenName)]);
+    immutable retRunBuildgen = execute([buildPath(options.workingDir, hiddenDir, buildGenName)]);
     enforce(retRunBuildgen.status == 0,
             text("Couldn't execute the produced ", buildGenName, " binary:\n", retRunBuildgen.output));
 
@@ -268,7 +267,8 @@ private void buildBinary(in Options options, in Binary bin) {
     // don't work (https://issues.dlang.org/show_bug.cgi?id=15915)
     // so executeShell is used instead
     immutable res = executeShell(bin.cmd.join(" "), env, config, maxOutput, workDir);
-    enforce(res.status == 0, text("Couldn't execute ", bin.cmd.join(" "), "\n", res.output,
+    enforce(res.status == 0, text("Couldn't execute ", bin.cmd.join(" "), "\nin ", workDir,
+                                  ":\n", res.output,
                                   "\n", "bin.name: ", bin.name, ", bin.cmd: ", bin.cmd.join(" ")));
 
 }

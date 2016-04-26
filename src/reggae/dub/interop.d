@@ -27,8 +27,9 @@ void maybeCreateReggaefile(in Options options) {
 }
 
 void createReggaefile(in Options options) {
+    import std.path;
     writeln("[Reggae] Creating reggaefile.d from dub information");
-    auto file = File("reggaefile.d", "w");
+    auto file = File(buildPath(options.workingDir, "reggaefile.d"), "w");
     file.writeln(q{import reggae;});
     file.writeln(q{mixin build!(dubDefaultTarget!(),
                                 dubTestTarget!());});

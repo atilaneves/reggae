@@ -30,23 +30,23 @@ void testDCompileIncludePathsNinja() {
 }
 
 void testDCompileIncludePathsMake() {
-    import reggae.config: options;
+    import reggae.config: gDefaultOptions;
 
     auto build = Build(objectFile(SourceFile("path/to/src/foo.d"),
                                    Flags("-O"),
                                    ImportPaths(["path/to/src", "other/path"])));
-    build.targets.array[0].shellCommand(options.withProjectPath("/tmp/myproject")).shouldEqual(".reggae/dcompile --objFile=path/to/src/foo.o --depFile=path/to/src/foo.o.dep dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path  /tmp/myproject/path/to/src/foo.d");
+    build.targets.array[0].shellCommand(gDefaultOptions.withProjectPath("/tmp/myproject")).shouldEqual(".reggae/dcompile --objFile=path/to/src/foo.o --depFile=path/to/src/foo.o.dep dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path  /tmp/myproject/path/to/src/foo.d");
 }
 
 
 void testDCompileWithMultipleFilesMake() {
-    import reggae.config: options;
+    import reggae.config: gDefaultOptions;
 
     auto build = Build(dlangPackageObjectFilesPerPackage(
                             ["path/to/src/foo.d", "path/to/src/bar.d", "other/weird.d"],
                             "-O", ["path/to/src", "other/path"]));
 
-    auto commands = build.targets.map!(a => a.shellCommand(options.withProjectPath("/tmp/myproject"))).array;
+    auto commands = build.targets.map!(a => a.shellCommand(gDefaultOptions.withProjectPath("/tmp/myproject"))).array;
 
     commands.shouldBeSameSetAs(
         [

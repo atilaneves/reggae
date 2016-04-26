@@ -57,23 +57,24 @@ void testDObjectFile() {
 
 
 void testBuiltinTemplateDeps() {
-    import reggae.config: options;
+    import reggae.config;
 
-    Command.builtinTemplate(CommandType.compile, Language.C, options).shouldEqual(
+    Command.builtinTemplate(CommandType.compile, Language.C, gDefaultOptions).shouldEqual(
         "gcc $flags $includes -MMD -MT $out -MF $out.dep -o $out -c $in");
 
-    Command.builtinTemplate(CommandType.compile, Language.D, options).shouldEqual(
+    Command.builtinTemplate(CommandType.compile, Language.D, gDefaultOptions).shouldEqual(
         ".reggae/dcompile --objFile=$out --depFile=$out.dep " ~
          "dmd $flags $includes $stringImports $in");
 
 }
 
 void testBuiltinTemplateNoDeps() {
-    import reggae.config: options;
-    Command.builtinTemplate(CommandType.compile, Language.C, options, No.dependencies).shouldEqual(
+    import reggae.config;
+
+    Command.builtinTemplate(CommandType.compile, Language.C, gDefaultOptions, No.dependencies).shouldEqual(
         "gcc $flags $includes -o $out -c $in");
 
-    Command.builtinTemplate(CommandType.compile, Language.D, options, No.dependencies).shouldEqual(
+    Command.builtinTemplate(CommandType.compile, Language.D, gDefaultOptions, No.dependencies).shouldEqual(
         "dmd $flags $includes $stringImports -of$out -c $in");
 
 }

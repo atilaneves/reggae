@@ -15,7 +15,7 @@ version(minimal) {
     enum isDubProject = true;
 }
 
-Options gOptions = Options(Backend.ninja,
+immutable Options gDefaultOptions = Options(Backend.ninja,
             "",
             "",
             "",
@@ -29,12 +29,18 @@ Options gOptions = Options(Backend.ninja,
             false,
 );
 
+Options gOptions = gDefaultOptions.dup;
+
 Options options() @safe nothrow {
     return gOptions;
 }
 
 void setOptions(Options options) {
     gOptions = options;
+}
+
+void setDefaultOptions() {
+    gOptions = gDefaultOptions.dup;
 }
 
 enum userVars = AssocList!(string, string)();

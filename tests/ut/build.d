@@ -14,13 +14,13 @@ void testIsLeaf() {
 
 
 void testInOut() {
-    import reggae.config: options;
+    import reggae.config: gDefaultOptions;
     //Tests that specifying $in and $out in the command string gets substituted correctly
     {
         auto target = Target("foo",
                               "createfoo -o $out $in",
                               [Target("bar.txt"), Target("baz.txt")]);
-        target.shellCommand(options.withProjectPath("/path/to")).shouldEqual(
+        target.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
             "createfoo -o foo /path/to/bar.txt /path/to/baz.txt");
     }
     {
@@ -31,14 +31,14 @@ void testInOut() {
                                   Target("src2.o", "gcc -c -o $out $in", [Target("src2.c")])
                                   ],
             );
-        target.shellCommand(options.withProjectPath("/path/to")).shouldEqual("gcc -o tgt src1.o src2.o");
+        target.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual("gcc -o tgt src1.o src2.o");
     }
 
     {
         auto target = Target(["proto.h", "proto.c"],
                               "protocompile $out -i $in",
                               [Target("proto.idl")]);
-        target.shellCommand(options.withProjectPath("/path/to")).shouldEqual(
+        target.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
             "protocompile proto.h proto.c -i /path/to/proto.idl");
     }
 
@@ -48,26 +48,26 @@ void testInOut() {
                               [Target(["foo1.o", "foo2.o"], "cmd", [Target("tmp")]),
                                Target("bar.o"),
                                Target("baz.o")]);
-        target.shellCommand(options.withProjectPath("/path/to")).shouldEqual(
+        target.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
             "ar -olib1.a foo1.o foo2.o /path/to/bar.o /path/to/baz.o");
     }
 }
 
 
 void testProject() {
-    import reggae.config: options;
+    import reggae.config: gDefaultOptions;
     auto target = Target("foo",
                           "makefoo -i $in -o $out -p $project",
                           [Target("bar"), Target("baz")]);
-    target.shellCommand(options.withProjectPath("/tmp")).shouldEqual("makefoo -i /tmp/bar /tmp/baz -o foo -p /tmp");
+    target.shellCommand(gDefaultOptions.withProjectPath("/tmp")).shouldEqual("makefoo -i /tmp/bar /tmp/baz -o foo -p /tmp");
 }
 
 
 void testMultipleOutputs() {
-    import reggae.config: options;
+    import reggae.config: gDefaultOptions;
     auto target = Target(["foo.hpp", "foo.cpp"], "protocomp $in", [Target("foo.proto")]);
     target.rawOutputs.shouldEqual(["foo.hpp", "foo.cpp"]);
-    target.shellCommand(options.withProjectPath("myproj")).shouldEqual("protocomp myproj/foo.proto");
+    target.shellCommand(gDefaultOptions.withProjectPath("myproj")).shouldEqual("protocomp myproj/foo.proto");
 
     auto bld = Build(target);
     bld.targets.array[0].rawOutputs.shouldEqual(["foo.hpp", "foo.cpp"]);
@@ -211,9 +211,9 @@ void testExpandOutputs() {
 
 
 void testCommandBuilddir() {
-    import reggae.config: options;
+    import reggae.config: gDefaultOptions;
     auto cmd = Command("dmd -of$builddir/ut_debug $in");
-    cmd.shellCommand(options.withProjectPath("/path/to/proj"), Language.unknown, ["$builddir/ut_debug"], ["foo.d"]).
+    cmd.shellCommand(gDefaultOptions.withProjectPath("/path/to/proj"), Language.unknown, ["$builddir/ut_debug"], ["foo.d"]).
         shouldEqual("dmd -ofut_debug foo.d");
 }
 
@@ -239,12 +239,12 @@ void testOutputInProjectDir() {
 
 void testCmdInBuildDir() {
     auto target = Target("output", "cmd -I$builddir/include $in $out", [Target("foo.d"), Target("bar.d")]);
-    target.shellCommand(options.withProjectPath("/path/to")).shouldEqual("cmd -Iinclude /path/to/foo.d /path/to/bar.d output");
+    target.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual("cmd -Iinclude /path/to/foo.d /path/to/bar.d output");
 }
 
 void testCmdInProjectDir() {
     auto target = Target("output", "cmd -I$project/include $in $out", [Target("foo.d"), Target("bar.d")]);
-    target.shellCommand(options.withProjectPath("/path/to")).shouldEqual("cmd -I/path/to/include /path/to/foo.d /path/to/bar.d output");
+    target.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual("cmd -I/path/to/include /path/to/foo.d /path/to/bar.d output");
 }
 
 void testDepsInBuildDir() {

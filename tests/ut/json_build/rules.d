@@ -70,10 +70,10 @@ void testLink() {
 
 
 void testJsonToOptions() {
-    import reggae.config: options;
+    import reggae.config: gDefaultOptions;
     import std.json;
 
-    auto oldOptions = options.dup;
+    auto oldOptions = gDefaultOptions.dup;
     oldOptions.args = ["reggae", "-b", "ninja", "/path/to/my/project"];
     auto newOptions = jsonToOptions(oldOptions, parseJSON(linkJsonString));
     newOptions.cCompiler.shouldEqual("weirdcc");

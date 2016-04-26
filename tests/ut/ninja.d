@@ -137,8 +137,8 @@ void testImplicitDependenciesMoreThanOne() {
 
 
 void testDefaultRules() {
-    import reggae.config: options;
-    defaultRules(options).shouldEqual(
+    import reggae.config: gDefaultOptions;
+    defaultRules(gDefaultOptions).shouldEqual(
         [
             NinjaEntry("rule _ccompile",
                        ["command = gcc $flags $includes -MMD -MT $out -MF $out.dep -o $out -c $in",

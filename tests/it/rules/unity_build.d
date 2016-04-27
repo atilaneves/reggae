@@ -1,6 +1,8 @@
 module tests.it.rules.unity_build;
 
 import tests.it;
+import std.path;
+import std.algorithm;
 
 @("template") unittest {
     import reggae.buildgen;

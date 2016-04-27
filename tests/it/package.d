@@ -228,17 +228,17 @@ void justDoTestBuild(string module_ = __MODULE__)(in Options options, string[] a
 
     auto cmdArgs = buildCmd(options, args);
     doBuildFor!module_(options, cmdArgs); // generate build
-    if(options.backend != Backend.binary)
+    if(options.backend != Backend.binary && options.backend != Backend.none)
         cmdArgs.shouldExecuteOk(options.workingDir);
 }
 
-void buildCmdShouldRunOk(alias module_ = __MODULE__)(in Options options, string[] args = [],
-                                                     string file = __FILE__, ulong line = __LINE__ ) {
+string[] buildCmdShouldRunOk(alias module_ = __MODULE__)(in Options options, string[] args = [],
+                                                         string file = __FILE__, ulong line = __LINE__ ) {
     import tests.utils;
     auto cmdArgs = buildCmd(options, args);
     // the binary backend in the tests isn't a separate executable, but make, ninja and tup are
-    options.backend == Backend.binary
-        ? doBuildFor!module_(options, cmdArgs)
+    return options.backend == Backend.binary
+        ? (doBuildFor!module_(options, cmdArgs), cast(string[])[])
         : cmdArgs.shouldExecuteOk(options.workingDir, file, line);
 }
 

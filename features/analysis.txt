@@ -3,7 +3,6 @@ Which features actually have to build code?
 regressions: Dunno 16.5s @non_essential
 
 user_vars: DIT runtime, use simpler project
-export: buildgen
 
 All scripting features: one feature file per language, DIT JSON to Build extensively (json -> jsonToBuild() -> Build)
 rerun_itself: 38s Has to be end-to-end test

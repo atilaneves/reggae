@@ -46,9 +46,11 @@ auto shouldFailToExecute(string arg, string workDir = getcwd(), string file = __
     Config config = Config.none;
     size_t maxOutput = size_t.max;
 
-    immutable res = execute([arg], env, config, maxOutput, workDir);
-    if(res.status == 0)
-        throw new UnitTestException([arg ~ " executed ok but was expected to fail"], file, line);
+    try {
+        immutable res = execute([arg], env, config, maxOutput, workDir);
+        if(res.status == 0)
+            throw new UnitTestException([arg ~ " executed ok but was expected to fail"], file, line);
+    } catch(ProcessException) {}
 }
 
 

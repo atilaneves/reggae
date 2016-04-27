@@ -179,8 +179,27 @@ Target[] targetConcat(T...)() {
     return ret;
 }
 
+/**
+ Compile-time version of Target.phony
+ */
+Target phony(string name,
+             string shellCommand,
+             alias dependenciesFunc = () { Target[] ts; return ts; },
+             alias implicitsFunc = () { Target[] ts; return ts; })() {
+    return Target.phony(name, shellCommand, arrayify!dependenciesFunc, arrayify!implicitsFunc);
+}
+
 
 //end of rules
+
+private auto arrayify(alias func)() {
+    import std.traits;
+    auto ret = func();
+    static if(isArray!(typeof(ret)))
+        return ret;
+    else
+        return [ret];
+}
 
 string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
 

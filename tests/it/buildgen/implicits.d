@@ -24,6 +24,6 @@ unittest {
     buildCmdShouldRunOk!module_(options);
 
     // check new output
-    [appPath, "3"].shouldExecuteOk(testPath).shouldEqual(
+    appPath.shouldExecuteOk(testPath).shouldEqual(
         ["Goodbye!"]);
 }

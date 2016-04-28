@@ -2,11 +2,11 @@ module tests.it.runtime.user_vars;
 
 import tests.it.runtime;
 import std.file;
+import std.path;
 
 
 private void prepareBuild(in string testPath) {
     import std.stdio;
-    import std.path;
 
     File(buildPath(testPath, "reggaefile.d"), "w").writeln(q{
         import reggae;

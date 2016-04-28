@@ -5,22 +5,6 @@ Feature: Regressions
   So that bugs are not reintroduced
 
   @ninja
-  Scenario: Github issue 14: $builddir not expanded
-    Given a file named "project/reggaefile.d" with:
-      """
-      import reggae;
-
-      enum ao = objectFile(SourceFile("a.c"));
-      enum liba = Target("$builddir/liba.a", "ar rcs $out $in", [ao]);
-      mixin build!(liba);
-      """
-    And a file named "project/a.c" with:
-      """
-      """
-    When I successfully run `reggae -b ninja project`
-    Then I successfully run `ninja`
-
-  @ninja
   Scenario: Github issue 12: Can't set executable as a dependency
     Given a file named "project/reggaefile.d" with:
       """

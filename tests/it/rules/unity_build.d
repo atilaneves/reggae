@@ -14,7 +14,8 @@ import std.algorithm;
 
     getBuildObject!"unity.reggaefile"(options).shouldEqual(
         Build(Target("unity",
-                     compileCommand("$builddir/objs/unity.objs/unity.cpp", "-g", [], [], options.projectPath, No.justCompile),
+                     compileCommand("$builddir/objs/unity.objs/unity.cpp",
+                                    "-g", [], [], options.projectPath, No.justCompile),
                      [Target.phony("unity.cpp",
                                    "",
                                    [],
@@ -25,7 +26,9 @@ import std.algorithm;
     // #include "1st.cpp"
     // #include "2nd.cpp"
     // ...
-    readText(buildPath(options.workingDir, "objs", "unity.objs", "unity.cpp")).chomp.split("\n").shouldEqual(
-        ["main.cpp", "maths.cpp"].map!(a => `#include "` ~ buildPath(options.projectPath, "src", a) ~ `"`));
+    readText(buildPath(options.workingDir, "objs", "unity.objs", "unity.cpp")).chomp.split("\n").
+        shouldBeSameSetAs(
+            ["main.cpp", "maths.cpp"].
+            map!(a => `#include "` ~ buildPath(options.projectPath, "src", a) ~ `"`));
 
 }

@@ -26,14 +26,18 @@ import std.stdio: File;
 @("C++ files with regular objectFiles") unittest {
     auto testPath = newTestDir.absolutePath;
     mkdir(buildPath(testPath, "proj"));
-    foreach(fileName; ["main.cpp", "maths.cpp", "intermediate.hpp", "final.hpp" ]) { //, "reggaefile.d"]) {
+    foreach(fileName; ["main.cpp", "maths.cpp", "intermediate.hpp", "final.hpp" ]) {
         auto f = File(buildPath(testPath, "proj", fileName), "w");
         f.writeln;
     }
 
     string[] none;
-    objectFiles(testPath, ["."], none, none, none, "-g -O0").shouldEqual(
-        [Target("proj/main.o", compileCommand("proj/main.cpp", "-g -O0"), [Target("proj/main.cpp")]),
-         Target("proj/maths.o", compileCommand("proj/maths.cpp", "-g -O0"), [Target("proj/maths.cpp")])]
+    objectFiles(testPath, ["."], none, none, none, "-g -O0").shouldBeSameSetAs(
+        [Target("proj/main.o",
+                compileCommand("proj/main.cpp", "-g -O0"),
+                [Target("proj/main.cpp")]),
+         Target("proj/maths.o",
+                compileCommand("proj/maths.cpp", "-g -O0"),
+                [Target("proj/maths.cpp")])]
     );
 }

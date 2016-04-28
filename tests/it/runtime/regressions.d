@@ -75,3 +75,46 @@ unittest {
          "bar bar",
          "baz baz"]);
 }
+
+
+@("Issue 10: dubConfigurationTarget doesn't work for unittest builds")
+@Tags(["ninja", "regressions"])
+unittest {
+    import std.stdio;
+    import std.file;
+    import std.string;
+
+    const testPath = newTestDir;
+    {
+        File(buildPath(testPath, "dub.json"), "w").writeln(`
+            {
+                "name": "dubproj",
+                "configurations": [
+                    { "name": "executable"},
+                    { "name": "unittest"}
+              ]
+            }`);
+
+        mkdir(buildPath(testPath, "source"));
+        File(buildPath(testPath, "reggaefile.d"), "w").writeln(q{
+            import reggae;
+            alias ut = dubConfigurationTarget!(ExeName(`ut`),
+                                               Configuration(`unittest`),
+                                               Flags(`-g -debug -cov`));
+            mixin build!ut;
+        });
+
+        File(buildPath(testPath, "source", "src.d"), "w").writeln(q{
+            unittest { static assert(false, `oopsie`); }
+            int add(int i, int j) { return i + j; }
+        });
+
+        File(buildPath(testPath, "source", "main.d"), "w").writeln(q{
+            import src;
+            void main() {}
+        });
+    }
+
+    testRun(["reggae", "-C", testPath, "-b", "ninja", testPath]);
+    ninja.shouldFailToExecute(testPath);
+}

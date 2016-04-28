@@ -39,17 +39,26 @@ auto shouldExecuteOk(string arg, string file = __FILE__, size_t line = __LINE__)
     return shouldExecuteOk([arg], getcwd(), file, line);
 }
 
-auto shouldFailToExecute(string arg, string workDir = getcwd(), string file = __FILE__, size_t line = __LINE__) {
+auto shouldFailToExecute(string arg, string workDir = getcwd(),
+                         string file = __FILE__, size_t line = __LINE__) {
+    return shouldFailToExecute([arg], workDir, file, line);
+}
+
+auto shouldFailToExecute(string[] args, string workDir = getcwd(),
+                         string file = __FILE__, size_t line = __LINE__) {
+
     import std.process;
+    import std.array;
 
     const string[string] env = null;
     Config config = Config.none;
     size_t maxOutput = size_t.max;
 
     try {
-        immutable res = execute([arg], env, config, maxOutput, workDir);
+        immutable res = execute(args, env, config, maxOutput, workDir);
         if(res.status == 0)
-            throw new UnitTestException([arg ~ " executed ok but was expected to fail"], file, line);
+            throw new UnitTestException([args.join(" ") ~
+                                         " executed ok but was expected to fail"], file, line);
     } catch(ProcessException) {}
 }
 

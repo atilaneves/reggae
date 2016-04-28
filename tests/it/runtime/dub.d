@@ -77,3 +77,38 @@ unittest {
     testRun(["reggae", "-C", testPath, "-b", "ninja", `--dflags=-g -debug`, testPath]).shouldThrowWithMessage(
         "Unsupported dub targetType 'none'");
 }
+
+
+@("Recursive sub dependencies")
+@Tags(["dub", "ninja", "regressions"])
+unittest {
+    import std.stdio;
+    const testPath = newTestDir;
+
+    {
+        File(buildPath(testPath, "dub.json"), "w").writeln(`
+{
+    "targetType": "executable",
+    "name": "simpleshader",
+    "mainSourceFile": "simpleshader.d",
+
+    "dependencies":
+    {
+        "gfm:sdl2": "*",
+        "gfm:opengl": "*",
+        "gfm:logger": "*"
+    }
+}`);
+
+        File(buildPath(testPath, "simpleshader.d"), "w").writeln(q{
+                import std.math, std.random, std.typecons;
+                import std.experimental.logger;
+                import derelict.util.loader;
+                import gfm.logger, gfm.sdl2, gfm.opengl, gfm.math;
+                void main() {}
+        });
+    }
+
+    testRun(["reggae", "-C", testPath, "-b", "ninja"]);
+    ninja.shouldExecuteOk(testPath);
+}

@@ -437,6 +437,20 @@ struct Target {
         return Target(outputs, command, dependencies, implicits);
     }
 
+    bool opEquals()(auto ref const Target other) @safe pure const {
+
+        bool sameSet(T)(const(T)[] fst, const(T)[] snd) {
+            if(fst.length != snd.length) return false;
+            return fst.all!(a => snd.any!(b => a == b));
+        }
+
+        return
+            sameSet(_outputs, other._outputs) &&
+            _command == other._command &&
+            sameSet(_dependencies, other._dependencies) &&
+            sameSet(_implicits, other._implicits);
+    }
+
 private:
 
     string[] depsInProjectPath(in Target[] deps, in string projectPath) @safe pure const {

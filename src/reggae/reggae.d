@@ -163,6 +163,10 @@ enum otherFiles = [
     "dub/info.d", "rules/dub.d",
     ];
 
+enum foreignFiles = [
+    "__init__.py", "build.py", "json_build.py", "reflect.py", "rules.py",
+    ];
+
 //all files that need to be written out and compiled
 private string[] fileNames() @safe pure nothrow {
     version(minimal)
@@ -318,14 +322,6 @@ string reggaeSrcDirName(in Options options) @safe pure nothrow {
     return buildPath(options.workingDir, hiddenDir, reggaeSrcRelDirName);
 }
 
-private string filesTupleString() @safe pure nothrow {
-    return "TypeTuple!(" ~ fileNames.map!(a => `"` ~ a ~ `"`).join(",") ~ ")";
-}
-
-template FileNames() {
-    mixin("alias FileNames = " ~ filesTupleString ~ ";");
-}
-
 
 void writeSrcFiles(T)(T output, in Options options) {
     output.writeln("[Reggae] Writing reggae source files");
@@ -342,7 +338,7 @@ void writeSrcFiles(T)(T output, in Options options) {
 
     //this foreach has to happen at compile time due
     //to the string import below.
-    foreach(fileName; FileNames!()) {
+    foreach(fileName; aliasSeqOf!(fileNames ~ foreignFiles)) {
         auto file = File(reggaeSrcFileName(options, fileName), "w");
         file.write(import(fileName));
     }

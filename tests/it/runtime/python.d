@@ -16,10 +16,9 @@ unittest {
 
     const testPath = newTestDir;
     {
-        File(buildPath(testPath, "reggaefile.py"), "w").writeln(`
-            from reggae import *
-            b = Build(executable(name='app', src_dirs=['src']))
-        `);
+        auto file = File(buildPath(testPath, "reggaefile.py"), "w");
+        file.writeln(`from reggae import *`);
+        file.writeln(`b = Build(executable(name='app', src_dirs=['src']))`);
     }
 
     writeHelloWorldApp(testPath);

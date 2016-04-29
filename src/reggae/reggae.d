@@ -68,6 +68,10 @@ void run(T)(T output, Options options) {
     if(options.earlyExit) return;
     enforce(options.projectPath != "", "A project path must be specified");
 
+    // write out the library source files to be compiled/interpreted
+    // with the user's build description
+    writeSrcFiles(output, options);
+
     if(options.isJsonBuild) {
         immutable haveToReturn = jsonBuild(options);
         if(haveToReturn) return;
@@ -108,9 +112,12 @@ bool jsonBuild(Options options, in string jsonOutput) {
 
 private string getJsonOutput(in Options options) @safe {
     const args = getJsonOutputArgs(options);
+    const pythonPaths = environment.get("PYTHONPATH", "").split(":");
     const nodePaths = environment.get("NODE_PATH", "").split(":");
     const luaPaths = environment.get("LUA_PATH", "").split(";");
-    auto env = ["NODE_PATH": (nodePaths ~ options.projectPath).join(":"),
+    const srcDir = buildPath(options.workingDir, hiddenDir, "src");
+    auto env = ["PYTHONPATH": (pythonPaths ~ srcDir).join(":"),
+                "NODE_PATH": (nodePaths ~ options.projectPath).join(":"),
                 "LUA_PATH": (luaPaths ~ buildPath(options.projectPath, "?.lua")).join(";")];
     immutable res = execute(args, env);
     enforce(res.status == 0, text("Could not execute ", args.join(" "), ":\n", res.output));
@@ -179,10 +186,6 @@ private string[] fileNames() @safe pure nothrow {
 private void createBuild(T)(T output, in Options options) {
 
     enforce(options.reggaeFilePath.exists, text("Could not find ", options.reggaeFilePath));
-
-    //write out the library source files to be compiled with the user's
-    //build description
-    writeSrcFiles(output, options);
 
     //compile the binaries (the build generator and dcompile)
     immutable buildGenName = compileBinaries(output, options);

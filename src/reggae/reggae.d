@@ -112,11 +112,14 @@ bool jsonBuild(Options options, in string jsonOutput) {
 
 private string getJsonOutput(in Options options) @safe {
     const args = getJsonOutputArgs(options);
+    const path = environment.get("PATH", "").split(":");
     const pythonPaths = environment.get("PYTHONPATH", "").split(":");
     const nodePaths = environment.get("NODE_PATH", "").split(":");
     const luaPaths = environment.get("LUA_PATH", "").split(";");
     const srcDir = buildPath(options.workingDir, hiddenDir, "src");
-    auto env = ["PYTHONPATH": (pythonPaths ~ srcDir).join(":"),
+    const binDir = buildPath(srcDir, "reggae");
+    auto env = ["PATH": (path ~ binDir).join(":"),
+                "PYTHONPATH": (pythonPaths ~ srcDir).join(":"),
                 "NODE_PATH": (nodePaths ~ options.projectPath).join(":"),
                 "LUA_PATH": (luaPaths ~ buildPath(options.projectPath, "?.lua")).join(";")];
     immutable res = execute(args, env);
@@ -141,7 +144,10 @@ private string[] getJsonOutputArgs(in Options options) @safe {
                 options.projectPath];
 
     case BuildLanguage.Ruby:
-        return ["ruby", "-S", "-I" ~ options.projectPath, "reggae_json_build.rb"];
+        return ["ruby", "-S",
+                "-I" ~ options.projectPath,
+                "-I" ~ buildPath(options.workingDir, hiddenDir, "src", "reggae"),
+                "reggae_json_build.rb"];
 
     case BuildLanguage.Lua:
         return ["reggae_json_build.lua"];
@@ -172,6 +178,7 @@ enum otherFiles = [
 
 enum foreignFiles = [
     "__init__.py", "build.py", "json_build.py", "reflect.py", "rules.py",
+    "reggae.rb", "reggae_json_build.rb",
     ];
 
 //all files that need to be written out and compiled

@@ -68,6 +68,10 @@ void run(T)(T output, Options options) {
     if(options.earlyExit) return;
     enforce(options.projectPath != "", "A project path must be specified");
 
+    // write out the library source files to be compiled/interpreted
+    // with the user's build description
+    writeSrcFiles(output, options);
+
     if(options.isJsonBuild) {
         immutable haveToReturn = jsonBuild(options);
         if(haveToReturn) return;
@@ -108,9 +112,15 @@ bool jsonBuild(Options options, in string jsonOutput) {
 
 private string getJsonOutput(in Options options) @safe {
     const args = getJsonOutputArgs(options);
+    const path = environment.get("PATH", "").split(":");
+    const pythonPaths = environment.get("PYTHONPATH", "").split(":");
     const nodePaths = environment.get("NODE_PATH", "").split(":");
     const luaPaths = environment.get("LUA_PATH", "").split(";");
-    auto env = ["NODE_PATH": (nodePaths ~ options.projectPath).join(":"),
+    const srcDir = buildPath(options.workingDir, hiddenDir, "src");
+    const binDir = buildPath(srcDir, "reggae");
+    auto env = ["PATH": (path ~ binDir).join(":"),
+                "PYTHONPATH": (pythonPaths ~ srcDir).join(":"),
+                "NODE_PATH": (nodePaths ~ options.projectPath).join(":"),
                 "LUA_PATH": (luaPaths ~ buildPath(options.projectPath, "?.lua")).join(";")];
     immutable res = execute(args, env);
     enforce(res.status == 0, text("Could not execute ", args.join(" "), ":\n", res.output));
@@ -134,7 +144,10 @@ private string[] getJsonOutputArgs(in Options options) @safe {
                 options.projectPath];
 
     case BuildLanguage.Ruby:
-        return ["ruby", "-S", "-I" ~ options.projectPath, "reggae_json_build.rb"];
+        return ["ruby", "-S",
+                "-I" ~ options.projectPath,
+                "-I" ~ buildPath(options.workingDir, hiddenDir, "src", "reggae"),
+                "reggae_json_build.rb"];
 
     case BuildLanguage.Lua:
         return ["reggae_json_build.lua"];
@@ -163,6 +176,11 @@ enum otherFiles = [
     "dub/info.d", "rules/dub.d",
     ];
 
+enum foreignFiles = [
+    "__init__.py", "build.py", "json_build.py", "reflect.py", "rules.py",
+    "reggae.rb", "reggae_json_build.rb",
+    ];
+
 //all files that need to be written out and compiled
 private string[] fileNames() @safe pure nothrow {
     version(minimal)
@@ -175,10 +193,6 @@ private string[] fileNames() @safe pure nothrow {
 private void createBuild(T)(T output, in Options options) {
 
     enforce(options.reggaeFilePath.exists, text("Could not find ", options.reggaeFilePath));
-
-    //write out the library source files to be compiled with the user's
-    //build description
-    writeSrcFiles(output, options);
 
     //compile the binaries (the build generator and dcompile)
     immutable buildGenName = compileBinaries(output, options);
@@ -318,14 +332,6 @@ string reggaeSrcDirName(in Options options) @safe pure nothrow {
     return buildPath(options.workingDir, hiddenDir, reggaeSrcRelDirName);
 }
 
-private string filesTupleString() @safe pure nothrow {
-    return "TypeTuple!(" ~ fileNames.map!(a => `"` ~ a ~ `"`).join(",") ~ ")";
-}
-
-template FileNames() {
-    mixin("alias FileNames = " ~ filesTupleString ~ ";");
-}
-
 
 void writeSrcFiles(T)(T output, in Options options) {
     output.writeln("[Reggae] Writing reggae source files");
@@ -342,7 +348,7 @@ void writeSrcFiles(T)(T output, in Options options) {
 
     //this foreach has to happen at compile time due
     //to the string import below.
-    foreach(fileName; FileNames!()) {
+    foreach(fileName; aliasSeqOf!(fileNames ~ foreignFiles)) {
         auto file = File(reggaeSrcFileName(options, fileName), "w");
         file.write(import(fileName));
     }

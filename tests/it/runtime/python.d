@@ -9,7 +9,7 @@ module tests.it.runtime.python;
 import tests.it.runtime;
 
 @("Build description in Python")
-@Tags(["ninja", "json_build"])
+@Tags(["ninja", "json_build", "python"])
 unittest {
     import std.stdio;
     import std.path;

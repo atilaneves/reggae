@@ -16,7 +16,7 @@ import tests.it;
                       Target("$builddir/maths.a",
                              "ar rcs $out $in",
                              [Target("libsrc.o",
-                                     compileCommand("libsrc/muler.d", "", ["."]),
+                                     compileCommand("libsrc.d", "", ["."]),
                                      [Target("libsrc/muler.d"), Target("libsrc/adder.d")]
                                      )]),
                          ])));

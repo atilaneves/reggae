@@ -14,7 +14,7 @@ import tests.it;
                              compileCommand("d/main.d", "-debug -O", ["d"], ["resources/text"]),
                              [Target("d/main.d")]),
                       Target("d.o",
-                             compileCommand("d/logger.d", "-debug -O", ["d"], ["resources/text"]),
+                             compileCommand("d.d", "-debug -O", ["d"], ["resources/text"]),
                              [Target("d/logger.d"), Target("d/constants.d")]),
                       Target("cpp/maths.o",
                              compileCommand("cpp/maths.cpp", "-pg"),

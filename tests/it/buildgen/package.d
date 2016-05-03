@@ -31,6 +31,7 @@ void shouldBuild(string project)(string[] args = [],
     buildCmdShouldRunOk!module_(options, args, file, line);
 }
 
+
 // runs a command in the test sandbox, throws if it fails,
 // returns the output
 auto shouldSucceed(string[] args, string file = __FILE__, size_t line = __LINE__) {

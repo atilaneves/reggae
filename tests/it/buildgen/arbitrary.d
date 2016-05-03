@@ -29,17 +29,13 @@ unittest {
 unittest {
 import tests.utils;
 
-    const backend = getValue!string;
-    auto options = testProjectOptions(backend, "project2");
-    doTestBuildFor!"project2.reggaefile"(options);
+    enum project = "project2";
+    generateBuild!project;
+    shouldBuild!project;
 
-    const testPath = options.workingDir;
-    const appPath = inPath(testPath, "appp");
+    ["appp", "hello"].shouldSucceed.shouldEqual(
+        ["Appending to hello yields hello appended!"]);
 
-    [appPath, "hello"].shouldExecuteOk(testPath).shouldEqual(
-        ["Appending to hello yields hello appended!",
-      ]);
-    [appPath, "ohnoes"].shouldExecuteOk(testPath).shouldEqual(
-        ["Appending to ohnoes yields ohnoes appended!",
-            ]);
+    ["appp", "ohnoes"].shouldSucceed.shouldEqual(
+        ["Appending to ohnoes yields ohnoes appended!"]);
 }

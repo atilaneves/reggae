@@ -5,7 +5,8 @@ import unit_threaded;
 import tests.it.runtime;
 
 @("Non-existent directory error message") unittest {
-    testRun(["reggae", "-b", "binary", "/non/existent"]).shouldThrowWithMessage(
+    const testPath = newTestDir;
+    testRun(["reggae", "-C", testPath, "-b", "binary", "/non/existent"]).shouldThrowWithMessage(
         "Could not find /non/existent/reggaefile.d");
 }
 
@@ -17,7 +18,7 @@ import tests.it.runtime;
     {
         File(buildPath(testPath, "foo.txt"), "w").writeln;
     }
-    testRun(["reggae", "-b", "binary", testPath]).shouldThrowWithMessage(
+    testRun(["reggae", "-C", testPath, "-b", "binary", testPath]).shouldThrowWithMessage(
         "Could not find " ~ buildPath(testPath, "reggaefile.d")
         );
 }
@@ -33,7 +34,7 @@ import tests.it.runtime;
         File(buildPath(testPath, name), "w").writeln;
     }
 
-    auto args = ["reggae", "-b", "binary", testPath];
+    auto args = ["reggae", "-C", testPath, "-b", "binary", testPath];
     writeFile("reggaefile.d");
     writeFile("reggaefile.py");
 

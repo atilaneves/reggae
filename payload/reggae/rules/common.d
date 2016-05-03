@@ -370,7 +370,8 @@ Command compileCommand(in string srcFileName,
                    assocEntry("flags", flagParams)];
 
     if(language == Language.D)
-        params ~= assocEntry("stringImports", stringImportPaths.map!(a => "-J" ~ maybeExpand(a)).array);
+        params ~= assocEntry("stringImports",
+                             stringImportPaths.map!(a => "-J" ~ maybeExpand(a)).array);
 
     params ~= assocEntry("DEPFILE", [srcFileName.objFileName ~ ".dep"]);
 

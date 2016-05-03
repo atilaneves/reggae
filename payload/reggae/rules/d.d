@@ -27,14 +27,23 @@ Target[] dlangPackageObjectFiles(in string[] srcFiles, in string flags = "",
     return func(srcFiles, flags, importPaths, stringImportPaths, projDir);
 }
 
-Target[] dlangPackageObjectFilesPerPackage(in string[] srcFiles, in string flags = "",
-                                           in string[] importPaths = [], in string[] stringImportPaths = [],
-                                           in string projDir = "$project") @trusted pure {
+Target[] dlangPackageObjectFilesPerPackage(in string[] srcFiles,
+                                           in string flags = "",
+                                           in string[] importPaths = [],
+                                           in string[] stringImportPaths = [],
+                                           in string projDir = "$project")
+    @trusted pure {
 
     if(srcFiles.empty) return [];
-    auto command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
+    auto command(in string[] files) {
+        return compileCommand(files[0].packagePath ~ ".d",
+                              flags,
+                              importPaths,
+                              stringImportPaths,
+                              projDir);
+    }
     return srcFiles.byPackage.map!(a => Target(a[0].packagePath.objFileName,
-                                               command,
+                                               command(a),
                                                a.map!(a => Target(a)).array)).array;
 }
 

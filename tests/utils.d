@@ -26,11 +26,13 @@ auto shouldExecuteOk(string[] args, string workDir,
     return lines;
 }
 
-auto shouldExecuteOk(string[] args, in Options options, string file = __FILE__, size_t line = __LINE__) {
+auto shouldExecuteOk(string[] args, in Options options,
+                     string file = __FILE__, size_t line = __LINE__) {
     return shouldExecuteOk(args, options.workingDir, file, line);
 }
 
-auto shouldExecuteOk(string arg, in Options options, string file = __FILE__, size_t line = __LINE__) {
+auto shouldExecuteOk(string arg, in Options options,
+                     string file = __FILE__, size_t line = __LINE__) {
     return shouldExecuteOk([arg], options, file, line);
 }
 
@@ -39,12 +41,12 @@ auto shouldExecuteOk(string arg, string file = __FILE__, size_t line = __LINE__)
     return shouldExecuteOk([arg], getcwd(), file, line);
 }
 
-auto shouldFailToExecute(string arg, string workDir = getcwd(),
+void shouldFailToExecute(string arg, string workDir = getcwd(),
                          string file = __FILE__, size_t line = __LINE__) {
     return shouldFailToExecute([arg], workDir, file, line);
 }
 
-auto shouldFailToExecute(string[] args, string workDir = getcwd(),
+void shouldFailToExecute(string[] args, string workDir = getcwd(),
                          string file = __FILE__, size_t line = __LINE__) {
 
     import std.process;

@@ -232,8 +232,10 @@ void justDoTestBuild(string module_ = __MODULE__)(in Options options, string[] a
         cmdArgs.shouldExecuteOk(options.workingDir);
 }
 
-string[] buildCmdShouldRunOk(alias module_ = __MODULE__)(in Options options, string[] args = [],
-                                                         string file = __FILE__, ulong line = __LINE__ ) {
+string[] buildCmdShouldRunOk(alias module_ = __MODULE__)(in Options options,
+                                                         string[] args = [],
+                                                         string file = __FILE__,
+                                                         ulong line = __LINE__ ) {
     import tests.utils;
     auto cmdArgs = buildCmd(options, args);
     // the binary backend in the tests isn't a separate executable, but make, ninja and tup are

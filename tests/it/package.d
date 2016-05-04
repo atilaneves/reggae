@@ -203,6 +203,7 @@ void prepareTestBuild(string module_ = __MODULE__)(ref Options options) {
     import std.string;
     import std.path;
     import std.algorithm: canFind;
+    import reggae.config;
 
     mkdirRecurse(buildPath(options.workingDir, ".reggae"));
     symlink(buildPath(testsPath, "dcompile"), buildPath(options.workingDir, ".reggae", "dcompile"));
@@ -221,6 +222,8 @@ void prepareTestBuild(string module_ = __MODULE__)(ref Options options) {
         copyProjectFiles(projectPath, options.workingDir);
         options.projectPath = options.workingDir;
     }
+
+    setOptions(options);
 }
 
 void justDoTestBuild(string module_ = __MODULE__)(in Options options, string[] args = []) {

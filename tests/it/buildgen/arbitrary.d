@@ -27,8 +27,6 @@ unittest {
 @AutoTags
 @Values("ninja", "make", "tup", "binary")
 unittest {
-import tests.utils;
-
     enum project = "project2";
     generateBuild!project;
     shouldBuild!project;

@@ -5,9 +5,9 @@ import unit_threaded;
 import tests.it.runtime;
 
 @("Non-existent directory error message") unittest {
-    const testPath = newTestDir;
-    testRun(["reggae", "-C", testPath, "-b", "binary", "/non/existent"]).shouldThrowWithMessage(
-        "Could not find /non/existent/reggaefile.d");
+    runReggaeProject("-b", "binary", "/non/existent").shouldThrowWithMessage(
+        "Could not find /non/existent/reggaefile.d"
+    );
 }
 
 @("Non-existent build description error message") unittest {

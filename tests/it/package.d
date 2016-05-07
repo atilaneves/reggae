@@ -267,5 +267,15 @@ void copyProjectFiles(in string projectPath, in string testPath) {
         if(!dir.exists) mkdirRecurse(dir);
         copy(entry, buildPath(testPath, tgtName));
     }
+}
 
+// whether a file exists in the test sandbox
+void shouldNotExist(string fileName, string file = __FILE__, size_t line = __LINE__) {
+    import reggae.config;
+    import std.file;
+
+    fileName = inPath(options, fileName);
+    if(fileName.exists) {
+        throw new UnitTestException(["File " ~ fileName ~ " was not expected to exist but does"]);
+    }
 }

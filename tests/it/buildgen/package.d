@@ -53,17 +53,6 @@ void shouldFail(T)(T args, string file = __FILE__, size_t line = __LINE__) {
 }
 
 
-// whether a file exists in the test sandbox
-void shouldNotExist(string fileName, string file = __FILE__, size_t line = __LINE__) {
-    import reggae.config;
-    import std.file;
-
-    fileName = inPath(options, fileName);
-    if(fileName.exists) {
-        throw new UnitTestException(["File " ~ fileName ~ " was not expected to exist but does"]);
-    }
-}
-
 // read a file in the test sandbox and verify its contents
 void shouldEqualLines(string fileName, string[] lines,
                       string file = __FILE__, size_t line = __LINE__) {

@@ -2,6 +2,7 @@ module tests.it;
 
 public import reggae;
 public import unit_threaded;
+public import std.path;
 
 immutable string origPath;
 

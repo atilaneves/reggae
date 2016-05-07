@@ -12,24 +12,37 @@ auto testRun(string[] args) {
     return output;
 }
 
-// calls reggae.run, which is nearly the same as calling
-// reggae itself with an array of string args.
-// this function calls reggae in a test sandbox dir
-// so it takes only the extra options.
-// The project path isn't needed, nor the binary name
-auto runReggaeImpl(string[] args, string project = "") {
-    const testPath = newTestDir;
-    if(project == "") project = testPath;
-    return testRun(["reggae", "-C", testPath] ~ args ~ project);
+struct Reggae {
+    string testPath;
+
+    static Reggae opCall() {
+        Reggae ret;
+        ret.testPath = cast(immutable)newTestDir;
+        return ret;
+    }
+
+    void run(string[] args...) const {
+        runImpl(args);
+    }
+
+    void run(string[] args, string project) const {
+        runImpl(args, project);
+    }
+
+    void writeFile(in string fileName) const {
+        import std.stdio;
+        import std.path;
+        File(buildPath(testPath, fileName), "w").writeln;
+    }
+
+private:
+
+    void runImpl(string[] args, string project = "") const {
+        if(project == "") project = testPath;
+        testRun(["reggae", "-C", testPath] ~ args ~ project);
+    }
 }
 
-auto runReggae(string[] args...) {
-    return runReggaeImpl(args);
-}
-
-auto runReggaeProject(string[] args...) {
-    return runReggaeImpl(args[0..$-1], args[$-1]);
-}
 
 void writeHelloWorldApp(in string testPath) {
     import std.stdio;
@@ -43,10 +56,4 @@ void writeHelloWorldApp(in string testPath) {
             writeln("Hello world!");
         }
     });
-}
-
-private void writeFile(in string testPath, in string fileName) {
-    import std.stdio;
-    import std.path;
-    File(buildPath(testPath, fileName), "w").writeln;
 }

@@ -5,56 +5,43 @@ import unit_threaded;
 import tests.it.runtime;
 
 @("Non-existent directory error message") unittest {
-    runReggaeProject("-b", "binary", "/non/existent").shouldThrowWithMessage(
+    Reggae().run(["-b", "binary"], "/non/existent").shouldThrowWithMessage(
         "Could not find /non/existent/reggaefile.d"
     );
 }
 
 @("Non-existent build description error message") unittest {
-    import std.path;
-    import std.stdio;
+    immutable reggae = Reggae();
 
-    auto testPath = newTestDir;
-    {
-        File(buildPath(testPath, "foo.txt"), "w").writeln;
-    }
-    testRun(["reggae", "-C", testPath, "-b", "binary", testPath]).shouldThrowWithMessage(
-        "Could not find " ~ buildPath(testPath, "reggaefile.d")
-        );
+    reggae.writeFile("foo.txt");
+    reggae.run("-b", "binary").shouldThrowWithMessage(
+        "Could not find " ~ buildPath(reggae.testPath, "reggaefile.d")
+    );
 }
 
 
 @("Too many languages") unittest {
-    import std.path;
-    import std.stdio;
+    immutable reggae = Reggae();
 
-    auto testPath = newTestDir;
+    reggae.writeFile("reggaefile.d");
+    reggae.writeFile("reggaefile.py");
 
-    void writeFile(in string name) {
-        File(buildPath(testPath, name), "w").writeln;
-    }
-
-    auto args = ["reggae", "-C", testPath, "-b", "binary", testPath];
-    writeFile("reggaefile.d");
-    writeFile("reggaefile.py");
-
-    testRun(args).shouldThrowWithMessage(
+    reggae.run("-b", "binary").shouldThrowWithMessage(
         "Reggae builds may only use one language. Found: D, Python"
     );
 
-    writeFile("reggaefile.rb");
-    testRun(args).shouldThrowWithMessage(
+    reggae.writeFile("reggaefile.rb");
+    reggae.run("-b", "binary").shouldThrowWithMessage(
         "Reggae builds may only use one language. Found: D, Python, Ruby"
     );
 
-    writeFile("reggaefile.js");
-    testRun(args).shouldThrowWithMessage(
+    reggae.writeFile("reggaefile.js");
+    reggae.run("-b", "binary").shouldThrowWithMessage(
         "Reggae builds may only use one language. Found: D, Python, Ruby, JavaScript"
     );
 
-    writeFile("reggaefile.lua");
-    testRun(args).shouldThrowWithMessage(
+    reggae.writeFile("reggaefile.lua");
+    reggae.run("-b", "binary").shouldThrowWithMessage(
         "Reggae builds may only use one language. Found: D, Python, Ruby, JavaScript, Lua"
-        );
-
+    );
 }

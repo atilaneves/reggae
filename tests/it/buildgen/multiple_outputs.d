@@ -1,15 +1,14 @@
 module tests.it.buildgen.multiple_outputs;
 
-import reggae;
-import unit_threaded;
-import tests.utils;
-import tests.it;
+import tests.it.buildgen;
 import std.file;
-import std.path;
-import std.process;
+
+enum project = "multiple_outputs";
 
 
 private void doBuild(string module_)(in string reggaefileName, ref Options options) {
+    import tests.utils;
+
     prepareTestBuild!module_(options);
 
     const testPath = options.workingDir;
@@ -26,21 +25,17 @@ private void doBuild(string module_)(in string reggaefileName, ref Options optio
 @AutoTags
 @Values("ninja", "make", "binary")
 unittest {
-    auto options = testProjectOptions("multiple_outputs");
+    auto options = testProjectOptions(project);
 
     enum module_ = "multiple_outputs.reggaefile_sep";
     doBuild!module_("reggaefile_sep.d", options);
 
-    auto appPath = inPath(options, "app");
-
-    [appPath, "2"].shouldExecuteOk(options).shouldEqual(
-        ["I call protoFunc(2) and get 4"]);
+    ["app", "2"].shouldSucceed.shouldEqual(["I call protoFunc(2) and get 4"]);
 
     overwrite(options, "protocol.proto", "int protoFunc(int n) { return n * 3; }");
     buildCmdShouldRunOk!module_(options);
 
-    [appPath, "3"].shouldExecuteOk(options).shouldEqual(
-        ["I call protoFunc(3) and get 9"]);
+    ["app", "3"].shouldSucceed.shouldEqual(["I call protoFunc(3) and get 9"]);
 }
 
 
@@ -48,19 +43,15 @@ unittest {
 @AutoTags
 @Values("ninja", "make", "binary")
 unittest {
-    auto options = testProjectOptions("multiple_outputs");
-    enum module_ = "multiple_outputs.reggaefile_tog";
+    auto options = testProjectOptions(project);
 
+    enum module_ = "multiple_outputs.reggaefile_tog";
     doBuild!module_("reggaefile_tog.d", options);
 
-    auto appPath = inPath(options, "app");
-
-    [appPath, "2"].shouldExecuteOk(options).shouldEqual(
-        ["I call protoFunc(2) and get 4"]);
+    ["app", "2"].shouldSucceed.shouldEqual(["I call protoFunc(2) and get 4"]);
 
     overwrite(options, "protocol.proto", "int protoFunc(int n) { return n * 3; }");
     buildCmdShouldRunOk!module_(options);
 
-    [appPath, "3"].shouldExecuteOk(options).shouldEqual(
-        ["I call protoFunc(3) and get 9"]);
+    ["app", "3"].shouldSucceed.shouldEqual(["I call protoFunc(3) and get 9"]);
 }

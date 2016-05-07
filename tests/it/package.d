@@ -156,6 +156,13 @@ void overwrite(in Options options, in string fileName, in string newContents) {
     file.writeln(newContents);
 }
 
+// used to change files and cause a rebuild
+void overwrite(in string fileName, in string newContents) {
+    import reggae.config;
+    overwrite(options, fileName, newContents);
+}
+
+
 string[] ninja(string[] args = []) {
     return ["ninja", "-j1"] ~ args;
 }

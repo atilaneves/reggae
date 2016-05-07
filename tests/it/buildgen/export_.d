@@ -1,11 +1,8 @@
 module tests.it.buildgen.export_;
 
 
-import tests.it;
+import tests.it.buildgen;
 import tests.utils;
-import std.path;
-import std.file;
-import std.string;
 import std.conv;
 
 
@@ -17,16 +14,13 @@ unittest {
     enum module_ = "export_proj.reggaefile";
     doTestBuildFor!module_(options);
 
-    const testPath = options.workingDir;
-    const appPath = inPath(testPath, "hello");
-
     // no app yet, just exported the build
-    appPath.shouldFailToExecute(testPath);
+    "hello".shouldFail;
 
     // try one of the build systems and build the app
+    const testPath = options.workingDir;
     buildCmd(getValue!string.to!Backend, testPath).shouldExecuteOk(testPath);
 
     // it should now run ok
-    appPath.shouldExecuteOk.shouldEqual(
-        ["Hello world!"]);
+    "hello".shouldSucceed.shouldEqual(["Hello world!"]);
 }

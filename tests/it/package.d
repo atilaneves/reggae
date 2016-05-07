@@ -13,7 +13,8 @@ shared static this() {
     import std.range;
     import std.stdio: writeln;
 
-    auto paths = [".", ".."].map!(a => buildNormalizedPath(getcwd, a)).find!(a => buildNormalizedPath(a, "dub.json").exists);
+    auto paths = [".", ".."].map!(a => buildNormalizedPath(getcwd, a))
+        .find!(a => buildNormalizedPath(a, "dub.json").exists);
     assert(!paths.empty, "Error: Cannot find reggae top dir using dub.json");
     origPath = paths.front.absolutePath;
 

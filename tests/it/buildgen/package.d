@@ -41,6 +41,10 @@ auto shouldSucceed(string[] args, string file = __FILE__, size_t line = __LINE__
                            options, file, line);
 }
 
+auto shouldSucceed(string arg, string file = __FILE__, size_t line = __LINE__) {
+    return shouldSucceed([arg], file, line);
+}
+
 
 // runs a command in the test sandbox, throws if it succeeds
 void shouldFail(T)(T args, string file = __FILE__, size_t line = __LINE__) {

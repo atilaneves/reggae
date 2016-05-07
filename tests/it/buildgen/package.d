@@ -63,3 +63,14 @@ void shouldNotExist(string fileName, string file = __FILE__, size_t line = __LIN
         throw new UnitTestException(["File " ~ fileName ~ " was not expected to exist but does"]);
     }
 }
+
+// read a file in the test sandbox and verify its contents
+void shouldEqualLines(string fileName, string[] lines,
+                      string file = __FILE__, size_t line = __LINE__) {
+    import reggae.config;
+    import std.file;
+    import std.string;
+
+    readText(buildPath(options.workingDir, "output.txt")).chomp.split("\n")
+        .shouldEqual(lines, file, line);
+}

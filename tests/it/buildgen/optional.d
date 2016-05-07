@@ -1,28 +1,24 @@
 module tests.it.buildgen.optional;
 
 
-import tests.it;
-import tests.utils;
+import tests.it.buildgen;
+import std.file;
 
 
 @("optional")
 @Values("ninja", "make", "binary")
 unittest {
-    import std.file;
 
-    enum module_ = "opt.reggaefile";
-    auto options = testProjectOptions!module_;
+    enum project = "opt";
+    generateBuild!project;
+    shouldBuild!project;
+
+    "foo".shouldSucceed.shouldEqual(["hello foo"]);
 
     // default build only produces foo, not bar
-    doTestBuildFor!module_(options);
-
-    auto fooPath = inPath(options, "foo");
-    fooPath.shouldExecuteOk(options).shouldEqual(["hello foo"]);
-
-    auto barPath = inPath(options, "bar");
-    barPath.exists.shouldBeFalse;
+    "bar".shouldNotExist;
 
     // explicitly request to build bar
-    buildCmdShouldRunOk!module_(options, ["bar"]);
-    barPath.shouldExecuteOk(options).shouldEqual(["hello bar"]);
+    shouldBuild!project(["bar"]);
+    "bar".shouldSucceed.shouldEqual(["hello bar"]);
 }

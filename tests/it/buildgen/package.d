@@ -51,3 +51,15 @@ void shouldFail(T)(T args, string file = __FILE__, size_t line = __LINE__) {
     import reggae.config;
     shouldFailToExecute(args, options.workingDir, file, line);
 }
+
+
+// whether a file exists in the test sandbox
+void shouldNotExist(string fileName, string file = __FILE__, size_t line = __LINE__) {
+    import reggae.config;
+    import std.file;
+
+    fileName = inPath(options, "foo");
+    if(fileName.exists) {
+        throw new UnitTestException(["File " ~ fileName ~ " was not expected to exist but does"]);
+    }
+}

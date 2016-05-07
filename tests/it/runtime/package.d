@@ -29,11 +29,28 @@ struct Reggae {
         runImpl(args, project);
     }
 
-    void writeFile(in string fileName) const {
+    void writeFile(in string fileName, in string[] lines = [""]) const {
         import std.stdio;
         import std.path;
-        File(buildPath(testPath, fileName), "w").writeln;
+        auto f = File(buildPath(testPath, fileName), "w");
+        foreach(l; lines) f.writeln(l);
     }
+
+    void writeHelloWorldApp() const {
+        import std.stdio;
+        import std.path;
+        import std.file;
+        import std.array;
+
+        mkdir(buildPath(testPath, "src"));
+        writeFile(buildPath("src", "hello.d"), q{
+                import std.stdio;
+                void main() {
+                    writeln("Hello world!");
+                }
+        }.split("\n").array);
+    }
+
 
 private:
 

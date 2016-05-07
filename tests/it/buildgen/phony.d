@@ -1,36 +1,26 @@
 module tests.it.buildgen.phony;
 
 
-import tests.it;
-import tests.utils;
-import std.path;
-import std.file;
-import std.string;
+import tests.it.buildgen;
 
 
 @("Phony target always executed")
 @AutoTags
 @Values("ninja", "make", "binary")
 unittest {
-    auto options = testProjectOptions("phony_proj");
-    enum module_ = "phony_proj.reggaefile";
-    doTestBuildFor!module_(options);
 
-    const testPath = options.workingDir;
-    const appPath = inPath(testPath, "app");
+    enum project = "phony_proj";
+    generateBuild!project;
+    shouldBuild!project;
 
-    // haven't run the binary yet, no output
-    buildPath(testPath, "output.txt").exists.shouldBeFalse;
+    // haven't run the binary yet, not output
+    "output.txt".shouldNotExist;
 
     // "build" the phony target doit
-    buildCmdShouldRunOk!module_(options, ["doit"]);
-    readText(buildPath(testPath, "output.txt")).chomp.split("\n").shouldEqual(
-        ["It is done"]);
+    shouldBuild!project(["doit"]);
+    "output.txt".shouldEqualLines(["It is done"]);
 
     // "rebuild" the phony target doit should cause it to run again
-    buildCmdShouldRunOk!module_(options, ["doit"]);
-    readText(buildPath(testPath, "output.txt")).chomp.split("\n").shouldEqual(
-        ["It is done",
-         "It is done"]);
-
+    shouldBuild!project(["doit"]);
+    "output.txt".shouldEqualLines(["It is done", "It is done"]);
 }

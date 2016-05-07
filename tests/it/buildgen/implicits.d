@@ -1,29 +1,20 @@
 module tests.it.buildgen.implicits;
 
 
-import tests.it;
-import tests.utils;
-import std.path;
+import tests.it.buildgen;
 
 
 @("Implicit dependencies cause the target to rebuild")
 @AutoTags
 @Values("ninja", "make", "binary")
 unittest {
-    auto options = testProjectOptions("implicits");
-    enum module_ = "implicits.reggaefile";
-    doTestBuildFor!module_(options);
+    enum project = "implicits";
+    generateBuild!project;
+    shouldBuild!project;
 
-    const testPath = options.workingDir;
-    const appPath = inPath(testPath, "leapp");
-
-    appPath.shouldExecuteOk(testPath).shouldEqual(
-        ["Hello world!"]);
+    "leapp".shouldSucceed.shouldEqual(["Hello world!"]);
 
     overwrite(options, buildPath("string.txt"), "Goodbye!");
-    buildCmdShouldRunOk!module_(options);
-
-    // check new output
-    appPath.shouldExecuteOk(testPath).shouldEqual(
-        ["Goodbye!"]);
+    shouldBuild!project;
+    "leapp".shouldSucceed.shouldEqual(["Goodbye!"]);
 }

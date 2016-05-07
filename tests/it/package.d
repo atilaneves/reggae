@@ -2,6 +2,7 @@ module tests.it;
 
 public import reggae;
 public import unit_threaded;
+public import std.path;
 
 immutable string origPath;
 
@@ -12,7 +13,8 @@ shared static this() {
     import std.range;
     import std.stdio: writeln;
 
-    auto paths = [".", ".."].map!(a => buildNormalizedPath(getcwd, a)).find!(a => buildNormalizedPath(a, "dub.json").exists);
+    auto paths = [".", ".."].map!(a => buildNormalizedPath(getcwd, a))
+        .find!(a => buildNormalizedPath(a, "dub.json").exists);
     assert(!paths.empty, "Error: Cannot find reggae top dir using dub.json");
     origPath = paths.front.absolutePath;
 
@@ -154,6 +156,13 @@ void overwrite(in Options options, in string fileName, in string newContents) {
     file.writeln(newContents);
 }
 
+// used to change files and cause a rebuild
+void overwrite(in string fileName, in string newContents) {
+    import reggae.config;
+    overwrite(options, fileName, newContents);
+}
+
+
 string[] ninja(string[] args = []) {
     return ["ninja", "-j1"] ~ args;
 }
@@ -203,6 +212,7 @@ void prepareTestBuild(string module_ = __MODULE__)(ref Options options) {
     import std.string;
     import std.path;
     import std.algorithm: canFind;
+    import reggae.config;
 
     mkdirRecurse(buildPath(options.workingDir, ".reggae"));
     symlink(buildPath(testsPath, "dcompile"), buildPath(options.workingDir, ".reggae", "dcompile"));
@@ -221,6 +231,8 @@ void prepareTestBuild(string module_ = __MODULE__)(ref Options options) {
         copyProjectFiles(projectPath, options.workingDir);
         options.projectPath = options.workingDir;
     }
+
+    setOptions(options);
 }
 
 void justDoTestBuild(string module_ = __MODULE__)(in Options options, string[] args = []) {
@@ -232,8 +244,10 @@ void justDoTestBuild(string module_ = __MODULE__)(in Options options, string[] a
         cmdArgs.shouldExecuteOk(options.workingDir);
 }
 
-string[] buildCmdShouldRunOk(alias module_ = __MODULE__)(in Options options, string[] args = [],
-                                                         string file = __FILE__, ulong line = __LINE__ ) {
+string[] buildCmdShouldRunOk(alias module_ = __MODULE__)(in Options options,
+                                                         string[] args = [],
+                                                         string file = __FILE__,
+                                                         ulong line = __LINE__ ) {
     import tests.utils;
     auto cmdArgs = buildCmd(options, args);
     // the binary backend in the tests isn't a separate executable, but make, ninja and tup are

@@ -87,3 +87,14 @@ private struct FakeFile {
     readText("foo").chomp.split("\n").shouldEqual(["foo"]);
     readText("bar").chomp.split("\n").shouldEqual(["bar"]);
 }
+
+
+@("List of targets") unittest {
+    auto file = FakeFile();
+    auto binary = Binary(binaryBuild, getOptions(["reggae", "-b", "binary"]), file);
+    binary.run(["./build", "-l"]);
+    file.lines.shouldEqual(
+        ["List of available top-level targets:",
+         "- copy.txt",
+         "- opt (optional)"]);
+}

@@ -292,6 +292,9 @@ struct Target {
             this._command = Command(command);
     }
 
+    /**
+       The outputs without expanding special variables
+     */
     @property const(string)[] rawOutputs(in string projectPath = "") @safe pure const {
         return _outputs;
     }

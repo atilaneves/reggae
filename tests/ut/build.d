@@ -262,7 +262,7 @@ void testBuildWithOneDepInBuildDir() {
     auto target = Target("output", "cmd -o $out -c $in", Target("$builddir/input.d"));
     alias top = link!(ExeName("ut"), targetConcat!(target));
     auto build = Build(top);
-    build.targets[0].dependencies[0].dependenciesInProjectPath("/path/to").shouldEqual(["input.d"]);
+    build.targets[0].dependencyTargets[0].dependenciesInProjectPath("/path/to").shouldEqual(["input.d"]);
 }
 
 

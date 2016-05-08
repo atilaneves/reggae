@@ -27,7 +27,7 @@ import unit_threaded;
     auto app = link(ExeName("app"), [obj]);
     auto bld = Build(app);
     import reggae.config: gDefaultOptions;
-    bld.targets[0].dependencies[0].shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
+    bld.targets[0].dependencyTargets[0].shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
         "gcc -include /path/to/includes/header.h  -MMD -MT objs/app.objs/src/foo.o -MF objs/app.objs/src/foo.o.dep -o objs/app.objs/src/foo.o -c /path/to/src/foo.c");
 }
 

@@ -181,7 +181,7 @@ private:
     }
 
     bool checkTimestamps(Target target) {
-        foreach(dep; chain(target.dependencies, target.implicits)) {
+        foreach(dep; chain(target.dependencyTargets, target.implicitTargets)) {
 
             immutable isPhony = target.getCommandType == CommandType.phony;
 
@@ -200,7 +200,7 @@ private:
     //ByDepthLevel won't include them
     bool checkChildlessPhony(Target target) {
         if(target.getCommandType == CommandType.phony &&
-           target.dependencies.empty && target.implicits.empty) {
+           target.dependencyTargets.empty && target.implicitTargets.empty) {
             executeCommand(target);
             return true;
         }

@@ -12,9 +12,9 @@ import std.exception;
 
 enum isTargetLike(T) = is(typeof(() {
     auto target = T.init;
-    auto deps = target.dependencies;
+    auto deps = target.dependencyTargets;
     static assert(is(Unqual!(typeof(deps[0])) == Unqual!T));
-    auto imps = target.implicits;
+    auto imps = target.implicitTargets;
     static assert(is(Unqual!(typeof(imps[0])) == Unqual!T));
     if(target.isLeaf) {}
     string cmd = target.shellCommand(Options());
@@ -35,8 +35,8 @@ struct DepthFirst(T) if(isTargetLike!T) {
         if(target.isLeaf) return target.shellCommand(Options()) is null ? [] : [target];
 
         //if not, add ourselves to the end to get depth-first
-        return reduce!((a, b) => a ~ depthFirstTargets(b))(typeof(return).init, target.dependencies) ~
-            reduce!((a, b) => a ~ depthFirstTargets(b))(typeof(return).init, target.implicits) ~
+        return reduce!((a, b) => a ~ depthFirstTargets(b))(typeof(return).init, target.dependencyTargets) ~
+            reduce!((a, b) => a ~ depthFirstTargets(b))(typeof(return).init, target.implicitTargets) ~
             target;
     }
 
@@ -93,7 +93,7 @@ struct ByDepthLevel {
 
     private void rec(int level, Target[] targets, ref Target[][] soFar) @trusted pure nothrow {
         Target[] notLeaves = targets.
-            map!(a => chain(a.dependencies, a.implicits)). //get all dependencies
+            map!(a => chain(a.dependencyTargets, a.implicitTargets)). //get all dependencies
             join. //flatten into a regular range
             filter!(a => !a.isLeaf). //don't care about leaves
             array;
@@ -134,7 +134,7 @@ private:
             return;
         }
 
-        foreach(dep; target.dependencies ~ target.implicits) {
+        foreach(dep; target.dependencyTargets ~ target.implicitTargets) {
             if(dep.isLeaf) {
                 targets ~= dep;
             } else {

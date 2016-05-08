@@ -299,11 +299,11 @@ struct Target {
         return _outputs;
     }
 
-    @property Target[] dependencies(in string projectPath = "") @safe pure nothrow {
+    @property Target[] dependencyTargets(in string projectPath = "") @safe pure nothrow {
         return _dependencies;
     }
 
-    @property Target[] implicits(in string projectPath = "") @safe pure nothrow {
+    @property Target[] implicitTargets(in string projectPath = "") @safe pure nothrow {
         return _implicits;
     }
 

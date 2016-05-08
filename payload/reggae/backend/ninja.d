@@ -178,7 +178,7 @@ private:
         //no projectPath for phony rules since they don't generate output
         immutable outputs = target.outputsInProjectPath("").join(" ");
         auto buildLine = "build " ~ outputs ~ ": _phony " ~ target.dependenciesInProjectPath(_projectPath).join(" ");
-        if(!target.implicits.empty) buildLine ~= " | " ~ target.implicitsInProjectPath(_projectPath).join(" ");
+        if(!target.implicitTargets.empty) buildLine ~= " | " ~ target.implicitsInProjectPath(_projectPath).join(" ");
         buildEntries ~= NinjaEntry(buildLine,
                                    ["cmd = " ~ target.shellCommand(_options),
                                     "pool = console"]);
@@ -206,7 +206,7 @@ private:
 
         auto mat = shellCommand.match(reg);
         if(mat.captures.empty) { //this is usually bad since we need both $in and $out
-            if(target.dependencies.empty) { //ah, no $in needed then
+            if(target.dependencyTargets.empty) { //ah, no $in needed then
                 mat = match(shellCommand ~ " $in", reg); //add a dummy one
             }
             else
@@ -231,7 +231,7 @@ private:
             : implicitInput;
 
         auto buildLine = buildLine(target) ~ ruleName ~ " " ~ deps;
-        if(!target.implicits.empty) buildLine ~= " | " ~  target.implicitsInProjectPath(_projectPath).join(" ");
+        if(!target.implicitTargets.empty) buildLine ~= " | " ~  target.implicitsInProjectPath(_projectPath).join(" ");
 
         string[] buildParamLines;
         if(!before.empty)  buildParamLines ~= "before = "  ~ before;

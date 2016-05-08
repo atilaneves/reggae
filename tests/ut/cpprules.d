@@ -128,13 +128,13 @@ void testUnityTargetCpp() @safe {
     target.shellCommand(gDefaultOptions.withProjectPath(projectPath)).shouldEqual(
         "g++ -g -O0 -I/path/to/proj/headers -MMD -MT leapp -MF leapp.dep -o leapp " ~
         "objs/leapp.objs/unity.cpp mylib.a");
-    target.dependencies.shouldEqual([Target.phony("$builddir/objs/leapp.objs/unity.cpp",
-                                                  "",
-                                                  [],
-                                                  [Target("src/foo.cpp"),
-                                                   Target("src/bar.cpp"),
-                                                   Target("src/baz.cpp")]),
-                                     Target("$builddir/mylib.a")]);
+    target.dependencyTargets.shouldEqual([Target.phony("$builddir/objs/leapp.objs/unity.cpp",
+                                                       "",
+                                                       [],
+                                                       [Target("src/foo.cpp"),
+                                                        Target("src/bar.cpp"),
+                                                        Target("src/baz.cpp")]),
+                                          Target("$builddir/mylib.a")]);
 }
 
 void testUnityTargetC() @safe {
@@ -156,11 +156,11 @@ void testUnityTargetC() @safe {
     target.shellCommand(gDefaultOptions.withProjectPath(projectPath)).shouldEqual(
         "gcc -g -O0 -I/path/to/proj/headers -MMD -MT leapp -MF leapp.dep -o leapp " ~
         "objs/leapp.objs/unity.c mylib.a");
-    target.dependencies.shouldEqual([Target.phony("$builddir/objs/leapp.objs/unity.c",
-                                                  "",
-                                                  [],
-                                                  [Target("src/foo.c"),
-                                                   Target("src/bar.c"),
-                                                   Target("src/baz.c")]),
+    target.dependencyTargets.shouldEqual([Target.phony("$builddir/objs/leapp.objs/unity.c",
+                                                       "",
+                                                       [],
+                                                       [Target("src/foo.c"),
+                                                        Target("src/bar.c"),
+                                                        Target("src/baz.c")]),
                                      Target("$builddir/mylib.a")]);
 }

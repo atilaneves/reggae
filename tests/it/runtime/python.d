@@ -22,3 +22,19 @@ unittest {
         shouldSucceed("app").shouldEqual(["Hello world!"]);
     }
 }
+
+@("User vars in Python")
+@Tags(["ninja", "json_build", "python"])
+unittest {
+    with(Sandbox()) {
+        writeFile("reggaefile.py",
+                  [`from reggae import *`,
+                   `name = user_vars.get('name', 'app')`,
+                   `b = Build(executable(name=name, src_dirs=['src']))`]);
+        writeHelloWorldApp;
+
+        runReggae("-b", "ninja", "-dname=foo");
+        ninja.shouldExecuteOk(testPath);
+        shouldSucceed("foo").shouldEqual(["Hello world!"]);
+    }
+}

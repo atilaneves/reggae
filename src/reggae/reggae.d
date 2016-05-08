@@ -134,13 +134,24 @@ private string[] getJsonOutputArgs(in Options options) @safe {
         assert(0, "Cannot obtain JSON build for builds written in D");
 
     case BuildLanguage.Python:
-        auto userVarsJsonString = () @trusted {
+
+        auto optionsString = () @trusted {
             import std.json;
-            JSONValue jsonVal = options.userVars;
+            import std.traits;
+            JSONValue jsonVal = parseJSON(`{}`);
+            foreach(member; __traits(allMembers, typeof(options))) {
+                static if(is(typeof(mixin(`options.` ~ member)) == const(Backend)) ||
+                          is(typeof(mixin(`options.` ~ member)) == const(string)) ||
+                          is(typeof(mixin(`options.` ~ member)) == const(bool)) ||
+                          is(typeof(mixin(`options.` ~ member)) == const(string[string])) ||
+                          is(typeof(mixin(`options.` ~ member)) == const(string[])))
+                    jsonVal.object[member] = mixin(`options.` ~ member);
+            }
             return jsonVal.toString;
         }();
+
         return ["/usr/bin/env", "python", "-m", "reggae.json_build",
-                "--dict", userVarsJsonString,
+                "--options", optionsString,
                 options.projectPath];
 
     case BuildLanguage.Ruby:

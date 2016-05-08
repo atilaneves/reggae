@@ -7,8 +7,10 @@ from reggae.rules import (executable, link, object_files, static_library,  # noq
                           scriptlike, target_concat)
 
 user_vars = dict()
+options = dict()
 
 
-def set_user_vars(new_vars):
-    global user_vars
-    user_vars = new_vars
+def set_options(opts):
+    global options, user_vars
+    options = opts
+    user_vars = opts["userVars"]

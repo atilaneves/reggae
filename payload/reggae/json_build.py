@@ -17,12 +17,12 @@ def get_json(module):
 
 def main():
     parser = argparse.ArgumentParser(description='oh hello')
-    parser.add_argument('--dict', type=json.loads, default=dict())
+    parser.add_argument('--options', type=json.loads, default=dict())
     parser.add_argument('project_path', help='The project path')
     args = parser.parse_args()
 
-    from reggae import set_user_vars
-    set_user_vars(args.dict)
+    from reggae import set_options
+    set_options(args.options)
 
     import sys
     sys.path.append(args.project_path)

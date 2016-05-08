@@ -1,13 +1,7 @@
 module tests.it.buildgen.backend_errors;
 
-import reggae;
+import tests.it.buildgen;
 mixin build!(Target(`foo`));
-
-import reggae;
-import reggae.reggae: run;
-import unit_threaded;
-import tests.it;
-
 
 @("A backend must be specified") unittest {
     auto options = testOptions([inOrigPath("lvl1", "lvl2")]);

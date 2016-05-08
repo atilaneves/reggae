@@ -15,6 +15,7 @@ static if(isDubProject) {
     import reggae.build;
     import reggae.rules.common;
     import std.typecons;
+    import std.traits;
 
     /**
      Builds the main dub target (equivalent of "dub build")
@@ -54,6 +55,8 @@ static if(isDubProject) {
                              in string compilerFlags,
                              Flag!"main" includeMain = Yes.main,
                              Flag!"allTogether" allTogether = No.allTogether) {
+
+        import std.array;
 
         auto dubInfo =  configToDubInfo[config];
         auto dubObjs = dubInfo.toTargets(includeMain, compilerFlags, allTogether);

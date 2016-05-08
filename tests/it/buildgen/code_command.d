@@ -1,9 +1,6 @@
 module tests.it.buildgen.code_command;
 
-import reggae;
-import unit_threaded;
-import tests.it;
-import tests.utils;
+import tests.it.buildgen;
 
 void func(in string[], in string[]) {  }
 mixin build!(Target(`copy.txt`, &func, Target(`original.txt`)));

@@ -25,6 +25,7 @@ private void doBuild(string module_)(in string reggaefileName, ref Options optio
 @("separate")
 @AutoTags
 @Values("ninja", "make", "binary")
+@Tags("travis_oops")
 unittest {
     auto options = testProjectOptions("multiple_outputs");
 
@@ -47,6 +48,7 @@ unittest {
 @("together")
 @AutoTags
 @Values("ninja", "make", "binary")
+@Tags("travis_oops")
 unittest {
     auto options = testProjectOptions("multiple_outputs");
     enum module_ = "multiple_outputs.reggaefile_tog";

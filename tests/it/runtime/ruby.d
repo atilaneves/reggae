@@ -9,7 +9,7 @@ module tests.it.runtime.ruby;
 import tests.it.runtime;
 
 @("Build description in ruby")
-@Tags(["ninja", "json_build", "ruby"])
+@Tags(["ninja", "json_build", "ruby", "travis_oops"])
 unittest {
     import std.stdio;
     import std.path;

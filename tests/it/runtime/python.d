@@ -11,14 +11,15 @@ import tests.it.runtime;
 @("Build description in Python")
 @Tags(["ninja", "json_build"])
 unittest {
-    immutable runtime = Runtime();
-    runtime.writeFile("reggaefile.py",
-                     [`from reggae import *`,
-                      `b = Build(executable(name='app', src_dirs=['src']))`]);
-    runtime.writeHelloWorldApp;
+    with(Runtime()) {
+        writeFile("reggaefile.py",
+                  [`from reggae import *`,
+                   `b = Build(executable(name='app', src_dirs=['src']))`]);
+        writeHelloWorldApp;
 
-    runtime.runReggae("-b", "ninja");
-    ninja.shouldExecuteOk(runtime.testPath);
-    buildPath(runtime.testPath, "app").shouldExecuteOk(runtime.testPath).shouldEqual(
-        ["Hello world!"]);
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk(testPath);
+        buildPath(testPath, "app").shouldExecuteOk(testPath).shouldEqual(
+            ["Hello world!"]);
+    }
 }

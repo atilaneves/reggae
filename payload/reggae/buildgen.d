@@ -157,7 +157,7 @@ private void writeCompilationDB(Build build, in Options options) {
             "    {\n" ~
             text(`        "directory": "`, cwd, `"`) ~ ",\n" ~
             text(`        "command": "`, target.shellCommand(options), `"`) ~ ",\n" ~
-            text(`        "file": "`, target.outputsInProjectPath(options.projectPath).join(" "), `"`) ~ "\n" ~
+            text(`        "file": "`, target.expandOutputs(options.projectPath).join(" "), `"`) ~ "\n" ~
             "    }";
     }
 

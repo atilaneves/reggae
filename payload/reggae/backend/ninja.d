@@ -176,7 +176,7 @@ private:
 
     void phonyRule(Target target) @safe {
         //no projectPath for phony rules since they don't generate output
-        immutable outputs = target.outputsInProjectPath("").join(" ");
+        immutable outputs = target.expandOutputs("").join(" ");
         auto buildLine = "build " ~ outputs ~ ": _phony " ~ target.dependenciesInProjectPath(_projectPath).join(" ");
         if(!target.implicitTargets.empty) buildLine ~= " | " ~ target.implicitsInProjectPath(_projectPath).join(" ");
         buildEntries ~= NinjaEntry(buildLine,
@@ -335,7 +335,7 @@ private:
     }
 
     string buildLine(Target target) @safe pure const {
-        immutable outputs = target.outputsInProjectPath(_projectPath).join(" ");
+        immutable outputs = target.expandOutputs(_projectPath).join(" ");
         return "build " ~ outputs ~ ": ";
     }
 

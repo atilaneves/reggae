@@ -67,7 +67,7 @@ struct Build {
     }
 
     string defaultTargetsString(in string projectPath) @trusted pure {
-        return defaultTargets.map!(a => a.outputsInProjectPath(projectPath).join(" ")).join(" ");
+        return defaultTargets.map!(a => a.expandOutputs(projectPath).join(" ")).join(" ");
     }
 
     auto range() @safe pure {
@@ -319,21 +319,6 @@ struct Target {
         return _dependencies is null && _implicits is null && getCommandType == CommandType.shell && _command.command == "";
     }
 
-    string[] outputsInProjectPath(in string projectPath) @safe pure const {
-        string inProjectPath(in string path) {
-            return path.startsWith(gProjdir)
-                ? path
-                : path.startsWith(gBuilddir)
-                    ? path.replace(gBuilddir ~ dirSeparator, "")
-                    : buildPath(projectPath, path);
-        }
-
-        return _outputs.map!(a => isLeaf ? inProjectPath(a) : a).
-            map!(a => a.replace("$project", projectPath)).
-            map!(a => expandBuildDir(a)).
-            array;
-    }
-
     Language getLanguage() @safe pure nothrow {
         import reggae.range: Leaves;
         const leaves = () @trusted { return Leaves(this).array; }();
@@ -347,7 +332,18 @@ struct Target {
 
     ///Replace special variables and return a list of outputs thus modified
     auto expandOutputs(in string projectPath) @safe pure const {
-        return outputsInProjectPath(projectPath).map!(a => expandBuildDir(a));
+                string inProjectPath(in string path) {
+            return path.startsWith(gProjdir)
+                ? path
+                : path.startsWith(gBuilddir)
+                    ? path.replace(gBuilddir ~ dirSeparator, "")
+                    : buildPath(projectPath, path);
+        }
+
+        return _outputs.map!(a => isLeaf ? inProjectPath(a) : a).
+            map!(a => a.replace("$project", projectPath)).
+            map!(a => expandBuildDir(a)).
+            array;
     }
 
     //@trusted because of replace
@@ -458,7 +454,7 @@ private:
 
     string[] depsInProjectPath(in Target[] deps, in string projectPath) @safe pure const {
         import reggae.range;
-        return deps.map!(a => a.outputsInProjectPath(projectPath)).join;
+        return deps.map!(a => a.expandOutputs(projectPath)).join;
     }
 
     string[] inputs(in string projectPath) @safe pure nothrow const {

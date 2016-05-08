@@ -141,7 +141,7 @@ struct BinaryT(T) {
 private:
 
     void handleTarget(Target target, ref bool didAnything) {
-        const outs = target.outputsInProjectPath(options.projectPath);
+        const outs = target.expandOutputs(options.projectPath);
         immutable depFileName = outs[0] ~ ".dep";
         if(depFileName.exists) {
             didAnything = checkDeps(target, depFileName) || didAnything;
@@ -186,7 +186,7 @@ private:
             immutable isPhony = target.getCommandType == CommandType.phony;
 
             if(isPhony || anyNewer(options.projectPath,
-                                   dep.outputsInProjectPath(options.projectPath),
+                                   dep.expandOutputs(options.projectPath),
                                    target)) {
                 executeCommand(target);
                 return true;
@@ -230,7 +230,7 @@ private:
 
     //@trusted because of mkdirRecurse
     private void mkDir(Target target) @trusted const {
-        foreach(output; target.outputsInProjectPath(options.projectPath)) {
+        foreach(output; target.expandOutputs(options.projectPath)) {
             import std.file: exists, mkdirRecurse;
             import std.path: dirName;
             if(!output.dirName.exists) mkdirRecurse(output.dirName);
@@ -241,6 +241,6 @@ private:
 
 
 bool anyNewer(in string projectPath, in string[] dependencies, in Target target) @safe {
-    return cartesianProduct(dependencies, target.outputsInProjectPath(projectPath)).
+    return cartesianProduct(dependencies, target.expandOutputs(projectPath)).
         any!(a => a[0].newerThan(a[1]));
 }

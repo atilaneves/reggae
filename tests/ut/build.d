@@ -197,7 +197,7 @@ void testPhobosOptionalBug() {
 
 void testOutputsInProjectPath() {
     auto mkDir = Target("$project/foodir", "mkdir -p $out", [], []);
-    mkDir.outputsInProjectPath("/path/to/proj").shouldEqual(["/path/to/proj/foodir"]);
+    mkDir.expandOutputs("/path/to/proj").shouldEqual(["/path/to/proj/foodir"]);
 }
 
 
@@ -229,12 +229,12 @@ void testBuilddirInTopLevelTarget() {
 
 void testOutputInBuildDir() {
     auto target = Target("$builddir/foo/bar", "cmd", [Target("foo.d"), Target("bar.d")]);
-    target.outputsInProjectPath("/path/to").shouldEqual(["foo/bar"]);
+    target.expandOutputs("/path/to").shouldEqual(["foo/bar"]);
 }
 
 void testOutputInProjectDir() {
     auto target = Target("$project/foo/bar", "cmd", [Target("foo.d"), Target("bar.d")]);
-    target.outputsInProjectPath("/path/to").shouldEqual(["/path/to/foo/bar"]);
+    target.expandOutputs("/path/to").shouldEqual(["/path/to/foo/bar"]);
 }
 
 void testCmdInBuildDir() {

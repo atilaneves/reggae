@@ -37,7 +37,7 @@ struct Makefile {
 
             mkDir(target);
 
-            immutable output = target.outputsInProjectPath(options.projectPath).join(" ");
+            immutable output = target.expandOutputs(options.projectPath).join(" ");
             if(target.getCommandType == CommandType.phony) {
                 ret ~= ".PHONY: " ~ output ~ "\n";
             }
@@ -83,7 +83,7 @@ struct Makefile {
             throw new Exception("Command type 'code' not supported for make backend");
 
         immutable cmd = target.shellCommand(options).replaceConcreteCompilersWithVars(options);
-        immutable depfile = target.outputsInProjectPath(options.projectPath)[0] ~ ".dep";
+        immutable depfile = target.expandOutputs(options.projectPath)[0] ~ ".dep";
         if(target.hasDefaultCommand) {
             return cmdType == CommandType.link ? cmd : cmd ~ makeAutoDeps(depfile);
         } else {
@@ -92,7 +92,7 @@ struct Makefile {
     }
 
     private void mkDir(Target target) @trusted const {
-        foreach(output; target.outputsInProjectPath(options.projectPath)) {
+        foreach(output; target.expandOutputs(options.projectPath)) {
             import std.file;
             if(!output.dirName.exists) mkdirRecurse(output.dirName);
         }

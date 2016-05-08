@@ -60,6 +60,6 @@ void shouldEqualLines(string fileName, string[] lines,
     import std.file;
     import std.string;
 
-    readText(buildPath(options.workingDir, "output.txt")).chomp.split("\n")
+    readText(buildPath(options.workingDir, fileName)).chomp.split("\n")
         .shouldEqual(lines, file, line);
 }

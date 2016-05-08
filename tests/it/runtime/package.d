@@ -36,6 +36,11 @@ struct Runtime {
         foreach(l; lines) f.writeln(l);
     }
 
+    void writeFile(in string fileName, in string output) const {
+        import std.array;
+        writeFile(fileName, output.split("\n"));
+    }
+
     void writeHelloWorldApp() const {
         import std.stdio;
         import std.path;
@@ -56,6 +61,16 @@ struct Runtime {
                        ulong line = __LINE__ ) const {
         import tests.utils;
         return [buildPath(testPath, arg)].shouldExecuteOk(testPath, file, line);
+    }
+
+    // read a file in the test sandbox and verify its contents
+    void shouldEqualLines(string fileName, string[] lines,
+                          string file = __FILE__, size_t line = __LINE__) {
+        import std.file;
+        import std.string;
+
+        readText(buildPath(testPath, fileName)).chomp.split("\n")
+            .shouldEqual(lines, file, line);
     }
 
 

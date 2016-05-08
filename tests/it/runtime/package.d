@@ -73,6 +73,22 @@ struct Runtime {
             .shouldEqual(lines, file, line);
     }
 
+    void shouldExist(string fileName, string file = __FILE__, size_t line = __LINE__) {
+        import std.file;
+        import std.path;
+        fileName = buildPath(testPath, fileName);
+        if(!fileName.exists)
+            throw new UnitTestException(["Expected " ~ fileName ~ " to exist but it didn't"]);
+    }
+
+    void shouldNotExist(string fileName, string file = __FILE__, size_t line = __LINE__) {
+        import std.file;
+        import std.path;
+        fileName = buildPath(testPath, fileName);
+        if(fileName.exists)
+            throw new UnitTestException(["Expected " ~ fileName ~ " to not exist but it did"]);
+    }
+
 
 private:
 

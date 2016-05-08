@@ -43,6 +43,14 @@ enum JsonDepsFuncName {
 }
 
 Build jsonToBuild(in string projectPath, in string jsonString) {
+    try {
+        return jsonToBuildImpl(projectPath, jsonString);
+    } catch(JSONException e) {
+        throw new Exception("Wrong JSON description:\n" ~ jsonString);
+    }
+}
+
+Build jsonToBuildImpl(in string projectPath, in string jsonString) {
     auto json = parseJSON(jsonString);
 
     Build.TopLevelTarget maybeOptional(in JSONValue json, Target target) {

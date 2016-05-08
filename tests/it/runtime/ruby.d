@@ -28,3 +28,21 @@ unittest {
         shouldSucceed("app").shouldEqual(["Hello world!"]);
     }
 }
+
+@("Erroneous description in ruby doesn't crash")
+@Tags(["ninja", "json_build", "ruby", "travis_oops"])
+unittest {
+    with(Sandbox()) {
+        writeFile("reggaefile.rb",
+                  [
+                      `require 'reggae'`,
+                      // this is the difference: source dirs is not an array
+                      `helloObj = object_files(src_dirs: 'src')`,
+                      `app = link(exe_name: 'app', dependencies: helloObj)`,
+                      `bld = Build.new(app)`,
+                      ]);
+
+        // it used to throw a raw JSONException
+        runReggae("-b", "ninja").shouldThrowExactly!Exception;
+    }
+}

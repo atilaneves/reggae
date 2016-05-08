@@ -236,6 +236,18 @@ unittest {
 }
 
 
+private static auto arrayify(E, T)(T value) {
+    static if(isInputRange!T && is(Unqual!(ElementType!T) == E))
+        return value.array;
+    else static if(is(Unqual!T == E))
+        return [value];
+    else static if(is(Unqual!T == void[])) {
+        E[] nothing;
+        return nothing;
+    }
+}
+
+
 /**
  The core of reggae's D-based DSL for describing build systems.
  Targets contain outputs, a command to generate those outputs,
@@ -259,37 +271,31 @@ struct Target {
     private Target[] _dependencies;
     private Target[] _implicits;
 
+    enum Target[] noTargets = [];
+
     this(string output) @safe pure nothrow {
-        this(output, "", null);
+        this(output, "", noTargets, noTargets);
     }
 
-    this(C)(string output,
-            C command,
-            Target dependency,
-            Target[] implicits = []) @safe pure nothrow {
-        this([output], command, [dependency], implicits);
+    this(O, C)(O outputs, C command) {
+        this(outputs, command, noTargets, noTargets);
     }
 
-    this(C)(string output,
-            C command,
-            Target[] dependencies = [],
-            Target[] implicits = []) @safe pure nothrow {
-        this([output], command, dependencies, implicits);
+    this(O, C, D)(O outputs, C command, D dependencies) {
+        this(outputs, command, dependencies, noTargets);
     }
 
-    this(C)(string[] outputs,
-            C command,
-            Target[] dependencies = [],
-            Target[] implicits = []) @safe pure nothrow {
+    this(O, C, D, I)(O outputs, C command, D dependencies, I implicits) {
 
-        this._outputs = outputs;
-        this._dependencies = dependencies;
-        this._implicits = implicits;
+        this._outputs = arrayify!string(outputs);
 
         static if(is(C == Command))
             this._command = command;
         else
             this._command = Command(command);
+
+        this._dependencies = arrayify!Target(dependencies);
+        this._implicits = arrayify!Target(implicits);
     }
 
     /**

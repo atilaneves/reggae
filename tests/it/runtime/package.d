@@ -66,18 +66,3 @@ private:
         testRun(["reggae", "-C", testPath] ~ args ~ project);
     }
 }
-
-
-void writeHelloWorldApp(in string testPath) {
-    import std.stdio;
-    import std.path;
-    import std.file;
-
-    mkdir(buildPath(testPath, "src"));
-    File(buildPath(testPath, "src", "hello.d"), "w").writeln(q{
-        import std.stdio;
-        void main() {
-            writeln("Hello world!");
-        }
-    });
-}

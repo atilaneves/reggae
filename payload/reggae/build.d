@@ -295,15 +295,15 @@ struct Target {
     /**
        The outputs without expanding special variables
      */
-    @property const(string)[] rawOutputs(in string projectPath = "") @safe pure const {
+    @property inout(string)[] rawOutputs(in string projectPath = "") @safe pure inout {
         return _outputs;
     }
 
-    @property Target[] dependencyTargets(in string projectPath = "") @safe pure nothrow {
+    @property inout(Target)[] dependencyTargets(in string projectPath = "") @safe pure nothrow inout {
         return _dependencies;
     }
 
-    @property Target[] implicitTargets(in string projectPath = "") @safe pure nothrow {
+    @property inout(Target)[] implicitTargets(in string projectPath = "") @safe pure nothrow inout {
         return _implicits;
     }
 
@@ -319,7 +319,7 @@ struct Target {
         return _dependencies is null && _implicits is null && getCommandType == CommandType.shell && _command.command == "";
     }
 
-    Language getLanguage() @safe pure nothrow {
+    Language getLanguage() @safe pure const nothrow {
         import reggae.range: Leaves;
         const leaves = () @trusted { return Leaves(this).array; }();
         foreach(language; [Language.D, Language.Cplusplus, Language.C]) {
@@ -353,10 +353,11 @@ struct Target {
 
     ///returns a command string to be run by the shell
     string shellCommand(in Options options,
-                        Flag!"dependencies" deps = Yes.dependencies) @safe pure {
+                        Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
         return _command.shellCommand(options, getLanguage(), _outputs, inputs(options.projectPath), deps);
     }
 
+    // not const because the code commands take inputs and outputs as non-const strings
     string[] execute(in Options options) @safe {
         return _command.execute(options, getLanguage(), _outputs, inputs(options.projectPath));
     }
@@ -382,7 +383,7 @@ struct Target {
         return Target(name, Command.phony(shellCommand), dependencies, implicits);
     }
 
-    string toString(in Options options) nothrow {
+    string toString(in Options options) nothrow const {
         try {
             if(isLeaf) return _outputs[0];
             immutable _outputs = _outputs.length == 1 ? `"` ~ _outputs[0] ~ `"` : text(_outputs);
@@ -397,7 +398,7 @@ struct Target {
         }
     }
 
-    ubyte[] toBytes(in Options options) @safe pure {
+    ubyte[] toBytes(in Options options) @safe pure const {
         ubyte[] bytes;
         bytes ~= setUshort(cast(ushort)_outputs.length);
         foreach(output; _outputs) {

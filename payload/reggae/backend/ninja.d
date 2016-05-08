@@ -264,9 +264,8 @@ private:
 
         immutable cmdLine = () @trusted {
             string line = shellCommand;
-            auto allDeps = (target.dependenciesInProjectPath(_projectPath).join(" ") ~ " " ~
-                            target.implicitsInProjectPath(_projectPath).join(" ")).splitter(" ");
-            foreach(string dep; allDeps) {
+            auto allDeps = target.dependenciesInProjectPath(_projectPath) ~ target.implicitsInProjectPath(_projectPath);
+            foreach(dep; allDeps) {
                 if(line.canFind(dep)) {
                     line = line.replace(dep, "$in");
                     input = dep;

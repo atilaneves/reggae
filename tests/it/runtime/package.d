@@ -51,6 +51,13 @@ struct Runtime {
         }.split("\n").array);
     }
 
+    auto shouldSucceed(in string arg,
+                       in string file = __FILE__,
+                       ulong line = __LINE__ ) const {
+        import tests.utils;
+        return [buildPath(testPath, arg)].shouldExecuteOk(testPath, file, line);
+    }
+
 
 private:
 

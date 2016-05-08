@@ -33,19 +33,20 @@ struct Makefile {
         ret ~= ".SUFFIXES:\n"; //disable default rules
         ret ~= options.compilerVariables.join("\n") ~ "\n";
 
-        foreach(t; build.range) {
+        foreach(target; build.range) {
 
-            mkDir(t);
+            mkDir(target);
 
-            immutable output = t.outputsInProjectPath(options.projectPath).join(" ");
-            if(t.getCommandType == CommandType.phony) {
+            immutable output = target.outputsInProjectPath(options.projectPath).join(" ");
+            if(target.getCommandType == CommandType.phony) {
                 ret ~= ".PHONY: " ~ output ~ "\n";
             }
             ret ~= output ~  ": ";
-            ret ~= (t.dependenciesInProjectPath(options.projectPath) ~ t.implicitsInProjectPath(options.projectPath)).join(" ");
+            ret ~= (target.dependenciesInProjectPath(options.projectPath) ~
+                    target.implicitsInProjectPath(options.projectPath)).join(" ");
 
             ret ~= " " ~ fileName() ~ "\n";
-            ret ~= "\t" ~ command(t) ~ "\n";
+            ret ~= "\t" ~ command(target) ~ "\n";
         }
 
         return ret;

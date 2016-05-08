@@ -24,6 +24,7 @@ private void doBuild(string module_)(in string reggaefileName, ref Options optio
 @("separate")
 @AutoTags
 @Values("ninja", "make", "binary")
+@Tags("travis_oops")
 unittest {
     auto options = testProjectOptions(project);
 
@@ -42,6 +43,7 @@ unittest {
 @("together")
 @AutoTags
 @Values("ninja", "make", "binary")
+@Tags("travis_oops")
 unittest {
     auto options = testProjectOptions(project);
 

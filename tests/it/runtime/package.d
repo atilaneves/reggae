@@ -12,20 +12,20 @@ auto testRun(string[] args) {
     return output;
 }
 
-struct Reggae {
+struct Runtime {
     string testPath;
 
-    static Reggae opCall() {
-        Reggae ret;
+    static Runtime opCall() {
+        Runtime ret;
         ret.testPath = cast(immutable)newTestDir;
         return ret;
     }
 
-    void run(string[] args...) const {
+    void runReggae(string[] args...) const {
         runImpl(args);
     }
 
-    void run(string[] args, string project) const {
+    void runReggae(string[] args, string project) const {
         runImpl(args, project);
     }
 

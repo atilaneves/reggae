@@ -150,7 +150,7 @@ private string[] getJsonOutputArgs(in Options options) @safe {
             return jsonVal.toString;
         }();
 
-        return ["/usr/bin/env", "python", "-m", "reggae.json_build",
+        return ["/usr/bin/env", "python", "-m", "reggae.reggae_json_build",
                 "--options", optionsString,
                 options.projectPath];
 
@@ -188,7 +188,7 @@ enum otherFiles = [
     ];
 
 enum foreignFiles = [
-    "__init__.py", "build.py", "json_build.py", "reflect.py", "rules.py",
+    "__init__.py", "build.py", "reggae_json_build.py", "reflect.py", "rules.py",
     "reggae.rb", "reggae_json_build.rb",
     ];
 

@@ -63,6 +63,11 @@ struct Runtime {
         return [buildPath(testPath, arg)].shouldExecuteOk(testPath, file, line);
     }
 
+    void shouldFail(in string arg, in string file = __FILE__, ulong line = __LINE__) const {
+        import tests.utils;
+        return [buildPath(testPath, arg)].shouldFailToExecute(testPath, file, line);
+    }
+
     // read a file in the test sandbox and verify its contents
     void shouldEqualLines(string fileName, string[] lines,
                           string file = __FILE__, size_t line = __LINE__) {
@@ -78,7 +83,7 @@ struct Runtime {
         import std.path;
         fileName = buildPath(testPath, fileName);
         if(!fileName.exists)
-            throw new UnitTestException(["Expected " ~ fileName ~ " to exist but it didn't"]);
+            throw new UnitTestException(["Expected " ~ fileName ~ " to exist but it didn't"], file, line);
     }
 
     void shouldNotExist(string fileName, string file = __FILE__, size_t line = __LINE__) {
@@ -86,7 +91,13 @@ struct Runtime {
         import std.path;
         fileName = buildPath(testPath, fileName);
         if(fileName.exists)
-            throw new UnitTestException(["Expected " ~ fileName ~ " to not exist but it did"]);
+            throw new UnitTestException(["Expected " ~ fileName ~ " to not exist but it did"], file, line);
+    }
+
+    void copyProject(in string projectName) {
+        import std.path;
+        const projPath = buildPath(origPath, "tests", "projects", projectName);
+        copyProjectFiles(projPath, testPath);
     }
 
 
@@ -96,4 +107,14 @@ private:
         if(project == "") project = testPath;
         testRun(["reggae", "-C", testPath] ~ args ~ project);
     }
+}
+
+
+void shouldContain(string[] haystack, in string needle,
+                   string file = __FILE__, size_t line = __LINE__) {
+    import std.algorithm;
+    import std.array;
+    if(!haystack.canFind!(a => a.canFind(needle)))
+        throw new UnitTestException(["Could not find " ~ needle ~ " in:"] ~ haystack);
+
 }

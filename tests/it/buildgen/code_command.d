@@ -5,7 +5,7 @@ import unit_threaded;
 import tests.it;
 import tests.utils;
 
-void func(string[], string[]) {  }
+void func(in string[], in string[]) {  }
 mixin build!(Target(`copy.txt`, &func, Target(`original.txt`)));
 
 

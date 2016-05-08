@@ -10,8 +10,8 @@ void testTargetSelection() {
     bool barCalled;
     void resetCalls() { fooCalled = false; barCalled = false;}
 
-    auto foo = Target("foo", (string[] i, string[] o) { fooCalled = true; }, Target("foo.d"));
-    auto bar = Target("bar", (string[] i, string[] o) { barCalled = true; }, Target("bar.d"));
+    auto foo = Target("foo", (in string[] i, in string[] o) { fooCalled = true; }, Target("foo.d"));
+    auto bar = Target("bar", (in string[] i, in string[] o) { barCalled = true; }, Target("bar.d"));
     auto binary = Binary(Build(foo, bar), getOptions(["reggae", "--export"]));
 
     {

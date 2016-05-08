@@ -358,7 +358,7 @@ struct Target {
     }
 
     // not const because the code commands take inputs and outputs as non-const strings
-    string[] execute(in Options options) @safe {
+    const(string)[] execute(in Options options) @safe const {
         return _command.execute(options, getLanguage(), _outputs, inputs(options.projectPath));
     }
 
@@ -488,8 +488,8 @@ enum CommandType {
     phony,
 }
 
-alias CommandFunction = void function(string[], string[]);
-alias CommandDelegate = void delegate(string[], string[]);
+alias CommandFunction = void function(in string[], in string[]);
+alias CommandDelegate = void delegate(in string[], in string[]);
 
 /**
  A command to be execute to produce a targets outputs from its inputs.
@@ -669,8 +669,8 @@ struct Command {
             : expandCmd(command, options.projectPath, outputs, inputs);
     }
 
-    string[] execute(in Options options, in Language language,
-                     string[] outputs, string[] inputs) const @trusted {
+    const(string)[] execute(in Options options, in Language language,
+                     in string[] outputs, in string[] inputs) const @trusted {
         import std.process;
 
         final switch(type) with(CommandType) {

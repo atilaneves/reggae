@@ -7,7 +7,7 @@ int gCounter;
 string[] gInputs;
 string[] gOutputs;
 
-private void incr(string[] inputs, string[] outputs) {
+private void incr(in string[] inputs, in string[] outputs) {
     gInputs = inputs.dup;
     gOutputs = outputs.dup;
     gCounter++;

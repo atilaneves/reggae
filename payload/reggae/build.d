@@ -347,7 +347,7 @@ struct Target {
     }
 
     //@trusted because of replace
-    string rawCmdString(in string projectPath = "") @trusted pure const {
+    string rawCmdString(in string projectPath = "") @safe pure const {
         return _command.rawCmdString(projectPath);
     }
 
@@ -566,10 +566,6 @@ struct Command {
     }
 
     ///Replace $in, $out, $project with values
-    string expand(in string projectPath, in string[] outputs, in string[] inputs) @safe pure const {
-        return expandCmd(command, projectPath, outputs, inputs);
-    }
-
     private static string expandCmd(in string cmd, in string projectPath,
                                     in string[] outputs, in string[] inputs) @safe pure {
         auto replaceIn = cmd.dup.replace("$in", inputs.join(" "));
@@ -577,8 +573,7 @@ struct Command {
         return replaceOut.replace("$project", projectPath).replace(gBuilddir ~ dirSeparator, "");
     }
 
-    //@trusted because of replace
-    string rawCmdString(in string projectPath) @trusted pure const {
+    string rawCmdString(in string projectPath) @safe pure const {
         if(getType != CommandType.shell)
             throw new Exception("Command type 'code' not supported for ninja backend");
         return command.replace("$project", projectPath);
@@ -670,7 +665,7 @@ struct Command {
                         Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
         return isDefaultCommand
             ? defaultCommand(options, language, outputs, inputs, deps)
-            : expand(options.projectPath, outputs, inputs);
+            : expandCmd(command, options.projectPath, outputs, inputs);
     }
 
     string[] execute(in Options options, in Language language,

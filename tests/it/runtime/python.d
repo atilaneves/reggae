@@ -11,20 +11,14 @@ import tests.it.runtime;
 @("Build description in Python")
 @Tags(["ninja", "json_build"])
 unittest {
-    import std.stdio;
-    import std.path;
+    with(Sandbox()) {
+        writeFile("reggaefile.py",
+                  [`from reggae import *`,
+                   `b = Build(executable(name='app', src_dirs=['src']))`]);
+        writeHelloWorldApp;
 
-    const testPath = newTestDir;
-    {
-        auto file = File(buildPath(testPath, "reggaefile.py"), "w");
-        file.writeln(`from reggae import *`);
-        file.writeln(`b = Build(executable(name='app', src_dirs=['src']))`);
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk(testPath);
+        shouldSucceed("app").shouldEqual(["Hello world!"]);
     }
-
-    writeHelloWorldApp(testPath);
-
-    testRun(["reggae", "-C", testPath, "-b", "ninja", testPath]);
-    ninja.shouldExecuteOk(testPath);
-    buildPath(testPath, "app").shouldExecuteOk(testPath).shouldEqual(
-        ["Hello world!"]);
 }

@@ -5,13 +5,13 @@ import unit_threaded;
 import tests.it.runtime;
 
 @("Non-existent directory error message") unittest {
-    Runtime().runReggae(["-b", "binary"], "/non/existent").shouldThrowWithMessage(
+    Sandbox().runReggae(["-b", "binary"], "/non/existent").shouldThrowWithMessage(
         "Could not find /non/existent/reggaefile.d"
     );
 }
 
 @("Non-existent build description error message") unittest {
-    with(Runtime()) {
+    with(Sandbox()) {
         writeFile("foo.txt");
         runReggae("-b", "binary").shouldThrowWithMessage(
             "Could not find " ~ buildPath(testPath, "reggaefile.d"));
@@ -20,7 +20,7 @@ import tests.it.runtime;
 
 
 @("Too many languages") unittest {
-    with(Runtime()) {
+    with(Sandbox()) {
         writeFile("reggaefile.d");
         writeFile("reggaefile.py");
 

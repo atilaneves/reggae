@@ -11,7 +11,7 @@ import tests.it.runtime;
 @("Build description in Python")
 @Tags(["ninja", "json_build"])
 unittest {
-    with(Runtime()) {
+    with(Sandbox()) {
         writeFile("reggaefile.py",
                   [`from reggae import *`,
                    `b = Build(executable(name='app', src_dirs=['src']))`]);

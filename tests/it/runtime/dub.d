@@ -17,7 +17,7 @@ private string prepareTestPath(in string projectName) {
 @Tags(["dub", "ninja"])
 unittest {
 
-    with(Runtime()) {
+    with(Sandbox()) {
         copyProject("dub");
         shouldNotExist("reggaefile.d");
         runReggae("-b", "ninja", "--dflags=-g -debug");
@@ -40,7 +40,7 @@ unittest {
 @("dub project with no reggaefile tup")
 @Tags(["dub", "tup"])
 unittest {
-    with(Runtime()) {
+    with(Sandbox()) {
         copyProject("dub");
         runReggae("-b", "tup", "--dflags=-g -debug").
             shouldThrowWithMessage("dub integration not supported with the tup backend");
@@ -50,7 +50,7 @@ unittest {
 @("dub project with no reggaefile and prebuild command")
 @Tags(["dub", "ninja"])
 unittest {
-    with(Runtime()) {
+    with(Sandbox()) {
         copyProject("dub_prebuild");
         runReggae("-b", "ninja", "--dflags=-g -debug");
         ninja.shouldExecuteOk(testPath);
@@ -62,7 +62,7 @@ unittest {
 @Tags(["dub", "ninja"])
 unittest {
 
-    with(Runtime()) {
+    with(Sandbox()) {
         writeFile("dub.json", `
 {
   "name": "notargettype",

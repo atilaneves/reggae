@@ -12,7 +12,7 @@ import tests.it.runtime;
 @Tags(["ninja", "json_build"])
 unittest {
 
-    with(Runtime()) {
+    with(Sandbox()) {
         writeFile("reggaefile.rb",
             [
             `require 'reggae'`,

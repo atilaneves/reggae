@@ -12,12 +12,12 @@ auto testRun(string[] args) {
     return output;
 }
 
-struct Runtime {
+struct Sandbox {
     string testPath;
 
-    static Runtime opCall() {
-        Runtime ret;
-        ret.testPath = cast(immutable)newTestDir;
+    static Sandbox opCall() {
+        Sandbox ret;
+        ret.testPath = newTestDir;
         return ret;
     }
 

@@ -1,7 +1,7 @@
 @javascript
 Feature: Foreign language integration
   As a reggae user
-  I want to be able to write build descriptions in a scripting language
+  I want to be able to write build descriptions in javascript
   So I don't have to compile the build description
 
   Background:

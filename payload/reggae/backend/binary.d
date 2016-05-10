@@ -123,18 +123,15 @@ struct BinaryT(T) {
     }
 
     string[] listTargets(BinaryOptions binaryOptions) pure {
-        string[] result;
+
+        string targetOutputsString(in Target target) {
+            return "- " ~ target.expandOutputs(options.projectPath).join(" ");
+        }
 
         const defaultTargets = topLevelTargets(binaryOptions.args);
-        foreach(topTarget; defaultTargets)
-            result ~= "- " ~ topTarget.expandOutputs(options.projectPath).join(" ");
-
         auto optionalTargets = build.targets.filter!(a => !defaultTargets.canFind(a));
-        foreach(optionalTarget; optionalTargets)
-            result ~= "- " ~ optionalTarget.rawOutputs.join(" ") ~
-                " (optional)";
-
-        return result;
+        return chain(defaultTargets.map!targetOutputsString,
+                     optionalTargets.map!targetOutputsString.map!(a => a ~ " (optional)")).array;
     }
 
 

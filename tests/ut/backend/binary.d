@@ -96,3 +96,14 @@ private Build binaryBuild() {
     binary.run(["./build", "--norerun", "oops", "woopsie"]).
         shouldThrowWithMessage("Unknown target(s) 'oops' 'woopsie'");
 }
+
+
+@("Non-phony target with no dependencies gets built if output doesn't exist")
+unittest {
+    bool ran;
+    auto build = Build(Target("foo.txt",
+                              (in string[], in string[]) { ran = true; }));
+    auto binary = Binary(build, getOptions(["reggae", "-b", "binary"]));
+    binary.run(["./build", "--norerun"]);
+    ran.shouldBeTrue;
+}

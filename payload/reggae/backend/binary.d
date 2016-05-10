@@ -178,13 +178,19 @@ private:
     }
 
     bool checkTimestamps(Target target) {
-        foreach(dep; chain(target.dependencyTargets, target.implicitTargets)) {
+        auto allDeps = chain(target.dependencyTargets, target.implicitTargets);
+        immutable isPhonyLike = target.getCommandType == CommandType.phony ||
+            allDeps.empty;
 
-            immutable isPhony = target.getCommandType == CommandType.phony;
+        if(isPhonyLike) {
+            executeCommand(target);
+            return true;
+        }
 
-            if(isPhony || anyNewer(options.projectPath,
-                                   dep.expandOutputs(options.projectPath),
-                                   target)) {
+        foreach(dep; allDeps) {
+            if(anyNewer(options.projectPath,
+                        dep.expandOutputs(options.projectPath),
+                        target)) {
                 executeCommand(target);
                 return true;
             }

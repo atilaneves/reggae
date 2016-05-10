@@ -76,7 +76,7 @@ Build getBuildObject(alias module_)(in Options options) {
         return build;
     } else {
         auto file = File(cacheFileName);
-        auto buffer = new ubyte[file.size];
+        auto buffer = new ubyte[cast(uint)file.size];
         return Build.fromBytes(file.rawRead(buffer));
     }
 }

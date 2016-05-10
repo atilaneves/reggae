@@ -98,3 +98,17 @@ private struct FakeFile {
          "- copy.txt",
          "- opt (optional)"]);
 }
+
+@("List of targets with $project in the name") unittest {
+    import std.path;
+
+    auto build = Build(Target("$project/../druntime/" ~ copyFileName, `cp $in $out`, Target(origFileName)),
+                       optional(Target.phony(`opt`, `echo Optional!`)));
+    auto file = FakeFile();
+    auto binary = Binary(build, getOptions(["reggae", "-b", "binary"]), file);
+    binary.run(["./build", "-l"]);
+    file.lines.shouldEqual(
+        ["List of available top-level targets:",
+         "- " ~ buildPath(getcwd(), "..", "druntime", "copy.txt"),
+         "- opt (optional)"]);
+}

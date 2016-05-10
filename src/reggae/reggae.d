@@ -187,10 +187,14 @@ enum otherFiles = [
     "dub/info.d", "rules/dub.d",
     ];
 
-enum foreignFiles = [
-    "__init__.py", "build.py", "reggae_json_build.py", "reflect.py", "rules.py",
-    "reggae.rb", "reggae_json_build.rb",
-    ];
+version(minimal) {
+    enum string[] foreignFiles = [];
+} else {
+    enum foreignFiles = [
+        "__init__.py", "build.py", "reggae_json_build.py", "reflect.py", "rules.py",
+        "reggae.rb", "reggae_json_build.rb",
+        ];
+}
 
 //all files that need to be written out and compiled
 private string[] fileNames() @safe pure nothrow {

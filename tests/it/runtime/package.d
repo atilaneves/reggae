@@ -12,11 +12,11 @@ auto testRun(string[] args) {
     return output;
 }
 
-struct Sandbox {
+struct ReggaeSandbox {
     string testPath;
 
-    static Sandbox opCall() {
-        Sandbox ret;
+    static ReggaeSandbox opCall() {
+        ReggaeSandbox ret;
         ret.testPath = newTestDir;
         return ret;
     }

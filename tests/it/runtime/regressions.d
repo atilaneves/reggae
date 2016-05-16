@@ -10,7 +10,7 @@ import std.path;
 @Tags(["ninja", "regressions"])
 unittest {
 
-    with(Sandbox()) {
+    with(ReggaeSandbox()) {
         writeFile("reggaefile.d", q{
             import reggae;
             enum ao = objectFile(SourceFile("a.c"));
@@ -29,7 +29,7 @@ unittest {
 @Tags(["ninja", "regressions"])
 unittest {
 
-    with(Sandbox()) {
+    with(ReggaeSandbox()) {
         writeFile("reggaefile.d", q{
             import reggae;
             alias app = scriptlike!(App(SourceFileName("main.d"),
@@ -75,7 +75,7 @@ unittest {
     import std.path;
     import std.file;
 
-    with(Sandbox()) {
+    with(ReggaeSandbox()) {
 
         writeFile("dub.json", `
             {

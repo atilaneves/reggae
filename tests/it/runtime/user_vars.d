@@ -15,7 +15,7 @@ immutable reggaefileStr = q{
 @Tags("make")
 unittest {
 
-    with(Sandbox()) {
+    with(ReggaeSandbox()) {
         writeFile("reggaefile.d", reggaefileStr);
 
         runReggae("-b", "make");
@@ -32,7 +32,7 @@ unittest {
 @Tags("make")
 unittest {
 
-    with(Sandbox()) {
+    with(ReggaeSandbox()) {
         writeFile("reggaefile.d", reggaefileStr);
 
         runReggae("-b", "make", "-d", "1st=true");

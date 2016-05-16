@@ -11,7 +11,7 @@ import tests.it.runtime;
 }
 
 @("Non-existent build description error message") unittest {
-    with(ReggaeSandbox()) {
+    with(immutable ReggaeSandbox()) {
         writeFile("foo.txt");
         runReggae("-b", "binary").shouldThrowWithMessage(
             "Could not find " ~ buildPath(testPath, "reggaefile.d"));
@@ -20,7 +20,7 @@ import tests.it.runtime;
 
 
 @("Too many languages") unittest {
-    with(ReggaeSandbox()) {
+    with(immutable ReggaeSandbox()) {
         writeFile("reggaefile.d");
         writeFile("reggaefile.py");
 

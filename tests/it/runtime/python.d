@@ -11,7 +11,7 @@ import tests.it.runtime;
 @("Build description in Python")
 @Tags(["ninja", "json_build", "python"])
 unittest {
-    with(ReggaeSandbox()) {
+    with(immutable ReggaeSandbox()) {
         writeFile("reggaefile.py",
                   [`from reggae import *`,
                    `b = Build(executable(name='app', src_dirs=['src']))`]);
@@ -26,7 +26,7 @@ unittest {
 @("User vars in Python")
 @Tags(["ninja", "json_build", "python"])
 unittest {
-    with(ReggaeSandbox()) {
+    with(immutable ReggaeSandbox()) {
         writeFile("reggaefile.py",
                   [`from reggae import *`,
                    `name = user_vars.get('name', 'app')`,

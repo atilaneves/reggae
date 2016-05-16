@@ -12,7 +12,7 @@ import tests.it.runtime;
 @Tags(["ninja", "json_build", "ruby", "travis_oops"])
 unittest {
 
-    with(ReggaeSandbox()) {
+    with(immutable ReggaeSandbox()) {
         writeFile("reggaefile.rb",
             [
             `require 'reggae'`,
@@ -32,7 +32,7 @@ unittest {
 @("Erroneous description in ruby doesn't crash")
 @Tags(["ninja", "json_build", "ruby", "travis_oops"])
 unittest {
-    with(ReggaeSandbox()) {
+    with(immutable ReggaeSandbox()) {
         writeFile("reggaefile.rb",
                   [
                       `require 'reggae'`,

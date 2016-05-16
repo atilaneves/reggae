@@ -30,8 +30,7 @@ install:
 
 script:
   - ./bootstrap.sh make
-  - bin/ut tests.ut
   # the Travis CI machines don't like tup
   # also, installing the right ruby version in travis for D projects is a pain
-  - bin/ut tests.it ~@tup ~@travis_oops
+  - bin/ut ~@tup ~@travis_oops
   - cucumber --tags ~@tup --tags ~@ruby --tags ~@lua

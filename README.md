@@ -70,9 +70,10 @@ Pick a language to write your description in and place a file called
 
 In one of the scripting languages, a global variable with the type
 `reggae.Build` must exist with any name. Also, the relevant
-language-specific package must be installed or otherwise available on
-the system to make use of that language's API. Use pip, gem, npm or luarocks
-to install the reggae package (reggae-js for npm).
+language-specific package can be installed using pip, gem, npm or
+luarocks to install the reggae package (reggae-js for npm). This is
+not required; the reggae binary includes the API for all scripting
+languages.
 
 In D, a function with return type `Build` must exist with any name.
 Normally this function isn't written by hand but by using the

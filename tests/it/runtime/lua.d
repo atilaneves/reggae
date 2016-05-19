@@ -9,7 +9,7 @@ module tests.it.runtime.lua;
 import tests.it.runtime;
 
 @("Build description in Lua")
-@Tags(["ninja", "json_build", "lua", "travis oops"])
+@Tags(["ninja", "json_build", "lua", "travis_oops"])
 unittest {
     with(immutable ReggaeSandbox()) {
         writeFile("reggaefile.lua",

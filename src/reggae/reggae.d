@@ -121,8 +121,7 @@ private string getJsonOutput(in Options options) @safe {
     auto env = ["PATH": (path ~ binDir).join(":"),
                 "PYTHONPATH": (pythonPaths ~ srcDir).join(":"),
                 "NODE_PATH": (nodePaths ~ options.projectPath ~ binDir).join(":"),
-                "LUA_PATH": (luaPaths ~ buildPath(options.projectPath, "?.lua")).join(";")];
-    writeln(env);
+                "LUA_PATH": (luaPaths ~ buildPath(options.projectPath, "?.lua") ~ buildPath(binDir, "?.lua")).join(";")];
     immutable res = execute(args, env);
     enforce(res.status == 0, text("Could not execute ", args.join(" "), ":\n", res.output));
     return res.output;
@@ -162,7 +161,7 @@ private string[] getJsonOutputArgs(in Options options) @safe {
                 "reggae_json_build.rb"];
 
     case BuildLanguage.Lua:
-        return ["reggae_json_build.lua"];
+        return ["lua", buildPath(options.workingDir, hiddenDir, "src", "reggae", "reggae_json_build.lua")];
 
     case BuildLanguage.JavaScript:
         return ["node", buildPath(options.workingDir, hiddenDir, "src", "reggae", "reggae_json_build.js")];
@@ -195,6 +194,7 @@ version(minimal) {
         "__init__.py", "build.py", "reflect.py", "rules.py", "reggae_json_build.py",
         "reggae.rb", "reggae_json_build.rb",
         "reggae-js.js", "reggae_json_build.js",
+        "JSON.lua", "reggae.lua", "reggae_json_build.lua",
         ];
 }
 

@@ -120,8 +120,9 @@ private string getJsonOutput(in Options options) @safe {
     const binDir = buildPath(srcDir, "reggae");
     auto env = ["PATH": (path ~ binDir).join(":"),
                 "PYTHONPATH": (pythonPaths ~ srcDir).join(":"),
-                "NODE_PATH": (nodePaths ~ options.projectPath).join(":"),
+                "NODE_PATH": (nodePaths ~ options.projectPath ~ binDir).join(":"),
                 "LUA_PATH": (luaPaths ~ buildPath(options.projectPath, "?.lua")).join(";")];
+    writeln(env);
     immutable res = execute(args, env);
     enforce(res.status == 0, text("Could not execute ", args.join(" "), ":\n", res.output));
     return res.output;
@@ -164,7 +165,7 @@ private string[] getJsonOutputArgs(in Options options) @safe {
         return ["reggae_json_build.lua"];
 
     case BuildLanguage.JavaScript:
-        return ["reggae_json_build.js"];
+        return ["node", buildPath(options.workingDir, hiddenDir, "src", "reggae", "reggae_json_build.js")];
     }
 }
 
@@ -191,8 +192,9 @@ version(minimal) {
     enum string[] foreignFiles = [];
 } else {
     enum foreignFiles = [
-        "__init__.py", "build.py", "reggae_json_build.py", "reflect.py", "rules.py",
+        "__init__.py", "build.py", "reflect.py", "rules.py", "reggae_json_build.py",
         "reggae.rb", "reggae_json_build.rb",
+        "reggae-js.js", "reggae_json_build.js",
         ];
 }
 

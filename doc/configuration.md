@@ -46,7 +46,7 @@ Not implemented yet.
 All of the variables in the `Options` struct can be set this way.
 
 
-## User-defined Variables
+## User-defined Variables and Options
 
 To enable/disable features at build configuration time, users may
 define their own variables on the command-line when running
@@ -83,6 +83,33 @@ an exception if not set. It's usually better to use `get`.
 ```python
 if user_vars.get("enableTests", "true") == "true":
    bld = Build(ut, app)
+```
+
+### Ruby
+
+Not implemented yet.
+
+### Javascript
+
+Not implemented yet.
+
+### Lua
+
+Not implemented yet.
+
+
+The run-time options passed to the binary can also be accessed:
+
+### D
+
+```d
+auto cc = options.cCompiler;
+```
+
+### Python
+
+```python
+cc = options.cCompiler
 ```
 
 ### Ruby

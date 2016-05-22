@@ -43,8 +43,12 @@ enum JsonDepsFuncName {
 }
 
 Build jsonToBuild(in string projectPath, in string jsonString) {
+    return tryJson(jsonString, jsonToBuildImpl(projectPath, jsonString));
+}
+
+private auto tryJson(E)(in string jsonString, lazy E expr) {
     try {
-        return jsonToBuildImpl(projectPath, jsonString);
+        return expr();
     } catch(JSONException e) {
         throw new Exception("Wrong JSON description for:\n" ~ jsonString ~ "\n" ~ e.msg, e, e.file, e.line);
     }
@@ -225,7 +229,7 @@ private Target callTargetFunc(in string projectPath, in JSONValue json) {
 
 
 const(Options) jsonToOptions(in Options options, in string jsonString) {
-    return jsonToOptions(options, parseJSON(jsonString));
+    return tryJson(jsonString, jsonToOptions(options, parseJSON(jsonString)));
 }
 
 //get "real" options based on what was passed in via the command line
@@ -241,6 +245,12 @@ const(Options) jsonToOptions(in Options options, in JSONValue json) {
 
 
 private const(Options) jsonToOptionsImpl(in Options options, in JSONValue defaultOptionsObj) {
+    import std.exception;
+    import std.conv;
+
+    assert(defaultOptionsObj.type == JSON_TYPE.OBJECT,
+           text("jsonToOptions requires an object, not ", defaultOptionsObj.type));
+
     Options defaultOptions;
 
     //statically loop over members of Options

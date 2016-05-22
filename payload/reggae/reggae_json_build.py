@@ -10,9 +10,13 @@ def get_json(module):
     from reggae.reflect import get_build, get_default_options
     build = get_build(module)
     default_opts = get_default_options(module)
-    opts_json = [] if default_opts is None else [default_opts.jsonify()]
+    opts_json = {} if default_opts is None else default_opts.jsonify()
+    ret = {'version': 1,
+           'defaultOptions': opts_json,
+           'dependencies': [],
+           'build': build.jsonify()}
 
-    return json.dumps(build.jsonify() + opts_json)
+    return json.dumps(ret)
 
 
 def main():

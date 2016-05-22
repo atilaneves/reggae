@@ -46,12 +46,28 @@ Build jsonToBuild(in string projectPath, in string jsonString) {
     try {
         return jsonToBuildImpl(projectPath, jsonString);
     } catch(JSONException e) {
-        throw new Exception("Wrong JSON description:\n" ~ jsonString);
+        throw new Exception("Wrong JSON description for:\n" ~ jsonString ~ "\n" ~ e.msg, e, e.file, e.line);
     }
 }
 
-Build jsonToBuildImpl(in string projectPath, in string jsonString) {
+private Build jsonToBuildImpl(in string projectPath, in string jsonString) {
+    import std.exception;
+
     auto json = parseJSON(jsonString);
+    const hasVersion = json.type == JSON_TYPE.OBJECT && "version" in json;
+
+    enforce(!hasVersion || json.object["version"].integer == 1, "Unknown JSON build version");
+
+    return hasVersion
+        ? jsonToBuildImplVersion1(projectPath, json)
+        : jsonToBuildImplVersion0(projectPath, json);
+}
+
+private Build jsonToBuildImplVersion1(in string projectPath, in JSONValue json) {
+    return jsonToBuildImplVersion0(projectPath, json.object["build"]);
+}
+
+private Build jsonToBuildImplVersion0(in string projectPath, in JSONValue json) {
 
     Build.TopLevelTarget maybeOptional(in JSONValue json, Target target) {
         immutable optional = ("optional" in json.object) !is null;

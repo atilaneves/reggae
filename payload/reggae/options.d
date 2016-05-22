@@ -9,7 +9,7 @@ import std.file: exists;
 
 enum version_ = "0.5.4+";
 
-Options defaultOptions;
+private Options defaultOptions;
 
 enum BuildLanguage {
     D,
@@ -177,9 +177,12 @@ struct Options {
     }
 }
 
+Options getOptions(string[] args) {
+    return getOptions(defaultOptions, args);
+}
 
 //getopt is @system
-Options getOptions(string[] args) @trusted {
+Options getOptions(Options defaultOptions, string[] args) @trusted {
     import std.getopt;
     import std.algorithm;
     import std.array;

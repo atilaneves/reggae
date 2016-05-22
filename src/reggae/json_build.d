@@ -237,8 +237,7 @@ private const(Options) jsonToOptionsVersion1(in Options options, in JSONValue js
 
 
 private const(Options) jsonToOptionsImpl(in Options options, in JSONValue defaultOptionsObj) {
-    auto oldDefaultOptions = defaultOptions.dup;
-    scope(exit) defaultOptions = oldDefaultOptions;
+    Options defaultOptions;
 
     //statically loop over members of Options
     foreach(member; __traits(allMembers, Options)) {
@@ -265,5 +264,5 @@ private const(Options) jsonToOptionsImpl(in Options options, in JSONValue defaul
         }
     }
 
-    return getOptions(options.args.dup);
+    return getOptions(defaultOptions, options.args.dup);
 }

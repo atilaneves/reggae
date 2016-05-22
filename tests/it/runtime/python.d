@@ -8,7 +8,7 @@ module tests.it.runtime.python;
 
 import tests.it.runtime;
 
-@("Build description in Python")
+@("Build description")
 @Tags(["ninja", "json_build", "python"])
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -23,7 +23,7 @@ unittest {
     }
 }
 
-@("User vars in Python")
+@("User variables")
 @Tags(["ninja", "json_build", "python"])
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -36,5 +36,21 @@ unittest {
         runReggae("-b", "ninja", "-dname=foo");
         ninja.shouldExecuteOk(testPath);
         shouldSucceed("foo").shouldEqual(["Hello world!"]);
+    }
+}
+
+@("default options")
+@Tags(["ninja", "json_build", "python"])
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile("reggaefile.py",
+                  [`from reggae import *`,
+                   `opts = DefaultOptions(dCompiler='nope')`,
+                   `b = Build(executable(name='app', src_dirs=['src']))`]);
+        writeHelloWorldApp;
+
+        runReggae("-b", "ninja");
+        // there's no binary named "nope" so the build fails
+        ninja.shouldFailToExecute(testPath);
     }
 }

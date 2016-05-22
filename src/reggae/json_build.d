@@ -50,43 +50,60 @@ Build jsonToBuild(in string projectPath, in string jsonString) {
     }
 }
 
+private struct Version0 {
+
+    static Build jsonToBuild(in string projectPath, in JSONValue json) {
+        Build.TopLevelTarget maybeOptional(in JSONValue json, Target target) {
+            immutable optional = ("optional" in json.object) !is null;
+            return createTopLevelTarget(target, optional);
+        }
+
+        auto targets = json.array.
+            filter!(a => a.object["type"].str != "defaultOptions").
+            map!(a => maybeOptional(a, jsonToTarget(projectPath, a))).
+            array;
+
+        return Build(targets);
+    }
+
+    static const(Options) jsonToOptions(in Options options, in JSONValue json) {
+        //first, find the JSON object we want
+        auto defaultOptionsRange = json.array.filter!(a => a.object["type"].str == "defaultOptions");
+        return defaultOptionsRange.empty
+            ? options
+            : jsonToOptionsImpl(options, defaultOptionsRange.front);
+    }
+}
+
+private struct Version1 {
+
+    static Build jsonToBuild(in string projectPath, in JSONValue json) {
+        return Version0.jsonToBuild(projectPath, json.object["build"]);
+    }
+
+    static const(Options) jsonToOptions(in Options options, in JSONValue json) {
+        return jsonToOptionsImpl(options, json.object["defaultOptions"]);
+    }
+}
+
+
 private Build jsonToBuildImpl(in string projectPath, in string jsonString) {
     import std.exception;
 
     auto json = parseJSON(jsonString);
     immutable version_ = version_(json);
-    const hasVersion = json.type == JSON_TYPE.OBJECT && "version" in json;
 
     enforce(version_ == 0 || version_ == 1, "Unknown JSON build version");
 
     return version_ == 1
-        ? jsonToBuildImplVersion1(projectPath, json)
-        : jsonToBuildImplVersion0(projectPath, json);
+        ? Version1.jsonToBuild(projectPath, json)
+        : Version0.jsonToBuild(projectPath, json);
 }
 
 private long version_(in JSONValue json) {
     return json.type == JSON_TYPE.OBJECT
         ? json.object["version"].integer
         : 0;
-}
-
-private Build jsonToBuildImplVersion1(in string projectPath, in JSONValue json) {
-    return jsonToBuildImplVersion0(projectPath, json.object["build"]);
-}
-
-private Build jsonToBuildImplVersion0(in string projectPath, in JSONValue json) {
-
-    Build.TopLevelTarget maybeOptional(in JSONValue json, Target target) {
-        immutable optional = ("optional" in json.object) !is null;
-        return createTopLevelTarget(target, optional);
-    }
-
-    auto targets = json.array.
-        filter!(a => a.object["type"].str != "defaultOptions").
-        map!(a => maybeOptional(a, jsonToTarget(projectPath, a))).
-        array;
-
-    return Build(targets);
 }
 
 
@@ -218,21 +235,8 @@ const(Options) jsonToOptions(in Options options, in string jsonString) {
 //First the command-line parses the options, then the json can override the defaults
 const(Options) jsonToOptions(in Options options, in JSONValue json) {
     return version_(json) == 1
-        ? jsonToOptionsVersion1(options, json)
-        : jsonToOptionsVersion0(options, json);
-}
-
-private const(Options) jsonToOptionsVersion0(in Options options, in JSONValue json) {
-    //first, find the JSON object we want
-    auto defaultOptionsRange = json.array.filter!(a => a.object["type"].str == "defaultOptions");
-    return defaultOptionsRange.empty
-        ? options
-        : jsonToOptionsImpl(options, defaultOptionsRange.front);
-}
-
-
-private const(Options) jsonToOptionsVersion1(in Options options, in JSONValue json) {
-    return jsonToOptionsImpl(options, json.object["defaultOptions"]);
+        ? Version1.jsonToOptions(options, json)
+        : Version0.jsonToOptions(options, json);
 }
 
 

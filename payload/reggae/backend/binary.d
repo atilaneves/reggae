@@ -159,7 +159,7 @@ private:
         if(options.export_) return false;
 
         immutable myPath = thisExePath;
-        if((options.reggaeFileDependencies ~ getReggaeFileDependencies).any!(a => a.newerThan(myPath))) {
+        if(options.reggaeFileDependencies.any!(a => a.newerThan(myPath))) {
             output.writeln("[build] " ~ options.rerunArgs.join(" "));
             immutable reggaeRes = execute(options.rerunArgs);
             enforce(reggaeRes.status == 0,

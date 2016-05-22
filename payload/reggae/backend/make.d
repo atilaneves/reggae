@@ -61,7 +61,7 @@ struct Makefile {
         } else {
             // add a dependency on the Makefile to reggae itself and the build description,
             // but only if not exporting a build
-            ret ~= fileName() ~ ": " ~ (options.reggaeFileDependencies ~ getReggaeFileDependencies).join(" ") ~ "\n";
+            ret ~= fileName() ~ ": " ~ options.reggaeFileDependencies.join(" ") ~ "\n";
             ret ~= "\t" ~ options.rerunArgs.join(" ") ~ "\n";
         }
 

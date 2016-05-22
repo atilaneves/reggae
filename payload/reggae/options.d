@@ -155,7 +155,7 @@ struct Options {
     }
 
     string[] reggaeFileDependencies() @safe const {
-        return [ranFromPath, reggaeFilePath];
+        return [ranFromPath, reggaeFilePath] ~ getReggaeFileDependencies;
     }
 
     bool isJsonBuild() @safe const {

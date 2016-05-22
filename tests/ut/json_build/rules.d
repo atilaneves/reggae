@@ -69,7 +69,8 @@ void testLink() {
 }
 
 
-void testJsonToOptions() {
+@("jsonToOptions version0")
+unittest {
     import reggae.config: gDefaultOptions;
     import std.json;
 
@@ -78,6 +79,21 @@ void testJsonToOptions() {
     auto newOptions = jsonToOptions(oldOptions, parseJSON(linkJsonString));
     newOptions.cCompiler.shouldEqual("weirdcc");
     newOptions.cppCompiler.shouldEqual("g++");
+}
+
+@("jsonToOptions version1")
+unittest {
+    import reggae.config: gDefaultOptions;
+    import std.json;
+
+    auto oldOptions = gDefaultOptions.dup;
+    oldOptions.args = ["reggae", "-b", "ninja", "/path/to/my/project"];
+    immutable jsonString =
+        `{"version": 1, "defaultOptions": {"cCompiler": "huh"}, "dependencies": [], "build": ` ~ linkJsonString ~ `}`;
+    auto newOptions = jsonToOptions(oldOptions, parseJSON(jsonString));
+    newOptions.cCompiler.shouldEqual("huh");
+    newOptions.cppCompiler.shouldEqual("g++");
+    newOptions.oldNinja.shouldBeFalse;
 }
 
 

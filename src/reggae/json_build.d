@@ -54,13 +54,20 @@ private Build jsonToBuildImpl(in string projectPath, in string jsonString) {
     import std.exception;
 
     auto json = parseJSON(jsonString);
+    immutable version_ = version_(json);
     const hasVersion = json.type == JSON_TYPE.OBJECT && "version" in json;
 
-    enforce(!hasVersion || json.object["version"].integer == 1, "Unknown JSON build version");
+    enforce(version_ == 0 || version_ == 1, "Unknown JSON build version");
 
-    return hasVersion
+    return version_ == 1
         ? jsonToBuildImplVersion1(projectPath, json)
         : jsonToBuildImplVersion0(projectPath, json);
+}
+
+private long version_(in JSONValue json) {
+    return json.type == JSON_TYPE.OBJECT
+        ? json.object["version"].integer
+        : 0;
 }
 
 private Build jsonToBuildImplVersion1(in string projectPath, in JSONValue json) {
@@ -209,11 +216,27 @@ const(Options) jsonToOptions(in Options options, in string jsonString) {
 //This is needed so that scripting language build descriptions can specify
 //default values for the options
 //First the command-line parses the options, then the json can override the defaults
-const (Options) jsonToOptions(in Options options, in JSONValue json) {
+const(Options) jsonToOptions(in Options options, in JSONValue json) {
+    return version_(json) == 1
+        ? jsonToOptionsVersion1(options, json)
+        : jsonToOptionsVersion0(options, json);
+}
+
+private const(Options) jsonToOptionsVersion0(in Options options, in JSONValue json) {
     //first, find the JSON object we want
     auto defaultOptionsRange = json.array.filter!(a => a.object["type"].str == "defaultOptions");
-    if(defaultOptionsRange.empty) return options;
-    auto defaultOptionsObj = defaultOptionsRange.front;
+    return defaultOptionsRange.empty
+        ? options
+        : jsonToOptionsImpl(options, defaultOptionsRange.front);
+}
+
+
+private const(Options) jsonToOptionsVersion1(in Options options, in JSONValue json) {
+    return jsonToOptionsImpl(options, json.object["defaultOptions"]);
+}
+
+
+private const(Options) jsonToOptionsImpl(in Options options, in JSONValue defaultOptionsObj) {
     auto oldDefaultOptions = defaultOptions.dup;
     scope(exit) defaultOptions = oldDefaultOptions;
 

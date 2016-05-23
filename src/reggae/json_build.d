@@ -86,7 +86,7 @@ private struct Version1 {
     }
 
     static const(Options) jsonToOptions(in Options options, in JSONValue json) {
-        return jsonToOptionsImpl(options, json.object["defaultOptions"]);
+        return jsonToOptionsImpl(options, json.object["defaultOptions"], json.object["dependencies"]);
     }
 }
 
@@ -244,7 +244,9 @@ const(Options) jsonToOptions(in Options options, in JSONValue json) {
 }
 
 
-private const(Options) jsonToOptionsImpl(in Options options, in JSONValue defaultOptionsObj) {
+private const(Options) jsonToOptionsImpl(in Options options,
+                                         in JSONValue defaultOptionsObj,
+                                         in JSONValue dependencies = parseJSON(`[]`)) {
     import std.exception;
     import std.conv;
 
@@ -277,6 +279,8 @@ private const(Options) jsonToOptionsImpl(in Options options, in JSONValue defaul
             }
         }
     }
+
+    defaultOptions.dependencies = dependencies.array.map!(a => cast(string)a.str.dup).array;
 
     return getOptions(defaultOptions, options.args.dup);
 }

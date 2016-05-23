@@ -7,13 +7,13 @@ import argparse
 
 
 def get_json(module):
-    from reggae.reflect import get_build, get_default_options
+    from reggae.reflect import get_build, get_default_options, get_dependencies
     build = get_build(module)
     default_opts = get_default_options(module)
     opts_json = {} if default_opts is None else default_opts.jsonify()
     ret = {'version': 1,
            'defaultOptions': opts_json,
-           'dependencies': [],
+           'dependencies': get_dependencies(module.__file__),
            'build': build.jsonify()}
 
     return json.dumps(ret)

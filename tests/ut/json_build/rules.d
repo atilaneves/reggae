@@ -81,6 +81,10 @@ unittest {
     newOptions.cppCompiler.shouldEqual("g++");
 }
 
+private string toVersion1(in string jsonString, in string dependencies = `[]`) {
+    return `{"version": 1, "defaultOptions": {"cCompiler": "huh"}, "dependencies": ` ~ dependencies ~ `, "build": ` ~ jsonString ~ `}`;
+}
+
 @("jsonToOptions version1")
 unittest {
     import reggae.config: gDefaultOptions;
@@ -88,12 +92,28 @@ unittest {
 
     auto oldOptions = gDefaultOptions.dup;
     oldOptions.args = ["reggae", "-b", "ninja", "/path/to/my/project"];
-    immutable jsonString =
-        `{"version": 1, "defaultOptions": {"cCompiler": "huh"}, "dependencies": [], "build": ` ~ linkJsonString ~ `}`;
+    immutable jsonString = linkJsonString.toVersion1;
     auto newOptions = jsonToOptions(oldOptions, parseJSON(jsonString));
     newOptions.cCompiler.shouldEqual("huh");
     newOptions.cppCompiler.shouldEqual("g++");
     newOptions.oldNinja.shouldBeFalse;
+}
+
+@("jsonToOptions with dependencies")
+unittest {
+    import std.json;
+    import std.file;
+    import std.path;
+
+    Options defaultOptions;
+    defaultOptions.args = ["reggae", "-b", "ninja", "/path/to/my/project"];
+    immutable jsonString = linkJsonString.toVersion1(`["/path/to/foo.py", "/other/path/bar.py"]`);
+    auto options = jsonToOptions(defaultOptions, parseJSON(jsonString));
+    options.reggaeFileDependencies.shouldEqual(
+        [thisExePath,
+         buildPath("/path/to/my/project", "reggaefile.d"),
+         "/path/to/foo.py",
+         "/other/path/bar.py"]);
 }
 
 

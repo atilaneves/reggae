@@ -82,9 +82,7 @@ class DefaultOptions(object):
         self.kwargs = kwargs
 
     def jsonify(self):
-        json = self.kwargs.copy()
-        json['type'] = 'defaultOptions'
-        return json
+        return self.kwargs.copy()
 
 
 def optional(tgt):

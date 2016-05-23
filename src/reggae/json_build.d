@@ -43,27 +43,71 @@ enum JsonDepsFuncName {
 }
 
 Build jsonToBuild(in string projectPath, in string jsonString) {
+    return tryJson(jsonString, jsonToBuildImpl(projectPath, jsonString));
+}
+
+private auto tryJson(E)(in string jsonString, lazy E expr) {
     try {
-        return jsonToBuildImpl(projectPath, jsonString);
+        return expr();
     } catch(JSONException e) {
-        throw new Exception("Wrong JSON description:\n" ~ jsonString);
+        throw new Exception("Wrong JSON description for:\n" ~ jsonString ~ "\n" ~ e.msg, e, e.file, e.line);
     }
 }
 
-Build jsonToBuildImpl(in string projectPath, in string jsonString) {
-    auto json = parseJSON(jsonString);
+private struct Version0 {
 
-    Build.TopLevelTarget maybeOptional(in JSONValue json, Target target) {
-        immutable optional = ("optional" in json.object) !is null;
-        return createTopLevelTarget(target, optional);
+    static Build jsonToBuild(in string projectPath, in JSONValue json) {
+        Build.TopLevelTarget maybeOptional(in JSONValue json, Target target) {
+            immutable optional = ("optional" in json.object) !is null;
+            return createTopLevelTarget(target, optional);
+        }
+
+        auto targets = json.array.
+            filter!(a => a.object["type"].str != "defaultOptions").
+            map!(a => maybeOptional(a, jsonToTarget(projectPath, a))).
+            array;
+
+        return Build(targets);
     }
 
-    auto targets = json.array.
-        filter!(a => a.object["type"].str != "defaultOptions").
-        map!(a => maybeOptional(a, jsonToTarget(projectPath, a))).
-        array;
+    static const(Options) jsonToOptions(in Options options, in JSONValue json) {
+        //first, find the JSON object we want
+        auto defaultOptionsRange = json.array.filter!(a => a.object["type"].str == "defaultOptions");
+        return defaultOptionsRange.empty
+            ? options
+            : jsonToOptionsImpl(options, defaultOptionsRange.front);
+    }
+}
 
-    return Build(targets);
+private struct Version1 {
+
+    static Build jsonToBuild(in string projectPath, in JSONValue json) {
+        return Version0.jsonToBuild(projectPath, json.object["build"]);
+    }
+
+    static const(Options) jsonToOptions(in Options options, in JSONValue json) {
+        return jsonToOptionsImpl(options, json.object["defaultOptions"], json.object["dependencies"]);
+    }
+}
+
+
+private Build jsonToBuildImpl(in string projectPath, in string jsonString) {
+    import std.exception;
+
+    auto json = parseJSON(jsonString);
+    immutable version_ = version_(json);
+
+    enforce(version_ == 0 || version_ == 1, "Unknown JSON build version");
+
+    return version_ == 1
+        ? Version1.jsonToBuild(projectPath, json)
+        : Version0.jsonToBuild(projectPath, json);
+}
+
+private long version_(in JSONValue json) {
+    return json.type == JSON_TYPE.OBJECT
+        ? json.object["version"].integer
+        : 0;
 }
 
 
@@ -185,7 +229,7 @@ private Target callTargetFunc(in string projectPath, in JSONValue json) {
 
 
 const(Options) jsonToOptions(in Options options, in string jsonString) {
-    return jsonToOptions(options, parseJSON(jsonString));
+    return tryJson(jsonString, jsonToOptions(options, parseJSON(jsonString)));
 }
 
 //get "real" options based on what was passed in via the command line
@@ -193,13 +237,23 @@ const(Options) jsonToOptions(in Options options, in string jsonString) {
 //This is needed so that scripting language build descriptions can specify
 //default values for the options
 //First the command-line parses the options, then the json can override the defaults
-const (Options) jsonToOptions(in Options options, in JSONValue json) {
-    //first, find the JSON object we want
-    auto defaultOptionsRange = json.array.filter!(a => a.object["type"].str == "defaultOptions");
-    if(defaultOptionsRange.empty) return options;
-    auto defaultOptionsObj = defaultOptionsRange.front;
-    auto oldDefaultOptions = defaultOptions.dup;
-    scope(exit) defaultOptions = oldDefaultOptions;
+const(Options) jsonToOptions(in Options options, in JSONValue json) {
+    return version_(json) == 1
+        ? Version1.jsonToOptions(options, json)
+        : Version0.jsonToOptions(options, json);
+}
+
+
+private const(Options) jsonToOptionsImpl(in Options options,
+                                         in JSONValue defaultOptionsObj,
+                                         in JSONValue dependencies = parseJSON(`[]`)) {
+    import std.exception;
+    import std.conv;
+
+    assert(defaultOptionsObj.type == JSON_TYPE.OBJECT,
+           text("jsonToOptions requires an object, not ", defaultOptionsObj.type));
+
+    Options defaultOptions;
 
     //statically loop over members of Options
     foreach(member; __traits(allMembers, Options)) {
@@ -226,5 +280,7 @@ const (Options) jsonToOptions(in Options options, in JSONValue json) {
         }
     }
 
-    return getOptions(options.args.dup);
+    defaultOptions.dependencies = dependencies.array.map!(a => cast(string)a.str.dup).array;
+
+    return getOptions(defaultOptions, options.args.dup);
 }

@@ -108,7 +108,7 @@ struct Ninja {
 
     //includes rerunning reggae
     const(NinjaEntry)[] allBuildEntries() @safe {
-        immutable files = (_options.reggaeFileDependencies ~ getReggaeFileDependencies).join(" ");
+        immutable files = _options.reggaeFileDependencies.join(" ");
         auto paramLines = _options.oldNinja ? [] : ["pool = console"];
 
         const(NinjaEntry)[] rerunEntries() {

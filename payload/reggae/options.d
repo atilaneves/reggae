@@ -9,7 +9,7 @@ import std.file: exists;
 
 enum version_ = "0.5.4+";
 
-Options defaultOptions;
+private Options defaultOptions;
 
 enum BuildLanguage {
     D,
@@ -39,6 +39,7 @@ struct Options {
     bool version_;
     bool export_;
     bool verbose;
+    string[] dependencies;
     string[string] userVars; //must always be the last member variable
 
     Options dup() @safe pure const nothrow {
@@ -155,7 +156,7 @@ struct Options {
     }
 
     string[] reggaeFileDependencies() @safe const {
-        return [ranFromPath, reggaeFilePath];
+        return [ranFromPath, reggaeFilePath] ~ getReggaeFileDependenciesDlang ~ dependencies;
     }
 
     bool isJsonBuild() @safe const {
@@ -177,9 +178,12 @@ struct Options {
     }
 }
 
+Options getOptions(string[] args) {
+    return getOptions(defaultOptions, args);
+}
 
 //getopt is @system
-Options getOptions(string[] args) @trusted {
+Options getOptions(Options defaultOptions, string[] args) @trusted {
     import std.getopt;
     import std.algorithm;
     import std.array;
@@ -241,9 +245,10 @@ Options getOptions(string[] args) @trusted {
 
 immutable hiddenDir = ".reggae";
 
+
 //returns the list of files that the `reggaefile` depends on
 //this will usually be empty, but won't be if the reggaefile imports other D files
-string[] getReggaeFileDependencies() @trusted {
+string[] getReggaeFileDependenciesDlang() @trusted {
     import std.string: chomp;
     import std.stdio: File;
     import std.algorithm: splitter;

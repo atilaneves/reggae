@@ -246,7 +246,7 @@ private string compileBinaries(T)(T output, in Options options) {
     immutable buildObjName = "build.o";
     buildBinary(output, options, Binary(buildObjName, buildGenCmd));
 
-    const reggaeFileDeps = getReggaeFileDependencies;
+    const reggaeFileDeps = getReggaeFileDependenciesDlang;
     auto objFiles = [buildObjName];
     if(!reggaeFileDeps.empty) {
         immutable rest = "rest.o";

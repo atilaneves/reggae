@@ -70,3 +70,34 @@ unittest {
         Build(Target("foo.o", "dmd -of$out -c $in", Target("foo.d")),
               optional(Target("bar.o", "dmd -of$out -c $in", Target("bar.d")))));
 }
+
+immutable fooObjJson2 = `
+{
+    "version": 1,
+    "defaultOptions": {},
+    "dependencies": [],
+    "build": [
+    {
+      "type": "fixed",
+      "outputs": ["foo.o"],
+      "command": {"type": "shell", "cmd": "dmd -of$out -c $in"},
+      "dependencies": {
+          "type": "fixed",
+          "targets": [
+              {"type": "fixed",
+               "outputs": ["foo.d"],
+               "command": {},
+               "dependencies": {"type": "fixed", "targets": []},
+               "implicits": {"type": "fixed", "targets": []}}]},
+      "implicits": {"type": "fixed", "targets": []}
+    }
+  ]
+}
+`;
+
+
+@("version2")
+unittest {
+    jsonToBuild("", fooObjJson2).shouldEqual(
+        Build(Target("foo.o", "dmd -of$out -c $in", Target("foo.d"))));
+}

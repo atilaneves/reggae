@@ -202,7 +202,6 @@ private auto arrayify(alias func)() {
 }
 
 string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
-
     import std.exception: enforce;
     import std.file;
     import std.path: buildNormalizedPath, buildPath;
@@ -235,7 +234,7 @@ string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
 //run-time version
 string[] sourcesToFileNames(in string projectPath,
                             in string[] srcDirs,
-                            in string[] excDirs,
+                            const(string)[] excDirs,
                             in string[] srcFiles,
                             in string[] excFiles) @trusted {
 
@@ -247,13 +246,16 @@ string[] sourcesToFileNames(in string projectPath,
     import std.array: array;
     import std.traits: isCallable;
 
-    DirEntry[] files;
-    foreach(dir; srcDirs.filter!(a => !excDirs.canFind(a)).map!(a => buildPath(projectPath, a))) {
-        enforce(isDir(dir), dir ~ " is not a directory name");
-        auto entries = dirEntries(dir, SpanMode.depth);
-        auto normalised = entries.map!(a => DirEntry(buildNormalizedPath(a)));
+    excDirs = (excDirs ~ ".reggae").map!(a => buildPath(projectPath, a)).array;
 
-        files ~= normalised.array;
+    DirEntry[] files;
+    foreach(dir; srcDirs.map!(a => buildPath(projectPath, a))) {
+        enforce(isDir(dir), dir ~ " is not a directory name");
+
+        auto entries = dirEntries(dir, SpanMode.depth)
+                .map!(a => a.buildNormalizedPath)
+                .filter!(a => !excDirs.canFind!(b => a.dirName.absolutePath.startsWith(b)));
+        files ~= entries.map!(a => DirEntry(a)).array;
     }
 
     foreach(module_; srcFiles) {

@@ -39,7 +39,7 @@
                                   "tests/projects/export_proj/hello.d"
                                  ],
           "dependencies": {
-              "unit-threaded": "~>0.6.14"
+              "unit-threaded": "~>0.6.15"
           }
         }
     ]

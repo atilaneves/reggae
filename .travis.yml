@@ -26,6 +26,7 @@ install:
   - cd ..
 
 script:
+  - dub describe
   - ./bootstrap.sh make
   # the Travis CI machines don't like tup
   # installing the right ruby version in travis for D projects is a pain

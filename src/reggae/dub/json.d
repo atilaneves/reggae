@@ -66,7 +66,9 @@ private string[] jsonValueToFiles(JSONValue files) @trusted {
     import std.array;
 
     return files.array.
-        filter!(a => "type" !in a || a.byKey("type").str == "source").
+        filter!(a => ("type" in a && a.byKey("type").str == "source") ||
+                     ("role" in a && a.byKey("role").str == "source") ||
+                     ("type" !in a && "role" !in a)).
         map!(a => a.byKey("path").str).
         array;
 }

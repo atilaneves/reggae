@@ -141,7 +141,7 @@ private void writeBuild(T)(Build build, in Options options) {
 }
 
 
-private void writeCompilationDB(Build build, in Options options) {
+void writeCompilationDB(Build build, in Options options) {
     import std.file;
     import std.conv;
     import std.algorithm;
@@ -156,8 +156,8 @@ private void writeCompilationDB(Build build, in Options options) {
         return
             "    {\n" ~
             text(`        "directory": "`, cwd, `"`) ~ ",\n" ~
-            text(`        "command": "`, target.shellCommand(options), `"`) ~ ",\n" ~
-            text(`        "file": "`, target.expandOutputs(options.projectPath).join(" "), `"`) ~ "\n" ~
+            text(`        "command": "`, target.shellCommand(options).replace(`"`, `\"`), `"`) ~ ",\n" ~
+            text(`        "file": "`, target.dependenciesInProjectPath(options.projectPath).join(" "), `"`) ~ "\n" ~
             "    }";
     }
 

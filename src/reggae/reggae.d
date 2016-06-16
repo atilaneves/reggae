@@ -104,6 +104,9 @@ bool jsonBuild(Options options, in string jsonOutput) {
         auto build = jsonToBuild(options.projectPath, jsonOutput);
         doBuild(build, jsonToOptions(options, jsonOutput));
 
+        import reggae.buildgen:writeCompilationDB;
+        if(!options.noCompilationDB) writeCompilationDB(build, options);
+
         //true -> exit early
         return !build.targets.canFind!(a => a.getLanguage == Language.D);
     }

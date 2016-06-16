@@ -47,11 +47,22 @@ Build jsonToBuild(in string projectPath, in string jsonString) {
 }
 
 private auto tryJson(E)(in string jsonString, lazy E expr) {
+    import core.exception;
     try {
         return expr();
     } catch(JSONException e) {
-        throw new Exception("Wrong JSON description for:\n" ~ jsonString ~ "\n" ~ e.msg, e, e.file, e.line);
+        rethrow(jsonString, e);
+    } catch(RangeError e) {
+        import std.stdio;
+        stderr.writeln(e.toString);
+        rethrow(jsonString, e);
     }
+
+    assert(0);
+}
+
+private void rethrow(E)(in string jsonString, E e) {
+    throw new Exception("Wrong JSON description for:\n" ~ jsonString ~ "\n" ~ e.msg, e, e.file, e.line);
 }
 
 private struct Version0 {
@@ -151,10 +162,33 @@ private Command jsonToCommand(in JSONValue json) pure {
 
 
 private Target[] getDeps(in string projectPath, in JSONValue json) {
+    import core.exception;
     immutable type = json.object["type"].str.to!JsonDependencyType;
-    return type == JsonDependencyType.fixed
-        ? json.object["targets"].array.map!(a => jsonToTarget(projectPath, a)).array
-        : callDepsFunc(projectPath, json);
+
+    if(type == JsonDependencyType.fixed && "targets" in json.object && json.object["targets"].array.length == 0) {
+        return [];
+    }
+    try {
+        return type == JsonDependencyType.fixed
+            ? fixedDeps(projectPath, json)
+            : callDepsFunc(projectPath, json);
+    } catch(RangeError e) {
+        import std.stdio;
+        stderr.writeln(e.toString);
+        throw new JSONException("Could not get dependencies from JSON object" ~
+                                json.to!string);
+    } catch(JSONException e) {
+        throw new JSONException(e.msg ~ ": object was " ~ json.to!string);
+    }
+}
+
+private Target[] fixedDeps(in string projectPath, in JSONValue json) {
+    return "targets" in json.object
+           ? json.object["targets"].array.map!(a => jsonToTarget(projectPath, a)).array
+           :  [Target(json.object["outputs"].array.map!(a => a.str.dup.to!string),
+                      "",
+                      getDeps(projectPath, json.object["dependencies"]),
+                      getDeps(projectPath, json.object["implicits"]))];
 
 }
 

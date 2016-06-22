@@ -676,7 +676,7 @@ struct Command {
     }
 
     const(string)[] execute(in Options options, in Language language,
-                     in string[] outputs, in string[] inputs) const @trusted {
+                            in string[] outputs, in string[] inputs) const @trusted {
         import std.process;
 
         final switch(type) with(CommandType) {
@@ -694,7 +694,7 @@ struct Command {
 
                 immutable res = executeShell(cmd, env, config, maxOutput, options.workingDir);
                 enforce(res.status == 0, "Could not execute phony " ~ cmd ~ ":\n" ~ res.output);
-                return [cmd, res.output];
+                return [res.output];
             case code:
                 assert(function_ !is null || delegate_ !is null,
                        "Command of type code with null function");

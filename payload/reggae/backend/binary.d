@@ -225,11 +225,13 @@ private:
     }
 
     void executeCommand(Target target) @trusted {
+        output.writeln("[build] ", target.shellCommand(options));
+
         mkDir(target);
         auto targetOutput = target.execute(options);
-        output.writeln("[build] ", targetOutput[0]);
-        if(target.getCommandType == CommandType.phony && targetOutput.length > 1)
-            output.writeln("\n", targetOutput[1]);
+
+        if(target.getCommandType == CommandType.phony && targetOutput.length > 0)
+            output.writeln("\n", targetOutput[0]);
     }
 
     //@trusted because of mkdirRecurse

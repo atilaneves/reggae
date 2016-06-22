@@ -9,7 +9,7 @@ import std.file: exists;
 
 enum version_ = "0.5.4+";
 
-private Options defaultOptions;
+Options defaultOptions;
 
 enum BuildLanguage {
     D,

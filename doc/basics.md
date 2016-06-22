@@ -183,12 +183,16 @@ Some builds may always use the same command-line options, as is the case when us
 compiler for embedded development. Since it is tedious and error-prone to require users to
 always specify these options, it is possible to override defaults for a build in particular.
 In D, assign to `defaultOptions`:
-J
-    defaultOptions.cCompiler = "my_weird_cc";
+
+```d
+defaultOptions.cCompiler = "my_weird_cc";
+```
 
 In Python, use kwargs with the `DefaultOptions type`:
 
-    opts = DefaultOptions(cCompiler='my_weird_cc', ...)
+```python
+opts = DefaultOptions(cCompiler='my_weird_cc', ...)
+```
 
 
 

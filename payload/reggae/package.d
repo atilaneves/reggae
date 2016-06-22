@@ -49,6 +49,7 @@ public import reggae.core;
 
 version(minimal) {
     //only pure D builds supported
+    public import reggae.rules;
 } else {
     //include all features
     public import reggae.rules;

@@ -59,3 +59,13 @@ void testFromFile() {
     string[] noDeps;
     dependenciesFromFile(noDeps).shouldEqual([]);
 }
+
+@("multiple backslashes")
+unittest {
+    dependenciesFromFile(
+        [`foo.o: \`,
+         ` foo.c \`,
+         ` foo.h \`,
+         `bar.h`])
+        .shouldEqual(["foo.c", "foo.h", "bar.h"]);
+}

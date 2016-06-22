@@ -213,7 +213,8 @@ private:
     //Checks dependencies listed in the .dep file created by the compiler
     bool checkDeps(Target target, in string depFileName) @trusted {
         auto file = File(depFileName);
-        auto dependencies = file.byLine.map!(a => a.to!string).dependenciesFromFile;
+        auto lines = file.byLine.map!(a => a.to!string);
+        auto dependencies = dependenciesFromFile(lines);
 
         if(anyNewer(options.projectPath, dependencies, target)) {
             executeCommand(target);

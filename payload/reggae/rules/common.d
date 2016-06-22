@@ -201,6 +201,10 @@ private auto arrayify(alias func)() {
         return [ret];
 }
 
+auto sourcesToTargets(alias sourcesFunc = Sources!())() {
+    return sourcesToFileNames!sourcesFunc.map!(a => Target(a));
+}
+
 string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
     import std.exception: enforce;
     import std.file;

@@ -5,8 +5,16 @@ import std.range;
 
 
 string[] dependenciesFromFile(R)(R lines) if(isInputRange!R) {
-    auto arr = lines.array;
-    return arr.length < 2 ? [] : arr[1].split(" ");
+    if(lines.empty) return [];
+    import std.algorithm: map, filter, find;
+    import std.string: strip, split;
+    return lines
+        .map!(a => a.replace(`\`, ``).strip)
+        .join(" ")
+        .find(":")
+        .split(" ")
+        .filter!(a => a != "")
+        .array[1..$];
 }
 
 

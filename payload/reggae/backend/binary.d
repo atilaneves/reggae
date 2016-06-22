@@ -98,21 +98,12 @@ struct BinaryT(T) {
         if(topTargets.empty)
             throw new Exception(text("Unknown target(s) ", binaryOptions.args.map!(a => "'" ~ a ~ "'").join(" ")));
 
-        foreach(topTarget; topTargets) {
+        if(binaryOptions.singleThreaded)
+            didAnything = mainLoop(topTargets, binaryOptions, didAnything);
+        else
+            didAnything = mainLoop(topTargets.parallel, binaryOptions, didAnything);
 
-            immutable didPhony = checkChildlessPhony(topTarget);
-            didAnything = didPhony || didAnything;
-            if(didPhony) continue;
 
-            foreach(level; ByDepthLevel(topTarget)) {
-                if(binaryOptions.singleThreaded)
-                    foreach(target; level)
-                        handleTarget(target, didAnything);
-                else
-                    foreach(target; level.parallel)
-                        handleTarget(target, didAnything);
-            }
-        }
         if(!didAnything) output.writeln("[build] Nothing to do");
     }
 
@@ -136,6 +127,25 @@ struct BinaryT(T) {
 
 
 private:
+
+    bool mainLoop(R)(R topTargets_, in BinaryOptions binaryOptions, bool didAnything) @system {
+        foreach(topTarget; topTargets_) {
+
+            immutable didPhony = checkChildlessPhony(topTarget);
+            didAnything = didPhony || didAnything;
+            if(didPhony) continue;
+
+            foreach(level; ByDepthLevel(topTarget)) {
+                if(binaryOptions.singleThreaded)
+                    foreach(target; level)
+                        handleTarget(target, didAnything);
+                else
+                    foreach(target; level.parallel)
+                        handleTarget(target, didAnything);
+            }
+        }
+        return didAnything;
+    }
 
     void handleTarget(Target target, ref bool didAnything) {
         const outs = target.expandOutputs(options.projectPath);

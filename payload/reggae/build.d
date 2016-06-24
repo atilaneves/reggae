@@ -384,8 +384,10 @@ struct Target {
         return _command.paramNames;
     }
 
-    static Target phony(string name, string shellCommand,
-                        Target[] dependencies = [], Target[] implicits = []) @safe pure {
+    private enum Target[] emptyTargets = [];
+
+    static Target phony(D, I)(string name, string shellCommand,
+                              D dependencies = emptyTargets, I implicits = emptyTargets) @safe pure {
         return Target(name, Command.phony(shellCommand), dependencies, implicits);
     }
 

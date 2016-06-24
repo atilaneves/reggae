@@ -38,7 +38,7 @@ struct Build {
         _targets = targets.map!createTopLevelTarget.array;
     }
 
-    this(TopLevelTarget[] targets) {
+    this(R)(R targets) if(isInputRange!R && is(Unqual!(ElementType!R) == TopLevelTarget)) {
         _targets = targets;
     }
 

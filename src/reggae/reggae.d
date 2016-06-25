@@ -269,17 +269,16 @@ private string compileBinaries(T)(T output, in Options options) {
 }
 
 void buildDCompile(T)(T output, in Options options) {
-    immutable name = "dcompile";
-
-    if(!thisExePath.newerThan(name)) return;
+    if(!thisExePath.newerThan(buildPath(options.workingDir, hiddenDir, "dcompile")))
+        return;
 
     immutable cmd = ["dmd",
                      "-Isrc",
-                     "-of" ~ name,
+                     "-ofdcompile",
                      buildPath(options.workingDir, hiddenDir, reggaeSrcRelDirName, "dcompile.d"),
                      buildPath(options.workingDir, hiddenDir, reggaeSrcRelDirName, "dependencies.d")];
 
-    buildBinary(output, options, Binary(name, cmd));
+    buildBinary(output, options, Binary("dcompile", cmd));
 }
 
 private bool isExecutable(in char[] path) @trusted nothrow @nogc //TODO: @safe

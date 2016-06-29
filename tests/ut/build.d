@@ -288,7 +288,7 @@ unittest {
 @("optional targets should also sandbox their dependencies") unittest {
     auto med = Target("med", "medcmd -o $out $in", Target("input"));
     auto tgt = Target("output", "cmd -o $out $in", med);
-    auto build = Build(tgt);
+    auto build = Build(optional(tgt));
     build.targets.shouldEqual(
         [Target("output",
                 "cmd -o $out $in",

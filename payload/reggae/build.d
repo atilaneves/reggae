@@ -98,15 +98,14 @@ struct Build {
  "Compile-time" version that can be aliased
  */
 Build.TopLevelTarget optional(alias targetFunc)() {
-    auto target = targetFunc();
-    return createTopLevelTarget(target, true);
+    return optional(targetFunc());
 }
 
 /**
  Designate a target as optional so it won't be built by default.
  */
 Build.TopLevelTarget optional(Target target) {
-    return Build.TopLevelTarget(target, true);
+    return createTopLevelTarget(target, true);
 }
 
 Build.TopLevelTarget createTopLevelTarget(Target target, bool optional = false) {

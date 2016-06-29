@@ -244,6 +244,11 @@ private static auto arrayify(E, T)(T value) {
     else static if(is(Unqual!T == void[])) {
         E[] nothing;
         return nothing;
+    } else static if(is(Unqual!T == string))
+        return [E(value)];
+    else {
+        import std.conv: text;
+        static assert(false, text("Can not arraify value of type ", T.stringof));
     }
 }
 

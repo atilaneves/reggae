@@ -283,3 +283,16 @@ unittest {
         "$(DC) -offoo -c foo.d\n"
         );
 }
+
+
+@("optional targets should also sandbox their dependencies") unittest {
+    auto med = Target("med", "medcmd -o $out $in", Target("input"));
+    auto tgt = Target("output", "cmd -o $out $in", med);
+    auto build = Build(tgt);
+    build.targets.shouldEqual(
+        [Target("output",
+                "cmd -o $out $in",
+                Target("objs/output.objs/med",
+                       "medcmd -o $out $in",
+                       "input"))]);
+}

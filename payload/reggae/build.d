@@ -39,7 +39,7 @@ struct Build {
     }
 
     this(R)(R targets) if(isInputRange!R && is(Unqual!(ElementType!R) == TopLevelTarget)) {
-        _targets = targets;
+        _targets = targets.array;
     }
 
     this(T...)(T targets) {

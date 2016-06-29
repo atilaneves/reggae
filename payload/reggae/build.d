@@ -388,11 +388,8 @@ struct Target {
         return _command.paramNames;
     }
 
-    private enum Target[] emptyTargets = [];
-
-    static Target phony(D, I)(string name, string shellCommand,
-                              D dependencies = emptyTargets, I implicits = emptyTargets) @safe pure {
-        return Target(name, Command.phony(shellCommand), dependencies, implicits);
+    static Target phony(T...)(string name, string shellCommand, T args) {
+        return Target(name, Command.phony(shellCommand), args);
     }
 
     string toString(in Options options) nothrow const {

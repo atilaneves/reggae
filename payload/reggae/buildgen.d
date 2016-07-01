@@ -153,10 +153,17 @@ void writeCompilationDB(Build build, in Options options) {
 
     immutable cwd = getcwd;
     string entry(Target target) {
+        auto command = target
+            .shellCommand(options)
+            .replace(`"`, `\"`)
+            .split(" ")
+            .map!(a => a.startsWith("objs/") ? buildPath(options.workingDir, a) : a)
+            .join(" ")
+        ;
         return
             "    {\n" ~
             text(`        "directory": "`, cwd, `"`) ~ ",\n" ~
-            text(`        "command": "`, target.shellCommand(options).replace(`"`, `\"`), `"`) ~ ",\n" ~
+            text(`        "command": "`, command, `"`) ~ ",\n" ~
             text(`        "file": "`, target.dependenciesInProjectPath(options.projectPath).join(" "), `"`) ~ "\n" ~
             "    }";
     }

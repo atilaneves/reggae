@@ -55,7 +55,7 @@ void testCppCompile() {
 
     import reggae.config: gDefaultOptions;
     mathsObj.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
-        "g++ -m64 -fPIC -O3 -I/path/to/headers -MMD -MT src/cpp/maths.o -MF src/cpp/maths.o.dep "
+        "g++ -m64 -fPIC -O3 -I/path/to/headers -MMD -MT src/cpp/maths.o -MF src/cpp/maths.o.dep " ~
         "-o src/cpp/maths.o -c /path/to/src/cpp/maths.cpp");
 }
 
@@ -65,7 +65,7 @@ void testCCompile() {
                                 IncludePaths(["headers"]));
 
     mathsObj.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
-        "gcc -m64 -fPIC -O3 -I/path/to/headers -MMD -MT src/c/maths.o -MF src/c/maths.o.dep "
+        "gcc -m64 -fPIC -O3 -I/path/to/headers -MMD -MT src/c/maths.o -MF src/c/maths.o.dep " ~
         "-o src/c/maths.o -c /path/to/src/c/maths.c");
 }
 
@@ -109,7 +109,7 @@ void testUnityDFiles() {
 }
 
 
-void testUnityTargetCpp() @safe {
+void testUnityTargetCpp() @trusted {
     import reggae.config: gDefaultOptions;
 
     enum files = ["src/foo.cpp", "src/bar.cpp", "src/baz.cpp"];
@@ -137,7 +137,7 @@ void testUnityTargetCpp() @safe {
                                           Target("$builddir/mylib.a")]);
 }
 
-void testUnityTargetC() @safe {
+void testUnityTargetC() @trusted {
     import reggae.config: gDefaultOptions;
 
     enum files = ["src/foo.c", "src/bar.c", "src/baz.c"];

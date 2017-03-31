@@ -76,7 +76,7 @@ struct BinaryT(T) {
         version(unittest) {
             static if(is(T == File)) {
                 assert(&output != &stdout,
-                       "stdio not allowed for Binary output in testing, "
+                       "stdio not allowed for Binary output in testing, " ~
                        "use tests.utils.FakeFile instead");
             }
         }

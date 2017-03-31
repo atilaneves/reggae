@@ -250,9 +250,15 @@ string[] buildCmdShouldRunOk(alias module_ = __MODULE__)(in Options options,
                                                          ulong line = __LINE__ ) {
     import tests.utils;
     auto cmdArgs = buildCmd(options, args);
+
+    string[] doTheBuild() {
+        doBuildFor!module_(options, cmdArgs);
+        return [];
+    }
+
     // the binary backend in the tests isn't a separate executable, but make, ninja and tup are
     return options.backend == Backend.binary
-        ? (doBuildFor!module_(options, cmdArgs), cast(string[])[])
+        ? doTheBuild
         : cmdArgs.shouldExecuteOk(options.workingDir, file, line);
 }
 

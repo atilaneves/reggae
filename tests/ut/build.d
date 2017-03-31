@@ -268,18 +268,18 @@ void testBuildWithOneDepInBuildDir() {
 
 @("Replace concrete compiler with variables")
 unittest {
-    immutable str = "\n"
-        "clang -o foo -c foo.c\n"
-        "clang++ -o foo -c foo.cpp\n"
+    immutable str = "\n" ~
+        "clang -o foo -c foo.c\n" ~
+        "clang++ -o foo -c foo.cpp\n" ~
         "ldmd -offoo -c foo.d\n";
     auto opts = Options();
     opts.cCompiler = "clang";
     opts.cppCompiler = "clang++";
     opts.dCompiler = "ldmd";
     str.replaceConcreteCompilersWithVars(opts).shouldEqual(
-        "\n"
-        "$(CC) -o foo -c foo.c\n"
-        "$(CXX) -o foo -c foo.cpp\n"
+        "\n" ~
+        "$(CC) -o foo -c foo.c\n" ~
+        "$(CXX) -o foo -c foo.cpp\n" ~
         "$(DC) -offoo -c foo.d\n"
         );
 }

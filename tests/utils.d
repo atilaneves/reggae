@@ -68,7 +68,8 @@ void shouldFailToExecute(string[] args, string workDir = getcwd(),
 struct FakeFile {
     string[] lines;
     void writeln(T...)(T args) {
-        import std.conv;
-        lines ~= text(args);
+        import std.conv: text;
+        static if(T.length > 0)
+            lines ~= text(args);
     }
 }

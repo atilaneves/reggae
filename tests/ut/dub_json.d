@@ -8,70 +8,70 @@ import std.string;
 
 
 immutable jsonString =
-    `WARNING: A deprecated branch based version specification is used for the dependency unit-threaded. Please use numbered versions instead. Also note that you can still use the dub.selections.json file to override a certain dependency to use a branch instead.`
-    `{`
-    `  "packages": [`
-    `    {`
-    `      "targetType": "executable",`
-    `      "path": "/path/to/pkg1",`
-    `      "name": "pkg1",`
-    `      "mainSourceFile": "src/boooo.d",`
-    `      "targetFileName": "super_app",`
-    `      "dflags": [],`
-    `      "versions": ["v1", "v2"],`
-    `      "dependencies": ["pkg_other"],`
-    `      "importPaths": ["leimports"],`
-    `      "stringImportPaths": [`
-    `        "src/string_imports",`
-    `        "src/moar_stringies"`
-    `      ],`
-    `      "active": true,`
-    `      "preBuildCommands": ["dub run dtest"],`
-    `      "files": [`
-    `        {`
-    `          "path": "src/foo.d",`
-    `          "type": "source"`
-    `        },`
-    `        {`
-    `          "path": "src/bar.d",`
-    `          "type": "source"`
-    `        },`
-    `        {`
-    `          "path": "src/boooo.d",`
-    `          "type": "source"`
-    `        }`
-    `      ]`
-    `    },`
-    `    {`
-    `      "path": "/weird/path/pkg_other",`
-    `      "name": "pkg_other",`
-    `      "importPaths": [`
-    `        "my_imports",`
-    `        "moar_imports"`
-    `      ],`
-    `      "dflags": [`
-    `        "-g", "-debug"`
-    `      ],`
-    `      "libs": ["liblib", "otherlib"],`
-    `      "versions": ["v3", "v4"],`
-    `      "stringImportPaths": [],`
-    `      "active": true,`
-    `      "files": [`
-    `        {`
-    `          "path": "source/toto.d",`
-    `          "type": "source"`
-    `        },`
-    `        {`
-    `          "path": "source/africa.d",`
-    `          "type": "source"`
-    `        },`
-    `        {`
-    `          "path": "source/africa.d",`
-    `          "type": "weirdo"`
-    `        }`
-    `      ]`
-    `    }`
-    `  ]`
+    `WARNING: A deprecated branch based version specification is used for the dependency unit-threaded. Please use numbered versions instead. Also note that you can still use the dub.selections.json file to override a certain dependency to use a branch instead.` ~
+    `{` ~
+    `  "packages": [` ~
+    `    {` ~
+    `      "targetType": "executable",` ~
+    `      "path": "/path/to/pkg1",` ~
+    `      "name": "pkg1",` ~
+    `      "mainSourceFile": "src/boooo.d",` ~
+    `      "targetFileName": "super_app",` ~
+    `      "dflags": [],` ~
+    `      "versions": ["v1", "v2"],` ~
+    `      "dependencies": ["pkg_other"],` ~
+    `      "importPaths": ["leimports"],` ~
+    `      "stringImportPaths": [` ~
+    `        "src/string_imports",` ~
+    `        "src/moar_stringies"` ~
+    `      ],` ~
+    `      "active": true,` ~
+    `      "preBuildCommands": ["dub run dtest"],` ~
+    `      "files": [` ~
+    `        {` ~
+    `          "path": "src/foo.d",` ~
+    `          "type": "source"` ~
+    `        },` ~
+    `        {` ~
+    `          "path": "src/bar.d",` ~
+    `          "type": "source"` ~
+    `        },` ~
+    `        {` ~
+    `          "path": "src/boooo.d",` ~
+    `          "type": "source"` ~
+    `        }` ~
+    `      ]` ~
+    `    },` ~
+    `    {` ~
+    `      "path": "/weird/path/pkg_other",` ~
+    `      "name": "pkg_other",` ~
+    `      "importPaths": [` ~
+    `        "my_imports",` ~
+    `        "moar_imports"` ~
+    `      ],` ~
+    `      "dflags": [` ~
+    `        "-g", "-debug"` ~
+    `      ],` ~
+    `      "libs": ["liblib", "otherlib"],` ~
+    `      "versions": ["v3", "v4"],` ~
+    `      "stringImportPaths": [],` ~
+    `      "active": true,` ~
+    `      "files": [` ~
+    `        {` ~
+    `          "path": "source/toto.d",` ~
+    `          "type": "source"` ~
+    `        },` ~
+    `        {` ~
+    `          "path": "source/africa.d",` ~
+    `          "type": "source"` ~
+    `        },` ~
+    `        {` ~
+    `          "path": "source/africa.d",` ~
+    `          "type": "weirdo"` ~
+    `        }` ~
+    `      ]` ~
+    `    }` ~
+    `  ]` ~
     `}`;
 
 

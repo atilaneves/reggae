@@ -9,7 +9,7 @@ import std.algorithm;
     import std.file;
     import std.string;
 
-    auto options = testProjectOptions("binary", "unity");
+    auto options = _testProjectOptions("binary", "unity");
     string[] noFlags;
 
     getBuildObject!"unity.reggaefile"(options).shouldEqual(

@@ -12,7 +12,7 @@ import std.stdio: File;
 
 @("C++ files with template objectFiles") unittest {
     import reggae.buildgen;
-    auto options = testProjectOptions("binary", "template_rules");
+    auto options = _testProjectOptions("binary", "template_rules");
     string[] flags;
 
     getBuildObject!"template_rules.reggaefile"(options).shouldEqual(

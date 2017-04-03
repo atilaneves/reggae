@@ -26,7 +26,7 @@ private void doBuild(string module_)(in string reggaefileName, ref Options optio
 @Values("ninja", "make", "binary")
 @Tags("travis_oops")
 unittest {
-    auto options = testProjectOptions(project);
+    auto options = _testProjectOptions(project);
 
     enum module_ = "multiple_outputs.reggaefile_sep";
     doBuild!module_("reggaefile_sep.d", options);
@@ -45,7 +45,7 @@ unittest {
 @Values("ninja", "make", "binary")
 @Tags("travis_oops")
 unittest {
-    auto options = testProjectOptions(project);
+    auto options = _testProjectOptions(project);
 
     enum module_ = "multiple_outputs.reggaefile_tog";
     doBuild!module_("reggaefile_tog.d", options);

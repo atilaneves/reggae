@@ -4,7 +4,7 @@ import tests.it;
 
 @("template") unittest {
     import reggae.buildgen;
-    auto options = testProjectOptions("binary", "static_lib");
+    auto options = _testProjectOptions("binary", "static_lib");
     string[] noFlags;
 
     getBuildObject!"static_lib.reggaefile"(options).shouldEqual(

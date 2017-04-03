@@ -11,7 +11,7 @@ private string projectToModule(in string project) {
 
 void generateBuild(string project)(string[] args = []) {
     enum module_ = projectToModule(project);
-    auto options = testProjectOptions!module_;
+    auto options = _testProjectOptions!module_;
     prepareTestBuild!module_(options);
 
     // backend doesn't need to generate anything

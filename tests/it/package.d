@@ -122,22 +122,22 @@ Options testOptions(string[] args) {
     return options;
 }
 
-Options testProjectOptions(in string backend, in string projectName) {
+Options _testProjectOptions(in string backend, in string projectName) {
     return testOptions(["-b", backend, projectPath(projectName)]);
 }
 
-Options testProjectOptions(in string projectName) {
+Options _testProjectOptions(in string projectName) {
     return testOptions(["-b", getValue!string, projectPath(projectName)]);
 }
 
-Options testProjectOptions(string module_)() {
+Options _testProjectOptions(string module_)() {
     import std.string;
-    return testProjectOptions(module_.split(".")[0]);
+    return _testProjectOptions(module_.split(".")[0]);
 }
 
-Options testProjectOptions(string module_)(string backend) {
+Options _testProjectOptions(string module_)(string backend) {
     import std.string;
-    return testProjectOptions(backend, module_.split(".")[0]);
+    return _testProjectOptions(backend, module_.split(".")[0]);
 }
 
 

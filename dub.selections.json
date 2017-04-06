@@ -1,6 +1,6 @@
 {
 	"fileVersion": 1,
 	"versions": {
-		"unit-threaded": {"path":"../unit-threaded"}
+		"unit-threaded": "0.7.11"
 	}
 }

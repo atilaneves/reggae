@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+set -euo pipefail
+
 #1st parameter is the backend to use (e.g. make, ninja)
 
 if [ "$1" != "" ]; then
@@ -11,7 +14,10 @@ COMP=${DMD:="dmd"}
 
 rm -rf bin
 
-$DMD -ofbin/reggae -Isrc -Ipayload -Jpayload/reggae src/reggae/*.d src/reggae/dub/*.d payload/reggae/backend/*.d payload/reggae/{options,reflect,config,build,types,sorting,dependencies,range,buildgen,package,ctaa,file}.d payload/reggae/rules/*.d payload/reggae/core/*.d payload/reggae/core/rules/*.d payload/reggae/dub/info.d
-cd bin
+echo "Compiling reggae"
+$COMP -ofbin/reggae -Isrc -Ipayload -Jpayload/reggae src/reggae/*.d src/reggae/dub/*.d payload/reggae/backend/*.d payload/reggae/{options,reflect,config,build,types,sorting,dependencies,range,buildgen,package,ctaa,file}.d payload/reggae/rules/*.d payload/reggae/core/*.d payload/reggae/core/rules/*.d payload/reggae/dub/info.d
+
+cd bin || exit 1
+echo "Running boostrapped reggae with backend $BACKEND"
 ./reggae -b $BACKEND ..
 $BACKEND

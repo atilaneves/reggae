@@ -39,7 +39,7 @@
                                   "tests/projects/export_proj/hello.d"
                                  ],
           "dependencies": {
-              "unit-threaded": {"path": "/home/atila/coding/d/unit-threaded"}
+              "unit-threaded": "~>0.7.11"
           }
         }
     ]

@@ -19,7 +19,7 @@ shared static this() {
     origPath = paths.front.absolutePath;
 
     if(testsPath.exists) {
-        writeln("[IT] Removing old test path");
+        writelnUt("[IT] Removing old test path ", testsPath);
         foreach(entry; dirEntries(testsPath, SpanMode.shallow)) {
             if(isDir(entry.name)) {
                 rmdirRecurse(entry);
@@ -27,7 +27,7 @@ shared static this() {
         }
     }
 
-    writeln("[IT] Creating new test path");
+    writelnUt("[IT] Creating new test path ", testsPath);
     mkdirRecurse(testsPath);
 
     buildDCompile();
@@ -41,12 +41,16 @@ private void buildDCompile() {
     import std.array;
     import std.stdio: writeln;
     import std.algorithm: any;
+    import std.file: exists;
     import reggae.file;
 
     enum fileNames = ["dcompile.d", "dependencies.d"];
 
-    immutable needToRecompile = fileNames.
-        any!(a => buildPath(origPath, "payload", "reggae", a).newerThan(buildPath(testsPath, a)));
+    immutable needToRecompile =
+        !"dcompile".exists ||
+        fileNames.
+        any!(a => buildPath(origPath, "payload", "reggae", a).
+        newerThan(buildPath(testsPath, a)));
 
     if(!needToRecompile)
         return;

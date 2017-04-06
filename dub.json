@@ -16,6 +16,8 @@
         { "name": "executable" },
         { "name": "unittest",
           "targetType": "executable",
+          "targetName": "ut",
+          "targetPath": "bin",
           "sourcePaths": ["tests", "payload"],
           "preBuildCommands": ["dub run unit-threaded -c gen_ut_main -- -f bin/ut.d tests/ut tests/it"],
           "mainSourceFile": "bin/ut.d",

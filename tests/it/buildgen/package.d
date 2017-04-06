@@ -14,7 +14,7 @@ void generateBuild(string project)(string[] args = []) {
     auto options = _testProjectOptions!module_;
     prepareTestBuild!module_(options);
 
-    // backend doesn't need to generate anything
+    // binary backend doesn't need to generate anything
     if(options.backend != Backend.binary) {
         auto cmdArgs = buildCmd(options, args);
         doBuildFor!module_(options, cmdArgs);

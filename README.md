@@ -140,7 +140,7 @@ unittest binaries concurrently is this:
 
 ```d
 import reggae;
-alias main = dubDefaultTarget!("-g -debug");
+alias main = dubDefaultTarget!(Flags("-g -debug"));
 alias ut = dubConfigurationTarget!(ExeName("ut"), Configuration("unittest"));
 mixin build!(main, ut);
 ```

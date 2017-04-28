@@ -26,6 +26,7 @@ void maybeCreateReggaefile(in Options options) {
     }
 }
 
+// default build for a dub project when there is no reggaefile
 void createReggaefile(in Options options) {
     import std.path;
     writeln("[Reggae] Creating reggaefile.d from dub information");

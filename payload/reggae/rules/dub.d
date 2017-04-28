@@ -46,6 +46,8 @@ static if(isDubProject) {
         const hasMain = configToDubInfo[config].packages[0].mainSourceFile != "";
         if(!hasMain) actualCompilerFlags ~= " -main";
 
+        // since dmd has a bug pertaining to separate compilation and __traits(getUnitTests),
+        // we default here to compiling all-at-once for the unittest build
         return dubTarget!()(ExeName("ut"), config, actualCompilerFlags, Yes.main, Yes.allTogether);
     }
 

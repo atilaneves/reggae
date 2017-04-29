@@ -1,4 +1,5 @@
 language: d
+dist: trusty
 sudo: false
 install:
   - gem install bundler

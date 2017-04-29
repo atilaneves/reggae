@@ -32,10 +32,12 @@ static if(isDubProject) {
                                   Configuration config = Configuration("default"),
                                   Flags compilerFlags = Flags(),
                                   Flag!"main" includeMain = Yes.main,
+                                  Flag!"allTogether" allTogether = No.allTogether,
                                   alias objsFunction = () { Target[] t; return t; },
-        )() if(isCallable!objsFunction) {
+                                  )
+        () if(isCallable!objsFunction) {
 
-        return dubTarget!(objsFunction)(exeName, config.value, compilerFlags.value, includeMain);
+        return dubTarget!(objsFunction)(exeName, config.value, compilerFlags.value, includeMain, allTogether);
     }
 
     Target dubTestTarget(Flags compilerFlags = Flags())() {

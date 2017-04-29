@@ -32,12 +32,19 @@ struct DubPackage {
 }
 
 struct DubInfo {
+
     DubPackage[] packages;
 
     Target[] toTargets(Flag!"main" includeMain = Yes.main,
                        in string compilerFlags = "",
                        Flag!"allTogether" allTogether = No.allTogether) @safe const {
         Target[] targets;
+
+        // -unittest should only apply to the main package
+        string deUnitTest(T)(in T index, in string flags) {
+            import std.string: replace;
+            return index == 0 ? flags : flags.replace("-unittest", "");
+        }
 
         foreach(const i, const dubPackage; packages) {
             const importPaths = allImportPaths();
@@ -47,7 +54,7 @@ struct DubInfo {
             //package
             const projDir = i == 0 ? "" : dubPackage.path;
 
-            immutable flags = chain(dubPackage.flags, versions, [options.dflags], [compilerFlags]).join(" ");
+            immutable flags = chain(dubPackage.flags, versions, [options.dflags], [deUnitTest(i, compilerFlags)]).join(" ");
 
             const files = dubPackage.files.
                 filter!(a => includeMain || a != dubPackage.mainSourceFile).

@@ -94,6 +94,41 @@ void testJsonToDubDescribe() {
                         "", ["v3", "v4"], [], ["liblib", "otherlib"], true)]));
 }
 
+@("DubInfo.toTargets with -unittest")
+unittest {
+    import reggae.config: setOptions;
+    import reggae.options: getOptions;
+    setOptions(getOptions(["reggae", "--per_module", "/tmp/proj"]));
+
+    auto info = getDubInfo(jsonString.dup);
+    info.toTargets(Yes.main, "-unittest")[0].shouldEqual(
+        Target("path/to/pkg1/src/foo.o",
+               Command(CommandType.compile,
+                       assocListT("includes", ["-I/path/to/pkg1/leimports",
+                                               "-I/weird/path/pkg_other/my_imports",
+                                               "-I/weird/path/pkg_other/moar_imports",
+                                               "-I/tmp/proj"],
+                                  "flags", ["-version=v1", "-version=v2", "-version=v3", "-version=v4", "-unittest"],
+                                  "stringImports", ["-J/path/to/pkg1/src/string_imports",
+                                                    "-J/path/to/pkg1/src/moar_stringies"],
+                                  "DEPFILE", ["path/to/pkg1/src/foo.o.dep"])),
+               Target("/path/to/pkg1/src/foo.d")),
+    );
+
+    info.toTargets(Yes.main, "-unittest")[3].shouldEqual(
+        Target("weird/path/pkg_other/source/toto.o",
+               Command(CommandType.compile,
+                       assocListT("includes", ["-I/path/to/pkg1/leimports",
+                                               "-I/weird/path/pkg_other/my_imports",
+                                               "-I/weird/path/pkg_other/moar_imports",
+                                               "-I/tmp/proj"],
+                                  "flags", ["-g", "-debug", "-version=v3", "-version=v4"],
+                                  "stringImports", cast(string[])[],
+                                  "DEPFILE", ["weird/path/pkg_other/source/toto.o.dep"])),
+               Target("/weird/path/pkg_other/source/toto.d")),
+    );
+}
+
 void testDubInfoToTargets() {
     import reggae.config: setOptions;
     import reggae.options: getOptions;

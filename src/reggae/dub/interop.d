@@ -46,7 +46,7 @@ private DubInfo _getDubInfo(in Options options) {
         gDubInfos = null;
 
     if("default" !in gDubInfos) {
-        immutable dubBuildArgs = ["dub", "--annotate", "build", "--compiler=dmd", "--print-configs"];
+        immutable dubBuildArgs = ["dub", "--annotate", "build", "--compiler=dmd", "--print-configs", "--build=docs"];
         immutable dubBuildOutput = callDub(options, dubBuildArgs);
         immutable configs = getConfigurations(dubBuildOutput);
 
@@ -119,15 +119,30 @@ private void dubFetch(in Options options) {
     }
 }
 
+enum TargetType {
+    executable,
+    library,
+    staticLibrary,
+    sourceLibrary,
+}
+
 
 void writeDubConfig(in Options options, File file) {
+    import std.conv: to;
+
     file.writeln("import reggae.dub.info;");
+
     if(options.isDubProject) {
+
         file.writeln("enum isDubProject = true;");
         auto dubInfo = _getDubInfo(options);
-        immutable targetType = dubInfo.packages[0].targetType;
-        enforce(targetType == "executable" || targetType == "library" || targetType == "staticLibrary",
-                text("Unsupported dub targetType '", targetType, "'"));
+        const targetType = dubInfo.packages[0].targetType;
+
+        try {
+            targetType.to!TargetType;
+        } catch(Exception ex) {
+            throw new Exception(text("Unsupported dub targetType '", targetType, "'"));
+        }
 
         file.writeln(`const configToDubInfo = assocList([`);
 

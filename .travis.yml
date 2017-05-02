@@ -9,7 +9,7 @@ install:
   - ./configure.py --bootstrap
   - export PATH=$PWD:$PATH
   - cd ..
-  - dub fetch unit-threaded --version=0.7.20
+  - dub fetch unit-threaded
   - dub fetch unit-threaded --version=0.7.11
   - dub fetch unit-threaded --version=0.7.8
   - dub fetch cerealed --version=0.6.8

@@ -86,10 +86,6 @@ struct DubInfo {
         return allLibs.map!(a => "-L-l" ~ a).array;
     }
 
-    string[] mainTargetImportPaths() @trusted nothrow const {
-        return packages[0].allOf!(a => a.packagePaths(a.importPaths))(packages);
-    }
-
     string[][] fetchCommands() @safe pure nothrow const {
         return packages[0].dependencies.map!(a => ["dub", "fetch", a]).array;
     }

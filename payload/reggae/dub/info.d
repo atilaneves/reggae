@@ -69,16 +69,18 @@ struct DubInfo {
         return targets;
     }
 
-    //@trusted: array
-    Target mainTarget(string compilerFlags = "") @trusted const {
-        const pack = packages[0];
-        string[] mainLinkerFlags;
-        mainLinkerFlags ~= (pack.targetType == "library" || pack.targetType == "staticLibrary") ? ["-lib"] : [];
-        mainLinkerFlags ~= linkerFlags();
+    ExeName exeName() @safe const pure nothrow {
+        return ExeName(packages[0].targetFileName);
+    }
 
-        return link(ExeName(packages[0].targetFileName),
-                    toTargets(Yes.main, compilerFlags),
-                    Flags(mainLinkerFlags.join(" ")));
+    Flags mainLinkerFlags() @safe pure nothrow const {
+        import std.array: join;
+
+        const pack = packages[0];
+        string[] flags;
+        flags ~= (pack.targetType == "library" || pack.targetType == "staticLibrary") ? ["-lib"] : [];
+        flags ~= linkerFlags();
+        return Flags(flags.join(" "));
     }
 
     string[] linkerFlags() @safe const pure nothrow {

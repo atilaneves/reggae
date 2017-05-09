@@ -21,9 +21,19 @@ static if(isDubProject) {
      Builds the main dub target (equivalent of "dub build")
     */
     Target dubDefaultTarget(Flags compilerFlags = Flags())() {
-        return configToDubInfo["default"].mainTarget(compilerFlags.value);
+        enum config = "default";
+        enum exeName = configToDubInfo[config].exeName;
+        enum linkerFlags = configToDubInfo[config].mainLinkerFlags;
+        return dubTarget!(() { Target[] t; return t;})
+            (
+                exeName,
+                config,
+                compilerFlags.value,
+                Yes.main,
+                No.allTogether,
+                linkerFlags
+            );
     }
-
 
     /**
      Builds a particular dub configuration (executable, unittest, etc.)
@@ -60,13 +70,27 @@ static if(isDubProject) {
                              Flag!"main" includeMain = Yes.main,
                              Flag!"allTogether" allTogether = No.allTogether) {
 
-        import std.array;
+        import std.array: join;
+
+        const dubInfo =  configToDubInfo[config];
+        const linkerFlags = Flags(dubInfo.linkerFlags().join(" "));
+        return dubTarget!(objsFunction)(exeName, config, compilerFlags, includeMain, allTogether, linkerFlags);
+    }
+
+    private Target dubTarget(alias objsFunction = () { Target[] t; return t;})
+                            (in ExeName exeName,
+                             in string config,
+                             in string compilerFlags,
+                             Flag!"main" includeMain,
+                             Flag!"allTogether" allTogether,
+                             Flags linkerFlags) {
+
 
         auto dubInfo =  configToDubInfo[config];
         auto dubObjs = dubInfo.toTargets(includeMain, compilerFlags, allTogether);
-        auto linkerFlags = dubInfo.linkerFlags().join(" ");
-        return link(exeName, objsFunction() ~ dubObjs, Flags(linkerFlags));
+        return link(exeName, objsFunction() ~ dubObjs, linkerFlags);
     }
+
 
     /**
      All object files from a particular dub configuration (executable, unittest, etc.)

@@ -43,7 +43,9 @@ struct DubInfo {
         // -unittest should only apply to the main package
         string deUnitTest(T)(in T index, in string flags) {
             import std.string: replace;
-            return index == 0 ? flags : flags.replace("-unittest", "");
+            return index == 0
+                ? flags
+                : flags.replace("-unittest", "").replace("-main", "");
         }
 
         foreach(const i, const dubPackage; packages) {

@@ -67,10 +67,10 @@ unittest {
     build.shouldEqual(Build(Target("project/source/main.o",
                                    compileCommand("/project/source/main.d"),
                                    Target("/project/source/main.d")),
-                            Target("project/../../common/source/foo.o",
+                            Target("project/__/__/common/source/foo.o",
                                    compileCommand("/project/../../common/source/foo.d"),
                                    Target("/project/../../common/source/foo.d")),
-                            Target("project/../../common/source/bar.o",
+                            Target("project/__/__/common/source/bar.o",
                                    compileCommand("/project/../../common/source/bar.d"),
                                    Target("/project/../../common/source/bar.d")),
                           ));

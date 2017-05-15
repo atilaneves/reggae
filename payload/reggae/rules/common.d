@@ -338,10 +338,12 @@ version(Windows) {
 
 package string objFileName(in string srcFileName) pure {
     import std.path: stripExtension, defaultExtension, isRooted, stripDrive;
+    import std.array: replace;
+
     immutable localFileName = srcFileName.isRooted
         ? srcFileName.stripDrive[1..$]
         : srcFileName;
-    return localFileName.stripExtension.defaultExtension(objExt);
+    return localFileName.stripExtension.defaultExtension(objExt).replace("..", "__");
 }
 
 string removeProjectPath(in string path) {

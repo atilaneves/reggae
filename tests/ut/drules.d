@@ -58,6 +58,24 @@ unittest {
                           ));
 }
 
+@("dlangPackageObjectFilesPerPackage ..")
+unittest {
+    auto build = Build(dlangPackageObjectFilesPerModule(["/project/source/main.d",
+                                                         "/project/../../common/source/foo.d",
+                                                         "/project/../../common/source/bar.d",
+                                                         ]));
+    build.shouldEqual(Build(Target("project/source/main.o",
+                                   compileCommand("/project/source/main.d"),
+                                   Target("/project/source/main.d")),
+                            Target("project/__/__/common/source/foo.o",
+                                   compileCommand("/project/../../common/source/foo.d"),
+                                   Target("/project/../../common/source/foo.d")),
+                            Target("project/__/__/common/source/bar.o",
+                                   compileCommand("/project/../../common/source/bar.d"),
+                                   Target("/project/../../common/source/bar.d")),
+                          ));
+}
+
 
 void testObjectFilesEmpty() {
     dlangPackageObjectFilesPerPackage([]).shouldEqual([]);

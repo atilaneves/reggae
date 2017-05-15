@@ -342,7 +342,9 @@ struct Target {
 
     ///Replace special variables and return a list of outputs thus modified
     auto expandOutputs(in string projectPath) @safe pure const {
-                string inProjectPath(in string path) {
+
+        string inProjectPath(in string path) {
+
             return path.startsWith(gProjdir)
                 ? path
                 : path.startsWith(gBuilddir)

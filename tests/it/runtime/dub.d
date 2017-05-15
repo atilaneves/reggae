@@ -74,3 +74,28 @@ unittest {
         "Unsupported dub targetType 'none'");
     }
 }
+
+@("project with dependencies not on file system already")
+@Tags(["dub", "ninja"])
+unittest {
+
+    import std.file: exists, rmdirRecurse;
+    import std.process: environment;
+    import std.path: buildPath;
+
+    const cerealedDir = buildPath(environment["HOME"], ".dub/packages/cerealed-0.6.8");
+    if(cerealedDir.exists)
+        rmdirRecurse(cerealedDir);
+
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.json", `
+{
+  "name": "depends_on_cerealed",
+  "license": "MIT",
+  "targetType": "executable",
+  "dependencies": { "cerealed": "==0.6.8" }
+}`);
+
+        runReggae("-b", "ninja");
+    }
+}

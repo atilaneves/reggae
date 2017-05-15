@@ -54,9 +54,23 @@ private DubInfo _getDubInfo(in Options options) {
             callDub(options, ["dub", "upgrade"]);
         }
 
-        immutable dubBuildArgs = ["dub", "--annotate", "build", "--compiler=dmd", "--print-configs", "--build=docs"];
-        immutable dubBuildOutput = callDub(options, dubBuildArgs);
-        immutable configs = getConfigurations(dubBuildOutput);
+        DubConfigurations getConfigsImpl() {
+            import reggae.dub.call: getConfigurations;
+            immutable dubBuildArgs = ["dub", "--annotate", "build", "--compiler=dmd", "--print-configs", "--build=docs"];
+            immutable dubBuildOutput = callDub(options, dubBuildArgs);
+            return getConfigurations(dubBuildOutput);
+        }
+
+        DubConfigurations getConfigs() {
+            try {
+                return getConfigsImpl;
+            } catch(Exception _) {
+                dubFetch(options);
+                return getConfigsImpl;
+            }
+        }
+
+        const configs = getConfigs();
 
         if(configs.configurations.empty) {
             immutable descOutput = callDub(options, ["dub", "describe"]);

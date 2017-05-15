@@ -40,11 +40,20 @@ void createReggaefile(in Options options) {
 
 private DubInfo _getDubInfo(in Options options) {
     import std.array;
+    import std.file: exists;
+    import std.path: buildPath;
+    import std.stdio: writeln;
 
     version(unittest)
         gDubInfos = null;
 
     if("default" !in gDubInfos) {
+
+        if(!buildPath(options.projectPath, "dub.selections.json").exists) {
+            writeln("[Reggae] Calling dub upgrade to create dub.selections.json");
+            callDub(options, ["dub", "upgrade"]);
+        }
+
         immutable dubBuildArgs = ["dub", "--annotate", "build", "--compiler=dmd", "--print-configs", "--build=docs"];
         immutable dubBuildOutput = callDub(options, dubBuildArgs);
         immutable configs = getConfigurations(dubBuildOutput);
@@ -103,17 +112,28 @@ private void callPreBuildCommands(in Options options, in DubInfo dubInfo) {
     }
 }
 
-private void dubFetch(in Options options) {
-    import std.string;
+private void dubFetch(in Options options) @trusted {
+    import std.array: join, replace;
+    import std.stdio: writeln;
+    import std.path: buildPath;
+    import std.json: parseJSON, JSON_TYPE;
+    import std.file: readText;
 
-    //this must be done without _getDubInfo. The reason begin that dub --annotate
-    //fails if the packages aren't fetched, creating a chicken and egg problem
-    //so we do it independently here to make sure the dependencies are fetched
-    //first
-    const dubInfo = getDubInfo(callDub(options, ["dub", "describe"]));
-    foreach(cmd; dubInfo.fetchCommands) {
-        immutable cmdStr = "'" ~ cmd.join(" ") ~ "'";
-        writeln("Fetching package with cmd ", cmdStr);
+    const fileName = buildPath(options.projectPath, "dub.selections.json");
+    auto json = parseJSON(readText(fileName));
+
+    auto versions = json["versions"];
+
+    foreach(dubPackage, versionJson; versions.object) {
+
+        // skip the ones with a defined path
+        if(versionJson.type != JSON_TYPE.STRING) continue;
+
+        // versions are usually `==1.2.3`, so strip the sign
+        const version_ = versionJson.str.replace("==", "");
+        const cmd = ["dub", "fetch", dubPackage, "--version=" ~ version_];
+
+        writeln("[Reggae] Fetching package with command '", cmd.join(" "), "'");
         callDub(options, cmd);
     }
 }

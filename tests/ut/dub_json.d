@@ -179,13 +179,6 @@ void testDubInfoToTargets() {
 }
 
 
-void testDubFetch() {
-    auto info = getDubInfo(jsonString.dup);
-    info.fetchCommands.shouldEqual(
-        [["dub", "fetch", "pkg_other"]]);
-}
-
-
 @("dub describe with empty sources")
 unittest {
     auto jsonString = `

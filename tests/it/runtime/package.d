@@ -22,6 +22,12 @@ struct ReggaeSandbox {
         return ret;
     }
 
+    static ReggaeSandbox opCall(in string projectName) {
+        auto ret = ReggaeSandbox();
+        ret.copyProject(projectName);
+        return ret;
+    }
+
     void runReggae(string[] args...) const {
         runImpl(args);
     }

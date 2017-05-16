@@ -20,8 +20,11 @@ DubInfo[string] gDubInfos;
 @safe:
 
 void maybeCreateReggaefile(in Options options) {
-    import std.file;
+    import std.file: exists;
+    import std.stdio: writeln;
+
     if(options.isDubProject && !options.projectBuildFile.exists) {
+        writeln("[Reggae] Creating default dub project reggaefile");
         createReggaefile(options);
     }
 }
@@ -65,6 +68,7 @@ private DubInfo _getDubInfo(in Options options) {
             try {
                 return getConfigsImpl;
             } catch(Exception _) {
+                writeln("[Reggae] Calling 'dub fetch' since getting the configuration failed");
                 dubFetch(options);
                 return getConfigsImpl;
             }
@@ -145,11 +149,31 @@ private void dubFetch(in Options options) @trusted {
 
         // versions are usually `==1.2.3`, so strip the sign
         const version_ = versionJson.str.replace("==", "");
+
+        if(!needDubFetch(dubPackage, version_)) continue;
+
         const cmd = ["dub", "fetch", dubPackage, "--version=" ~ version_];
 
         writeln("[Reggae] Fetching package with command '", cmd.join(" "), "'");
-        callDub(options, cmd);
+        try
+            callDub(options, cmd);
+        catch(Exception ex) {
+            // local packages can't be fetched, so it's normal to get an error
+            if(!options.dubLocalPackages)
+                throw ex;
+        }
     }
+}
+
+// dub fetch can sometimes take >10s (!) despite the package already being
+// on disk
+bool needDubFetch(in string dubPackage, in string version_) {
+    import std.path: buildPath;
+    import std.process: environment;
+    import std.file: exists;
+
+    const path = buildPath(environment["HOME"], ".dub", "packages", dubPackage ~ "-" ~ version_);
+    return !path.exists;
 }
 
 enum TargetType {
@@ -162,6 +186,9 @@ enum TargetType {
 
 void writeDubConfig(in Options options, File file) {
     import std.conv: to;
+    import std.stdio: writeln;
+
+    writeln("[Reggae] Writing dub configuration");
 
     file.writeln("import reggae.dub.info;");
 

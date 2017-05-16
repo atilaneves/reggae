@@ -39,6 +39,7 @@ struct Options {
     bool version_;
     bool export_;
     bool verbose;
+    bool dubLocalPackages;
     string[] dependencies;
     string[string] userVars; //must always be the last member variable
 
@@ -212,6 +213,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             "version", "Prints version information", &options.version_,
             "export", "Export build system - removes dependencies on reggae itself", &options.export_,
             "verbose", "Verbose output", &options.verbose,
+            "dub_local", "Project uses dub local packages", &options.dubLocalPackages,
             );
 
         if(helpInfo.helpWanted) {

@@ -372,6 +372,7 @@ void writeSrcFiles(T)(T output, in Options options) {
         file.write(import(fileName));
     }
 
+    output.writeln("[Reggae] Writing reggae configuration");
     writeConfig(options);
 }
 

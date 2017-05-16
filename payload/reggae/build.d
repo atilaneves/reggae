@@ -659,8 +659,17 @@ struct Command {
                           in string[] outputs,
                           in string[] inputs,
                           Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
+
+        import std.conv: text;
+
         assert(isDefaultCommand, text("This command is not a default command: ", this));
-        auto cmd = builtinTemplate(type, language, options, deps);
+        string cmd;
+        try
+            cmd = builtinTemplate(type, language, options, deps);
+        catch(Exception ex) {
+            throw new Exception(text(ex.msg, "\noutputs: ", outputs, "\ninputs: ", inputs));
+        }
+
         foreach(key; params.keys) {
             immutable var = "$" ~ key;
             immutable value = getParams(options.projectPath, key, []).join(" ");

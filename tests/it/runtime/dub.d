@@ -133,3 +133,32 @@ unittest {
         runReggae("-b", "ninja");
     }
 }
+
+@("simple dub project with no main function but with unit tests")
+@Tags(["dub", "ninja"])
+unittest {
+    import std.file: mkdirRecurse;
+    import std.path: buildPath;
+
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.json", `
+            {
+              "name": "depends_on_cerealed",
+              "license": "MIT",
+              "targetType": "executable",
+              "dependencies": { "cerealed": "==0.6.8" }
+            }`);
+
+        writeFile("reggaefile.d", q{
+            import reggae;
+            mixin build!(dubTestTarget!(Flags("-g -debug")));
+        });
+
+        mkdirRecurse(buildPath(testPath, "source"));
+        writeFile("source/foo.d", `unittest { assert(false); }`);
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk(testPath);
+
+        shouldFail("ut");
+    }
+}

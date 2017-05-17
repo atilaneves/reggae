@@ -52,15 +52,21 @@ static if(isDubProject) {
 
     Target dubTestTarget(Flags compilerFlags = Flags())() {
         const config = "unittest" in configToDubInfo ? "unittest" : "default";
-        auto actualCompilerFlags = compilerFlags.value;
 
+        auto actualCompilerFlags = compilerFlags.value;
         if("unittest" !in configToDubInfo) actualCompilerFlags ~= " -unittest";
+
         const hasMain = configToDubInfo[config].packages[0].mainSourceFile != "";
-        if(!hasMain) actualCompilerFlags ~= " -main";
+        const linkerFlags = hasMain ? Flags() : Flags("-main");
 
         // since dmd has a bug pertaining to separate compilation and __traits(getUnitTests),
         // we default here to compiling all-at-once for the unittest build
-        return dubTarget!()(ExeName("ut"), config, actualCompilerFlags, Yes.main, Yes.allTogether);
+        return dubTarget!()(ExeName("ut"),
+                            config,
+                            actualCompilerFlags,
+                            Yes.main,
+                            Yes.allTogether,
+                            linkerFlags);
     }
 
     private Target dubTarget(alias objsFunction = () { Target[] t; return t;})

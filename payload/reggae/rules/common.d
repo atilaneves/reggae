@@ -110,7 +110,8 @@ Target link(ExeName exeName, alias dependenciesFunc, Flags flags = Flags())() @s
  C++ and C. If none of those apply, the D compiler is used.
  */
 Target link(in ExeName exeName, Target[] dependencies, in Flags flags = Flags()) @safe pure {
-    auto command = Command(CommandType.link, assocList([assocEntry("flags", flags.value.splitter.array)]));
+    auto command = Command(CommandType.link,
+                           assocList([assocEntry("flags", flags.value.splitter.array)]));
     return Target(exeName.value, command, dependencies);
 }
 

@@ -41,6 +41,7 @@ DubInfo getDubInfo(string origString) @trusted {
                                                 a.getOptional("mainSourceFile"),
                                                 a.getOptional("targetFileName"),
                                                 a.byKey("dflags").jsonValueToStrings,
+                                                a.byKey("lflags").jsonValueToStrings,
                                                 a.byKey("importPaths").jsonValueToStrings,
                                                 a.byKey("stringImportPaths").jsonValueToStrings,
                                                 a.byKey("files").jsonValueToFiles,

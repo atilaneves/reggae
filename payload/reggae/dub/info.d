@@ -19,7 +19,8 @@ struct DubPackage {
     string path;
     string mainSourceFile;
     string targetFileName;
-    string[] flags;
+    string[] dflags;
+    string[] lflags;
     string[] importPaths;
     string[] stringImportPaths;
     string[] files;
@@ -56,7 +57,11 @@ struct DubInfo {
             //package
             const projDir = i == 0 ? "" : dubPackage.path;
 
-            immutable flags = chain(dubPackage.flags, versions, [options.dflags], [deUnitTest(i, compilerFlags)]).join(" ");
+            immutable flags = chain(dubPackage.dflags,
+                                    versions,
+                                    [options.dflags],
+                                    [deUnitTest(i, compilerFlags)])
+                .join(" ");
 
             const files = dubPackage.files.
                 filter!(a => includeMain || a != dubPackage.mainSourceFile).
@@ -73,19 +78,18 @@ struct DubInfo {
         return ExeName(packages[0].targetFileName);
     }
 
-    Flags mainLinkerFlags() @safe pure nothrow const {
+    string[] mainLinkerFlags() @safe pure nothrow const {
         import std.array: join;
 
         const pack = packages[0];
-        string[] flags;
-        flags ~= (pack.targetType == "library" || pack.targetType == "staticLibrary") ? ["-lib"] : [];
-        flags ~= linkerFlags();
-        return Flags(flags.join(" "));
+        return (pack.targetType == "library" || pack.targetType == "staticLibrary") ? ["-lib"] : [];
     }
 
     string[] linkerFlags() @safe const pure nothrow {
         const allLibs = packages.map!(a => a.libs).join;
-        return allLibs.map!(a => "-L-l" ~ a).array;
+        return
+            allLibs.map!(a => "-L-l" ~ a).array ~
+            packages.map!(a => a.lflags).join;
     }
 
     string[] allImportPaths() @safe nothrow const {

@@ -18,6 +18,7 @@ immutable jsonString =
     `      "mainSourceFile": "src/boooo.d",` ~
     `      "targetFileName": "super_app",` ~
     `      "dflags": [],` ~
+    `      "lflags": ["-L$LIB_DIR1", "-L$LIB_DIR2"],` ~
     `      "versions": ["v1", "v2"],` ~
     `      "dependencies": ["pkg_other"],` ~
     `      "importPaths": ["leimports"],` ~
@@ -52,6 +53,7 @@ immutable jsonString =
     `      "dflags": [` ~
     `        "-g", "-debug"` ~
     `      ],` ~
+    `      "lflags": [],` ~
     `      "libs": ["liblib", "otherlib"],` ~
     `      "versions": ["v3", "v4"],` ~
     `      "stringImportPaths": [],` ~
@@ -81,6 +83,7 @@ void testJsonToDubDescribe() {
         DubInfo(
             [DubPackage("pkg1", "/path/to/pkg1", "src/boooo.d", "super_app",
                         [],
+                        ["-L$LIB_DIR1", "-L$LIB_DIR2"],
                         ["leimports"],
                         ["src/string_imports", "src/moar_stringies"],
                         ["src/foo.d", "src/bar.d", "src/boooo.d"],
@@ -88,6 +91,7 @@ void testJsonToDubDescribe() {
 
              DubPackage("pkg_other", "/weird/path/pkg_other", "", "",
                         ["-g", "-debug"],
+                        [],
                         ["my_imports", "moar_imports"],
                         [],
                         ["source/toto.d", "source/africa.d"],

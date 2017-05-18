@@ -34,20 +34,22 @@ shared static this() {
 }
 
 private void buildDCompile() {
-    import std.meta;
-    import std.process;
-    import std.exception;
-    import std.conv;
-    import std.array;
+    import std.meta: aliasSeqOf;
+    import std.exception: enforce;
+    import std.conv: text;
     import std.stdio: writeln;
     import std.algorithm: any;
     import std.file: exists;
+    import std.path: buildPath;
+    import std.process: execute, Config;
+    import std.array: join;
     import reggae.file;
 
     enum fileNames = ["dcompile.d", "dependencies.d"];
 
+    const exeName = buildPath("tmp", "dcompile");
     immutable needToRecompile =
-        !"dcompile".exists ||
+        !exeName.exists ||
         fileNames.
         any!(a => buildPath(origPath, "payload", "reggae", a).
         newerThan(buildPath(testsPath, a)));

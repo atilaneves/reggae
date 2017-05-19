@@ -89,7 +89,7 @@ struct DubInfo {
         const allLibs = packages.map!(a => a.libs).join;
         return
             allLibs.map!(a => "-L-l" ~ a).array ~
-            packages.map!(a => a.lflags).join;
+            packages.map!(a => a.lflags.map!(b => "-L" ~ b)).join;
     }
 
     string[] allImportPaths() @safe nothrow const {

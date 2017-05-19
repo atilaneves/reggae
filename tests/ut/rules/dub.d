@@ -24,7 +24,7 @@ unittest {
     const expected = Target("app",
                             Command(CommandType.link,
                                     assocList([assocEntry("flags",
-                                                          ["-L$FOO"])])),
+                                                          ["-L-L$FOO"])])),
                             []);
     actual.shouldEqual(expected);
 }

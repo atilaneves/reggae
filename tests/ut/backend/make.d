@@ -5,6 +5,7 @@ import reggae;
 import unit_threaded;
 
 
+@Tags("make")
 @("Environment variables are properly escaped")
 unittest {
     import std.algorithm: canFind;

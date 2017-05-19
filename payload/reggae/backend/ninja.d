@@ -50,6 +50,11 @@ struct NinjaEntry {
     }
 }
 
+private string escapeEnvVars(in string line) @safe pure nothrow {
+    import std.string: replace;
+    return line.replace("$", "$$");
+}
+
 
 private bool hasDepFile(in CommandType type) @safe pure nothrow {
     return type == CommandType.compile || type == CommandType.compileAndLink;
@@ -163,7 +168,7 @@ private:
         foreach(immutable param; target.commandParamNames) {
             immutable value = target.getCommandParams(_projectPath, param, []).join(" ");
             if(value == "") continue;
-            paramLines ~= param ~ " = " ~ value;
+            paramLines ~= param ~ " = " ~ value.escapeEnvVars;
         }
 
         immutable language = target.getLanguage;

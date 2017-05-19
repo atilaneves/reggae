@@ -46,10 +46,16 @@ struct Makefile {
                     target.implicitsInProjectPath(options.projectPath)).join(" ");
 
             ret ~= " " ~ fileName() ~ "\n";
-            ret ~= "\t" ~ command(target) ~ "\n";
+            ret ~= "\t" ~ escapeEnvVars(command(target)) ~ "\n";
         }
 
         return ret;
+    }
+
+    private static string escapeEnvVars(in string command) @safe {
+        import std.regex: regex, replaceAll;
+        auto re = regex(`\$(\w)`);
+        return command.replaceAll(re, `$$$$$1`);
     }
 
     //includes rerunning reggae

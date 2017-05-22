@@ -296,3 +296,11 @@ unittest {
                        "medcmd -o $out $in",
                        "input"))]);
 }
+
+@("input path with environment variable")
+unittest {
+    auto build = Build(Target("app", "dmd -of$out $in", [Target("foo.d"), Target("$LIB/liblua.a")]));
+    Options options;
+    options.projectPath = "/proj";
+    build.targets[0].shellCommand(options).shouldEqual("dmd -ofapp /proj/foo.d $LIB/liblua.a");
+}

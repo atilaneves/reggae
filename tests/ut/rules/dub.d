@@ -35,15 +35,17 @@ unittest {
 unittest {
 
     import reggae.rules.dub: dubTarget;
-    import std.typecons: Yes, No;
     import reggae.config: setOptions;
     import reggae.options: getOptions;
+    import std.typecons: Yes, No;
+    import std.algorithm: filter;
+    import std.array: split;
 
     setOptions(getOptions(["reggae", "/tmp/proj"]));
 
     DubInfo dubInfo;
     dubInfo.packages = [DubPackage()];
-    dubInfo.packages[0].files = ["$KAL_EXT_LIB/liblua.a", "source/luad/foo.d"];
+    dubInfo.packages[0].files = ["$LIB/liblua.a", "source/luad/foo.d"];
     dubInfo.packages[0].importPaths = ["source"];
     Target[] objects;
     const actual = dubTarget!()(ExeName("app"),
@@ -71,7 +73,12 @@ unittest {
                             Command(CommandType.link,
                                     assocList([assocEntry("flags",
                                                           empty)])),
-                            [compileTarget, Target("$KAL_EXT_LIB/liblua.a")]);
+                            [compileTarget, Target("$LIB/liblua.a")]);
 
     actual.shouldEqual(expected);
+    Options options;
+    options.dCompiler = "dmd";
+    options.projectPath = "/proj";
+    actual.shellCommand(options).split(" ").filter!(a => a != "").
+        shouldEqual(["dmd", "-ofapp", "source/luad.o", "$LIB/liblua.a"]);
 }

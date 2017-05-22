@@ -36,6 +36,10 @@ unittest {
 
     import reggae.rules.dub: dubTarget;
     import std.typecons: Yes, No;
+    import reggae.config: setOptions;
+    import reggae.options: getOptions;
+
+    setOptions(getOptions(["reggae", "/tmp/proj"]));
 
     DubInfo dubInfo;
     dubInfo.packages = [DubPackage()];
@@ -48,18 +52,21 @@ unittest {
                                 Yes.main,
                                 No.allTogether,
     );
-    auto compileTarget = Target("source.o",
+
+    string[] empty;
+
+    auto compileTarget = Target("source/luad.o",
                                 Command(CommandType.compile,
                                         assocList(
                                              [
-                                                 assocEntry("includes", ["-Isource", "-I"]),
+                                                 assocEntry("includes", ["-Isource", "-I/tmp/proj"]),
                                                  assocEntry("flags", ["-g", "-debug"]),
-                                                 assocEntry("DEPFILE", ["source.o.dep"])
+                                                 assocEntry("stringImports", empty),
+                                                 assocEntry("DEPFILE", ["source/luad.o.dep"])
                                              ])),
                                  [Target("source/luad/foo.d")],
     );
 
-    string[] empty;
     const expected = Target("app",
                             Command(CommandType.link,
                                     assocList([assocEntry("flags",

@@ -32,6 +32,11 @@ struct DubPackage {
     string[] preBuildCommands;
 }
 
+bool isStaticLibrary(in string fileName) @safe pure nothrow {
+    import std.path: extension;
+    return fileName.extension == ".a";
+}
+
 struct DubInfo {
 
     DubPackage[] packages;
@@ -39,6 +44,9 @@ struct DubInfo {
     Target[] toTargets(Flag!"main" includeMain = Yes.main,
                        in string compilerFlags = "",
                        Flag!"allTogether" allTogether = No.allTogether) @safe const {
+
+        import std.functional: not;
+
         Target[] targets;
 
         // -unittest should only apply to the main package
@@ -65,6 +73,7 @@ struct DubInfo {
 
             const files = dubPackage.files.
                 filter!(a => includeMain || a != dubPackage.mainSourceFile).
+                filter!(not!isStaticLibrary).
                 map!(a => buildPath(dubPackage.path, a)).array;
 
             auto func = allTogether ? &dlangPackageObjectFilesTogether : &dlangPackageObjectFiles;
@@ -97,6 +106,16 @@ struct DubInfo {
         auto rng = packages.map!(a => a.packagePaths(a.importPaths));
         foreach(p; rng) paths ~= p;
         return paths ~ options.projectPath;
+    }
+
+    Target[] staticLibrarySources() @trusted nothrow const pure {
+        import std.algorithm: filter, map;
+        import std.array: array, join;
+        return packages.
+            map!(a => cast(string[])a.files.filter!isStaticLibrary.array).
+            join.
+            map!(a => Target(a)).
+            array;
     }
 }
 

@@ -349,7 +349,9 @@ struct Target {
                 ? path
                 : path.startsWith(gBuilddir)
                     ? path.replace(gBuilddir ~ dirSeparator, "")
-                    : buildPath(projectPath, path);
+                    : path[0] == '$'
+                        ? path
+                        : buildPath(projectPath, path);
         }
 
         return _outputs.map!(a => isLeaf ? inProjectPath(a) : a).
@@ -486,6 +488,7 @@ private:
 
 string inProjectPath(in string projectPath, in string name) @safe pure nothrow {
     if(name.startsWith(gBuilddir)) return name;
+    if(name[0] == '$') return name;
     return buildPath(projectPath, name);
 }
 

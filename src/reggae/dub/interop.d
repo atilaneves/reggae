@@ -181,6 +181,7 @@ enum TargetType {
     library,
     staticLibrary,
     sourceLibrary,
+    none,
 }
 
 

@@ -46,16 +46,27 @@ struct Makefile {
                     target.implicitsInProjectPath(options.projectPath)).join(" ");
 
             ret ~= " " ~ fileName() ~ "\n";
-            ret ~= "\t" ~ escapeEnvVars(command(target)) ~ "\n";
+            ret ~= "\t" ~ command(target) ~ "\n";
         }
 
         return ret;
     }
 
-    private static string escapeEnvVars(in string command) @safe {
-        import std.regex: regex, replaceAll;
-        auto re = regex(`\$(\w)`);
-        return command.replaceAll(re, `$$$$$1`);
+    private static string replaceEnvVars(in string str) @safe {
+        import std.regex: regex, matchAll;
+        import std.algorithm: _sort = sort, uniq, map;
+        import std.array: array;
+        import std.process: environment;
+
+        auto re = regex(`\$(\w+)`);
+        auto envVars = str.matchAll(re).map!(a => a.hit).array._sort.uniq;
+        string ret = str;
+
+        foreach(var; envVars) {
+            ret = ret.replace(var, environment.get(var[1..$], ""));
+        }
+
+        return ret;
     }
 
     //includes rerunning reggae
@@ -71,7 +82,7 @@ struct Makefile {
             ret ~= "\t" ~ options.rerunArgs.join(" ") ~ "\n";
         }
 
-        return ret;
+        return replaceEnvVars(ret);
     }
 
     void writeBuild() @safe {

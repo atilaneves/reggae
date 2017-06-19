@@ -19,5 +19,5 @@ $COMP -ofbin/reggae -Isrc -Ipayload -Jpayload/reggae src/reggae/*.d src/reggae/d
 
 cd bin || exit 1
 echo "Running boostrapped reggae with backend $BACKEND"
-./reggae -b $BACKEND ..
+./reggae -b $BACKEND --dc=$DMD ..
 $BACKEND

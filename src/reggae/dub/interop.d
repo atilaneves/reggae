@@ -59,7 +59,7 @@ private DubInfo _getDubInfo(in Options options) {
 
         DubConfigurations getConfigsImpl() {
             import reggae.dub.call: getConfigurations;
-            immutable dubBuildArgs = ["dub", "--annotate", "build", "--compiler=dmd", "--print-configs", "--build=docs"];
+            immutable dubBuildArgs = ["dub", "--annotate", "build", "--compiler=" ~ options.dCompiler, "--print-configs", "--build=docs"];
             immutable dubBuildOutput = callDub(options, dubBuildArgs);
             return getConfigurations(dubBuildOutput);
         }

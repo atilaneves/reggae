@@ -58,22 +58,6 @@ unittest {
     }
 }
 
-@("dub project with no target type")
-@Tags(["dub", "ninja"])
-unittest {
-
-    with(immutable ReggaeSandbox()) {
-        writeFile("dub.json", `
-{
-  "name": "notargettype",
-  "license": "MIT",
-  "targetType": "none"
-}`);
-
-        runReggae("-b", "ninja", "--dflags=-g -debug").shouldThrowWithMessage(
-        "Unsupported dub targetType 'none'");
-    }
-}
 
 @("project with dependencies not on file system already no dub.selections.json")
 @Tags(["dub", "ninja"])

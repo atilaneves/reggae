@@ -59,7 +59,8 @@ private DubInfo _getDubInfo(in Options options) {
 
         DubConfigurations getConfigsImpl() {
             import reggae.dub.call: getConfigurations;
-            immutable dubBuildArgs = ["dub", "--annotate", "build", "--compiler=" ~ options.dCompiler, "--print-configs", "--build=docs"];
+            immutable dubBuildArgs = ["dub", "--annotate", "build", "--compiler=" ~ options.dCompiler,
+                                      "--print-configs", "--build=docs"];
             immutable dubBuildOutput = callDub(options, dubBuildArgs);
             return getConfigurations(dubBuildOutput);
         }
@@ -102,7 +103,8 @@ private DubInfo _getDubInfo(in Options options) {
 
 private string callDub(in Options options, in string[] args) {
     import std.process;
-    import std.exception;
+    import std.exception: enforce;
+    import std.conv: text;
     import std.string;
 
     const string[string] env = null;
@@ -111,7 +113,7 @@ private string callDub(in Options options, in string[] args) {
     immutable workDir = options.projectPath;
 
     immutable ret = execute(args, env, config, maxOutput, workDir);
-    enforce(ret.status == 0, text("Error calling ", args.join(" "), ":\n",
+    enforce(ret.status == 0, text("Error calling '", args.join(" "), "' (", ret.status, ")", ":\n",
                                   ret.output));
     return ret.output;
 }

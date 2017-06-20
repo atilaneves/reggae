@@ -256,14 +256,14 @@ private string compileBinaries(T)(T output, in Options options) {
         buildBinary(output,
                     options,
                     Binary(rest,
-                           ["dmd",
+                           [options.dCompiler,
                             "-c",
                             "-of" ~ "rest.o"] ~
                            importPaths(options) ~
                            reggaeFileDeps));
         objFiles ~= rest;
     }
-    buildBinary(output, options, Binary(buildGenName, ["dmd", "-of" ~ buildGenName] ~ objFiles));
+    buildBinary(output, options, Binary(buildGenName, [options.dCompiler, "-of" ~ buildGenName] ~ objFiles));
 
     return buildGenName;
 }
@@ -272,7 +272,7 @@ void buildDCompile(T)(T output, in Options options) {
     if(!thisExePath.newerThan(buildPath(options.workingDir, hiddenDir, "dcompile")))
         return;
 
-    immutable cmd = ["dmd",
+    immutable cmd = [options.dCompiler,
                      "-Isrc",
                      "-ofdcompile",
                      buildPath(options.workingDir, hiddenDir, reggaeSrcRelDirName, "dcompile.d"),
@@ -321,7 +321,7 @@ private const(string)[] getCompileBuildGenCmd(in Options options) @safe {
     const commonBefore = ["./dcompile",
                           "--objFile=" ~ "build.o",
                           "--depFile=" ~ "reggaefile.dep",
-                          "dmd"] ~
+                          options.dCompiler] ~
         importPaths(options) ~
         ["-g",
          "-debug"];

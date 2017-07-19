@@ -63,6 +63,26 @@ static if(isDubProject) {
     /**
      Builds a particular dub configuration (executable, unittest, etc.)
      */
+    Target dubConfigurationTarget(ExeName exeName,
+                                  Configuration config = Configuration("default"),
+                                  Flags compilerFlags = Flags(),
+                                  Flag!"main" includeMain = Yes.main,
+                                  Flag!"allTogether" allTogether = No.allTogether,
+                                  alias objsFunction = () { Target[] t; return t; },
+                                  )
+        () if(isCallable!objsFunction)
+    {
+
+        return dubTarget!(objsFunction)(exeName,
+                                        configToDubInfo[config.value],
+                                        compilerFlags.value,
+                                        includeMain,
+                                        allTogether);
+    }
+
+    /**
+     Builds a particular dub configuration (executable, unittest, etc.)
+     */
     Target dubConfigurationTarget(TargetName targetName,
                                   Configuration config = Configuration("default"),
                                   Flags compilerFlags = Flags(),

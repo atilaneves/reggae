@@ -120,13 +120,16 @@ private string callDub(in Options options, in string[] args) {
 
 private void callPreBuildCommands(in Options options, in DubInfo dubInfo) {
     import std.process;
+    import std.string: replace;
+
     const string[string] env = null;
     Config config = Config.none;
     size_t maxOutput = size_t.max;
     immutable workDir = options.projectPath;
 
-    foreach(cmd; dubInfo.packages[0].preBuildCommands) {
-        writeln("Calling dub prebuildCommand '", cmd, "'");
+
+    foreach(c; dubInfo.packages[0].preBuildCommands) {
+        auto cmd = c.replace("$project", options.projectPath);
         immutable ret = executeShell(cmd, env, config, maxOutput, workDir);
         enforce(ret.status == 0, text("Error calling ", cmd, ":\n", ret.output));
     }

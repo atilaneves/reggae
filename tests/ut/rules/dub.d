@@ -200,3 +200,35 @@ unittest {
                                     [Target("/path/myapp/src/file1.d"), Target("/path/myapp/src/file2.d")])]);
     dubTarget(TargetName("foo"), dubInfo, "-g").shouldEqual(expected);
 }
+
+
+@("dubTarget with PACKAGE_DIR")
+unittest {
+
+    import reggae.rules.dub: dubTarget;
+    import reggae.config: setOptions;
+    import reggae.options: getOptions;
+    import std.typecons: Yes, No;
+    import std.algorithm: filter;
+    import std.array: split;
+
+    setOptions(getOptions(["reggae", "/tmp/proj"]));
+
+    DubInfo dubInfo;
+    dubInfo.packages = [DubPackage()];
+    dubInfo.packages[0].files = ["$LIB/liblua.a", "$PACKAGE_DIR/source/luad/foo.d"];
+    dubInfo.packages[0].importPaths = ["source"];
+    Target[] objects;
+    const target = dubTarget!()(ExeName("app"),
+                                dubInfo,
+                                "-g -debug",
+                                Yes.main,
+                                No.allTogether,
+    );
+
+    Options options;
+    options.dCompiler = "dmd";
+    options.projectPath = "/proj";
+    target.shellCommand(options).split(" ").filter!(a => a != "").
+        shouldEqual(["dmd", "-ofapp", "/proj/source/luad.o", "$LIB/liblua.a"]);
+}

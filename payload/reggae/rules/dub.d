@@ -93,16 +93,4 @@ static if(isDubProject) {
                     objsFunction() ~ dubObjs ~ dubInfo.staticLibrarySources(),
                     Flags(allLinkerFlags));
     }
-
-
-    /**
-     All object files from a particular dub configuration (executable, unittest, etc.)
-     */
-    Target[] dubConfigurationObjects(Configuration config = Configuration("default"),
-                                     Flags compilerFlags = Flags(),
-                                     alias objsFunction = () { Target[] t; return t; },
-                                     Flag!"main" includeMain = No.main)
-        () if(isCallable!objsFunction) {
-        return configToDubInfo[config.value].toTargets(includeMain, compilerFlags.value);
-    }
 }

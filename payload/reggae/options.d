@@ -30,6 +30,7 @@ struct Options {
     bool noFetch;
     bool help;
     bool perModule;
+    bool allAtOnce;
     bool isDubProject;
     bool oldNinja;
     bool noCompilationDB;
@@ -189,6 +190,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
     import std.algorithm;
     import std.array;
     import std.path;
+    import std.exception: enforce;
 
     Options options = defaultOptions;
 
@@ -206,6 +208,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             "cxx", "C++ compiler to use (default g++).", &options.cppCompiler,
             "nofetch", "Assume dub packages are present (no dub fetch).", &options.noFetch,
             "per_module", "Compile D files per module (default is per package)", &options.perModule,
+            "all_at_once", "Compile D files all at once (default is per package)", &options.allAtOnce,
             "old_ninja", "Generate a Ninja build compatible with older versions of Ninja", &options.oldNinja,
             "no_comp_db", "Don't generate a JSON compilation database", &options.noCompilationDB,
             "cache_build_info", "Cache the build information for the binary backend", &options.cacheBuildInfo,
@@ -224,6 +227,8 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
     } catch(ConvException ex) {
         throw new Exception("Unsupported backend, -b must be one of: make|ninja|tup|binary");
     }
+
+    enforce(!options.perModule || !options.allAtOnce, "Cannot specify both --per_module and --all_at_once");
 
     if(options.version_) {
         import std.stdio;

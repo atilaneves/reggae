@@ -22,8 +22,15 @@ import std.array;
 Target[] dlangPackageObjectFiles(in string[] srcFiles, in string flags = "",
                                  in string[] importPaths = [], in string[] stringImportPaths = [],
                                  in string projDir = "$project") @safe {
+
     import reggae.config: options;
-    auto func = options.perModule ? &dlangPackageObjectFilesPerModule : &dlangPackageObjectFilesPerPackage;
+
+    auto func = options.perModule
+        ? &dlangPackageObjectFilesPerModule
+        : options.allAtOnce
+            ? &dlangPackageObjectFilesTogether
+            : &dlangPackageObjectFilesPerPackage;
+
     return func(srcFiles, flags, importPaths, stringImportPaths, projDir);
 }
 

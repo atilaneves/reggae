@@ -20,7 +20,7 @@ static if(isDubProject) {
     /**
      Builds the main dub target (equivalent of "dub build")
     */
-    Target dubDefaultTarget(Flags compilerFlags = Flags())() {
+    Target dubDefaultTarget(Flags compilerFlags = Flags(), Flag!"allTogether" allTogether = No.allTogether)() {
         enum config = "default";
         const dubInfo = configToDubInfo[config];
         enum exeName = dubInfo.exeName;
@@ -31,7 +31,7 @@ static if(isDubProject) {
                 dubInfo,
                 compilerFlags.value,
                 Yes.main,
-                No.allTogether,
+                allTogether,
                 linkerFlags
             );
     }

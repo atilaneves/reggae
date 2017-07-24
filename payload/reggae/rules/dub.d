@@ -23,11 +23,11 @@ static if(isDubProject) {
     Target dubDefaultTarget(Flags compilerFlags = Flags(), Flag!"allTogether" allTogether = No.allTogether)() {
         enum config = "default";
         const dubInfo = configToDubInfo[config];
-        enum exeName = dubInfo.exeName;
+        enum targetName = dubInfo.targetName;
         enum linkerFlags = dubInfo.mainLinkerFlags;
         return dubTarget!(() { Target[] t; return t;})
             (
-                exeName,
+                targetName,
                 dubInfo,
                 compilerFlags.value,
                 Yes.main,
@@ -51,7 +51,7 @@ static if(isDubProject) {
 
         // since dmd has a bug pertaining to separate compilation and __traits(getUnitTests),
         // we default here to compiling all-at-once for the unittest build
-        return dubTarget!()(ExeName("ut"),
+        return dubTarget!()(TargetName("ut"),
                             configToDubInfo[config],
                             actualCompilerFlags,
                             Yes.main,
@@ -63,7 +63,7 @@ static if(isDubProject) {
     /**
      Builds a particular dub configuration (executable, unittest, etc.)
      */
-    Target dubConfigurationTarget(ExeName exeName,
+    Target dubConfigurationTarget(TargetName targetName,
                                   Configuration config = Configuration("default"),
                                   Flags compilerFlags = Flags(),
                                   Flag!"main" includeMain = Yes.main,
@@ -73,7 +73,7 @@ static if(isDubProject) {
         () if(isCallable!objsFunction)
     {
 
-        return dubTarget!(objsFunction)(exeName,
+        return dubTarget!(objsFunction)(targetName,
                                         configToDubInfo[config.value],
                                         compilerFlags.value,
                                         includeMain,
@@ -82,7 +82,7 @@ static if(isDubProject) {
 
 
     Target dubTarget(alias objsFunction = () { Target[] t; return t;})
-                    (in ExeName exeName,
+                    (in TargetName targetName,
                      in DubInfo dubInfo,
                      in string compilerFlags,
                      in Flag!"main" includeMain = Yes.main,
@@ -94,7 +94,7 @@ static if(isDubProject) {
 
         const allLinkerFlags = (linkerFlags ~ dubInfo.linkerFlags).join(" ");
         auto dubObjs = dubInfo.toTargets(includeMain, compilerFlags, allTogether);
-        return link(exeName,
+        return link(ExeName(targetName.value),
                     objsFunction() ~ dubObjs ~ dubInfo.staticLibrarySources(),
                     Flags(allLinkerFlags));
     }

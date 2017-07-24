@@ -93,8 +93,12 @@ struct DubInfo {
         return targets;
     }
 
-    ExeName exeName() @safe const pure nothrow {
-        return ExeName(packages[0].targetFileName);
+    TargetName targetName() @safe const pure nothrow {
+        return TargetName(packages[0].targetFileName);
+    }
+
+    string targetType() @safe const pure nothrow {
+        return packages[0].targetType;
     }
 
     string[] mainLinkerFlags() @safe pure nothrow const {

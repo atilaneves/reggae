@@ -100,8 +100,11 @@ void testJsonToDubDescribe() {
 
 @("DubInfo.toTargets with -unittest")
 unittest {
-    import reggae.config: setOptions;
+    import reggae.config: setOptions, options;
     import reggae.options: getOptions;
+
+    auto oldOptions = options;
+    scope(exit) setOptions(oldOptions);
     setOptions(getOptions(["reggae", "--per_module", "/tmp/proj"]));
 
     auto info = getDubInfo(jsonString.dup);
@@ -112,7 +115,7 @@ unittest {
                                                "-I/weird/path/pkg_other/my_imports",
                                                "-I/weird/path/pkg_other/moar_imports",
                                                "-I/tmp/proj"],
-                                  "flags", ["-version=v1", "-version=v2", "-version=v3", "-version=v4", "-unittest"],
+                                  "flags", ["-version=v1", "-version=v2", "-unittest"],
                                   "stringImports", ["-J/path/to/pkg1/src/string_imports",
                                                     "-J/path/to/pkg1/src/moar_stringies"],
                                   "DEPFILE", ["path/to/pkg1/src/foo.o.dep"])),
@@ -126,7 +129,7 @@ unittest {
                                                "-I/weird/path/pkg_other/my_imports",
                                                "-I/weird/path/pkg_other/moar_imports",
                                                "-I/tmp/proj"],
-                                  "flags", ["-g", "-debug", "-version=v3", "-version=v4"],
+                                  "flags", ["-g", "-debug", "-version=v1", "-version=v2", "-version=v3", "-version=v4"],
                                   "stringImports", cast(string[])[],
                                   "DEPFILE", ["weird/path/pkg_other/source/toto.o.dep"])),
                Target("/weird/path/pkg_other/source/toto.d")),
@@ -134,8 +137,12 @@ unittest {
 }
 
 void testDubInfoToTargets() {
-    import reggae.config: setOptions;
+    import reggae.config: setOptions, options;
     import reggae.options: getOptions;
+
+    auto oldOptions = options;
+    scope(exit) setOptions(oldOptions);
+
     setOptions(getOptions(["reggae", "--per_module", "/tmp/proj"]));
 
     auto info = getDubInfo(jsonString.dup);
@@ -146,7 +153,7 @@ void testDubInfoToTargets() {
                                                "-I/weird/path/pkg_other/my_imports",
                                                "-I/weird/path/pkg_other/moar_imports",
                                                "-I/tmp/proj"],
-                                  "flags", ["-version=v1", "-version=v2", "-version=v3", "-version=v4"],
+                                  "flags", ["-version=v1", "-version=v2"],
                                   "stringImports", ["-J/path/to/pkg1/src/string_imports",
                                                     "-J/path/to/pkg1/src/moar_stringies"],
                                   "DEPFILE", ["path/to/pkg1/src/foo.o.dep"])),
@@ -159,7 +166,7 @@ void testDubInfoToTargets() {
                                                "-I/weird/path/pkg_other/my_imports",
                                                "-I/weird/path/pkg_other/moar_imports",
                                                "-I/tmp/proj"],
-                                  "flags", ["-version=v1", "-version=v2", "-version=v3", "-version=v4"],
+                                  "flags", ["-version=v1", "-version=v2"],
                                   "stringImports", ["-J/path/to/pkg1/src/string_imports",
                                                     "-J/path/to/pkg1/src/moar_stringies"],
                                   "DEPFILE", ["path/to/pkg1/src/boooo.o.dep"])),
@@ -173,7 +180,7 @@ void testDubInfoToTargets() {
                                                "-I/weird/path/pkg_other/my_imports",
                                                "-I/weird/path/pkg_other/moar_imports",
                                                "-I/tmp/proj"],
-                                  "flags", ["-g", "-debug", "-version=v3", "-version=v4"],
+                                  "flags", ["-g", "-debug", "-version=v1", "-version=v2", "-version=v3", "-version=v4"],
                                   "stringImports", cast(string[])[],
                                   "DEPFILE", ["weird/path/pkg_other/source/toto.o.dep"])),
                Target("/weird/path/pkg_other/source/toto.d")),

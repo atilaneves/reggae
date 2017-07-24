@@ -3,7 +3,6 @@ module reggae.dub.info;
 import reggae.build;
 import reggae.rules;
 import reggae.types;
-import reggae.config: options;
 import reggae.sorting;
 
 public import std.typecons: Yes, No;
@@ -45,6 +44,7 @@ struct DubInfo {
                        in string compilerFlags = "",
                        Flag!"allTogether" allTogether = No.allTogether) @safe const {
 
+        import reggae.config: options;
         import std.functional: not;
 
         Target[] targets;
@@ -57,10 +57,20 @@ struct DubInfo {
                 : flags.replace("-unittest", "").replace("-main", "");
         }
 
+        const(string)[] getVersions(T)(in T index) {
+            import std.algorithm: map;
+            import std.array: array;
+
+            const(string)[] ret = packages[0].versions;
+            if(index != 0) ret ~= packages[index].versions;
+            return ret.map!(a => "-version=" ~ a).array;
+        }
+
         foreach(const i, const dubPackage; packages) {
             const importPaths = allImportPaths();
             const stringImportPaths = dubPackage.allOf!(a => a.packagePaths(a.stringImportPaths))(packages);
-            auto versions = dubPackage.allOf!(a => a.versions)(packages).map!(a => "-version=" ~ a);
+            auto versions = getVersions(i);
+
             //the path must be explicit for the other packages, implicit for the "main"
             //package
             const projDir = i == 0 ? "" : dubPackage.path;
@@ -102,6 +112,8 @@ struct DubInfo {
     }
 
     string[] allImportPaths() @safe nothrow const {
+        import reggae.config: options;
+
         string[] paths;
         auto rng = packages.map!(a => a.packagePaths(a.importPaths));
         foreach(p; rng) paths ~= p;
@@ -120,25 +132,27 @@ struct DubInfo {
 }
 
 
-private auto packagePaths(in DubPackage pack, in string[] paths) @trusted nothrow {
-    return paths.map!(a => buildPath(pack.path, a)).array;
+private auto packagePaths(in DubPackage dubPackage, in string[] paths) @trusted nothrow {
+    return paths.map!(a => buildPath(dubPackage.path, a)).array;
 }
 
 //@trusted because of map.array
 private string[] allOf(alias F)(in DubPackage pack, in DubPackage[] packages) @trusted nothrow {
-    string[] paths;
+
+    import std.algorithm: find;
+    import std.array: array, empty, front;
+
+    string[] result;
     //foreach(d; [pack.name] ~ pack.dependencies) doesn't compile with CTFE
     //it seems to have to do with constness, replace string[] with const(string)[]
     //and it won't compile
-    string[] dependencies = [pack.name];
-    dependencies ~= pack.dependencies;
+    const dependencies = [pack.name] ~ pack.dependencies;
     foreach(dependency; dependencies) {
 
-        import std.range;
         auto depPack = packages.find!(a => a.name == dependency);
         if(!depPack.empty) {
-            paths ~= F(depPack.front).array;
+            result ~= F(depPack.front).array;
         }
     }
-    return paths;
+    return result;
 }

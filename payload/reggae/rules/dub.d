@@ -94,8 +94,10 @@ static if(isDubProject) {
 
         const allLinkerFlags = (linkerFlags ~ dubInfo.linkerFlags).join(" ");
         auto dubObjs = dubInfo.toTargets(includeMain, compilerFlags, allTogether);
+        auto allObjs = objsFunction() ~ dubObjs ~ dubInfo.staticLibrarySources();
+
         return link(ExeName(targetName.value),
-                    objsFunction() ~ dubObjs ~ dubInfo.staticLibrarySources(),
+                    allObjs,
                     Flags(allLinkerFlags));
     }
 }

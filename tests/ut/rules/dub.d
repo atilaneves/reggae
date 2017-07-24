@@ -98,7 +98,6 @@ unittest {
     newOptions.projectPath = "/leproj";
     setOptions(newOptions);
 
-
     DubInfo dubInfo;
     dubInfo.packages = [DubPackage("myapp", "/path/myapp"), DubPackage("dep", "/path/dep")];
     dubInfo.packages[0].files = ["src/file1.d", "src/file2.d"];
@@ -169,4 +168,24 @@ unittest {
                              ]
         );
     actual.shouldEqual(expected);
+}
+
+
+@("static library dubConfigurationTarget")
+unittest {
+    auto oldOptions = options;
+    scope(exit) setOptions(oldOptions);
+
+    auto newOptions = oldOptions.dup;
+    newOptions.perModule = false;
+    newOptions.projectPath = "/leproj";
+    setOptions(newOptions);
+
+    auto dubInfo = DubInfo([DubPackage("myapp", "/path/myapp")]);
+    dubInfo.packages[0].files = ["src/file1.d", "src/file2.d"];
+
+    const expected = Target("libfoo.a",
+                            Command("foo"),
+                            []);
+    dubTarget(TargetName("libfoo.a"), dubInfo, "-g").shouldEqual(expected);
 }

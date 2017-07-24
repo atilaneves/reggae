@@ -61,8 +61,10 @@ struct DubInfo {
             import std.algorithm: map;
             import std.array: array;
 
-            const(string)[] ret = packages[0].versions;
-            if(index != 0) ret ~= packages[index].versions;
+            const(string)[] ret = index == 0
+                ? packages[index].allOf!(a => a.versions)(packages)
+                : packages[0].versions ~ packages[index].versions;
+
             return ret.map!(a => "-version=" ~ a).array;
         }
 

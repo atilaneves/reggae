@@ -88,7 +88,7 @@ unittest {
 
         writeFile("reggaefile.d", q{
             import reggae;
-            alias ut = dubConfigurationTarget!(ExeName(`ut`),
+            alias ut = dubConfigurationTarget!(TargetName(`ut`),
                                                Configuration(`unittest`),
                                                Flags(`-g -debug -cov`));
             mixin build!ut;

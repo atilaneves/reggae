@@ -132,10 +132,7 @@ Target[] staticLibrary(string name,
     else
         static assert(false, "Can only create static libraries on Posix");
 
-    const srcFiles = sourcesToFileNames!(sourcesFunc);
-    return [Target(buildPath("$builddir", name),
-                   "ar rcs $out $in",
-                   objectFiles!(sourcesFunc, flags, includes, stringImports)() ~ dependenciesFunc())];
+    return staticLibraryTarget(name, objectFiles!(sourcesFunc, flags, includes, stringImports)() ~ dependenciesFunc());
 }
 
 /**
@@ -309,11 +306,17 @@ Target[] staticLibrary(in string projectPath,
     else
         static assert(false, "Can only create static libraries on Posix");
 
-    return [Target([buildPath("$builddir", name)],
-                   "ar rcs $out $in",
-                   objectFiles(projectPath, srcDirs, excDirs, srcFiles, excFiles, flags, includes, stringImports))];
+    return staticLibraryTarget(name,
+                               objectFiles(projectPath, srcDirs, excDirs, srcFiles, excFiles, flags, includes, stringImports));
 }
 
+Target[] staticLibraryTarget(in string name, Target[] objects) {
+    return [Target([buildPath("$builddir", name)],
+                   staticLibraryShellCommand,
+                   objects)];
+}
+
+private enum staticLibraryShellCommand = "ar rcs $out $in";
 
 private Target[] srcFilesToObjectTargets(in string[] srcFiles,
                                          in Flags flags,

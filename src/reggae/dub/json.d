@@ -7,9 +7,12 @@ import std.algorithm: map, filter;
 
 
 DubInfo getDubInfo(string origString) @trusted {
+
     import std.string: indexOf;
     import core.exception: RangeError;
     import std.array;
+
+    origString = origString.replace("$PACKAGE_DIR", "$project");
 
     string nextOpenCurly(string str) {
         return str[str.indexOf("{") .. $];

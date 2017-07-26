@@ -36,6 +36,20 @@ bool isStaticLibrary(in string fileName) @safe pure nothrow {
     return fileName.extension == ".a";
 }
 
+bool isObjectFile(in string fileName) @safe pure nothrow {
+    import reggae.rules.common: objExt;
+    import std.path: extension;
+    return fileName.extension == objExt;
+}
+
+string inDubPackagePath(in string packagePath, in string filePath) @safe pure nothrow {
+    import std.path: buildPath;
+    import std.algorithm: startsWith;
+    return filePath.startsWith("$project")
+        ? filePath
+        : buildPath(packagePath, filePath);
+}
+
 struct DubInfo {
 
     DubPackage[] packages;
@@ -86,13 +100,21 @@ struct DubInfo {
             const files = dubPackage.files.
                 filter!(a => includeMain || a != dubPackage.mainSourceFile).
                 filter!(not!isStaticLibrary).
-                map!(a => buildPath(dubPackage.path, a)).array;
+                filter!(not!isObjectFile).
+                map!(a => buildPath(dubPackage.path, a))
+                .array;
 
             auto func = allTogether ? &dlangPackageObjectFilesTogether : &dlangPackageObjectFiles;
             targets ~= func(files, flags, importPaths, stringImportPaths, projDir);
+            // add any object files that are meant to be linked
+            targets ~= dubPackage
+                .files
+                .filter!isObjectFile
+                .map!(a => Target(inDubPackagePath(dubPackage.path, a)))
+                .array;
         }
 
-        return targets;
+        return targets ~ allStaticLibrarySources;
     }
 
     TargetName targetName() @safe const pure nothrow {
@@ -126,7 +148,8 @@ struct DubInfo {
         return paths ~ options.projectPath;
     }
 
-    Target[] staticLibrarySources() @trusted nothrow const pure {
+    // must be at the very end
+    private Target[] allStaticLibrarySources() @trusted nothrow const pure {
         import std.algorithm: filter, map;
         import std.array: array, join;
         return packages.

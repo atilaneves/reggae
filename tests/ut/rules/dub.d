@@ -200,3 +200,67 @@ unittest {
                                     [Target("/path/myapp/src/file1.d"), Target("/path/myapp/src/file2.d")])]);
     dubTarget(TargetName("foo"), dubInfo, "-g").shouldEqual(expected);
 }
+
+@("object files as dub srcFiles")
+unittest {
+    auto oldOptions = options;
+    scope(exit) setOptions(oldOptions);
+
+    auto newOptions = oldOptions.dup;
+    newOptions.perModule = false;
+    newOptions.projectPath = "/leproj";
+    setOptions(newOptions);
+
+    auto dubInfo = DubInfo([DubPackage("myapp", "/path/myapp")]);
+    dubInfo.packages[0].files = ["src/file1.d", "src/file2.d", "bin/dep.o"];
+
+    string[] empty;
+    const expected = Target("foo",
+                            Command(CommandType.link, assocList([assocEntry("flags", empty)])),
+                            [
+                                Target("path/myapp/src.o",
+                                       Command(CommandType.compile,
+                                               assocList([
+                                                             assocEntry("includes", ["-I/leproj"]),
+                                                             assocEntry("flags", ["-g"]),
+                                                             assocEntry("stringImports", empty),
+                                                             assocEntry("DEPFILE", ["path/myapp/src.o.dep"]),
+                                                         ])),
+                                       [Target("/path/myapp/src/file1.d"), Target("/path/myapp/src/file2.d")]),
+
+                                Target("/path/myapp/bin/dep.o"),
+                            ]);
+    dubTarget(TargetName("libfoo.a"), dubInfo, "-g").shouldEqual(expected);
+}
+
+@("object files as dub srcFiles $project")
+unittest {
+    auto oldOptions = options;
+    scope(exit) setOptions(oldOptions);
+
+    auto newOptions = oldOptions.dup;
+    newOptions.perModule = false;
+    newOptions.projectPath = "/leproj";
+    setOptions(newOptions);
+
+    auto dubInfo = DubInfo([DubPackage("myapp", "/path/myapp")]);
+    dubInfo.packages[0].files = ["src/file1.d", "src/file2.d", "$project/bin/dep.o"];
+
+    string[] empty;
+    const expected = Target("foo",
+                            Command(CommandType.link, assocList([assocEntry("flags", empty)])),
+                            [
+                                Target("path/myapp/src.o",
+                                       Command(CommandType.compile,
+                                               assocList([
+                                                             assocEntry("includes", ["-I/leproj"]),
+                                                             assocEntry("flags", ["-g"]),
+                                                             assocEntry("stringImports", empty),
+                                                             assocEntry("DEPFILE", ["path/myapp/src.o.dep"]),
+                                                         ])),
+                                       [Target("/path/myapp/src/file1.d"), Target("/path/myapp/src/file2.d")]),
+
+                                Target("/path/myapp/bin/dep.o"),
+                            ]);
+    dubTarget(TargetName("libfoo.a"), dubInfo, "-g").shouldEqual(expected);
+}

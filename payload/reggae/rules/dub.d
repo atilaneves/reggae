@@ -63,6 +63,26 @@ static if(isDubProject) {
     /**
      Builds a particular dub configuration (executable, unittest, etc.)
      */
+    Target dubConfigurationTarget(ExeName exeName,
+                                  Configuration config = Configuration("default"),
+                                  Flags compilerFlags = Flags(),
+                                  Flag!"main" includeMain = Yes.main,
+                                  Flag!"allTogether" allTogether = No.allTogether,
+                                  alias objsFunction = () { Target[] t; return t; },
+                                  )
+        () if(isCallable!objsFunction)
+    {
+
+        return dubTarget!(objsFunction)(exeName,
+                                        configToDubInfo[config.value],
+                                        compilerFlags.value,
+                                        includeMain,
+                                        allTogether);
+    }
+
+    /**
+     Builds a particular dub configuration (executable, unittest, etc.)
+     */
     Target dubConfigurationTarget(TargetName targetName,
                                   Configuration config = Configuration("default"),
                                   Flags compilerFlags = Flags(),
@@ -95,10 +115,10 @@ static if(isDubProject) {
 
         const allLinkerFlags = (linkerFlags ~ dubInfo.linkerFlags).join(" ");
         auto dubObjs = dubInfo.toTargets(includeMain, compilerFlags, allTogether);
-        auto allObjs = objsFunction() ~ dubObjs ~ dubInfo.staticLibrarySources();
+        auto allObjs = objsFunction() ~ dubObjs;
 
         return dubInfo.targetType == "library"
-            ? staticLibraryTarget("lib" ~ targetName.value ~ ".a", allObjs)[0]
+            ? staticLibraryTarget(targetName.value, allObjs)[0]
             : link(ExeName(targetName.value),
                    allObjs,
                    Flags(allLinkerFlags));

@@ -90,14 +90,17 @@ static if(isDubProject) {
                      in string[] linkerFlags = [])
     {
 
+        import reggae.rules.common: staticLibraryTarget;
         import std.array: join;
 
         const allLinkerFlags = (linkerFlags ~ dubInfo.linkerFlags).join(" ");
         auto dubObjs = dubInfo.toTargets(includeMain, compilerFlags, allTogether);
         auto allObjs = objsFunction() ~ dubObjs ~ dubInfo.staticLibrarySources();
 
-        return link(ExeName(targetName.value),
-                    allObjs,
-                    Flags(allLinkerFlags));
+        return dubInfo.targetType == "library"
+            ? staticLibraryTarget("lib" ~ targetName.value ~ ".a", allObjs)[0]
+            : link(ExeName(targetName.value),
+                   allObjs,
+                   Flags(allLinkerFlags));
     }
 }

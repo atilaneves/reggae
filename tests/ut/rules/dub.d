@@ -183,9 +183,19 @@ unittest {
 
     auto dubInfo = DubInfo([DubPackage("myapp", "/path/myapp")]);
     dubInfo.packages[0].files = ["src/file1.d", "src/file2.d"];
+    dubInfo.packages[0].targetType = "library";
 
-    const expected = Target("libfoo.a",
-                            Command("foo"),
-                            []);
-    dubTarget(TargetName("libfoo.a"), dubInfo, "-g").shouldEqual(expected);
+    string[] empty;
+    const expected = Target("$builddir/libfoo.a",
+                            Command("ar rcs $out $in"),
+                            [Target("path/myapp/src.o",
+                                    Command(CommandType.compile,
+                                            assocList([
+                                                          assocEntry("includes", ["-I/leproj"]),
+                                                          assocEntry("flags", ["-g"]),
+                                                          assocEntry("stringImports", empty),
+                                                          assocEntry("DEPFILE", ["path/myapp/src.o.dep"]),
+                                                          ])),
+                                    [Target("/path/myapp/src/file1.d"), Target("/path/myapp/src/file2.d")])]);
+    dubTarget(TargetName("foo"), dubInfo, "-g").shouldEqual(expected);
 }

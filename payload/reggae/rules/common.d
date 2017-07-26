@@ -310,7 +310,7 @@ Target[] staticLibrary(in string projectPath,
                                objectFiles(projectPath, srcDirs, excDirs, srcFiles, excFiles, flags, includes, stringImports));
 }
 
-private Target[] staticLibraryTarget(in string name, Target[] objects) {
+Target[] staticLibraryTarget(in string name, Target[] objects) {
     return [Target([buildPath("$builddir", name)],
                    staticLibraryShellCommand,
                    objects)];

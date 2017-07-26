@@ -51,7 +51,12 @@ unittest {
                     ["-L/dub/packages/lepackage"],
                     ["/dub/packages/lepackage/imports"],
                     ["/dub/packages/lepackage/stringImports"],
-                    ["/dub/packages/lepackage/foo.o", "src/file1.d"]
+                    ["/dub/packages/lepackage/foo.o", "src/file.d"],
+                    "", // targetType
+                    [], // versions
+                    [], // dependencies
+                    [], // libs
+                    true, // active
                 ),
                 DubPackage(
                     "dep",
@@ -62,7 +67,12 @@ unittest {
                     [], // lflags
                     [], // importPaths
                     [], // stringImportPaths
-                    ["/dub/packages/lepackage/foo.o", "src/file1.d"]
+                    ["/dub/packages/dep/bar.o", "src/dep.d"],
+                    "", // targetType
+                    [], // versions
+                    [], // dependencies
+                    [], // libs
+                    true, // active
                 ),
             ]
     ));

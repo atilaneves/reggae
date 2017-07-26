@@ -6,13 +6,11 @@ import std.json;
 import std.algorithm: map, filter;
 
 
-DubInfo getDubInfo(string origString) @trusted {
+DubInfo getDubInfo(in string origString) @trusted {
 
     import std.string: indexOf;
     import core.exception: RangeError;
     import std.array;
-
-    origString = origString.replace("$PACKAGE_DIR", "$project");
 
     string nextOpenCurly(string str) {
         return str[str.indexOf("{") .. $];
@@ -38,25 +36,47 @@ DubInfo getDubInfo(string origString) @trusted {
             }
 
             auto packages = json.byKey("packages");
-            return DubInfo(packages.array.
-                           map!(a => DubPackage(a.byKey("name").str,
-                                                a.byKey("path").str,
-                                                a.getOptional("mainSourceFile"),
-                                                a.getOptional("targetFileName"),
-                                                a.byKey("dflags").jsonValueToStrings,
-                                                a.byKey("lflags").jsonValueToStrings,
-                                                a.byKey("importPaths").jsonValueToStrings,
-                                                a.byKey("stringImportPaths").jsonValueToStrings,
-                                                a.byKey("files").jsonValueToFiles,
-                                                a.getOptional("targetType"),
-                                                a.getOptionalList("versions"),
-                                                a.getOptionalList("dependencies"),
-                                                a.getOptionalList("libs"),
-                                                a.byOptionalKey("active", true), //true for backwards compatibility
-                                                a.getOptionalList("preBuildCommands"),
-                                    )).
-                           filter!(a => a.active).
-                           array);
+            auto info = DubInfo(packages.array.
+                                map!(a => DubPackage(a.byKey("name").str,
+                                                     a.byKey("path").str,
+                                                     a.getOptional("mainSourceFile"),
+                                                     a.getOptional("targetFileName"),
+                                                     a.byKey("dflags").jsonValueToStrings,
+                                                     a.byKey("lflags").jsonValueToStrings,
+                                                     a.byKey("importPaths").jsonValueToStrings,
+                                                     a.byKey("stringImportPaths").jsonValueToStrings,
+                                                     a.byKey("files").jsonValueToFiles,
+                                                     a.getOptional("targetType"),
+                                                     a.getOptionalList("versions"),
+                                                     a.getOptionalList("dependencies"),
+                                                     a.getOptionalList("libs"),
+                                                     a.byOptionalKey("active", true), //true for backwards compatibility
+                                                     a.getOptionalList("preBuildCommands"),
+                                         )).
+                                filter!(a => a.active).
+                                array);
+
+
+
+            // in dub.json/dub.sdl, $PACKAGE_DIR is a variable that refers to the root
+            // of the dub package
+            void resolvePackageDir(in DubPackage dubPackage, ref string str) {
+                str = str.replace("$PACKAGE_DIR", dubPackage.path);
+            }
+
+            foreach(ref dubPackage; info.packages) {
+                foreach(ref member; dubPackage.tupleof) {
+
+                    static if(is(typeof(member) == string)) {
+                        resolvePackageDir(dubPackage, member);
+                    } else static if(is(typeof(member) == string[])) {
+                        foreach(ref elt; member)
+                            resolvePackageDir(dubPackage, elt);
+                    }
+                }
+            }
+
+            return info;
         }
     } catch(RangeError e) {
         import std.stdio;

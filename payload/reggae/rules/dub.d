@@ -118,7 +118,7 @@ static if(isDubProject) {
         auto allObjs = objsFunction() ~ dubObjs;
 
         return dubInfo.targetType == "library"
-            ? staticLibraryTarget("lib" ~ targetName.value ~ ".a", allObjs)[0]
+            ? staticLibraryTarget(targetName.value, allObjs)[0]
             : link(ExeName(targetName.value),
                    allObjs,
                    Flags(allLinkerFlags));

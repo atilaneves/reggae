@@ -230,5 +230,5 @@ unittest {
 
                                 Target("/path/myapp/bin/dep.o"),
                             ]);
-    dubTarget(TargetName("foo"), dubInfo, "-g").shouldEqual(expected);
+    dubTarget(TargetName("libfoo.a"), dubInfo, "-g").shouldEqual(expected);
 }

@@ -93,7 +93,8 @@ struct DubInfo {
                 filter!(a => includeMain || a != dubPackage.mainSourceFile).
                 filter!(not!isStaticLibrary).
                 filter!(not!isObjectFile).
-                array;
+                map!(a => buildPath(dubPackage.path, a))
+                .array;
 
             auto func = allTogether ? &dlangPackageObjectFilesTogether : &dlangPackageObjectFiles;
             targets ~= func(files, flags, importPaths, stringImportPaths, projDir);

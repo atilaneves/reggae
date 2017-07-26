@@ -201,7 +201,7 @@ unittest {
     dubTarget(TargetName("foo"), dubInfo, "-g").shouldEqual(expected);
 }
 
-@("static library dubConfigurationTarget")
+@("object files as dub srcFiles")
 unittest {
     auto oldOptions = options;
     scope(exit) setOptions(oldOptions);

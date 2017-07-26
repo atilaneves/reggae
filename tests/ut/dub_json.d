@@ -6,6 +6,69 @@ import reggae;
 import reggae.dub.json;
 import std.string;
 
+@("PACKAGE_DIR")
+unittest {
+    const jsonString = q{
+        {
+            "packages": [
+                {
+                    "name": "lepackage",
+                    "path": "/dub/packages/lepackage",
+                    "dflags": [],
+                    "lflags": ["-L$PACKAGE_DIR"],
+                    "importPaths": ["$PACKAGE_DIR/imports"],
+                    "stringImportPaths": ["$PACKAGE_DIR/stringImports"],
+                    "files": [
+                        {"role": "source", "path": "$PACKAGE_DIR/foo.o"},
+                        {"role": "source", "path": "src/file.d"}
+                    ]
+                },
+                {
+                    "name": "dep",
+                    "path": "/dub/packages/dep",
+                    "dflags": [],
+                    "lflags": [],
+                    "importPaths": [],
+                    "stringImportPaths": [],
+                    "files": [
+                        {"role": "source", "path": "$PACKAGE_DIR/bar.o"},
+                        {"role": "source", "path": "src/dep.d"}
+                    ]
+                }
+            ]
+        }
+    };
+
+    getDubInfo(jsonString).shouldEqual(
+        DubInfo(
+            [
+                DubPackage(
+                    "lepackage",
+                    "/dub/packages/lepackage",
+                    "", // mainSourceFile
+                    "", // targetFileName
+                    [], // dflags
+                    ["-L/dub/packages/lepackage"],
+                    ["/dub/packages/lepackage/imports"],
+                    ["/dub/packages/lepackage/stringImports"],
+                    ["/dub/packages/lepackage/foo.o", "src/file1.d"]
+                ),
+                DubPackage(
+                    "dep",
+                    "/dub/packages/dep",
+                    "", // mainSourceFile
+                    "", //targetFileName
+                    [], // dflags
+                    [], // lflags
+                    [], // importPaths
+                    [], // stringImportPaths
+                    ["/dub/packages/lepackage/foo.o", "src/file1.d"]
+                ),
+            ]
+    ));
+
+
+}
 
 immutable jsonString =
     `WARNING: A deprecated branch based version specification is used for the dependency unit-threaded. Please use numbered versions instead. Also note that you can still use the dub.selections.json file to override a certain dependency to use a branch instead.` ~

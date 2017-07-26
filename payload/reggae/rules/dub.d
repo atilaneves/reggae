@@ -115,7 +115,7 @@ static if(isDubProject) {
 
         const allLinkerFlags = (linkerFlags ~ dubInfo.linkerFlags).join(" ");
         auto dubObjs = dubInfo.toTargets(includeMain, compilerFlags, allTogether);
-        auto allObjs = objsFunction() ~ dubObjs ~ dubInfo.staticLibrarySources();
+        auto allObjs = objsFunction() ~ dubObjs;
 
         return dubInfo.targetType == "library"
             ? staticLibraryTarget("lib" ~ targetName.value ~ ".a", allObjs)[0]

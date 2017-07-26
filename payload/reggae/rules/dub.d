@@ -113,11 +113,14 @@ static if(isDubProject) {
         import reggae.rules.common: staticLibraryTarget;
         import std.array: join;
 
-        const allLinkerFlags = (linkerFlags ~ dubInfo.linkerFlags).join(" ");
+        const sharedFlags = dubInfo.targetType == "dynamicLibrary"
+            ? "-lib"
+            : "";
+        const allLinkerFlags = (linkerFlags ~ dubInfo.linkerFlags ~ sharedFlags).join(" ");
         auto dubObjs = dubInfo.toTargets(includeMain, compilerFlags, allTogether);
         auto allObjs = objsFunction() ~ dubObjs;
 
-        return dubInfo.targetType == "library"
+        return dubInfo.targetType == "library" || dubInfo.targetType == "staticLibrary"
             ? staticLibraryTarget(targetName.value, allObjs)[0]
             : link(ExeName(targetName.value),
                    allObjs,

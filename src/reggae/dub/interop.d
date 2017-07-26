@@ -185,6 +185,7 @@ enum TargetType {
     executable,
     library,
     staticLibrary,
+    dynamicLibrary,
     sourceLibrary,
     none,
 }

@@ -42,6 +42,14 @@ bool isObjectFile(in string fileName) @safe pure nothrow {
     return fileName.extension == objExt;
 }
 
+string inDubPackagePath(in string packagePath, in string filePath) @safe pure nothrow {
+    import std.path: buildPath;
+    import std.algorithm: startsWith;
+    return filePath.startsWith("$project")
+        ? filePath
+        : buildPath(packagePath, filePath);
+}
+
 struct DubInfo {
 
     DubPackage[] packages;
@@ -99,7 +107,11 @@ struct DubInfo {
             auto func = allTogether ? &dlangPackageObjectFilesTogether : &dlangPackageObjectFiles;
             targets ~= func(files, flags, importPaths, stringImportPaths, projDir);
             // add any object files that are meant to be linked
-            targets ~= dubPackage.files.filter!isObjectFile.map!(a => Target(buildPath(dubPackage.path, a))).array;
+            targets ~= dubPackage
+                .files
+                .filter!isObjectFile
+                .map!(a => Target(inDubPackagePath(dubPackage.path, a)))
+                .array;
         }
 
         return targets ~ allStaticLibrarySources;

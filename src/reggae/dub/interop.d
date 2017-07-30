@@ -19,29 +19,29 @@ DubInfo[string] gDubInfos;
 
 @safe:
 
-void maybeCreateReggaefile(in Options options) {
+void maybeCreateReggaefile(T)(auto ref T output, in Options options) {
     import std.file: exists;
     import std.stdio: writeln;
 
-    if(options.isDubProject && !options.projectBuildFile.exists) {
-        writeln("[Reggae] Creating default dub project reggaefile");
-        createReggaefile(options);
+    if(options.isDubProject && !options.reggaeFilePath.exists) {
+        output.writeln("[Reggae] Creating default dub project reggaefile");
+        createReggaefile(output, options);
     }
 }
 
 // default build for a dub project when there is no reggaefile
-void createReggaefile(in Options options) {
+void createReggaefile(T)(auto ref T output, in Options options) {
     import std.path;
-    writeln("[Reggae] Creating reggaefile.d from dub information");
+    output.writeln("[Reggae] Creating reggaefile.d from dub information");
     auto file = File(buildPath(options.workingDir, "reggaefile.d"), "w");
     file.writeln(q{import reggae;});
     file.writeln(q{mixin build!(dubDefaultTarget!(), dubTestTarget!());});
 
-    if(!options.noFetch) dubFetch(options);
+    if(!options.noFetch) dubFetch(output, options);
 }
 
 
-private DubInfo _getDubInfo(in Options options) {
+private DubInfo _getDubInfo(T)(auto ref T output, in Options options) {
     import std.array;
     import std.file: exists;
     import std.path: buildPath;
@@ -53,7 +53,7 @@ private DubInfo _getDubInfo(in Options options) {
     if("default" !in gDubInfos) {
 
         if(!buildPath(options.projectPath, "dub.selections.json").exists) {
-            writeln("[Reggae] Calling dub upgrade to create dub.selections.json");
+            output.writeln("[Reggae] Calling dub upgrade to create dub.selections.json");
             callDub(options, ["dub", "upgrade"]);
         }
 
@@ -69,8 +69,8 @@ private DubInfo _getDubInfo(in Options options) {
             try {
                 return getConfigsImpl;
             } catch(Exception _) {
-                writeln("[Reggae] Calling 'dub fetch' since getting the configuration failed");
-                dubFetch(options);
+                output.writeln("[Reggae] Calling 'dub fetch' since getting the configuration failed");
+                dubFetch(output, options);
                 return getConfigsImpl;
             }
         }
@@ -148,7 +148,7 @@ private void callPreBuildCommands(in Options options, in DubInfo dubInfo) {
     }
 }
 
-private void dubFetch(in Options options) @trusted {
+private void dubFetch(T)(auto ref T output, in Options options) @trusted {
     import std.array: join, replace;
     import std.stdio: writeln;
     import std.path: buildPath;
@@ -172,7 +172,7 @@ private void dubFetch(in Options options) @trusted {
 
         const cmd = ["dub", "fetch", dubPackage, "--version=" ~ version_];
 
-        writeln("[Reggae] Fetching package with command '", cmd.join(" "), "'");
+        output.writeln("[Reggae] Fetching package with command '", cmd.join(" "), "'");
         try
             callDub(options, cmd);
         catch(Exception ex) {
@@ -204,18 +204,18 @@ enum TargetType {
 }
 
 
-void writeDubConfig(in Options options, File file) {
+void writeDubConfig(T)(auto ref T output, in Options options, File file) {
     import std.conv: to;
     import std.stdio: writeln;
 
-    writeln("[Reggae] Writing dub configuration");
+    output.writeln("[Reggae] Writing dub configuration");
 
     file.writeln("import reggae.dub.info;");
 
     if(options.isDubProject) {
 
         file.writeln("enum isDubProject = true;");
-        auto dubInfo = _getDubInfo(options);
+        auto dubInfo = _getDubInfo(output, options);
         const targetType = dubInfo.packages[0].targetType;
 
         try {

@@ -41,16 +41,17 @@ auto shouldExecuteOk(string arg, string file = __FILE__, size_t line = __LINE__)
     return shouldExecuteOk([arg], getcwd(), file, line);
 }
 
-void shouldFailToExecute(string arg, string workDir = getcwd(),
+auto shouldFailToExecute(string arg, string workDir = getcwd(),
                          string file = __FILE__, size_t line = __LINE__) {
     return shouldFailToExecute([arg], workDir, file, line);
 }
 
-void shouldFailToExecute(string[] args, string workDir = getcwd(),
+auto shouldFailToExecute(string[] args, string workDir = getcwd(),
                          string file = __FILE__, size_t line = __LINE__) {
 
     import std.process;
     import std.array;
+    import std.string: splitLines, chomp;
 
     const string[string] env = null;
     Config config = Config.none;
@@ -61,15 +62,28 @@ void shouldFailToExecute(string[] args, string workDir = getcwd(),
         if(res.status == 0)
             throw new UnitTestException([args.join(" ") ~
                                          " executed ok but was expected to fail"], file, line);
+        return res.output.chomp.splitLines;
     } catch(ProcessException) {}
+    return "".chomp.splitLines;
 }
 
 
 struct FakeFile {
+
+    string soFar;
     string[] lines;
-    void writeln(T...)(T args) {
+
+    void write(T...)(auto ref T args) {
         import std.conv: text;
         static if(T.length > 0)
-            lines ~= text(args);
+            soFar ~= text(args);
+    }
+
+    void writeln(T...)(auto ref T args) {
+        import std.conv: text;
+        static if(T.length > 0)
+            lines ~= soFar ~ text(args);
+        else
+            lines ~= soFar;
     }
 }

@@ -28,12 +28,12 @@ struct ReggaeSandbox {
         return ret;
     }
 
-    void runReggae(string[] args...) const {
-        runImpl(args);
+    auto runReggae(string[] args...) const {
+        return runImpl(args);
     }
 
-    void runReggae(string[] args, string project) const {
-        runImpl(args, project);
+    auto runReggae(string[] args, string project) const {
+        return runImpl(args, project);
     }
 
     void writeHelloWorldApp() const {
@@ -58,7 +58,7 @@ struct ReggaeSandbox {
         return [buildPath(testPath, arg)].shouldExecuteOk(testPath, file, line);
     }
 
-    void shouldFail(in string arg, in string file = __FILE__, ulong line = __LINE__) const {
+    auto shouldFail(in string arg, in string file = __FILE__, ulong line = __LINE__) const {
         import tests.utils;
         return [buildPath(testPath, arg)].shouldFailToExecute(testPath, file, line);
     }
@@ -72,9 +72,12 @@ struct ReggaeSandbox {
 
 private:
 
-    void runImpl(string[] args, string project = "") const {
+    auto runImpl(string[] args, string project = "") const {
+        import std.file: thisExePath;
+        import std.path: buildPath, dirName, absolutePath;
         if(project == "") project = testPath;
-        testRun(["reggae", "-C", testPath] ~ args ~ project);
+        //return testRun([buildPath(thisExePath.absolutePath.dirName, "reggae"), "-C", testPath] ~ args ~ project);
+        return testRun(["reggae", "-C", testPath] ~ args ~ project);
     }
 }
 
@@ -85,5 +88,29 @@ void shouldContain(string[] haystack, in string needle,
     import std.array;
     if(!haystack.canFind!(a => a.canFind(needle)))
         throw new UnitTestException(["Could not find " ~ needle ~ " in:"] ~ haystack);
+}
 
+void shouldContain(in string haystack, in string needle,
+                   in string file = __FILE__, in size_t line = __LINE__) {
+    import std.algorithm;
+    import std.array;
+    if(!haystack.canFind(needle))
+        throw new UnitTestException(["Could not find " ~ needle ~ " in:"] ~ haystack);
+}
+
+
+void shouldNotContain(string[] haystack, in string needle,
+                      string file = __FILE__, size_t line = __LINE__) {
+    import std.algorithm;
+    import std.array;
+    if(haystack.canFind!(a => a.canFind(needle)))
+        throw new UnitTestException(["Should not have found " ~ needle ~ " in:"] ~ haystack);
+}
+
+void shouldNotContain(in string haystack, in string needle,
+                      in string file = __FILE__, in size_t line = __LINE__) {
+    import std.algorithm;
+    import std.array;
+    if(haystack.canFind(needle))
+        throw new UnitTestException(["Should not have found " ~ needle ~ " in:"] ~ haystack);
 }

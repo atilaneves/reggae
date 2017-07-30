@@ -10,9 +10,11 @@ import std.path;
 @Tags(["dub", "ninja"])
 unittest {
 
+    import std.string: join;
+
     with(immutable ReggaeSandbox("dub")) {
         shouldNotExist("reggaefile.d");
-        runReggae("-b", "ninja", "--dflags=-g -debug");
+        writelnUt("\n\nReggae output:\n\n", runReggae("-b", "ninja", "--dflags=-g -debug").lines.join("\n"), "-----\n");
         shouldExist("reggaefile.d");
         auto output = ninja.shouldExecuteOk(testPath);
         output.shouldContain("-g -debug");
@@ -146,5 +148,30 @@ unittest {
         ninja.shouldExecuteOk(testPath);
 
         shouldFail("ut");
+    }
+}
+
+@("issue #23 - reggae/dub build should rebuild if dub.json/sdl change")
+@Tags(["dub", "make"])
+unittest {
+
+    import std.process: execute;
+    import std.path: buildPath;
+
+    with(immutable ReggaeSandbox("dub")) {
+        runReggae("-b", "make", "--dflags=-g -debug");
+        make.shouldExecuteOk(testPath).shouldContain("-g -debug");
+        {
+            const ret = execute(["touch", buildPath(testPath, "dub.json")]);
+            ret.status.shouldEqual(0);
+        }
+        {
+            const ret = execute(["make", "-C", testPath]);
+            // don't assert on the status of ret - it requires rerunning reggae
+            // and that can fail if the reggae binary isn't built yet.
+            // Either way -g -debug shows up in the output as the code attempts
+            // to rebuild the binary
+            ret.output.shouldContain("-g -debug");
+        }
     }
 }

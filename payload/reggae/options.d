@@ -61,18 +61,23 @@ struct Options {
         if(!cppCompiler) cppCompiler = environment.get("CXX", "g++");
         if(!dCompiler)   dCompiler   = environment.get("DC", "dmd");
 
-        isDubProject = _isDubProject;
+        isDubProject = _dubProjectFile != "";
+
+        // if there's a dub package file, add it to the list of dependencies so the project
+        // is rebuilt if it changes
+        if(isDubProject) dependencies ~= _dubProjectFile;
 
         if(isDubProject && backend == Backend.tup) {
             throw new Exception("dub integration not supported with the tup backend");
         }
     }
 
-    private bool _isDubProject() @safe nothrow {
-        return
-            buildPath(projectPath, "dub.sdl").exists ||
-            buildPath(projectPath, "dub.json").exists ||
-            buildPath(projectPath, "package.json").exists;
+    private string _dubProjectFile() @safe nothrow {
+        foreach(fileName; ["dub.sdl", "dub.json", "package.json"]) {
+            const name = buildPath(projectPath, fileName);
+            if(name.exists) return name;
+        }
+        return "";
     }
 
     string reggaeFilePath() @safe const {
@@ -86,12 +91,11 @@ struct Options {
 
         if(!foundFiles.empty) return foundFiles.front;
 
-        immutable path = isDubProject ? "" : projectPath;
-        return buildPath(path, "reggaefile.d").absolutePath;
+        return buildPath(projectPath, "reggaefile.d").absolutePath;
     }
 
     string dlangFile() @safe const pure nothrow {
-        return projectBuildFile;
+        return buildPath(projectPath, "reggaefile.d");
     }
 
     string pythonFile() @safe const pure nothrow {
@@ -108,10 +112,6 @@ struct Options {
 
     string luaFile() @safe const pure nothrow {
         return buildPath(projectPath, "reggaefile.lua");
-    }
-
-    string projectBuildFile() @safe const pure nothrow {
-        return buildPath(projectPath, "reggaefile.d");
     }
 
     string toString() @safe const pure {

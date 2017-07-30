@@ -175,16 +175,12 @@ private auto packagePaths(in DubPackage dubPackage, in string[] paths) @trusted 
 //@trusted because of map.array
 private string[] allOf(alias F)(in DubPackage pack, in DubPackage[] packages) @trusted nothrow {
 
-    import std.algorithm: find;
-    import std.array: array, empty, front;
+    import std.range: chain, only;
+    import std.array: array, front, empty;
 
     string[] result;
-    //foreach(d; [pack.name] ~ pack.dependencies) doesn't compile with CTFE
-    //it seems to have to do with constness, replace string[] with const(string)[]
-    //and it won't compile
-    const dependencies = [pack.name] ~ pack.dependencies;
-    foreach(dependency; dependencies) {
 
+    foreach(dependency; chain(only(pack.name), pack.dependencies)) {
         auto depPack = packages.find!(a => a.name == dependency);
         if(!depPack.empty) {
             result ~= F(depPack.front).array;

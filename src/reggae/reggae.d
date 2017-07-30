@@ -10,7 +10,6 @@
  )
  */
 
-
 module reggae.reggae;
 
 import std.stdio;
@@ -59,12 +58,12 @@ mixin template ReggaeMain() {
     }
 }
 
-void run(T)(T output, string[] args) {
+void run(T)(auto ref T output, string[] args) {
     auto options = getOptions(args);
     run(output, options);
 }
 
-void run(T)(T output, Options options) {
+void run(T)(auto ref T output, Options options) {
     if(options.earlyExit) return;
     enforce(options.projectPath != "", "A project path must be specified");
 
@@ -77,7 +76,7 @@ void run(T)(T output, Options options) {
         if(haveToReturn) return;
     }
 
-    maybeCreateReggaefile(options);
+    maybeCreateReggaefile(output, options);
     createBuild(output, options);
 }
 
@@ -210,7 +209,7 @@ private string[] fileNames() @safe pure nothrow {
 }
 
 
-private void createBuild(T)(T output, in Options options) {
+private void createBuild(T)(auto ref T output, in Options options) {
 
     enforce(options.reggaeFilePath.exists, text("Could not find ", options.reggaeFilePath));
 
@@ -239,7 +238,7 @@ struct Binary {
 }
 
 
-private string compileBinaries(T)(T output, in Options options) {
+private string compileBinaries(T)(auto ref T output, in Options options) {
     buildDCompile(output, options);
 
     immutable buildGenName = getBuildGenName(options);
@@ -268,7 +267,7 @@ private string compileBinaries(T)(T output, in Options options) {
     return buildGenName;
 }
 
-void buildDCompile(T)(T output, in Options options) {
+void buildDCompile(T)(auto ref T output, in Options options) {
     if(!thisExePath.newerThan(buildPath(options.workingDir, hiddenDir, "dcompile")))
         return;
 
@@ -288,14 +287,14 @@ private bool isExecutable(in char[] path) @trusted nothrow @nogc //TODO: @safe
     return (access(path.tempCString(), X_OK) == 0);
 }
 
-private void buildBinary(T)(T output, in Options options, in Binary bin) {
+private void buildBinary(T)(auto ref T output, in Options options, in Binary bin) {
     import std.process;
     string[string] env;
     auto config = Config.none;
     auto maxOutput = size_t.max;
     auto workDir = buildPath(options.workingDir, hiddenDir);
-    std.stdio.write("[Reggae] Compiling metabuild binary ", bin.name);
-    if(options.verbose) std.stdio.write(" with ", bin.cmd.join(" "));
+    output.write("[Reggae] Compiling metabuild binary ", bin.name);
+    if(options.verbose) output.write(" with ", bin.cmd.join(" "));
     output.writeln;
     // std.process.execute has a bug where using workDir and a relative path
     // don't work (https://issues.dlang.org/show_bug.cgi?id=15915)
@@ -352,7 +351,7 @@ string reggaeSrcDirName(in Options options) @safe pure nothrow {
 }
 
 
-void writeSrcFiles(T)(T output, in Options options) {
+void writeSrcFiles(T)(auto ref T output, in Options options) {
     output.writeln("[Reggae] Writing reggae source files");
 
     import std.file: mkdirRecurse;
@@ -373,11 +372,11 @@ void writeSrcFiles(T)(T output, in Options options) {
     }
 
     output.writeln("[Reggae] Writing reggae configuration");
-    writeConfig(options);
+    writeConfig(output, options);
 }
 
 
-private void writeConfig(in Options options) {
+private void writeConfig(T)(auto ref T output, in Options options) {
     auto file = File(reggaeSrcFileName(options, "config.d"), "w");
 
     file.writeln(q{
@@ -397,7 +396,7 @@ import reggae.options;
     file.writeln("]);");
 
     try {
-        writeDubConfig(options, file);
+        writeDubConfig(output, options, file);
     } catch(Exception ex) {
         stderr.writeln("Could not write dub configuration, try 'dub upgrade': ", ex.msg);
         throw ex;

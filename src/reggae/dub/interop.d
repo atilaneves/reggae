@@ -77,25 +77,38 @@ private DubInfo _getDubInfo(in Options options) {
 
         const configs = getConfigs();
 
+        bool oneConfigOk;
+        Exception dubDescribeFailure;
+
         if(configs.configurations.empty) {
-            immutable descOutput = callDub(options, ["dub", "describe"]);
+            const descOutput = callDub(options, ["dub", "describe"]);
+            oneConfigOk = true;
             gDubInfos["default"] = getDubInfo(descOutput);
         } else {
             foreach(config; configs.configurations) {
-                immutable descOutput = callDub(options, ["dub", "describe", "-c", config]);
-                gDubInfos[config] = getDubInfo(descOutput);
+                try {
+                    const descOutput = callDub(options, ["dub", "describe", "-c", config]);
+                    oneConfigOk = true;
+                    gDubInfos[config] = getDubInfo(descOutput);
 
-                //dub adds certain flags to certain configurations automatically but these flags
-                //don't know up in the output to `dub describe`. Special case them here.
+                    //dub adds certain flags to certain configurations automatically but these flags
+                    //don't know up in the output to `dub describe`. Special case them here.
 
-                //unittest should only apply to the main package, hence [0]
-                if(config == "unittest") gDubInfos[config].packages[0].dflags ~= " -unittest";
+                    //unittest should only apply to the main package, hence [0]
+                    if(config == "unittest") gDubInfos[config].packages[0].dflags ~= " -unittest";
 
-                callPreBuildCommands(options, gDubInfos[config]);
+                    callPreBuildCommands(options, gDubInfos[config]);
 
+
+                } catch(Exception ex) {
+                    dubDescribeFailure = ex;
+                }
             }
+
             gDubInfos["default"] = gDubInfos[configs.default_];
         }
+
+        if(!oneConfigOk) throw dubDescribeFailure;
     }
 
     return gDubInfos["default"];

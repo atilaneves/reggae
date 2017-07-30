@@ -52,6 +52,7 @@ DubInfo getDubInfo(in string origString) @trusted {
                                                      a.getOptionalList("libs"),
                                                      a.byOptionalKey("active", true), //true for backwards compatibility
                                                      a.getOptionalList("preBuildCommands"),
+                                                     a.getOptionalList("postBuildCommands"),
                                          )).
                                 filter!(a => a.active).
                                 array);

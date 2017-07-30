@@ -1,0 +1,3 @@
+name "postbuild"
+targetType "executable"
+postBuildCommands "touch foo.txt"

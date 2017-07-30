@@ -29,6 +29,7 @@ struct DubPackage {
     string[] libs;
     bool active;
     string[] preBuildCommands;
+    string[] postBuildCommands;
 }
 
 bool isStaticLibrary(in string fileName) @safe pure nothrow {
@@ -157,6 +158,12 @@ struct DubInfo {
             join.
             map!(a => Target(a)).
             array;
+    }
+
+    // all postBuildCommands in one shell command. Empty if there are none
+    string postBuildCommands() @safe pure nothrow const {
+        import std.string: join;
+        return packages[0].postBuildCommands.join(" && ");
     }
 }
 

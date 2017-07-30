@@ -6,19 +6,11 @@ import reggae.reggae;
 import std.path;
 
 
-private string prepareTestPath(in string projectName) {
-    const testPath = newTestDir;
-    const projPath = buildPath(origPath, "tests", "projects", projectName);
-    copyProjectFiles(projPath, testPath);
-    return testPath;
-}
-
 @("dub project with no reggaefile ninja")
 @Tags(["dub", "ninja"])
 unittest {
 
-    with(immutable ReggaeSandbox()) {
-        copyProject("dub");
+    with(immutable ReggaeSandbox("dub")) {
         shouldNotExist("reggaefile.d");
         runReggae("-b", "ninja", "--dflags=-g -debug");
         shouldExist("reggaefile.d");
@@ -40,8 +32,7 @@ unittest {
 @("dub project with no reggaefile tup")
 @Tags(["dub", "tup"])
 unittest {
-    with(immutable ReggaeSandbox()) {
-        copyProject("dub");
+    with(immutable ReggaeSandbox("dub")) {
         runReggae("-b", "tup", "--dflags=-g -debug").
             shouldThrowWithMessage("dub integration not supported with the tup backend");
     }
@@ -50,13 +41,24 @@ unittest {
 @("dub project with no reggaefile and prebuild command")
 @Tags(["dub", "ninja"])
 unittest {
-    with(immutable ReggaeSandbox()) {
-        copyProject("dub_prebuild");
+    with(immutable ReggaeSandbox("dub_prebuild")) {
         runReggae("-b", "ninja", "--dflags=-g -debug");
         ninja.shouldExecuteOk(testPath);
         shouldSucceed("ut");
     }
 }
+
+@("dub project with postbuild command")
+@Tags(["dub", "ninja"])
+unittest {
+    with(immutable ReggaeSandbox("dub_postbuild")) {
+        runReggae("-b", "ninja", "--dflags=-g -debug");
+        ninja.shouldExecuteOk(testPath);
+        shouldExist("foo.txt");
+        shouldSucceed("postbuild");
+    }
+}
+
 
 
 @("project with dependencies not on file system already no dub.selections.json")

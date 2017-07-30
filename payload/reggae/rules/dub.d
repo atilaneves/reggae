@@ -112,6 +112,7 @@ static if(isDubProject) {
 
         import reggae.rules.common: staticLibraryTarget;
         import std.array: join;
+        import std.path: buildPath;
 
         const sharedFlags = dubInfo.targetType == "dynamicLibrary"
             ? "-lib"
@@ -120,10 +121,24 @@ static if(isDubProject) {
         auto dubObjs = dubInfo.toTargets(includeMain, compilerFlags, allTogether);
         auto allObjs = objsFunction() ~ dubObjs;
 
-        return dubInfo.targetType == "library" || dubInfo.targetType == "staticLibrary"
-            ? staticLibraryTarget(targetName.value, allObjs)[0]
-            : link(ExeName(targetName.value),
+        const postBuildCommands = dubInfo.postBuildCommands;
+
+        string realName() {
+            // otherwise the target wouldn't be top-level in the presence of
+            // postBuildCommands
+            return postBuildCommands == ""
+                ? targetName.value
+                : buildPath("$project", targetName.value);
+        }
+
+        auto target = dubInfo.targetType == "library" || dubInfo.targetType == "staticLibrary"
+            ? staticLibraryTarget(realName, allObjs)[0]
+            : link(ExeName(realName),
                    allObjs,
                    Flags(allLinkerFlags));
+
+        return postBuildCommands == ""
+            ? target
+            : Target.phony("postBuild", postBuildCommands, target);
     }
 }

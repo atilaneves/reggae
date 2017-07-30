@@ -59,12 +59,10 @@ static if(isDubProject) {
                             linkerFlags);
     }
 
-
     /**
      Builds a particular dub configuration (executable, unittest, etc.)
      */
-    Target dubConfigurationTarget(ExeName exeName,
-                                  Configuration config = Configuration("default"),
+    Target dubConfigurationTarget(Configuration config = Configuration("default"),
                                   Flags compilerFlags = Flags(),
                                   Flag!"main" includeMain = Yes.main,
                                   Flag!"allTogether" allTogether = No.allTogether,
@@ -72,32 +70,12 @@ static if(isDubProject) {
                                   )
         () if(isCallable!objsFunction)
     {
-
-        return dubTarget!(objsFunction)(exeName,
-                                        configToDubInfo[config.value],
-                                        compilerFlags.value,
-                                        includeMain,
-                                        allTogether);
-    }
-
-    /**
-     Builds a particular dub configuration (executable, unittest, etc.)
-     */
-    Target dubConfigurationTarget(TargetName targetName,
-                                  Configuration config = Configuration("default"),
-                                  Flags compilerFlags = Flags(),
-                                  Flag!"main" includeMain = Yes.main,
-                                  Flag!"allTogether" allTogether = No.allTogether,
-                                  alias objsFunction = () { Target[] t; return t; },
-                                  )
-        () if(isCallable!objsFunction)
-    {
-
-        return dubTarget!(objsFunction)(targetName,
-                                        configToDubInfo[config.value],
-                                        compilerFlags.value,
-                                        includeMain,
-                                        allTogether);
+        const dubInfo = configToDubInfo[config.value];
+        return dubTarget!objsFunction(dubInfo.targetName,
+                                      dubInfo,
+                                      compilerFlags.value,
+                                      includeMain,
+                                      allTogether);
     }
 
 

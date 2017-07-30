@@ -81,15 +81,14 @@ unittest {
             {
                 "name": "dubproj",
                 "configurations": [
-                    { "name": "executable"},
-                    { "name": "unittest"}
+                    { "name": "executable", "targetName": "foo"},
+                    { "name": "unittest", "targetName": "ut"}
               ]
             }`);
 
         writeFile("reggaefile.d", q{
             import reggae;
-            alias ut = dubConfigurationTarget!(TargetName(`ut`),
-                                               Configuration(`unittest`),
+            alias ut = dubConfigurationTarget!(Configuration(`unittest`),
                                                Flags(`-g -debug -cov`));
             mixin build!ut;
         });

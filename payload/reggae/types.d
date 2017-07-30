@@ -39,24 +39,69 @@ struct Flags {
 
 struct ImportPaths {
     string[] value;
+
+    this(inout(string)[] value) inout pure {
+        this.value = value;
+    }
+
+    this(inout(string) value) inout pure {
+        this([value]);
+    }
+
 }
 
 alias IncludePaths = ImportPaths;
 
 struct StringImportPaths {
     string[] value;
+
+    this(inout(string)[] value) inout pure {
+        this.value = value;
+    }
+
+    this(inout(string) value) inout pure {
+        this([value]);
+    }
+
 }
 
 struct SrcDirs {
     string[] value;
+
+    this(inout(string)[] value) inout pure {
+        this.value = value;
+    }
+
+    this(inout(string) value) inout pure {
+        this([value]);
+    }
+
 }
 
 struct SrcFiles {
     string[] value;
+
+    this(inout(string)[] value) inout pure {
+        this.value = value;
+    }
+
+    this(inout(string) value) inout pure {
+        this([value]);
+    }
+
 }
 
 struct ExcludeFiles {
     string[] value;
+
+    this(inout(string)[] value) inout pure {
+        this.value = value;
+    }
+
+    this(inout(string) value) inout pure {
+        this([value]);
+    }
+
 }
 
 struct ExeName {
@@ -82,10 +127,26 @@ enum Backend {
 
 struct Dirs {
     string[] value = ["."];
+
+    this(inout(string)[] value) inout pure {
+        this.value = value;
+    }
+
+    this(inout(string) value) inout pure {
+        this([value]);
+    }
 }
 
 struct Files {
     string[] value;
+
+    this(inout(string)[] value) inout pure {
+        this.value = value;
+    }
+
+    this(inout(string) value) inout pure {
+        this([value]);
+    }
 }
 
 struct Filter(alias F) {

@@ -1,8 +1,8 @@
-module tests.ut.dub_call;
+module tests.ut.dub.config;
 
 
 import unit_threaded;
-import reggae.dub.call;
+import reggae.dub.interop;
 
 
 immutable reggaeOutput = `Package std_data_json can be upgraded from 0.12.0 to 0.14.0.

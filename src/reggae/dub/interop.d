@@ -6,7 +6,6 @@ module reggae.dub.interop;
 
 import reggae.options;
 import reggae.dub.info;
-import reggae.dub.call;
 import reggae.dub.json;
 import std.stdio;
 import std.exception;
@@ -18,6 +17,33 @@ DubInfo[string] gDubInfos;
 
 
 @safe:
+
+struct DubConfigurations {
+    string[] configurations;
+    string default_;
+}
+
+
+DubConfigurations getConfigurations(in string output) pure {
+
+    import std.algorithm: splitter, find, canFind, until, map;
+    import std.string: stripLeft;
+    import std.array: array, replace, front, empty;
+
+    auto lines = output.splitter("\n");
+    auto fromConfigs = lines.find("Available configurations:").
+        until!(a => a == "").
+        map!(a => a.stripLeft).
+        array[1..$];
+    if(fromConfigs.empty) return DubConfigurations();
+
+    immutable defMarker = " [default]";
+    auto default_ = fromConfigs.find!(a => a.canFind(defMarker)).front.replace(defMarker, "");
+    auto configs = fromConfigs.map!(a => a.replace(defMarker, "")).array;
+
+    return DubConfigurations(configs, default_);
+}
+
 
 void maybeCreateReggaefile(T)(auto ref T output, in Options options) {
     import std.file: exists;
@@ -58,7 +84,6 @@ private DubInfo _getDubInfo(T)(auto ref T output, in Options options) {
         }
 
         DubConfigurations getConfigsImpl() {
-            import reggae.dub.call: getConfigurations;
             immutable dubBuildArgs = ["dub", "--annotate", "build", "--compiler=" ~ options.dCompiler,
                                       "--print-configs", "--build=docs"];
             immutable dubBuildOutput = callDub(options, dubBuildArgs);

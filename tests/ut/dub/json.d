@@ -1,4 +1,4 @@
-module tests.ut.dub_json;
+module tests.ut.dub.json;
 
 
 import unit_threaded;

@@ -126,9 +126,11 @@ struct DubInfo {
             //package
             const projDir = i == 0 ? "" : dubPackage.path;
 
+            const sharedFlag = targetType == TargetType.dynamicLibrary ? ["-fPIC"] : [];
             immutable flags = chain(dubPackage.dflags,
                                     versions,
                                     [options.dflags],
+                                    sharedFlag,
                                     [deUnitTest(i, compilerFlags)])
                 .join(" ");
 
@@ -173,7 +175,7 @@ struct DubInfo {
 
         const pack = packages[0];
         return (pack.targetType == TargetType.library || pack.targetType == TargetType.staticLibrary)
-            ? ["-lib"]
+            ? ["-shared"]
             : [];
     }
 

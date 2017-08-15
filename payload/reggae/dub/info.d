@@ -106,21 +106,9 @@ struct DubInfo {
                 : flags.replace("-unittest", "").replace("-main", "");
         }
 
-        const(string)[] getVersions(T)(in T index) {
-            import std.algorithm: map;
-            import std.array: array;
-
-            const(string)[] ret = index == 0
-                ? packages[index].allOf!(a => a.versions)(packages)
-                : packages[0].versions ~ packages[index].versions;
-
-            return ret.map!(a => "-version=" ~ a).array;
-        }
-
         foreach(const i, const dubPackage; packages) {
             const importPaths = allImportPaths();
             const stringImportPaths = dubPackage.allOf!(a => a.packagePaths(a.stringImportPaths))(packages);
-            auto versions = getVersions(i);
 
             //the path must be explicit for the other packages, implicit for the "main"
             //package
@@ -128,7 +116,7 @@ struct DubInfo {
 
             const sharedFlag = targetType == TargetType.dynamicLibrary ? ["-fPIC"] : [];
             immutable flags = chain(dubPackage.dflags,
-                                    versions,
+                                    dubPackage.versions.map!(a => "-version=" ~ a).array,
                                     [options.dflags],
                                     sharedFlag,
                                     [deUnitTest(i, compilerFlags)])

@@ -25,7 +25,7 @@ unittest {
                     [], // stringImportPaths
                     ["/path/to/source/app.d"], // sourceFiles
                     TargetType.executable,
-                    ["Have_foo", "Have_bar"], // verions
+                    ["lefoo", "Have_foo", "Have_bar"], // versions
                     ["bar"], // dependencies
                     [], // libs
                     true, // active
@@ -43,7 +43,7 @@ unittest {
                     [], // stringImportPaths
                     ["/path/to/bar/source/bar.d"], // sourceFiles
                     TargetType.staticLibrary,
-                    ["Have_bar"], // verions
+                    ["lefoo", "Have_bar"], // versions
                     [], // dependencies
                     [], // libs
                     true, // active

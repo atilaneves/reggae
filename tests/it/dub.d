@@ -20,7 +20,8 @@ unittest {
                   [
                       `name "foo"`,
                       `targetType "executable"`,
-                      `dependency "bar" path="bar"`
+                      `dependency "bar" path="bar"`,
+                      `versions "lefoo"`
                   ].join("\n"));
 
         writeFile("source/app.d",

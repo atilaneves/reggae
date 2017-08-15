@@ -35,7 +35,7 @@
             "lflags": [],
             "libs": [],
             "copyFiles": [],
-            "versions": [],
+            "versions": ["lefoo"],
             "debugVersions": [],
             "importPaths": [
                 "source/"
@@ -120,6 +120,7 @@
                 ],
                 "copyFiles": [],
                 "versions": [
+                    "lefoo",
                     "Have_foo",
                     "Have_bar"
                 ],
@@ -170,6 +171,7 @@
                 ],
                 "copyFiles": [],
                 "versions": [
+                    "lefoo",
                     "Have_bar"
                 ],
                 "debugVersions": [],

@@ -37,6 +37,14 @@ struct Flags {
     string value;
 }
 
+struct CompilerFlags {
+    string value;
+}
+
+struct LinkerFlags {
+    string value;
+}
+
 struct ImportPaths {
     string[] value;
 

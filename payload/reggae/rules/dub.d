@@ -20,7 +20,10 @@ static if(isDubProject) {
     /**
      Builds the main dub target (equivalent of "dub build")
     */
-    Target dubDefaultTarget(Flags compilerFlags = Flags(), Flag!"allTogether" allTogether = No.allTogether)() {
+    Target dubDefaultTarget(CompilerFlags compilerFlags = CompilerFlags(),
+                            Flag!"allTogether" allTogether = No.allTogether)
+        ()
+    {
         enum config = "default";
         const dubInfo = configToDubInfo[config];
         enum targetName = dubInfo.targetName;
@@ -30,9 +33,9 @@ static if(isDubProject) {
                 targetName,
                 dubInfo,
                 compilerFlags.value,
+                linkerFlags,
                 Yes.main,
                 allTogether,
-                linkerFlags
             );
     }
 
@@ -40,40 +43,47 @@ static if(isDubProject) {
     /**
        A target corresponding to `dub test`
      */
-    Target dubTestTarget(Flags compilerFlags = Flags())() {
+    Target dubTestTarget(CompilerFlags compilerFlags = CompilerFlags(), LinkerFlags linkerFlags = LinkerFlags())() {
+        import std.string: split;
+
         const config = "unittest" in configToDubInfo ? "unittest" : "default";
 
         auto actualCompilerFlags = compilerFlags.value;
         if("unittest" !in configToDubInfo) actualCompilerFlags ~= " -unittest";
 
         const hasMain = configToDubInfo[config].packages[0].mainSourceFile != "";
-        const linkerFlags = hasMain ? [] : ["-main"];
+        const extraLinkerFlags = hasMain ? [] : ["-main"];
+        const actualLinkerFlags = extraLinkerFlags ~ linkerFlags.value.split(" ");
 
         // since dmd has a bug pertaining to separate compilation and __traits(getUnitTests),
         // we default here to compiling all-at-once for the unittest build
         return dubTarget!()(TargetName("ut"),
                             configToDubInfo[config],
                             actualCompilerFlags,
+                            actualLinkerFlags,
                             Yes.main,
-                            Yes.allTogether,
-                            linkerFlags);
+                            Yes.allTogether);
     }
 
     /**
      Builds a particular dub configuration (executable, unittest, etc.)
      */
     Target dubConfigurationTarget(Configuration config = Configuration("default"),
-                                  Flags compilerFlags = Flags(),
+                                  CompilerFlags compilerFlags = CompilerFlags(),
+                                  LinkerFlags linkerFlags = LinkerFlags(),
                                   Flag!"main" includeMain = Yes.main,
                                   Flag!"allTogether" allTogether = No.allTogether,
                                   alias objsFunction = () { Target[] t; return t; },
                                   )
         () if(isCallable!objsFunction)
     {
+        import std.string: split;
+
         const dubInfo = configToDubInfo[config.value];
         return dubTarget!objsFunction(dubInfo.targetName,
                                       dubInfo,
                                       compilerFlags.value,
+                                      linkerFlags.value.split(" "),
                                       includeMain,
                                       allTogether);
     }
@@ -83,9 +93,9 @@ static if(isDubProject) {
                     (in TargetName targetName,
                      in DubInfo dubInfo,
                      in string compilerFlags,
+                     in string[] linkerFlags = [],
                      in Flag!"main" includeMain = Yes.main,
-                     in Flag!"allTogether" allTogether = No.allTogether,
-                     in string[] linkerFlags = [])
+                     in Flag!"allTogether" allTogether = No.allTogether)
     {
 
         import reggae.rules.common: staticLibraryTarget;

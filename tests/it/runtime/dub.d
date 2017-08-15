@@ -105,7 +105,7 @@ unittest {
 
         writeFile("reggaefile.d", q{
             import reggae;
-            mixin build!(dubTestTarget!(Flags("-g -debug")));
+            mixin build!(dubTestTarget!(CompilerFlags("-g -debug")));
         });
 
         mkdirRecurse(buildPath(testPath, "source"));

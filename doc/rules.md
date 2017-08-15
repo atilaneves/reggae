@@ -253,7 +253,8 @@ A configuration target of dub's, for instance 'unittest'.
 ```d
 Target dubConfigurationTarget(ExeName exeName,
                               Configuration config = Configuration("default"),
-                              Flags compilerFlags = Flags(),
+                              CompilerFlags compilerFlags = CompilerFlags(),
+                              LinkerFlags linkerFlags = LinkerFlags(),
                               Flag!"main" includeMain = Yes.main,
                               alias objsFunction = () { Target[] t; return t; },
 ```

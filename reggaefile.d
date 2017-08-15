@@ -31,10 +31,10 @@ version(minimal) {
     //could also be dubConfigurationTarget(ExeName("reggae"), Configuration("executable"), Flags(...))
     //or use the `scriptlike` rule to figure out dependencies itself
     enum commonFlags = "-g -debug -w";
-    alias main = dubDefaultTarget!(Flags(commonFlags));
+    alias main = dubDefaultTarget!(CompilerFlags(commonFlags));
 
     //the unit test binary
-    alias ut = dubTestTarget!(Flags(commonFlags ~ " -cov"));
+    alias ut = dubTestTarget!(CompilerFlags(commonFlags ~ " -cov"));
 
     //the cucumber test target
     enum cuke = Target.phony("cuke", "cd $project && cucumber", [main]);

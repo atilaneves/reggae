@@ -18,6 +18,7 @@ unittest {
     const actual = dubTarget!()(TargetName("app"),
                                 dubInfo,
                                 "-g -debug",
+                                [],
                                 Yes.main,
                                 No.allTogether,
     );
@@ -51,6 +52,7 @@ unittest {
     const actual = dubTarget!()(TargetName("app"),
                                 dubInfo,
                                 "-g -debug",
+                                [],
                                 Yes.main,
                                 No.allTogether,
     );
@@ -112,6 +114,7 @@ unittest {
     const actual = dubTarget!()(TargetName("app"),
                                 dubInfo,
                                 "-g",
+                                [],
                                 Yes.main,
                                 No.allTogether,
     );

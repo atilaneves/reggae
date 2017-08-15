@@ -22,7 +22,6 @@ unittest {
         shouldSucceed("atest").shouldEqual(
             ["Why hello!",
              "",
-             "[0, 0, 0, 4]",
              "I'm immortal!"]
         );
 
@@ -62,7 +61,6 @@ unittest {
 }
 
 
-
 @("project with dependencies not on file system already no dub.selections.json")
 @Tags(["dub", "ninja"])
 unittest {
@@ -83,44 +81,12 @@ unittest {
   "targetType": "executable",
   "dependencies": { "cerealed": "==0.6.8" }
 }`);
+        writeFile("source/app.d", "void main() {}");
 
         runReggae("-b", "ninja");
     }
 }
 
-@("project with dependencies not on file system already with dub.selections.json")
-@Tags(["dub", "ninja"])
-unittest {
-
-    import std.file: exists, rmdirRecurse;
-    import std.process: environment;
-    import std.path: buildPath;
-
-    const cerealedDir = buildPath(environment["HOME"], ".dub/packages/cerealed-0.6.8");
-    if(cerealedDir.exists)
-        rmdirRecurse(cerealedDir);
-
-    with(immutable ReggaeSandbox()) {
-        writeFile("dub.json", `
-{
-  "name": "depends_on_cerealed",
-  "license": "MIT",
-  "targetType": "executable",
-  "dependencies": { "cerealed": "==0.6.8" }
-}`);
-
-        writeFile("dub.selections.json", `
-{
-        "fileVersion": 1,
-        "versions": {
-                "cerealed": "0.6.8",
-        }
-}
-`);
-
-        runReggae("-b", "ninja");
-    }
-}
 
 @("simple dub project with no main function but with unit tests")
 @Tags(["dub", "ninja"])

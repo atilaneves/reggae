@@ -9,8 +9,8 @@ import std.algorithm: map, filter;
 DubInfo getDubInfo(in string origString) @trusted {
 
     import std.string: indexOf;
-    import core.exception: RangeError;
     import std.array;
+    import core.exception: RangeError;
 
     string nextOpenCurly(string str) {
         return str[str.indexOf("{") .. $];
@@ -24,38 +24,42 @@ DubInfo getDubInfo(in string origString) @trusted {
         for(; ; jsonString = nextOpenCurly(jsonString[1..$])) {
             auto json = parseJSON(jsonString);
 
-            bool hasPackages() {
+            bool hasTargets() {
                 try
-                    return ("packages" in json.object) !is null;
+                    return ("targets" in json.object) !is null;
                 catch(JSONException ex)
                     return false;
             }
 
-            if(!hasPackages) {
+            if(!hasTargets) {
                 continue;
             }
 
-            auto packages = json.byKey("packages");
-            auto info = DubInfo(packages.array.
-                                map!(a => DubPackage(a.byKey("name").str,
-                                                     a.byKey("path").str,
-                                                     a.getOptional("mainSourceFile"),
-                                                     a.getOptional("targetFileName"),
-                                                     a.byKey("dflags").jsonValueToStrings,
-                                                     a.byKey("lflags").jsonValueToStrings,
-                                                     a.byKey("importPaths").jsonValueToStrings,
-                                                     a.byKey("stringImportPaths").jsonValueToStrings,
-                                                     a.byKey("files").jsonValueToFiles,
-                                                     a.getOptional("targetType"),
-                                                     a.getOptionalList("versions"),
-                                                     a.getOptionalList("dependencies"),
-                                                     a.getOptionalList("libs"),
-                                                     a.byOptionalKey("active", true), //true for backwards compatibility
-                                                     a.getOptionalList("preBuildCommands"),
-                                                     a.getOptionalList("postBuildCommands"),
-                                         )).
-                                filter!(a => a.active).
-                                array);
+            auto targets = json.byKey("targets").array;
+            auto info = DubInfo(targets
+                                .map!((a) {
+                                    auto bs = a.object["buildSettings"];
+                                    return DubPackage(
+                                        bs.byKey("targetName").str,
+                                        bs.byKey("targetPath").str,
+                                        bs.getOptional("mainSourceFile"),
+                                        bs.getOptional("targetName"),
+                                        bs.byKey("dflags").jsonValueToStrings,
+                                        bs.byKey("lflags").jsonValueToStrings,
+                                        bs.byKey("importPaths").jsonValueToStrings,
+                                        bs.byKey("stringImportPaths").jsonValueToStrings,
+                                        bs.byKey("sourceFiles").jsonValueToStrings,
+                                        bs.getOptionalEnum!TargetType("targetType"),
+                                        bs.getOptionalList("versions"),
+                                        a.getOptionalList("dependencies"),
+                                        bs.getOptionalList("libs"),
+                                        true, // backwards compatibility (active)
+                                        bs.getOptionalList("preBuildCommands"),
+                                        bs.getOptionalList("postBuildCommands"),
+                                    );
+                                })
+                                .filter!(a => a.active)
+                                .array);
 
 
 
@@ -105,7 +109,12 @@ private string[] jsonValueToStrings(JSONValue json) @trusted {
 
 
 private JSONValue byKey(JSONValue json, in string key) @trusted {
-    return json.object[key];
+    import core.exception: RangeError;
+    try
+        return json.object[key];
+    catch(RangeError e) {
+        throw new Exception("Could not find key " ~ key);
+    }
 }
 
 private bool byOptionalKey(JSONValue json, in string key, bool def) {
@@ -125,6 +134,11 @@ private bool boolean(JSONValue json) @trusted {
 private string getOptional(JSONValue json, in string key) @trusted {
     auto aa = json.object;
     return key in aa ? aa[key].str : "";
+}
+
+private T getOptionalEnum(T)(JSONValue json, in string key) @trusted {
+    auto aa = json.object;
+    return key in aa ? cast(T)aa[key].integer : T.init;
 }
 
 private string[] getOptionalList(JSONValue json, in string key) @trusted {

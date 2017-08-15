@@ -92,7 +92,7 @@ static if(isDubProject) {
         import std.array: join;
         import std.path: buildPath;
 
-        const sharedFlags = dubInfo.targetType == "dynamicLibrary"
+        const sharedFlags = dubInfo.targetType == TargetType.dynamicLibrary
             ? "-lib"
             : "";
         const allLinkerFlags = (linkerFlags ~ dubInfo.linkerFlags ~ sharedFlags).join(" ");
@@ -109,7 +109,7 @@ static if(isDubProject) {
                 : buildPath("$project", targetName.value);
         }
 
-        auto target = dubInfo.targetType == "library" || dubInfo.targetType == "staticLibrary"
+        auto target = dubInfo.targetType == TargetType.library || dubInfo.targetType == TargetType.staticLibrary
             ? staticLibraryTarget(realName, allObjs)[0]
             : link(ExeName(realName),
                    allObjs,

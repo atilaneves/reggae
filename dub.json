@@ -42,6 +42,7 @@
                                   "tests/projects/dub_postbuild/source/app.d",
                                   "tests/projects/dub_postbuild/reggaefile.d",
                                  ],
+          "stringImportPaths": ["tests/json"],
           "dependencies": {
               "unit-threaded": "~>0.7.0"
           }

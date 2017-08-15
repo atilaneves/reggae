@@ -184,7 +184,7 @@ unittest {
 
     auto dubInfo = DubInfo([DubPackage("myapp", "/path/myapp")]);
     dubInfo.packages[0].files = ["src/file1.d", "src/file2.d"];
-    dubInfo.packages[0].targetType = "library";
+    dubInfo.packages[0].targetType = TargetType.library;
 
     string[] empty;
     const expected = Target("$builddir/libfoo.a",

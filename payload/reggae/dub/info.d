@@ -13,6 +13,18 @@ import std.path: buildPath;
 import std.traits: isCallable;
 import std.range: chain;
 
+enum TargetType {
+    autodetect,
+    none,
+    executable,
+    library,
+    sourceLibrary,
+    dynamicLibrary,
+    staticLibrary,
+    object,
+}
+
+
 struct DubPackage {
     string name;
     string path;
@@ -23,13 +35,35 @@ struct DubPackage {
     string[] importPaths;
     string[] stringImportPaths;
     string[] files;
-    string targetType;
+    TargetType targetType;
     string[] versions;
     string[] dependencies;
     string[] libs;
     bool active;
     string[] preBuildCommands;
     string[] postBuildCommands;
+
+    string toString() @safe pure const {
+        import std.string: join;
+        import std.conv: to;
+        import std.traits: Unqual;
+
+        auto ret = `DubPackage(`;
+        string[] lines;
+
+        foreach(ref elt; this.tupleof) {
+            static if(is(Unqual!(typeof(elt)) == TargetType))
+                lines ~= `TargetType.` ~ elt.to!string;
+            else static if(is(Unqual!(typeof(elt)) == string))
+                lines ~= `"` ~ elt.to!string ~ `"`;
+            else
+                lines ~= elt.to!string;
+        }
+        ret ~= lines.join(`, `);
+        ret ~= `)`;
+        return ret;
+    }
+
 }
 
 bool isStaticLibrary(in string fileName) @safe pure nothrow {
@@ -122,7 +156,7 @@ struct DubInfo {
         return TargetName(packages[0].targetFileName);
     }
 
-    string targetType() @safe const pure nothrow {
+    TargetType targetType() @safe const pure nothrow {
         return packages[0].targetType;
     }
 
@@ -130,7 +164,9 @@ struct DubInfo {
         import std.array: join;
 
         const pack = packages[0];
-        return (pack.targetType == "library" || pack.targetType == "staticLibrary") ? ["-lib"] : [];
+        return (pack.targetType == TargetType.library || pack.targetType == TargetType.staticLibrary)
+            ? ["-lib"]
+            : [];
     }
 
     string[] linkerFlags() @safe const pure nothrow {

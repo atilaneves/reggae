@@ -165,7 +165,6 @@ private void callPreBuildCommands(in Options options, in DubInfo dubInfo) {
     size_t maxOutput = size_t.max;
     immutable workDir = options.projectPath;
 
-
     foreach(c; dubInfo.packages[0].preBuildCommands) {
         auto cmd = c.replace("$project", options.projectPath);
         immutable ret = executeShell(cmd, env, config, maxOutput, workDir);
@@ -219,18 +218,9 @@ bool needDubFetch(in string dubPackage, in string version_) {
     return !path.exists;
 }
 
-enum TargetType {
-    executable,
-    library,
-    staticLibrary,
-    dynamicLibrary,
-    sourceLibrary,
-    none,
-}
-
 
 void writeDubConfig(T)(auto ref T output, in Options options, File file) {
-    import std.conv: to;
+    import reggae.dub.info: TargetType;
     import std.stdio: writeln;
 
     output.writeln("[Reggae] Writing dub configuration");
@@ -242,12 +232,6 @@ void writeDubConfig(T)(auto ref T output, in Options options, File file) {
         file.writeln("enum isDubProject = true;");
         auto dubInfo = _getDubInfo(output, options);
         const targetType = dubInfo.packages[0].targetType;
-
-        try {
-            targetType.to!TargetType;
-        } catch(Exception ex) {
-            throw new Exception(text("Unsupported dub targetType '", targetType, "'"));
-        }
 
         file.writeln(`const configToDubInfo = assocList([`);
 

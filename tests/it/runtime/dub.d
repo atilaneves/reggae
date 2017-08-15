@@ -83,6 +83,7 @@ unittest {
   "targetType": "executable",
   "dependencies": { "cerealed": "==0.6.8" }
 }`);
+        writeFile("source/app.d", "void main() {}");
 
         runReggae("-b", "ninja");
     }
@@ -117,6 +118,7 @@ unittest {
         }
 }
 `);
+        writeFile("source/app.d", "void main() {}");
 
         runReggae("-b", "ninja");
     }

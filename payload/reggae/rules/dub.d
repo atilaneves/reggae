@@ -21,13 +21,16 @@ static if(isDubProject) {
      Builds the main dub target (equivalent of "dub build")
     */
     Target dubDefaultTarget(CompilerFlags compilerFlags = CompilerFlags(),
+                            LinkerFlags linkerFlags = LinkerFlags(),
                             Flag!"allTogether" allTogether = No.allTogether)
         ()
     {
+        import std.string: split;
+
         enum config = "default";
         const dubInfo = configToDubInfo[config];
         enum targetName = dubInfo.targetName;
-        enum linkerFlags = dubInfo.mainLinkerFlags;
+        enum linkerFlags = dubInfo.mainLinkerFlags ~ linkerFlags.value.split(" ");
         return dubTarget!(() { Target[] t; return t;})
             (
                 targetName,

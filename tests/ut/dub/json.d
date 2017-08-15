@@ -55,6 +55,21 @@ unittest {
     );
 }
 
+@("DubInfo.targetName")
+unittest {
+    import std.format: format;
+    const path = "/path/to";
+    auto info = getDubInfo(import("foobar.json").format(path, path, path, path, path, path, path, path, path, path, path));
+
+    info.targetName.shouldEqual(TargetName("foo"));
+
+    info.packages[0].targetType = TargetType.dynamicLibrary;
+    info.targetName.shouldEqual(TargetName("libfoo.so"));
+
+    info.packages[0].targetType = TargetType.library;
+    info.targetName.shouldEqual(TargetName("libfoo.a"));
+}
+
 @("PACKAGE_DIR")
 unittest {
     const jsonString = q{

@@ -153,7 +153,15 @@ struct DubInfo {
     }
 
     TargetName targetName() @safe const pure nothrow {
-        return TargetName(packages[0].targetFileName);
+        const fileName = packages[0].targetFileName;
+        switch(targetType) with(TargetType) {
+        default:
+            return TargetName(fileName);
+        case library:
+            return TargetName("lib" ~ fileName ~ ".a");
+        case dynamicLibrary:
+            return TargetName("lib" ~ fileName ~ ".so");
+        }
     }
 
     TargetType targetType() @safe const pure nothrow {

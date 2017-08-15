@@ -204,6 +204,7 @@ unittest {
     dubTarget(TargetName("libfoo.a"), dubInfo, "-g").shouldEqual(expected);
 }
 
+
 @("object files as dub srcFiles")
 unittest {
     auto oldOptions = options;

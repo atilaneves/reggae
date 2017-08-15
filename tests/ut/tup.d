@@ -23,8 +23,8 @@ void testSimpleDBuild() {
     auto tup = Tup(build, "/path/to/project");
 
     tup.lines.shouldEqual(
-        [": /path/to/project/src/main.d |> dmd -I/path/to/project/src -c /path/to/project/src/main.d -ofobjs/myapp.objs/main.o |> objs/myapp.objs/main.o",
-         ": /path/to/project/src/maths.d |> dmd -c /path/to/project/src/maths.d -ofobjs/myapp.objs/maths.o |> objs/myapp.objs/maths.o",
-         ": objs/myapp.objs/main.o objs/myapp.objs/maths.o |> dmd -ofmyapp objs/myapp.objs/main.o objs/myapp.objs/maths.o |> myapp"
+        [": /path/to/project/src/main.d |> dmd -I/path/to/project/src -c /path/to/project/src/main.d -of.reggae/objs/myapp.objs/main.o |> .reggae/objs/myapp.objs/main.o",
+         ": /path/to/project/src/maths.d |> dmd -c /path/to/project/src/maths.d -of.reggae/objs/myapp.objs/maths.o |> .reggae/objs/myapp.objs/maths.o",
+         ": .reggae/objs/myapp.objs/main.o .reggae/objs/myapp.objs/maths.o |> dmd -ofmyapp .reggae/objs/myapp.objs/main.o .reggae/objs/myapp.objs/maths.o |> myapp"
                               ]);
 }

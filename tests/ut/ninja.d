@@ -88,13 +88,13 @@ void testSimpleDBuild() {
     auto ninja = Ninja(build, "/path/to/project");
 
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build objs/myapp.objs/main.o: dmd /path/to/project/src/main.d",
+        [NinjaEntry("build .reggae/objs/myapp.objs/main.o: dmd /path/to/project/src/main.d",
                     ["before = -I/path/to/project/src -c",
                      "between = -of"]),
-         NinjaEntry("build objs/myapp.objs/maths.o: dmd /path/to/project/src/maths.d",
+         NinjaEntry("build .reggae/objs/myapp.objs/maths.o: dmd /path/to/project/src/maths.d",
                     ["before = -c",
                      "between = -of"]),
-         NinjaEntry("build myapp: dmd_2 objs/myapp.objs/main.o objs/myapp.objs/maths.o",
+         NinjaEntry("build myapp: dmd_2 .reggae/objs/myapp.objs/main.o .reggae/objs/myapp.objs/maths.o",
                     ["before = -of"])
             ]);
 
@@ -301,10 +301,10 @@ void testImplicitsWithNoIn() {
     auto foo = Target("$project/foodir", "mkdir -p $out", emptyDependencies, [stuff]);
     auto ninja = Ninja(Build(foo), "/path/to/proj"); //to make sure we can
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build objs//path/to/proj/foodir.objs/foo.o: dmd /path/to/proj/foo.d",
+        [NinjaEntry("build .reggae/objs//path/to/proj/foodir.objs/foo.o: dmd /path/to/proj/foo.d",
                     ["before = -of",
                      "between = -c"]),
-         NinjaEntry("build /path/to/proj/foodir: mkdir  | objs//path/to/proj/foodir.objs/foo.o",
+         NinjaEntry("build /path/to/proj/foodir: mkdir  | .reggae/objs//path/to/proj/foodir.objs/foo.o",
                     ["before = -p"]),
             ]);
     ninja.ruleEntries.shouldEqual(

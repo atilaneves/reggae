@@ -142,7 +142,7 @@ Target inTopLevelObjDirOf(Target target, string dirName, Flag!"topLevel" isTopLe
 
 
 string topLevelDirName(in Target target) @safe pure {
-    return buildPath("objs", target._outputs[0].expandBuildDir ~ ".objs");
+    return buildPath(".reggae", "objs", target._outputs[0].expandBuildDir ~ ".objs");
 }
 
 //targets that have outputs with $builddir or $project in them want to be placed

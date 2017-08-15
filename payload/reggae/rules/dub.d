@@ -122,6 +122,7 @@ static if(isDubProject) {
                 : buildPath("$project", targetName.value);
         }
 
+        writeln("targetType: ", dubInfo.targetType);
         auto target = dubInfo.targetType == TargetType.library || dubInfo.targetType == TargetType.staticLibrary
             ? staticLibraryTarget(realName, allObjs)[0]
             : link(ExeName(realName),

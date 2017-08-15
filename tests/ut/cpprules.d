@@ -127,8 +127,8 @@ void testUnityTargetCpp() @trusted {
     target.rawOutputs.shouldEqual(["leapp"]);
     target.shellCommand(gDefaultOptions.withProjectPath(projectPath)).shouldEqual(
         "g++ -g -O0 -I/path/to/proj/headers -MMD -MT leapp -MF leapp.dep -o leapp " ~
-        "objs/leapp.objs/unity.cpp mylib.a");
-    target.dependencyTargets.shouldEqual([Target.phony("$builddir/objs/leapp.objs/unity.cpp",
+        ".reggae/objs/leapp.objs/unity.cpp mylib.a");
+    target.dependencyTargets.shouldEqual([Target.phony("$builddir/.reggae/objs/leapp.objs/unity.cpp",
                                                        "",
                                                        [],
                                                        [Target("src/foo.cpp"),
@@ -155,8 +155,8 @@ void testUnityTargetC() @trusted {
     target.rawOutputs.shouldEqual(["leapp"]);
     target.shellCommand(gDefaultOptions.withProjectPath(projectPath)).shouldEqual(
         "gcc -g -O0 -I/path/to/proj/headers -MMD -MT leapp -MF leapp.dep -o leapp " ~
-        "objs/leapp.objs/unity.c mylib.a");
-    target.dependencyTargets.shouldEqual([Target.phony("$builddir/objs/leapp.objs/unity.c",
+        ".reggae/objs/leapp.objs/unity.c mylib.a");
+    target.dependencyTargets.shouldEqual([Target.phony("$builddir/.reggae/objs/leapp.objs/unity.c",
                                                        "",
                                                        [],
                                                        [Target("src/foo.c"),

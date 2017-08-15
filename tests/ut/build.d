@@ -80,7 +80,7 @@ void testInTopLevelObjDir() {
     auto dirName = topLevelDirName(theApp);
     auto fooObj = Target("foo.o", "", [Target("foo.c")]);
     fooObj.inTopLevelObjDirOf(dirName).shouldEqual(
-        Target("objs/theapp.objs/foo.o", "", [Target("foo.c")]));
+        Target(".reggae/objs/theapp.objs/foo.o", "", [Target("foo.c")]));
 
     auto barObjInBuildDir = Target("$builddir/bar.o", "", [Target("bar.c")]);
     barObjInBuildDir.inTopLevelObjDirOf(dirName).shouldEqual(
@@ -164,8 +164,8 @@ void testDiamondDeps() {
     auto symlink2 = Target("$project/weird/path/thingie2", "ln -sf $in $out", fooLib);
     auto build = Build(symlink1, symlink2);
 
-    auto newObj1 = Target("objs/$project/foo.so.objs/obj1.o", "dmd -of$out -c $in", src1);
-    auto newObj2 = Target("objs/$project/foo.so.objs/obj2.o", "dmd -of$out -c $in", src2);
+    auto newObj1 = Target(".reggae/objs/$project/foo.so.objs/obj1.o", "dmd -of$out -c $in", src1);
+    auto newObj2 = Target(".reggae/objs/$project/foo.so.objs/obj2.o", "dmd -of$out -c $in", src2);
     auto newFooLib = Target("$project/foo.so", "dmd -of$out $in", [newObj1, newObj2]);
     auto newSymlink1 = Target("$project/weird/path/thingie1", "ln -sf $in $out", newFooLib);
     auto newSymlink2 = Target("$project/weird/path/thingie2", "ln -sf $in $out", newFooLib);
@@ -183,12 +183,12 @@ void testPhobosOptionalBug() {
     mixin build!(foo, optional!(bar));
     auto build = buildFunc();
 
-    auto fooObj1 = Target("objs/foo.objs/obj1.o", "dmd -of$out -c $in", Target("src1.d"));
-    auto fooObj2 = Target("objs/foo.objs/obj2.o", "dmd -of$out -c $in", Target("src2.d"));
+    auto fooObj1 = Target(".reggae/objs/foo.objs/obj1.o", "dmd -of$out -c $in", Target("src1.d"));
+    auto fooObj2 = Target(".reggae/objs/foo.objs/obj2.o", "dmd -of$out -c $in", Target("src2.d"));
     auto newFoo = Target("foo", "dmd -of$out $in", [fooObj1, fooObj2]);
 
-    auto barObj1 = Target("objs/bar.objs/obj1.o", "dmd -of$out -c $in", Target("src1.d"));
-    auto barObj2 = Target("objs/bar.objs/obj2.o", "dmd -of$out -c $in", Target("src2.d"));
+    auto barObj1 = Target(".reggae/objs/bar.objs/obj1.o", "dmd -of$out -c $in", Target("src1.d"));
+    auto barObj2 = Target(".reggae/objs/bar.objs/obj2.o", "dmd -of$out -c $in", Target("src2.d"));
     auto newBar = Target("bar", "dmd -of$out $in", [barObj1, barObj2]);
 
     build.range.array.shouldEqual([fooObj1, fooObj2, newFoo, barObj1, barObj2, newBar]);
@@ -292,7 +292,7 @@ unittest {
     build.targets.shouldEqual(
         [Target("output",
                 "cmd -o $out $in",
-                Target("objs/output.objs/med",
+                Target(".reggae/objs/output.objs/med",
                        "medcmd -o $out $in",
                        "input"))]);
 }

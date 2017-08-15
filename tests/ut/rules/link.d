@@ -13,7 +13,8 @@ import unit_threaded;
 
     auto cppTarget = link(ExeName("cppapp"), [Target("foo.o", "", Target("foo.cpp"))], Flags("--sillyflag"));
     //since foo.o is not a leaf target, the path should not appear (it's created in the build dir)
-    cppTarget.shellCommand(gDefaultOptions.withProjectPath("/foo/bar")).shouldEqual("g++ -o cppapp --sillyflag foo.o");
+    cppTarget.shellCommand(gDefaultOptions.withProjectPath("/foo/bar")).shouldEqual(
+        "g++ -o cppapp --sillyflag foo.o");
 
     auto cTarget = link(ExeName("capp"), [Target("bar.o", "", Target("bar.c"))]);
     //since foo.o is not a leaf target, the path should not appear (it's created in the build dir)
@@ -28,7 +29,7 @@ import unit_threaded;
     auto bld = Build(app);
     import reggae.config: gDefaultOptions;
     bld.targets[0].dependencyTargets[0].shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
-        "gcc -include /path/to/includes/header.h  -MMD -MT objs/app.objs/src/foo.o -MF objs/app.objs/src/foo.o.dep -o objs/app.objs/src/foo.o -c /path/to/src/foo.c");
+        "gcc -include /path/to/includes/header.h  -MMD -MT .reggae/objs/app.objs/src/foo.o -MF .reggae/objs/app.objs/src/foo.o.dep -o .reggae/objs/app.objs/src/foo.o -c /path/to/src/foo.c");
 }
 
 @("template link") unittest {

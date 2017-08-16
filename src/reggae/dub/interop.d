@@ -126,11 +126,15 @@ private DubInfo _getDubInfo(T)(auto ref T output, in Options options) {
 
 
                 } catch(Exception ex) {
-                    dubDescribeFailure = ex;
+                    if(dubDescribeFailure !is null) dubDescribeFailure = ex;
                 }
             }
 
-            gDubInfos["default"] = gDubInfos[configs.default_];
+            try
+                gDubInfos["default"] = gDubInfos[configs.default_];
+            catch(Exception ex) {
+                if(dubDescribeFailure !is null) dubDescribeFailure = ex;
+            }
         }
 
         if(!oneConfigOk) throw dubDescribeFailure;

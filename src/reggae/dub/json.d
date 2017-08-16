@@ -10,6 +10,7 @@ DubInfo getDubInfo(in string origString) @trusted {
 
     import std.string: indexOf;
     import std.array;
+    import std.range: iota;
     import core.exception: RangeError;
 
     string nextOpenCurly(string str) {
@@ -24,34 +25,51 @@ DubInfo getDubInfo(in string origString) @trusted {
         for(; ; jsonString = nextOpenCurly(jsonString[1..$])) {
             auto json = parseJSON(jsonString);
 
-            bool hasTargets() {
+            bool hasKey(in string key) {
                 try
-                    return ("targets" in json.object) !is null;
+                    return (key in json.object) !is null;
                 catch(JSONException ex)
                     return false;
             }
 
-            if(!hasTargets) {
+            if(!hasKey("packages") || !hasKey("targets")) {
                 continue;
             }
 
+            auto packages = json.byKey("packages").array;
             auto targets = json.byKey("targets").array;
+
+            // gets the package from `packages` corresponding to target `i`
+            auto packageForTarget(JSONValue target) {
+                import std.algorithm: find;
+                return packages.find!(a => a["name"] == target.object["rootPackage"]).front;
+            }
+
+            // unfortunately there's a hybrid approach going on here.
+            // dub seems to put most of the important information in `targets`
+            // but unfortunately under that `sourceFiles` contains object files
+            // from every package.
+            // So we take our information from targets mostly, except for the
+            // source files
             auto info = DubInfo(targets
-                                .map!((a) {
-                                    auto bs = a.object["buildSettings"];
+                                .map!((target) {
+
+                                    auto dubPackage = packageForTarget(target);
+                                    auto bs = target.object["buildSettings"];
+
                                     return DubPackage(
                                         bs.byKey("targetName").str,
-                                        bs.byKey("targetPath").str,
+                                        dubPackage.byKey("path").str,
                                         bs.getOptional("mainSourceFile"),
                                         bs.getOptional("targetName"),
                                         bs.byKey("dflags").jsonValueToStrings,
                                         bs.byKey("lflags").jsonValueToStrings,
                                         bs.byKey("importPaths").jsonValueToStrings,
                                         bs.byKey("stringImportPaths").jsonValueToStrings,
-                                        bs.byKey("sourceFiles").jsonValueToStrings,
+                                        dubPackage.byKey("files").jsonValueToFiles,
                                         bs.getOptionalEnum!TargetType("targetType"),
                                         bs.getOptionalList("versions"),
-                                        a.getOptionalList("dependencies"),
+                                        target.getOptionalList("dependencies"),
                                         bs.getOptionalList("libs"),
                                         true, // backwards compatibility (active)
                                         bs.getOptionalList("preBuildCommands"),

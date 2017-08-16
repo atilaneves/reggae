@@ -16,14 +16,14 @@ unittest {
             [
                 DubPackage(
                     "foo", //name
-                    "/path/to", //path
+                    "/path/to/", //path
                     "/path/to/source/app.d", // mainSourceFile
                     "foo", // targetFileName
                     [], // dflags
                     [], // lflags
                     ["/path/to/source/", "/path/to/bar/source/"], // importPaths
                     [], // stringImportPaths
-                    ["/path/to/source/app.d"], // sourceFiles
+                    ["source/app.d"], // sourceFiles
                     TargetType.executable,
                     ["lefoo", "Have_foo", "Have_bar"], // versions
                     ["bar"], // dependencies
@@ -34,14 +34,14 @@ unittest {
                 ),
                 DubPackage(
                     "bar", //name
-                    "/path/to/bar", //path
+                    "/path/to/bar/", //path
                     "", // mainSourceFile
                     "bar", // targetFileName
                     [], // dflags
                     [], // lflags
                     ["/path/to/bar/source/"], // importPaths
                     [], // stringImportPaths
-                    ["/path/to/bar/source/bar.d"], // sourceFiles
+                    ["source/bar.d"], // sourceFiles
                     TargetType.staticLibrary,
                     ["lefoo", "Have_bar"], // versions
                     [], // dependencies
@@ -74,6 +74,22 @@ unittest {
 unittest {
     const jsonString = q{
         {
+            "packages": [
+                {
+                    "path": "/dub/packages/lepackage",
+                    "files": [
+                        {"role": "source", "path": "$PACKAGE_DIR/foo.o"},
+                        {"role": "source", "path": "src/file.d"}
+                    ]
+                },
+                {
+                    "path": "/dub/packages/dep",
+                    "files": [
+                        {"role": "source", "path": "$PACKAGE_DIR/bar.o"},
+                        {"role": "source", "path": "src/dep.d"}
+                    ]
+                }
+            ],
             "targets": [
                 {
                     "buildSettings": {
@@ -144,10 +160,4 @@ unittest {
                 ),
             ]
     ));
-}
-
-
-@("travis string")
-unittest {
-    getDubInfo(import("travis.json"));
 }

@@ -120,29 +120,30 @@ private DubInfo _getDubInfo(T)(auto ref T output, in Options options) {
             foreach(config; configs.configurations) {
                 try {
                     const descOutput = callDub(options, ["dub", "describe", "-c", config]);
-                    oneConfigOk = true;
                     gDubInfos[config] = getDubInfo(descOutput);
 
-                    //dub adds certain flags to certain configurations automatically but these flags
-                    //don't know up in the output to `dub describe`. Special case them here.
+                    // dub adds certain flags to certain configurations automatically but these flags
+                    // don't know up in the output to `dub describe`. Special case them here.
 
-                    //unittest should only apply to the main package, hence [0]
+                    // unittest should only apply to the main package, hence [0]
+                    // this doesn't show up in `dub describe`, it's secret info that dub knows
+                    // so we have to add it manually here
                     if(config == "unittest") gDubInfos[config].packages[0].dflags ~= " -unittest";
 
                     callPreBuildCommands(options, gDubInfos[config]);
 
+                    oneConfigOk = true;
 
                 } catch(Exception ex) {
                     if(dubDescribeFailure !is null) dubDescribeFailure = ex;
                 }
             }
 
-            try
-                gDubInfos["default"] = gDubInfos[configs.default_];
-            catch(Exception ex) {
-                if(dubDescribeFailure !is null) dubDescribeFailure = ex;
-            }
-        }
+            if(configs.default_ !in gDubInfos)
+                throw new Exception("Non-existent config info for " ~ configs.default_);
+
+            gDubInfos["default"] = gDubInfos[configs.default_];
+       }
 
         if(!oneConfigOk) throw dubDescribeFailure;
     }

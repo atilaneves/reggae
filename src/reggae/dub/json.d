@@ -78,6 +78,7 @@ DubInfo getDubInfo(in string origString) @trusted {
                                 })
                                 .filter!(a => a.active)
                                 .array);
+            info = info.cleanObjectSourceFiles;
 
             // in dub.json/dub.sdl, $PACKAGE_DIR is a variable that refers to the root
             // of the dub package
@@ -160,4 +161,37 @@ private T getOptionalEnum(T)(JSONValue json, in string key) @trusted {
 private string[] getOptionalList(JSONValue json, in string key) @trusted {
     auto aa = json.object;
     return key in aa ? aa[key].jsonValueToStrings : [];
+}
+
+// dub describe, due to a bug, ends up including object files listed as sources
+// in a dependent package in the `sourceFiles` part of `target.buildSettings`
+// for the main package. We clean it up here.
+DubInfo cleanObjectSourceFiles(in DubInfo info) {
+    import std.algorithm: find, uniq, joiner, canFind, remove;
+    import std.array: array;
+
+    auto ret = info.dup;
+
+    bool isObjectFile(in string fileName) {
+        import std.path: extension;
+        return fileName.extension == ".o";
+    }
+
+    auto sourceObjectFiles = info.packages
+        .map!(a => a.files.dup)
+        .joiner
+        .filter!isObjectFile
+        .uniq;
+
+    foreach(sourceObjectFile; sourceObjectFiles) {
+        const packagesWithFile = ret.packages.filter!(a => a.files.canFind(sourceObjectFile)).array;
+        foreach(ref dubPackage; ret.packages) {
+            // all but the last package get scrubbed
+            if(dubPackage.files.canFind(sourceObjectFile) && dubPackage != packagesWithFile[$-1]) {
+                dubPackage.files = dubPackage.files.filter!(a => a != sourceObjectFile).array;
+            }
+        }
+    }
+
+    return ret;
 }

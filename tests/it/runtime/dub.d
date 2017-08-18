@@ -181,12 +181,11 @@ unittest {
 
 
 @("sourceLibrary dependency")
-@Tags(["dub", "ninja", "foo"])
+@Tags(["dub", "ninja"])
 unittest {
     with(immutable ReggaeSandbox()) {
         writeFile("dub.sdl", `
             name "foo"
-            versions "lefoo"
             targetType "executable"
             dependency "bar" path="bar"
         `);
@@ -203,17 +202,46 @@ unittest {
         `);
         writeFile("bar/source/bar.d", q{
             module bar;
-            version(lefoo)
-                int lebar() { return 3; }
-            else
-                int lebar() { return 42; }
+            int lebar() { return 3; }
         });
         runReggae("-b", "ninja");
         ninja.shouldExecuteOk(testPath);
-        shouldSucceed("foo").shouldEqual(
-            [
-                "3",
-            ]
-        );
+    }
+}
+
+@("object source files")
+@Tags(["dub", "ninja"])
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl", `
+            name "foo"
+            targetType "executable"
+            dependency "bar" path="bar"
+        `);
+        writeFile("source/app.d", q{
+            extern(C) int lebaz();
+            void main() {
+                import bar;
+                import std.stdio;
+                writeln(lebar);
+                writeln(lebaz);
+            }
+            });
+        writeFile("bar/dub.sdl", `
+            name "bar"
+            sourceFiles "../baz.o"
+        `);
+        writeFile("bar/source/bar.d", q{
+            module bar;
+            int lebar() { return 3; }
+        });
+        writeFile("baz.d", q{
+            module baz;
+            extern(C) int lebaz() { return 42; }
+        });
+
+        ["dmd", "-c", "baz.d"].shouldExecuteOk(testPath);
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk(testPath);
     }
 }

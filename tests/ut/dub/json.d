@@ -165,3 +165,173 @@ unittest {
             ]
     ));
 }
+
+@("remove object file duplicates")
+unittest {
+   const info = DubInfo(
+       [
+           DubPackage(
+               "foo", //name
+               "/path/to/", //path
+               "/path/to/source/app.d", // mainSourceFile
+               "foo", // targetFileName
+               [], // dflags
+               [], // lflags
+               ["/path/to/source/", "/path/to/bar/source/"], // importPaths
+               [], // stringImportPaths
+               ["/path/to/source/app.d", "baz.o"], // sourceFiles
+               TargetType.executable,
+               ["lefoo", "Have_foo", "Have_bar"], // versions
+               ["bar"], // dependencies
+               [], // libs
+               true, // active
+               [], // preBuildCommands
+               [], //postBuildCommands
+           ),
+           DubPackage(
+               "bar", //name
+               "/path/to/bar/", //path
+               "", // mainSourceFile
+               "bar", // targetFileName
+               [], // dflags
+               [], // lflags
+               ["/path/to/bar/source/"], // importPaths
+               [], // stringImportPaths
+               ["/path/to/bar/source/bar.d", "baz.o"], // sourceFiles
+               TargetType.staticLibrary,
+               ["lefoo", "Have_bar"], // versions
+               [], // dependencies
+               [], // libs
+               true, // active
+               [], // preBuildCommands
+               [], //postBuildCommands
+           ),
+       ]
+   );
+
+   info.cleanObjectSourceFiles.shouldEqual(DubInfo(
+       [
+           DubPackage(
+               "foo", //name
+               "/path/to/", //path
+               "/path/to/source/app.d", // mainSourceFile
+               "foo", // targetFileName
+               [], // dflags
+               [], // lflags
+               ["/path/to/source/", "/path/to/bar/source/"], // importPaths
+               [], // stringImportPaths
+               ["/path/to/source/app.d"], // sourceFiles
+               TargetType.executable,
+               ["lefoo", "Have_foo", "Have_bar"], // versions
+               ["bar"], // dependencies
+               [], // libs
+               true, // active
+               [], // preBuildCommands
+               [], //postBuildCommands
+           ),
+           DubPackage(
+               "bar", //name
+               "/path/to/bar/", //path
+               "", // mainSourceFile
+               "bar", // targetFileName
+               [], // dflags
+               [], // lflags
+               ["/path/to/bar/source/"], // importPaths
+               [], // stringImportPaths
+               ["/path/to/bar/source/bar.d", "baz.o"], // sourceFiles
+               TargetType.staticLibrary,
+               ["lefoo", "Have_bar"], // versions
+               [], // dependencies
+               [], // libs
+               true, // active
+               [], // preBuildCommands
+               [], //postBuildCommands
+           ),
+       ]
+   ));
+}
+
+@("cleanObjectSourceFiles with no duplicates")
+unittest {
+   const info = DubInfo(
+       [
+           DubPackage(
+               "foo", //name
+               "/path/to/", //path
+               "/path/to/source/app.d", // mainSourceFile
+               "foo", // targetFileName
+               [], // dflags
+               [], // lflags
+               ["/path/to/source/", "/path/to/bar/source/"], // importPaths
+               [], // stringImportPaths
+               ["/path/to/source/app.d", "baz.o"], // sourceFiles
+               TargetType.executable,
+               ["lefoo", "Have_foo", "Have_bar"], // versions
+               ["bar"], // dependencies
+               [], // libs
+               true, // active
+               [], // preBuildCommands
+               [], //postBuildCommands
+           ),
+           DubPackage(
+               "bar", //name
+               "/path/to/bar/", //path
+               "", // mainSourceFile
+               "bar", // targetFileName
+               [], // dflags
+               [], // lflags
+               ["/path/to/bar/source/"], // importPaths
+               [], // stringImportPaths
+               ["/path/to/bar/source/bar.d", "quux.o"], // sourceFiles
+               TargetType.staticLibrary,
+               ["lefoo", "Have_bar"], // versions
+               [], // dependencies
+               [], // libs
+               true, // active
+               [], // preBuildCommands
+               [], //postBuildCommands
+           ),
+       ]
+   );
+
+   info.cleanObjectSourceFiles.shouldEqual(DubInfo(
+       [
+           DubPackage(
+               "foo", //name
+               "/path/to/", //path
+               "/path/to/source/app.d", // mainSourceFile
+               "foo", // targetFileName
+               [], // dflags
+               [], // lflags
+               ["/path/to/source/", "/path/to/bar/source/"], // importPaths
+               [], // stringImportPaths
+               ["/path/to/source/app.d", "baz.o"], // sourceFiles
+               TargetType.executable,
+               ["lefoo", "Have_foo", "Have_bar"], // versions
+               ["bar"], // dependencies
+               [], // libs
+               true, // active
+               [], // preBuildCommands
+               [], //postBuildCommands
+           ),
+           DubPackage(
+               "bar", //name
+               "/path/to/bar/", //path
+               "", // mainSourceFile
+               "bar", // targetFileName
+               [], // dflags
+               [], // lflags
+               ["/path/to/bar/source/"], // importPaths
+               [], // stringImportPaths
+               ["/path/to/bar/source/bar.d", "quux.o"], // sourceFiles
+               TargetType.staticLibrary,
+               ["lefoo", "Have_bar"], // versions
+               [], // dependencies
+               [], // libs
+               true, // active
+               [], // preBuildCommands
+               [], //postBuildCommands
+           ),
+       ]
+   ));
+}

@@ -64,6 +64,16 @@ struct DubPackage {
         return ret;
     }
 
+    DubPackage dup() @safe pure nothrow const {
+        DubPackage ret;
+        foreach(i, member; this.tupleof) {
+            static if(__traits(compiles, member.dup))
+                ret.tupleof[i] = member.dup;
+            else
+                ret.tupleof[i] = member;
+        }
+        return ret;
+    }
 }
 
 bool isStaticLibrary(in string fileName) @safe pure nothrow {
@@ -88,6 +98,12 @@ string inDubPackagePath(in string packagePath, in string filePath) @safe pure no
 struct DubInfo {
 
     DubPackage[] packages;
+
+    DubInfo dup() @safe pure nothrow const {
+        import std.algorithm: map;
+        import std.array: array;
+        return DubInfo(packages.map!(a => a.dup).array);
+    }
 
     Target[] toTargets(Flag!"main" includeMain = Yes.main,
                        in string compilerFlags = "",

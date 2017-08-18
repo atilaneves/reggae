@@ -209,9 +209,8 @@ unittest {
     }
 }
 
-@ShouldFail
 @("object source files")
-@Tags(["dub", "ninja", "foo"])
+@Tags(["dub", "ninja"])
 unittest {
     with(immutable ReggaeSandbox()) {
         writeFile("dub.sdl", `

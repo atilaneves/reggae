@@ -23,7 +23,7 @@ unittest {
                     [], // lflags
                     ["/path/to/source/", "/path/to/bar/source/"], // importPaths
                     [], // stringImportPaths
-                    ["source/app.d"], // sourceFiles
+                    ["/path/to/source/app.d"], // sourceFiles
                     TargetType.executable,
                     ["lefoo", "Have_foo", "Have_bar"], // versions
                     ["bar"], // dependencies
@@ -41,7 +41,7 @@ unittest {
                     [], // lflags
                     ["/path/to/bar/source/"], // importPaths
                     [], // stringImportPaths
-                    ["source/bar.d"], // sourceFiles
+                    ["/path/to/bar/source/bar.d"], // sourceFiles
                     TargetType.staticLibrary,
                     ["lefoo", "Have_bar"], // versions
                     [], // dependencies
@@ -76,6 +76,7 @@ unittest {
         {
             "packages": [
                 {
+                    "name": "lepackage",
                     "path": "/dub/packages/lepackage",
                     "files": [
                         {"role": "source", "path": "$PACKAGE_DIR/foo.o"},
@@ -83,6 +84,7 @@ unittest {
                     ]
                 },
                 {
+                    "name": "dep",
                     "path": "/dub/packages/dep",
                     "files": [
                         {"role": "source", "path": "$PACKAGE_DIR/bar.o"},
@@ -92,6 +94,7 @@ unittest {
             ],
             "targets": [
                 {
+                    "rootPackage": "lepackage",
                     "buildSettings": {
                         "targetName": "lepackage",
                         "targetPath": "/dub/packages/lepackage",
@@ -106,6 +109,7 @@ unittest {
                     }
                 },
                 {
+                    "rootPackage": "dep",
                     "buildSettings": {
                         "targetName": "dep",
                         "targetPath": "/dub/packages/dep",

@@ -57,12 +57,18 @@ void maybeCreateReggaefile(T)(auto ref T output, in Options options) {
 
 // default build for a dub project when there is no reggaefile
 void createReggaefile(T)(auto ref T output, in Options options) {
-    import std.path;
+    import std.stdio: File;
+    import std.path: buildPath;
+    import std.regex: regex, replaceFirst;
+
     output.writeln("[Reggae] Creating reggaefile.d from dub information");
     auto file = File(buildPath(options.workingDir, "reggaefile.d"), "w");
-    file.writeln(q{import reggae;});
-    file.writeln(q{mixin build!(dubDefaultTarget!(CompilerFlags("-g -debug")),
-                                dubTestTarget!(CompilerFlags("-g -debug")));});
+    file.writeln(q{
+        import reggae;
+        enum commonFlags = "-w -g -debug";
+        mixin build!(dubDefaultTarget!(CompilerFlags(commonFlags)),
+                        dubTestTarget!(CompilerFlags(commonFlags)));
+    }.replaceFirst(regex(`^        `), ""));
 
     if(!options.noFetch) dubFetch(output, options);
 }

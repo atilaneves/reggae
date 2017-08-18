@@ -66,7 +66,7 @@ DubInfo getDubInfo(in string origString) @trusted {
                                         bs.byKey("lflags").jsonValueToStrings,
                                         bs.byKey("importPaths").jsonValueToStrings,
                                         bs.byKey("stringImportPaths").jsonValueToStrings,
-                                        dubPackage.byKey("files").jsonValueToFiles,
+                                        bs.byKey("sourceFiles").jsonValueToStrings,
                                         bs.getOptionalEnum!TargetType("targetType"),
                                         bs.getOptionalList("versions"),
                                         target.getOptionalList("dependencies"),
@@ -78,8 +78,6 @@ DubInfo getDubInfo(in string origString) @trusted {
                                 })
                                 .filter!(a => a.active)
                                 .array);
-
-
 
             // in dub.json/dub.sdl, $PACKAGE_DIR is a variable that refers to the root
             // of the dub package

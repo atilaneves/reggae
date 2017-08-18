@@ -178,3 +178,42 @@ unittest {
         );
     }
 }
+
+
+@("sourceLibrary dependency")
+@Tags(["dub", "ninja", "foo"])
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl", `
+            name "foo"
+            versions "lefoo"
+            targetType "executable"
+            dependency "bar" path="bar"
+        `);
+        writeFile("source/app.d", q{
+            void main() {
+                import bar;
+                import std.stdio;
+                writeln(lebar);
+            }
+        });
+        writeFile("bar/dub.sdl", `
+            name "bar"
+            targetType "sourceLibrary"
+        `);
+        writeFile("bar/source/bar.d", q{
+            module bar;
+            version(lefoo)
+                int lebar() { return 3; }
+            else
+                int lebar() { return 42; }
+        });
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk(testPath);
+        shouldSucceed("foo").shouldEqual(
+            [
+                "3",
+            ]
+        );
+    }
+}

@@ -46,7 +46,11 @@ static if(isDubProject) {
     /**
        A target corresponding to `dub test`
      */
-    Target dubTestTarget(CompilerFlags compilerFlags = CompilerFlags(), LinkerFlags linkerFlags = LinkerFlags())() {
+    Target dubTestTarget(CompilerFlags compilerFlags = CompilerFlags(),
+                         LinkerFlags linkerFlags = LinkerFlags(),
+                         Flag!"allTogether" allTogether = Yes.allTogether)
+                         ()
+    {
         import std.string: split;
 
         const config = "unittest" in configToDubInfo ? "unittest" : "default";
@@ -65,7 +69,7 @@ static if(isDubProject) {
                             actualCompilerFlags,
                             actualLinkerFlags,
                             Yes.main,
-                            Yes.allTogether);
+                            allTogether);
     }
 
     /**

@@ -47,10 +47,8 @@ DubConfigurations getConfigurations(in string output) pure {
 
 void maybeCreateReggaefile(T)(auto ref T output, in Options options) {
     import std.file: exists;
-    import std.stdio: writeln;
 
     if(options.isDubProject && !options.reggaeFilePath.exists) {
-        output.writeln("[Reggae] Creating default dub project reggaefile");
         createReggaefile(output, options);
     }
 }
@@ -63,6 +61,8 @@ void createReggaefile(T)(auto ref T output, in Options options) {
 
     output.writeln("[Reggae] Creating reggaefile.d from dub information");
     auto file = File(buildPath(options.workingDir, "reggaefile.d"), "w");
+    output.writeln("name: ", buildPath(options.workingDir, "reggaefile.d"));
+
     file.writeln(q{
         import reggae;
         enum commonFlags = "-w -g -debug";

@@ -33,6 +33,8 @@ struct Makefile {
         ret ~= ".SUFFIXES:\n"; //disable default rules
         ret ~= options.compilerVariables.join("\n") ~ "\n";
 
+        ret ~= "$(VERBOSE).SILENT:\n"; // Do not display executed commands
+
         foreach(target; build.range) {
 
             mkDir(target);
@@ -46,6 +48,7 @@ struct Makefile {
                     target.implicitsInProjectPath(options.projectPath)).join(" ");
 
             ret ~= " " ~ fileName() ~ "\n";
+	    ret ~= "\t@echo [make] Building " ~ output ~ "\n";
             ret ~= "\t" ~ command(target) ~ "\n";
         }
 

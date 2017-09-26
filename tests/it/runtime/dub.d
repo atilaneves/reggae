@@ -126,7 +126,7 @@ unittest {
 
     with(immutable ReggaeSandbox("dub")) {
         runReggae("-b", "make", "--dflags=-g -debug");
-        make.shouldExecuteOk(testPath).shouldContain("-g -debug");
+        make(["VERBOSE=1"]).shouldExecuteOk(testPath).shouldContain("-g -debug");
         {
             const ret = execute(["touch", buildPath(testPath, "dub.json")]);
             ret.status.shouldEqual(0);
@@ -135,9 +135,8 @@ unittest {
             const ret = execute(["make", "-C", testPath]);
             // don't assert on the status of ret - it requires rerunning reggae
             // and that can fail if the reggae binary isn't built yet.
-            // Either way -g -debug shows up in the output as the code attempts
-            // to rebuild the binary
-            ret.output.shouldContain("-g -debug");
+            // Either way make should run
+            ret.output.shouldContain("[make]");
         }
     }
 }

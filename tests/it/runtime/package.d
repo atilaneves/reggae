@@ -76,7 +76,6 @@ private:
         import std.file: thisExePath;
         import std.path: buildPath, dirName, absolutePath;
         if(project == "") project = testPath;
-        //return testRun([buildPath(thisExePath.absolutePath.dirName, "reggae"), "-C", testPath] ~ args ~ project);
         return testRun(["reggae", "-C", testPath] ~ args ~ project);
     }
 }
@@ -87,7 +86,7 @@ void shouldContain(string[] haystack, in string needle,
     import std.algorithm;
     import std.array;
     if(!haystack.canFind!(a => a.canFind(needle)))
-        throw new UnitTestException(["Could not find " ~ needle ~ " in:"] ~ haystack);
+        throw new UnitTestException(["Could not find " ~ needle ~ " in:"] ~ haystack, file, line);
 }
 
 void shouldContain(in string haystack, in string needle,
@@ -95,7 +94,7 @@ void shouldContain(in string haystack, in string needle,
     import std.algorithm;
     import std.array;
     if(!haystack.canFind(needle))
-        throw new UnitTestException(["Could not find " ~ needle ~ " in:"] ~ haystack);
+        throw new UnitTestException(["Could not find " ~ needle ~ " in:"] ~ haystack, file, line);
 }
 
 
@@ -104,7 +103,7 @@ void shouldNotContain(string[] haystack, in string needle,
     import std.algorithm;
     import std.array;
     if(haystack.canFind!(a => a.canFind(needle)))
-        throw new UnitTestException(["Should not have found " ~ needle ~ " in:"] ~ haystack);
+        throw new UnitTestException(["Should not have found " ~ needle ~ " in:"] ~ haystack, file, line);
 }
 
 void shouldNotContain(in string haystack, in string needle,
@@ -112,5 +111,5 @@ void shouldNotContain(in string haystack, in string needle,
     import std.algorithm;
     import std.array;
     if(haystack.canFind(needle))
-        throw new UnitTestException(["Should not have found " ~ needle ~ " in:"] ~ haystack);
+        throw new UnitTestException(["Should not have found " ~ needle ~ " in:"] ~ haystack, file, line);
 }

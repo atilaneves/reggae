@@ -136,7 +136,7 @@ unittest {
             // don't assert on the status of ret - it requires rerunning reggae
             // and that can fail if the reggae binary isn't built yet.
             // Either way make should run
-            ret.output.shouldContain("[make]");
+            ret.output.shouldNotContain("Nothing to be done");
         }
     }
 }

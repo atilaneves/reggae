@@ -7,7 +7,7 @@ Javascript, Lua) and backends (make, ninja, tup, custom).  This is
 alpha software, only tested on Linux and likely to have breaking
 changes made.
 
-Detailed API documentation can be found [here](doc/index.md).
+Detailed API documentation can be found [here](doc/README.md).
 
 Why?
 ----
@@ -86,7 +86,7 @@ appropriate command (ninja, make, tup, or ./build respectively).
 Quick Start
 ---------------------------------
 
-The API is documented [elsewhere](doc/index.md) and the best examples
+The API is documented [elsewhere](doc/README.md) and the best examples
 can be found in the [feature tests](features). To build a simple hello
 app in C/C++ with a build description in Python:
 

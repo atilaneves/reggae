@@ -55,13 +55,13 @@ void maybeCreateReggaefile(T)(auto ref T output, in Options options) {
 
 // default build for a dub project when there is no reggaefile
 void createReggaefile(T)(auto ref T output, in Options options) {
+    import reggae.io: log;
     import std.stdio: File;
     import std.path: buildPath;
     import std.regex: regex, replaceFirst;
 
-    output.writeln("[Reggae] Creating reggaefile.d from dub information");
+    output.log("Creating reggaefile.d from dub information");
     auto file = File(buildPath(options.workingDir, "reggaefile.d"), "w");
-    output.writeln("name: ", buildPath(options.workingDir, "reggaefile.d"));
 
     file.writeln(q{
         import reggae;
@@ -75,6 +75,7 @@ void createReggaefile(T)(auto ref T output, in Options options) {
 
 
 private DubInfo _getDubInfo(T)(auto ref T output, in Options options) {
+    import reggae.io: log;
     import std.array;
     import std.file: exists;
     import std.path: buildPath;
@@ -86,7 +87,7 @@ private DubInfo _getDubInfo(T)(auto ref T output, in Options options) {
     if("default" !in gDubInfos) {
 
         if(!buildPath(options.projectPath, "dub.selections.json").exists) {
-            output.writeln("[Reggae] Calling dub upgrade to create dub.selections.json");
+            output.log("Calling dub upgrade to create dub.selections.json");
             callDub(options, ["dub", "upgrade"]);
         }
 
@@ -101,7 +102,7 @@ private DubInfo _getDubInfo(T)(auto ref T output, in Options options) {
             try {
                 return getConfigsImpl;
             } catch(Exception _) {
-                output.writeln("[Reggae] Calling 'dub fetch' since getting the configuration failed");
+                output.log("Calling 'dub fetch' since getting the configuration failed");
                 dubFetch(output, options);
                 return getConfigsImpl;
             }
@@ -185,6 +186,7 @@ private void callPreBuildCommands(in Options options, in DubInfo dubInfo) {
 }
 
 private void dubFetch(T)(auto ref T output, in Options options) @trusted {
+    import reggae.io: log;
     import std.array: join, replace;
     import std.stdio: writeln;
     import std.path: buildPath;
@@ -208,7 +210,7 @@ private void dubFetch(T)(auto ref T output, in Options options) @trusted {
 
         const cmd = ["dub", "fetch", dubPackage, "--version=" ~ version_];
 
-        output.writeln("[Reggae] Fetching package with command '", cmd.join(" "), "'");
+        output.log("Fetching package with command '", cmd.join(" "), "'");
         try
             callDub(options, cmd);
         catch(Exception ex) {
@@ -232,10 +234,11 @@ bool needDubFetch(in string dubPackage, in string version_) {
 
 
 void writeDubConfig(T)(auto ref T output, in Options options, File file) {
+    import reggae.io: log;
     import reggae.dub.info: TargetType;
     import std.stdio: writeln;
 
-    output.writeln("[Reggae] Writing dub configuration");
+    output.log("Writing dub configuration");
 
     file.writeln("import reggae.dub.info;");
 

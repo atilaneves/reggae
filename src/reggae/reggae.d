@@ -211,6 +211,8 @@ private string[] fileNames() @safe pure nothrow {
 
 private void createBuild(T)(auto ref T output, in Options options) {
 
+    import reggae.io: log;
+
     enforce(options.reggaeFilePath.exists, text("Could not find ", options.reggaeFilePath));
 
     //compile the binaries (the build generator and dcompile)
@@ -223,12 +225,12 @@ private void createBuild(T)(auto ref T output, in Options options) {
     if(options.isScriptBuild) return;
 
     //actually run the build generator
-    output.writeln("[Reggae] Running the created binary to generate the build");
+    output.log("Running the created binary to generate the build");
     immutable retRunBuildgen = execute([buildPath(options.workingDir, hiddenDir, buildGenName)]);
     enforce(retRunBuildgen.status == 0,
             text("Couldn't execute the produced ", buildGenName, " binary:\n", retRunBuildgen.output));
 
-    output.writeln(retRunBuildgen.output);
+    if(retRunBuildgen.output.length )output.log(retRunBuildgen.output);
 }
 
 
@@ -288,14 +290,15 @@ private bool isExecutable(in char[] path) @trusted nothrow @nogc //TODO: @safe
 }
 
 private void buildBinary(T)(auto ref T output, in Options options, in Binary bin) {
+    import reggae.io: log;
     import std.process;
+
     string[string] env;
     auto config = Config.none;
     auto maxOutput = size_t.max;
     auto workDir = buildPath(options.workingDir, hiddenDir);
-    output.write("[Reggae] Compiling metabuild binary ", bin.name);
-    if(options.verbose) output.write(" with ", bin.cmd.join(" "));
-    output.writeln;
+    const extraInfo = options.verbose ? " with " ~  bin.cmd.join(" ") : "";
+    output.log("Compiling metabuild binary ", bin.name, extraInfo);
     // std.process.execute has a bug where using workDir and a relative path
     // don't work (https://issues.dlang.org/show_bug.cgi?id=15915)
     // so executeShell is used instead
@@ -352,7 +355,9 @@ string reggaeSrcDirName(in Options options) @safe pure nothrow {
 
 
 void writeSrcFiles(T)(auto ref T output, in Options options) {
-    output.writeln("[Reggae] Writing reggae source files");
+    import reggae.io: log;
+
+    output.log("Writing reggae source files");
 
     import std.file: mkdirRecurse;
     immutable reggaeSrcDirName = reggaeSrcDirName(options);
@@ -371,7 +376,7 @@ void writeSrcFiles(T)(auto ref T output, in Options options) {
         file.write(import(fileName));
     }
 
-    output.writeln("[Reggae] Writing reggae configuration");
+    output.log("Writing reggae configuration");
     writeConfig(output, options);
 }
 

@@ -41,7 +41,7 @@ mixin template BuildGenMain(string buildModule = "reggaefile") {
             import reggae.config: options;
             doBuildFor!(buildModule)(options, args); //the user's build description
         } catch(Exception ex) {
-            stderr.writeln(ex);
+            stderr.writeln(ex.msg);
             return 1;
         }
 

@@ -229,6 +229,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
     }
 
     enforce(!options.perModule || !options.allAtOnce, "Cannot specify both --per_module and --all_at_once");
+    enforce(options.backend != Backend.none, "A backend must be specified with -b/--backend");
 
     if(options.version_) {
         import std.stdio;

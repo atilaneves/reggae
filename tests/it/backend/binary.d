@@ -80,7 +80,7 @@ private struct FakeFile {
     auto mids = iota(10).map!(a => Target.phony("$project/" ~a.to!string, "echo " ~ a.to!string, [foo, bar])).array;
     auto top = Target.phony("top", "echo top", mids);
 
-    auto binary = Binary(Build(top), getOptions(["reggae", "--export"]));
+    auto binary = Binary(Build(top), getOptions(["reggae", "--export", "-b", "binary"]));
     binary.run(["./build"]);
 
     // only one line -> rule only called once

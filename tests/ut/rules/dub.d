@@ -42,7 +42,7 @@ unittest {
     import std.algorithm: filter;
     import std.array: split;
 
-    setOptions(getOptions(["reggae", "/tmp/proj"]));
+    setOptions(getOptions(["reggae", "-b", "ninja", "/tmp/proj"]));
 
     DubInfo dubInfo;
     dubInfo.packages = [DubPackage()];

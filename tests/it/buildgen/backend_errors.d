@@ -4,8 +4,7 @@ import tests.it.buildgen;
 mixin build!(Target(`foo`));
 
 @("A backend must be specified") unittest {
-    auto options = testOptions([inOrigPath("lvl1", "lvl2")]);
-    doTestBuildFor!(__MODULE__)(options).shouldThrowWithMessage(
+    testOptions([inOrigPath("lvl1", "lvl2")]).shouldThrowWithMessage(
         "A backend must be specified with -b/--backend");
 }
 

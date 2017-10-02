@@ -100,7 +100,7 @@ Or in D:
 
 ```d
 import reggae;
-alias app = executable!(ExeName("hello"), Sources!(["."]), Flags("-g -O0"))
+alias app = executable!(ExeName("hello"), Sources!(["."]), Flags("-g -O"));
 mixin build!app;
 ```
 

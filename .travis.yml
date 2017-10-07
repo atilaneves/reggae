@@ -1,4 +1,7 @@
 language: d
+d:
+  - dmd
+  - ldc
 dist: trusty
 sudo: false
 addons:
@@ -25,9 +28,11 @@ install:
   - cd ..
 
 script:
-  - ninja --version
   - ./bootstrap.sh make
   # the Travis CI machines don't like tup
   # installing the right ruby version in travis for D projects is a pain
-  - bin/ut ~@tup ~@travis_oops
-  - cucumber --tags ~@tup --tags ~@ruby --tags ~@lua
+  - |
+    if [ "$DC" == dmd ]; then
+      bin/ut ~@tup ~@travis_oops;
+      cucumber --tags ~@tup --tags ~@ruby --tags ~@lua;
+    fi

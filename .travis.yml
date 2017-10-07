@@ -1,23 +1,19 @@
 language: d
 dist: trusty
 sudo: false
+addons:
+  apt:
+    sources:
+      - debian-sid
+    packages:
+      - ninja-build
+      - bundler
 install:
-  - gem install bundler
   - bundle install
-  - git clone https://github.com/martine/ninja.git
-  - cd ninja
-  - ./configure.py --bootstrap
-  - export PATH=$PWD:$PATH
-  - cd ..
   - dub fetch unit-threaded --version=0.7.21
   - dub fetch unit-threaded --version=0.7.11
   - dub fetch unit-threaded --version=0.7.8
   - dub fetch cerealed --version=0.6.8
-  - git clone https://github.com/D-Programming-Language/dub.git
-  - cd dub
-  - dub build
-  - export PATH=$PWD/bin:$PATH
-  - cd ..
   - git clone https://github.com/atilaneves/reggae-python
   - cd reggae-python
   - export PYTHONPATH=$PWD
@@ -29,6 +25,7 @@ install:
   - cd ..
 
 script:
+  - ninja --version
   - ./bootstrap.sh make
   # the Travis CI machines don't like tup
   # installing the right ruby version in travis for D projects is a pain

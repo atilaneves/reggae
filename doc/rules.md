@@ -246,6 +246,12 @@ flags, an empty parameter list must be added, e.g.:
     mixin build!(dubDefaultTarget!());
 
 
+dubTestTarget
+-------------
+
+The target that would be built by `dub test`, with the difference that the executable
+name is always `ut`.
+
 dubConfigurationTarget
 ----------------------
 

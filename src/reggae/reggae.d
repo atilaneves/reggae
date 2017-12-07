@@ -376,12 +376,16 @@ void writeSrcFiles(T)(auto ref T output, in Options options) {
         file.write(import(fileName));
     }
 
-    output.log("Writing reggae configuration");
     writeConfig(output, options);
 }
 
 
 private void writeConfig(T)(auto ref T output, in Options options) {
+
+    import reggae.io: log;
+
+    output.log("Writing reggae configuration");
+
     auto file = File(reggaeSrcFileName(options, "config.d"), "w");
 
     file.writeln(q{

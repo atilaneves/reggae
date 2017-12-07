@@ -47,6 +47,21 @@ static if(isDubProject) {
        A target corresponding to `dub test`
      */
     Target dubTestTarget(CompilerFlags compilerFlags = CompilerFlags(),
+                         LinkerFlags linkerFlags = LinkerFlags())
+                         ()
+    {
+        import std.typecons: No, Yes;
+        static if (__VERSION__ >= 2077)
+            enum allTogether = No.allTogether;
+        else
+            enum allTogether = Yes.allTogether;
+        return dubTestTarget!(compilerFlags, linkerFlags, allTogether)();
+    }
+
+    /**
+       A target corresponding to `dub test`
+     */
+    Target dubTestTarget(CompilerFlags compilerFlags = CompilerFlags(),
                          LinkerFlags linkerFlags = LinkerFlags(),
                          Flag!"allTogether" allTogether = Yes.allTogether)
                          ()

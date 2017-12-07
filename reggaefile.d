@@ -33,6 +33,8 @@ version(minimal) {
 } else {
     //fully featured build
 
+    import std.typecons: Yes;
+
     //the actual reggae binary
     //could also be dubConfigurationTarget(ExeName("reggae"), Configuration("executable"), Flags(...))
     //or use the `scriptlike` rule to figure out dependencies itself
@@ -40,7 +42,9 @@ version(minimal) {
     alias main = dubDefaultTarget!(CompilerFlags(commonFlags));
 
     //the unit test binary
-    alias ut = dubTestTarget!(CompilerFlags(commonFlags ~ " -cov"));
+    alias ut = dubTestTarget!(CompilerFlags(commonFlags ~ " -cov"),
+                              LinkerFlags(),
+                              Yes.allTogether);
 
     //the cucumber test target
     enum cuke = Target.phony("cuke", "cd $project && cucumber", [main]);

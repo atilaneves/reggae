@@ -55,6 +55,7 @@ static if(isDubProject) {
             enum allTogether = No.allTogether;
         else
             enum allTogether = Yes.allTogether;
+
         return dubTestTarget!(compilerFlags, linkerFlags, allTogether)();
     }
 
@@ -63,7 +64,7 @@ static if(isDubProject) {
      */
     Target dubTestTarget(CompilerFlags compilerFlags = CompilerFlags(),
                          LinkerFlags linkerFlags = LinkerFlags(),
-                         Flag!"allTogether" allTogether = Yes.allTogether)
+                         Flag!"allTogether" allTogether)
                          ()
     {
         import std.string: split;

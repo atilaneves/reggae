@@ -52,7 +52,7 @@ static if(isDubProject) {
     {
         import std.typecons: No, Yes;
         static if (__VERSION__ >= 2077)
-            enum allTogether = No.allTogether;
+            enum allTogether = Yes.allTogether;
         else
             enum allTogether = Yes.allTogether;
 

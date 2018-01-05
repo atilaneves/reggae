@@ -141,6 +141,27 @@ unittest {
     }
 }
 
+@("reggae/dub build should rebuild if dub.selections.json changes")
+@Tags(["dub", "make"])
+unittest {
+
+    import std.process: execute;
+    import std.path: buildPath;
+
+    with(immutable ReggaeSandbox("dub")) {
+        runReggae("-b", "make", "--dflags=-g -debug");
+        make(["VERBOSE=1"]).shouldExecuteOk(testPath).shouldContain("-g -debug");
+        {
+            const ret = execute(["touch", buildPath(testPath, "dub.selections.json")]);
+            ret.status.shouldEqual(0);
+        }
+        {
+            const ret = execute(["make", "-C", testPath]);
+            ret.output.shouldContain("eggae");
+        }
+    }
+}
+
 @("version from main package is used in dependent packages")
 @Tags(["dub", "ninja"])
 unittest {

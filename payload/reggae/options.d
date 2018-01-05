@@ -53,6 +53,7 @@ struct Options {
     //finished setup
     void finalize(string[] args) @safe {
         import std.process;
+        import std.path: buildPath;
 
         this.args = args;
         ranFromPath = thisExePath();
@@ -65,7 +66,10 @@ struct Options {
 
         // if there's a dub package file, add it to the list of dependencies so the project
         // is rebuilt if it changes
-        if(isDubProject) dependencies ~= _dubProjectFile;
+        if(isDubProject) {
+            dependencies ~= _dubProjectFile;
+            dependencies ~= buildPath(projectPath, "dub.selections.json");
+        }
 
         if(isDubProject && backend == Backend.tup) {
             throw new Exception("dub integration not supported with the tup backend");

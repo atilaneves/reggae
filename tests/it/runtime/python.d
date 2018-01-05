@@ -54,3 +54,17 @@ unittest {
         ninja.shouldFailToExecute(testPath);
     }
 }
+
+@("Multiple runs will not crash")
+@Tags(["ninja", "json_build", "python"])
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile("reggaefile.py",
+                [`from reggae import *`,
+                 `b = Build(executable(name='app', src_dirs=['src']))`]);
+        writeHelloWorldApp;
+
+        runReggae("-b", "ninja", "-d", "foo=bar");
+        runReggae("-b", "ninja", "-d", "foo=baz");
+    }
+}

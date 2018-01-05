@@ -152,7 +152,7 @@ private string[] getJsonOutputArgs(in Options options) @safe {
             return jsonVal.toString;
         }();
 
-        return ["/usr/bin/env", "python", "-m", "reggae.reggae_json_build",
+        return ["/usr/bin/env", "python", "-B", "-m", "reggae.reggae_json_build",
                 "--options", optionsString,
                 options.projectPath];
 

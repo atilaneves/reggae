@@ -7,10 +7,7 @@ module reggae.dub.interop;
 import reggae.options;
 import reggae.dub.info;
 import reggae.dub.json;
-import std.stdio;
-import std.exception;
-import std.conv;
-import std.process;
+import reggae.from;
 
 
 DubInfo[string] gDubInfos;
@@ -166,7 +163,9 @@ private DubInfo _getDubInfo(T)(auto ref T output, in Options options) {
     return gDubInfos["default"];
 }
 
-private string callDub(in Options options, in string[] rawArgs) {
+private string callDub(in Options options,
+                       in string[] rawArgs,
+                       from!"std.typecons".Flag!"maybeNoDeps" maybeNoDeps = from!"std.typecons".No.maybeNoDeps) {
     import std.process: execute, Config;
     import std.exception: enforce;
     import std.conv: text;
@@ -174,7 +173,8 @@ private string callDub(in Options options, in string[] rawArgs) {
     import std.path: buildPath;
     import std.file: exists;
 
-    const args = buildPath(options.projectPath, "dub.selections.json").exists
+    const hasSelections = buildPath(options.projectPath, "dub.selections.json").exists;
+    const args = hasSelections && maybeNoDeps
         ? rawArgs ~ "--nodeps"
         : rawArgs;
     const string[string] env = null;
@@ -190,8 +190,10 @@ private string callDub(in Options options, in string[] rawArgs) {
 }
 
 private void callPreBuildCommands(in Options options, in DubInfo dubInfo) {
-    import std.process;
+    import std.process: executeShell, Config;
     import std.string: replace;
+    import std.exception: enforce;
+    import std.conv: text;
 
     const string[string] env = null;
     Config config = Config.none;
@@ -253,7 +255,7 @@ bool needDubFetch(in string dubPackage, in string version_) {
 }
 
 
-void writeDubConfig(T)(auto ref T output, in Options options, File file) {
+void writeDubConfig(T)(auto ref T output, in Options options, from!"std.stdio".File file) {
     import reggae.io: log;
     import reggae.dub.info: TargetType;
     import std.stdio: writeln;

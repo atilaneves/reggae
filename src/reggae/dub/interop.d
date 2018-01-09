@@ -94,7 +94,9 @@ private DubInfo _getDubInfo(T)(auto ref T output, in Options options) {
         DubConfigurations getConfigsImpl() {
             immutable dubBuildArgs = ["dub", "--annotate", "build", "--compiler=" ~ options.dCompiler,
                                       "--print-configs", "--build=docs"];
+            output.log("Querying dub for build configurations");
             immutable dubBuildOutput = callDub(options, dubBuildArgs);
+            output.log("Parsing dub build configurations output");
             return getConfigurations(dubBuildOutput);
         }
 

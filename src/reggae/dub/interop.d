@@ -24,22 +24,33 @@ struct DubConfigurations {
 }
 
 
-DubConfigurations getConfigurations(in string output) pure {
+DubConfigurations getConfigurations(in string rawOutput) pure {
 
-    import std.algorithm: splitter, find, canFind, until, map;
-    import std.string: stripLeft;
-    import std.array: array, replace, front, empty;
+    import std.algorithm: findSkip, filter, map, canFind, startsWith;
+    import std.string: splitLines, stripLeft;
+    import std.array: array, replace;
 
-    auto lines = output.splitter("\n");
-    auto fromConfigs = lines.find("Available configurations:").
-        until!(a => a == "").
-        map!(a => a.stripLeft).
-        array[1..$];
-    if(fromConfigs.empty) return DubConfigurations();
+    string output = rawOutput;  // findSkip mutates output
+    const found = output.findSkip("Available configurations:");
+    assert(found, "Could not find configurations in:\n" ~ rawOutput);
+    auto configs = output
+        .splitLines
+        .filter!(a => a.startsWith("  "))
+        .map!stripLeft
+        .array;
 
-    immutable defMarker = " [default]";
-    auto default_ = fromConfigs.find!(a => a.canFind(defMarker)).front.replace(defMarker, "");
-    auto configs = fromConfigs.map!(a => a.replace(defMarker, "")).array;
+    if(configs.length == 0) return DubConfigurations();
+
+    string default_;
+    foreach(ref config; configs) {
+        const defaultMarker = " [default]";
+        if(config.canFind(defaultMarker)) {
+            assert(default_ is null);
+            config = config.replace(defaultMarker, "");
+            default_ = config;
+            break;
+        }
+    }
 
     return DubConfigurations(configs, default_);
 }
@@ -87,7 +98,7 @@ private DubInfo _getDubInfo(T)(auto ref T output, in Options options) {
     if("default" !in gDubInfos) {
 
         if(!buildPath(options.projectPath, "dub.selections.json").exists) {
-            output.log("Calling dub upgrade to create dub.selections.json");
+            output.log("Calling `dub upgrade` to create dub.selections.json");
             callDub(options, ["dub", "upgrade"]);
         }
 
@@ -96,7 +107,6 @@ private DubInfo _getDubInfo(T)(auto ref T output, in Options options) {
                                       "--print-configs", "--build=docs"];
             output.log("Querying dub for build configurations");
             immutable dubBuildOutput = callDub(options, dubBuildArgs);
-            output.log("Parsing dub build configurations output");
             return getConfigurations(dubBuildOutput);
         }
 
@@ -104,7 +114,7 @@ private DubInfo _getDubInfo(T)(auto ref T output, in Options options) {
             try {
                 return getConfigsImpl;
             } catch(Exception _) {
-                output.log("Calling 'dub fetch' since getting the configuration failed");
+                output.log("Calling `dub fetch` since getting the configuration failed");
                 dubFetch(output, options);
                 return getConfigsImpl;
             }
@@ -116,12 +126,14 @@ private DubInfo _getDubInfo(T)(auto ref T output, in Options options) {
         Exception dubDescribeFailure;
 
         if(configs.configurations.empty) {
+            output.log("Calling `dub describe`");
             const descOutput = callDub(options, ["dub", "describe"]);
             oneConfigOk = true;
             gDubInfos["default"] = getDubInfo(descOutput);
         } else {
             foreach(config; configs.configurations) {
                 try {
+                    output.log("Calling `dub describe` for configuration ", config);
                     const descOutput = callDub(options, ["dub", "describe", "-c", config]);
                     gDubInfos[config] = getDubInfo(descOutput);
 

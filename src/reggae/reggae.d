@@ -264,7 +264,11 @@ private string compileBinaries(T)(auto ref T output, in Options options) {
                            reggaeFileDeps));
         objFiles ~= rest;
     }
-    buildBinary(output, options, Binary(buildGenName, [options.dCompiler, "-of" ~ buildGenName] ~ objFiles));
+
+    buildBinary(output,
+                options,
+                Binary(buildGenName,
+                       [options.dCompiler, "-of" ~ buildGenName] ~ objFiles));
 
     return buildGenName;
 }

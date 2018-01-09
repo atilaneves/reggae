@@ -154,18 +154,24 @@ private DubInfo _getDubInfo(T)(auto ref T output, in Options options) {
     return gDubInfos["default"];
 }
 
-private string callDub(in Options options, in string[] args) {
-    import std.process;
+private string callDub(in Options options, in string[] rawArgs) {
+    import std.process: execute, Config;
     import std.exception: enforce;
     import std.conv: text;
-    import std.string;
+    import std.string: join;
+    import std.path: buildPath;
+    import std.file: exists;
 
+    const args = buildPath(options.projectPath, "dub.selections.json").exists
+        ? rawArgs ~ "--nodeps"
+        : rawArgs;
     const string[string] env = null;
     Config config = Config.none;
     size_t maxOutput = size_t.max;
-    immutable workDir = options.projectPath;
+    const workDir = options.projectPath;
 
-    immutable ret = execute(args, env, config, maxOutput, workDir);
+
+    const ret = execute(args, env, config, maxOutput, workDir);
     enforce(ret.status == 0, text("Error calling '", args.join(" "), "' (", ret.status, ")", ":\n",
                                   ret.output));
     return ret.output;

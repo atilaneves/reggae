@@ -4,16 +4,10 @@
 
 module reggae.dub.interop;
 
-import reggae.options;
-import reggae.dub.info;
-import reggae.dub.json;
-import std.stdio;
-import std.exception;
-import std.conv;
-import std.process;
+import reggae.from;
 
 
-DubInfo[string] gDubInfos;
+from!"reggae.dub.info".DubInfo[string] gDubInfos;
 
 
 @safe:
@@ -56,7 +50,9 @@ DubConfigurations getConfigurations(in string rawOutput) pure {
 }
 
 
-void maybeCreateReggaefile(T)(auto ref T output, in Options options) {
+void maybeCreateReggaefile(T)(auto ref T output,
+                              in from!"reggae.options".Options options)
+{
     import std.file: exists;
 
     if(options.isDubProject && !options.reggaeFilePath.exists) {
@@ -65,7 +61,9 @@ void maybeCreateReggaefile(T)(auto ref T output, in Options options) {
 }
 
 // default build for a dub project when there is no reggaefile
-void createReggaefile(T)(auto ref T output, in Options options) {
+void createReggaefile(T)(auto ref T output,
+                         in from!"reggae.options".Options options)
+{
     import reggae.io: log;
     import std.stdio: File;
     import std.path: buildPath;
@@ -85,12 +83,16 @@ void createReggaefile(T)(auto ref T output, in Options options) {
 }
 
 
-private DubInfo _getDubInfo(T)(auto ref T output, in Options options) {
+private from!"reggae.dub.info".DubInfo _getDubInfo(T)(auto ref T output,
+                                                      in from!"reggae.options".Options options)
+{
     import reggae.io: log;
+    import reggae.dub.json: getDubInfo;
     import std.array;
     import std.file: exists;
     import std.path: buildPath;
     import std.stdio: writeln;
+    import std.typecons: Yes;
 
     version(unittest)
         gDubInfos = null;
@@ -106,7 +108,7 @@ private DubInfo _getDubInfo(T)(auto ref T output, in Options options) {
             immutable dubBuildArgs = ["dub", "--annotate", "build", "--compiler=" ~ options.dCompiler,
                                       "--print-configs", "--build=docs"];
             output.log("Querying dub for build configurations");
-            immutable dubBuildOutput = callDub(options, dubBuildArgs);
+            immutable dubBuildOutput = callDub(options, dubBuildArgs, Yes.maybeNoDeps);
             return getConfigurations(dubBuildOutput);
         }
 
@@ -127,14 +129,14 @@ private DubInfo _getDubInfo(T)(auto ref T output, in Options options) {
 
         if(configs.configurations.empty) {
             output.log("Calling `dub describe`");
-            const descOutput = callDub(options, ["dub", "describe"]);
+            const descOutput = callDub(options, ["dub", "describe"], Yes.maybeNoDeps);
             oneConfigOk = true;
             gDubInfos["default"] = getDubInfo(descOutput);
         } else {
             foreach(config; configs.configurations) {
                 try {
                     output.log("Calling `dub describe` for configuration ", config);
-                    const descOutput = callDub(options, ["dub", "describe", "-c", config]);
+                    const descOutput = callDub(options, ["dub", "describe", "-c", config], Yes.maybeNoDeps);
                     gDubInfos[config] = getDubInfo(descOutput);
 
                     // dub adds certain flags to certain configurations automatically but these flags
@@ -166,7 +168,10 @@ private DubInfo _getDubInfo(T)(auto ref T output, in Options options) {
     return gDubInfos["default"];
 }
 
-private string callDub(in Options options, in string[] rawArgs) {
+private string callDub(in from!"reggae.options".Options options,
+                       in string[] rawArgs,
+                       from!"std.typecons".Flag!"maybeNoDeps" maybeNoDeps = from!"std.typecons".No.maybeNoDeps)
+{
     import std.process: execute, Config;
     import std.exception: enforce;
     import std.conv: text;
@@ -174,7 +179,8 @@ private string callDub(in Options options, in string[] rawArgs) {
     import std.path: buildPath;
     import std.file: exists;
 
-    const args = buildPath(options.projectPath, "dub.selections.json").exists
+    const hasSelections = buildPath(options.projectPath, "dub.selections.json").exists;
+    const args = hasSelections && maybeNoDeps
         ? rawArgs ~ "--nodeps"
         : rawArgs;
     const string[string] env = null;
@@ -189,9 +195,13 @@ private string callDub(in Options options, in string[] rawArgs) {
     return ret.output;
 }
 
-private void callPreBuildCommands(in Options options, in DubInfo dubInfo) {
-    import std.process;
+private void callPreBuildCommands(in from!"reggae.options".Options options,
+                                  in from!"reggae.dub.json".DubInfo dubInfo)
+{
+    import std.process: executeShell, Config;
     import std.string: replace;
+    import std.exception: enforce;
+    import std.conv: text;
 
     const string[string] env = null;
     Config config = Config.none;
@@ -205,7 +215,10 @@ private void callPreBuildCommands(in Options options, in DubInfo dubInfo) {
     }
 }
 
-private void dubFetch(T)(auto ref T output, in Options options) @trusted {
+private void dubFetch(T)(auto ref T output,
+                         in from!"reggae.options".Options options)
+    @trusted
+{
     import reggae.io: log;
     import std.array: join, replace;
     import std.stdio: writeln;
@@ -253,7 +266,9 @@ bool needDubFetch(in string dubPackage, in string version_) {
 }
 
 
-void writeDubConfig(T)(auto ref T output, in Options options, File file) {
+void writeDubConfig(T)(auto ref T output,
+                       in from!"reggae.options".Options options,
+                       from!"std.stdio".File file) {
     import reggae.io: log;
     import reggae.dub.info: TargetType;
     import std.stdio: writeln;

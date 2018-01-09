@@ -92,6 +92,7 @@ private from!"reggae.dub.info".DubInfo _getDubInfo(T)(auto ref T output,
     import std.file: exists;
     import std.path: buildPath;
     import std.stdio: writeln;
+    import std.typecons: Yes;
 
     version(unittest)
         gDubInfos = null;
@@ -107,7 +108,7 @@ private from!"reggae.dub.info".DubInfo _getDubInfo(T)(auto ref T output,
             immutable dubBuildArgs = ["dub", "--annotate", "build", "--compiler=" ~ options.dCompiler,
                                       "--print-configs", "--build=docs"];
             output.log("Querying dub for build configurations");
-            immutable dubBuildOutput = callDub(options, dubBuildArgs);
+            immutable dubBuildOutput = callDub(options, dubBuildArgs, Yes.maybeNoDeps);
             return getConfigurations(dubBuildOutput);
         }
 
@@ -128,14 +129,14 @@ private from!"reggae.dub.info".DubInfo _getDubInfo(T)(auto ref T output,
 
         if(configs.configurations.empty) {
             output.log("Calling `dub describe`");
-            const descOutput = callDub(options, ["dub", "describe"]);
+            const descOutput = callDub(options, ["dub", "describe"], Yes.maybeNoDeps);
             oneConfigOk = true;
             gDubInfos["default"] = getDubInfo(descOutput);
         } else {
             foreach(config; configs.configurations) {
                 try {
                     output.log("Calling `dub describe` for configuration ", config);
-                    const descOutput = callDub(options, ["dub", "describe", "-c", config]);
+                    const descOutput = callDub(options, ["dub", "describe", "-c", config], Yes.maybeNoDeps);
                     gDubInfos[config] = getDubInfo(descOutput);
 
                     // dub adds certain flags to certain configurations automatically but these flags

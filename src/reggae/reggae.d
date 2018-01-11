@@ -130,6 +130,10 @@ private string getJsonOutput(in Options options) @safe {
 }
 
 private string[] getJsonOutputArgs(in Options options) @safe {
+
+    import std.process: environment;
+    import std.json: parseJSON;
+
     final switch(options.reggaeFileLanguage) {
 
     case BuildLanguage.D:
@@ -140,7 +144,7 @@ private string[] getJsonOutputArgs(in Options options) @safe {
         auto optionsString = () @trusted {
             import std.json;
             import std.traits;
-            JSONValue jsonVal = parseJSON(`{}`);
+            auto jsonVal = parseJSON(`{}`);
             foreach(member; __traits(allMembers, typeof(options))) {
                 static if(is(typeof(mixin(`options.` ~ member)) == const(Backend)) ||
                           is(typeof(mixin(`options.` ~ member)) == const(string)) ||
@@ -152,8 +156,11 @@ private string[] getJsonOutputArgs(in Options options) @safe {
             return jsonVal.toString;
         }();
 
-        auto pythonExecutable = environment.get("REGGAE_PYTHON", "python");
-        return [pythonExecutable, "-B", "-m", "reggae.reggae_json_build",
+        const haveReggaePython = "REGGAE_PYTHON" in environment;
+        auto pythonParts = haveReggaePython
+            ? [environment["REGGAE_PYTHON"]]
+            : ["/usr/bin/env", "python"];
+        return pythonParts ~ ["-B", "-m", "reggae.reggae_json_build",
                 "--options", optionsString,
                 options.projectPath];
 

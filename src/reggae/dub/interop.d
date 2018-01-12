@@ -181,7 +181,7 @@ private string callDub(in from!"reggae.options".Options options,
 
     const hasSelections = buildPath(options.projectPath, "dub.selections.json").exists;
     const args = hasSelections && maybeNoDeps
-        ? rawArgs ~ "--nodeps"
+        ? rawArgs ~ ["--nodeps", "--skip-registry=all"]
         : rawArgs;
     const string[string] env = null;
     Config config = Config.none;

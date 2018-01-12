@@ -175,24 +175,31 @@ private string callDub(in from!"reggae.options".Options options,
     import std.process: execute, Config;
     import std.exception: enforce;
     import std.conv: text;
-    import std.string: join;
+    import std.string: join, split;
     import std.path: buildPath;
     import std.file: exists;
 
     const hasSelections = buildPath(options.projectPath, "dub.selections.json").exists;
-    const args = hasSelections && maybeNoDeps
-        ? rawArgs ~ ["--nodeps", "--skip-registry=all"]
-        : rawArgs;
+    string[] emptyArgs;
+    const noDepsArgs = hasSelections && maybeNoDeps ? ["--nodeps", "--skip-registry=all"] : emptyArgs;
+    const args = rawArgs ~ noDepsArgs ~ dubEnvArgs;
     const string[string] env = null;
     Config config = Config.none;
     size_t maxOutput = size_t.max;
     const workDir = options.projectPath;
 
-
     const ret = execute(args, env, config, maxOutput, workDir);
-    enforce(ret.status == 0, text("Error calling '", args.join(" "), "' (", ret.status, ")", ":\n",
-                                  ret.output));
+    enforce(ret.status == 0,
+            text("Error calling '", args.join(" "), "' (", ret.status, ")", ":\n",
+                 ret.output));
+
     return ret.output;
+}
+
+private string[] dubEnvArgs() {
+    import std.process: environment;
+    import std.string: split;
+    return environment.get("REGGAE_DUB_ARGS", "").split(" ");
 }
 
 private void callPreBuildCommands(in from!"reggae.options".Options options,
@@ -241,7 +248,8 @@ private void dubFetch(T)(auto ref T output,
 
         if(!needDubFetch(dubPackage, version_)) continue;
 
-        const cmd = ["dub", "fetch", dubPackage, "--version=" ~ version_];
+
+        const cmd = ["dub", "fetch", dubPackage, "--version=" ~ version_] ~ dubEnvArgs;
 
         output.log("Fetching package with command '", cmd.join(" "), "'");
         try
@@ -261,7 +269,12 @@ bool needDubFetch(in string dubPackage, in string version_) {
     import std.process: environment;
     import std.file: exists;
 
-    const path = buildPath(environment["HOME"], ".dub", "packages", dubPackage ~ "-" ~ version_);
+    const packageDir = dubPackage ~ "-" ~ version_;
+    version(Windows)
+        const path = buildPath("C:\\Users", environment["USERNAME"], "AppData", "Roaming", "dub", "packages", packageDir);
+    else
+        const path = buildPath(environment["HOME"], ".dub", "packages", packageDir);
+
     return !path.exists;
 }
 

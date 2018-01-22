@@ -9,14 +9,10 @@ matrix:
         - d: dmd-2.076.1
         - d: dmd-2.075.1
         - d: dmd-2.074.1
-        - d: dmd-2.073.2
-        - d: dmd-2.072.2
         - d: ldc
         - d: ldc-1.6.0
         - d: ldc-1.5.0
         - d: ldc-1.4.0
-        - d: ldc-1.3.0
-        - d: ldc-1.2.0
 
 install:
   - gem install bundler

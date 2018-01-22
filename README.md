@@ -1,6 +1,7 @@
 Reggae
 =======
 [![Build Status](https://travis-ci.org/atilaneves/reggae.png?branch=master)](https://travis-ci.org/atilaneves/reggae)
+[![Coverage](https://codecov.io/gh/atilaneves/reggae/branch/master/graph/badge.svg)](https://codecov.io/gh/atilaneves/reggae)
 
 A (meta) build system with multiple front (D, Python, Ruby,
 Javascript, Lua) and backends (make, ninja, tup, custom).  This is

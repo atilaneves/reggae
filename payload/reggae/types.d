@@ -39,6 +39,12 @@ struct Flags {
 
 struct CompilerFlags {
     string value;
+
+    this(string value) { this.value = value; }
+    this(string[] value) {
+        import std.string: join;
+        this.value = value.join(" ");
+    }
 }
 
 struct LinkerFlags {

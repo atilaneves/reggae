@@ -42,6 +42,7 @@ struct Options {
     bool verbose;
     bool dubLocalPackages;
     string[] dependencies;
+    string dubObjsDir;
     string[string] userVars; //must always be the last member variable
 
     Options dup() @safe pure const nothrow {
@@ -222,6 +223,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             "export", "Export build system - removes dependencies on reggae itself", &options.export_,
             "verbose", "Verbose output", &options.verbose,
             "dub_local", "Project uses dub local packages", &options.dubLocalPackages,
+            "dub-objs-dir", "Directory to place object files for dub dependencies", &options.dubObjsDir,
         );
 
         if(helpInfo.helpWanted) {

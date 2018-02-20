@@ -276,12 +276,8 @@ unittest {
 
         writeFile("reggaefile.d", q{
             import reggae;
-            import std.typecons;
-            mixin build!(dubDefaultTarget!(CompilerFlags(),
-                                           LinkerFlags(),
-                                           No.allTogether,
-                                           DubObjsDir("%s")));
-        }.format(testPath));
+            mixin build!(dubDefaultTarget!());
+        });
 
         writeFile("dub.sdl",`
             name "foo"
@@ -303,7 +299,7 @@ unittest {
             int add(int i, int j) { return i + j; }
         });
 
-        runReggae("-b", "ninja");
+        runReggae("-b", "ninja", "--dub-objs-dir=" ~ testPath);
         ninja.shouldExecuteOk;
 
         import std.path: buildPath;

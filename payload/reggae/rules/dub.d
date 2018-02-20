@@ -122,6 +122,7 @@ static if(isDubProject) {
     {
 
         import reggae.rules.common: staticLibraryTarget;
+        import reggae.config: options;
         import std.array: join;
         import std.path: buildPath;
 
@@ -132,18 +133,17 @@ static if(isDubProject) {
             ? "-shared"
             : "";
         const allLinkerFlags = (linkerFlags ~ dubInfo.linkerFlags ~ sharedFlags).join(" ");
-        auto dubObjs = dubInfo.toTargets(includeMain, compilerFlags, allTogether);
-        auto allObjs = objsFunction() ~ dubObjs;
-
         const postBuildCommands = dubInfo.postBuildCommands;
 
-        string realName() {
-            // otherwise the target wouldn't be top-level in the presence of
-            // postBuildCommands
-            return postBuildCommands == ""
-                ? targetName.value
-                : buildPath("$project", targetName.value);
-        }
+        // otherwise the target wouldn't be top-level in the presence of
+        // postBuildCommands
+        const realName = postBuildCommands == ""
+            ? targetName.value
+            : buildPath("$project", targetName.value);
+
+        const realDubObjsDir = buildPath(options.dubObjsDir, realName ~ ".objs");
+        auto dubObjs = dubInfo.toTargets(includeMain, compilerFlags, allTogether, realDubObjsDir);
+        auto allObjs = objsFunction() ~ dubObjs;
 
         auto target = isStaticLibrary
             ? staticLibraryTarget(realName, allObjs)[0]

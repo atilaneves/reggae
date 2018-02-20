@@ -264,3 +264,51 @@ unittest {
         ninja.shouldExecuteOk;
     }
 }
+
+
+@("dub objs option")
+@Tags("dub", "ninja")
+unittest {
+
+    import std.format;
+
+    with(immutable ReggaeSandbox()) {
+
+        writeFile("reggaefile.d", q{
+            import reggae;
+            mixin build!(dubDefaultTarget!());
+        });
+
+        writeFile("dub.sdl",`
+            name "foo"
+            targetType "executable"
+            dependency "bar" path="bar"
+        `);
+
+        writeFile("source/app.d", q{
+            import bar;
+            void main() { add(2, 3); }
+        });
+
+        writeFile("bar/dub.sdl", `
+            name "bar"
+        `);
+
+        writeFile("bar/source/bar.d", q{
+            module bar;
+            int add(int i, int j) { return i + j; }
+        });
+
+        runReggae("-b", "ninja", "--dub-objs-dir=" ~ testPath);
+        ninja.shouldExecuteOk;
+
+        import std.path: buildPath;
+        import std.file: getcwd;
+        shouldExist(buildPath("foo.objs", testPath.deabsolutePath, "bar", "source.o"));
+    }
+}
+
+private string deabsolutePath(in string path) {
+    version(Windows) throw new Exception("not implemented yet");
+    return path[1..$];
+}

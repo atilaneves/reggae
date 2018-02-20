@@ -95,6 +95,11 @@ string inDubPackagePath(in string packagePath, in string filePath) @safe pure no
         : buildPath(packagePath, filePath);
 }
 
+struct DubObjsDir {
+    string globalDir;
+    string targetDir;
+}
+
 struct DubInfo {
 
     DubPackage[] packages;
@@ -108,14 +113,14 @@ struct DubInfo {
     Target[] toTargets(in Flag!"main" includeMain = Yes.main,
                        in string compilerFlags = "",
                        in Flag!"allTogether" allTogether = No.allTogether,
-                       in string dubObjsDir = "")
+                       in DubObjsDir dubObjsDir = DubObjsDir())
         @safe const
     {
 
         import reggae.config: options;
         import reggae.build: targetObjsDir;
         import std.functional: not;
-        import std.path: buildPath, absolutePath;
+        import std.path: buildPath, absolutePath, baseName, dirName;
 
         Target[] targets;
 
@@ -162,9 +167,12 @@ struct DubInfo {
 
 
             // go through dub dependencies and optionally put the object files in dubObjsDir
-            if(!isMainPackage && dubObjsDir != "") {
+            if(!isMainPackage && dubObjsDir.globalDir != "") {
                 foreach(ref target; packageTargets) {
-                    target.rawOutputs[0] = buildPath(dubObjsDir, target.rawOutputs[0]).absolutePath;
+                    target.rawOutputs[0] = buildPath(dubObjsDir.globalDir,
+                                                     target.rawOutputs[0].dirName,
+                                                     dubObjsDir.targetDir,
+                                                     target.rawOutputs[0].baseName);
                 }
             }
 

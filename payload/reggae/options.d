@@ -7,7 +7,7 @@ import std.conv: ConvException;
 import std.path: absolutePath, buildPath;
 import std.file: exists;
 
-enum version_ = "0.5.21";
+enum version_ = "0.5.22";
 
 Options defaultOptions;
 

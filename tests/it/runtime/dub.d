@@ -303,8 +303,10 @@ unittest {
         ninja.shouldExecuteOk;
 
         import std.path: buildPath;
-        import std.file: getcwd;
-        shouldExist(buildPath("foo.objs", testPath.deabsolutePath, "bar", "source.o"));
+        shouldExist(buildPath(testPath.deabsolutePath,
+                              "bar",
+                              "foo.objs",
+                              "source.o"));
     }
 }
 

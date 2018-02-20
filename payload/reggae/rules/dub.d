@@ -123,8 +123,10 @@ static if(isDubProject) {
 
         import reggae.rules.common: staticLibraryTarget;
         import reggae.config: options;
+        import reggae.dub.info: DubObjsDir;
         import std.array: join;
         import std.path: buildPath;
+        import std.file: getcwd;
 
         const isStaticLibrary =
             dubInfo.targetType == TargetType.library ||
@@ -141,8 +143,10 @@ static if(isDubProject) {
             ? targetName.value
             : buildPath("$project", targetName.value);
 
-        const realDubObjsDir = buildPath(options.dubObjsDir, realName ~ ".objs");
-        auto dubObjs = dubInfo.toTargets(includeMain, compilerFlags, allTogether, realDubObjsDir);
+        auto dubObjs = dubInfo.toTargets(includeMain,
+                                         compilerFlags,
+                                         allTogether,
+                                         DubObjsDir(options.dubObjsDir, realName ~ ".objs"));
         auto allObjs = objsFunction() ~ dubObjs;
 
         auto target = isStaticLibrary
@@ -155,4 +159,10 @@ static if(isDubProject) {
             ? target
             : Target.phony("postBuild", postBuildCommands, target);
     }
+
+    private string deabsolutePath(in string path) {
+        version(Windows) throw new Exception("not implemented yet");
+        return path[1..$];
+    }
+
 }

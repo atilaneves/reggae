@@ -75,12 +75,12 @@ unittest {
 
     with(immutable ReggaeSandbox()) {
         writeFile("dub.json", `
-{
-  "name": "depends_on_cerealed",
-  "license": "MIT",
-  "targetType": "executable",
-  "dependencies": { "cerealed": "==0.6.8" }
-}`);
+        {
+          "name": "depends_on_cerealed",
+          "license": "MIT",
+          "targetType": "executable",
+          "dependencies": { "cerealed": "==0.6.8" }
+        }`);
         writeFile("source/app.d", "void main() {}");
 
         runReggae("-b", "ninja");
@@ -246,7 +246,7 @@ unittest {
                 writeln(lebar);
                 writeln(lebaz);
             }
-            });
+        });
         writeFile("bar/dub.sdl", `
             name "bar"
             sourceFiles "../baz.o"

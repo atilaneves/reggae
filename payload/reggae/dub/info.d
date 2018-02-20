@@ -158,14 +158,6 @@ struct DubInfo {
             auto func = allTogether ? &dlangPackageObjectFilesTogether : &dlangPackageObjectFiles;
             auto packageTargets = func(files, flags, importPaths, stringImportPaths, projDir);
 
-            // add any object files that are meant to be linked
-            packageTargets ~= dubPackage
-                .files
-                .filter!isObjectFile
-                .map!(a => Target(inDubPackagePath(dubPackage.path, a)))
-                .array;
-
-
             // go through dub dependencies and optionally put the object files in dubObjsDir
             if(!isMainPackage && dubObjsDir.globalDir != "") {
                 foreach(ref target; packageTargets) {
@@ -175,6 +167,14 @@ struct DubInfo {
                                                      target.rawOutputs[0].baseName);
                 }
             }
+
+            // add any object files that are meant to be linked
+            packageTargets ~= dubPackage
+                .files
+                .filter!isObjectFile
+                .map!(a => Target(inDubPackagePath(dubPackage.path, a)))
+                .array;
+
 
             targets ~= packageTargets;
         }

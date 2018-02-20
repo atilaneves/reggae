@@ -310,6 +310,44 @@ unittest {
     }
 }
 
+@("object source files with dub objs option")
+@Tags(["dub", "ninja"])
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl", `
+            name "foo"
+            targetType "executable"
+            dependency "bar" path="bar"
+        `);
+        writeFile("source/app.d", q{
+            extern(C) int lebaz();
+            void main() {
+                import bar;
+                import std.stdio;
+                writeln(lebar);
+                writeln(lebaz);
+            }
+        });
+        writeFile("bar/dub.sdl", `
+            name "bar"
+            sourceFiles "../baz.o"
+        `);
+        writeFile("bar/source/bar.d", q{
+            module bar;
+            int lebar() { return 3; }
+        });
+        writeFile("baz.d", q{
+            module baz;
+            extern(C) int lebaz() { return 42; }
+        });
+
+        ["dmd", "-c", "baz.d"].shouldExecuteOk;
+        runReggae("-b", "ninja", "--dub-objs-dir=" ~ testPath);
+        ninja.shouldExecuteOk;
+    }
+}
+
+
 private string deabsolutePath(in string path) {
     version(Windows) throw new Exception("not implemented yet");
     return path[1..$];

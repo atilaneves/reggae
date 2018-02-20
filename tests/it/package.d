@@ -121,6 +121,7 @@ string newTestDir() {
     return ret.absolutePath;
 }
 
+@DontTest
 Options testOptions(string[] args) {
     import reggae.config: setOptions;
     auto options = getOptions(["reggae", "-C", newTestDir] ~ args);
@@ -247,7 +248,7 @@ void justDoTestBuild(string module_ = __MODULE__)(in Options options, string[] a
     auto cmdArgs = buildCmd(options, args);
     doBuildFor!module_(options, cmdArgs); // generate build
     if(options.backend != Backend.binary && options.backend != Backend.none)
-        cmdArgs.shouldExecuteOk(options.workingDir);
+        cmdArgs.shouldExecuteOk(WorkDir(options.workingDir));
 }
 
 string[] buildCmdShouldRunOk(alias module_ = __MODULE__)(in Options options,
@@ -265,7 +266,7 @@ string[] buildCmdShouldRunOk(alias module_ = __MODULE__)(in Options options,
     // the binary backend in the tests isn't a separate executable, but make, ninja and tup are
     return options.backend == Backend.binary
         ? doTheBuild
-        : cmdArgs.shouldExecuteOk(options.workingDir, file, line);
+        : cmdArgs.shouldExecuteOk(WorkDir(options.workingDir), file, line);
 }
 
 // copy one of the test projects to a temporary test directory

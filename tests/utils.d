@@ -4,9 +4,17 @@ import reggae;
 import unit_threaded;
 import std.file;
 
+struct WorkDir {
+    string value;
+}
 
-auto shouldExecuteOk(string[] args, string workDir,
-                     string file = __FILE__, size_t line = __LINE__) {
+auto shouldExecuteOk(in string[] args, in string file = __FILE__, in size_t line = __LINE__) {
+    import tests.it.runtime: ReggaeSandbox;
+    return shouldExecuteOk(args, WorkDir(ReggaeSandbox.currentTestPath), file, line);
+}
+
+auto shouldExecuteOk(in string[] args, in WorkDir workDir,
+                     in string file = __FILE__, in size_t line = __LINE__) {
     import std.process;
     import std.array;
     import std.string;
@@ -15,12 +23,12 @@ auto shouldExecuteOk(string[] args, string workDir,
     Config config = Config.none;
     size_t maxOutput = size_t.max;
 
-    immutable res = execute(args, env, config, maxOutput, workDir);
+    immutable res = execute(args, env, config, maxOutput, workDir.value);
 
     auto lines = res.output.chomp.split("\n");
     if(res.status != 0)
         throw new UnitTestException(["Could not execute '" ~ args.join(" ") ~
-                                     "' in path " ~ workDir ~ ":"] ~
+                                     "' in path " ~ workDir.value ~ ":"] ~
                                     "" ~ lines,
                                     file, line);
     return lines;
@@ -28,7 +36,7 @@ auto shouldExecuteOk(string[] args, string workDir,
 
 auto shouldExecuteOk(string[] args, in Options options,
                      string file = __FILE__, size_t line = __LINE__) {
-    return shouldExecuteOk(args, options.workingDir, file, line);
+    return shouldExecuteOk(args, WorkDir(options.workingDir), file, line);
 }
 
 auto shouldExecuteOk(string arg, in Options options,
@@ -37,8 +45,8 @@ auto shouldExecuteOk(string arg, in Options options,
 }
 
 auto shouldExecuteOk(string arg, string file = __FILE__, size_t line = __LINE__) {
-    import std.file;
-    return shouldExecuteOk([arg], getcwd(), file, line);
+    import std.file: getcwd;
+    return shouldExecuteOk([arg], WorkDir(getcwd()), file, line);
 }
 
 auto shouldFailToExecute(string arg, string workDir = getcwd(),

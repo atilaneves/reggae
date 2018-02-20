@@ -24,7 +24,7 @@ unittest {
         writeHelloWorldApp;
 
         runReggae("-b", "ninja");
-        ninja.shouldExecuteOk(testPath);
+        ninja.shouldExecuteOk;
         shouldSucceed("app").shouldEqual(["Hello world!"]);
     }
 }

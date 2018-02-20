@@ -21,7 +21,7 @@ unittest {
         writeFile("a.c");
 
         runReggae("-b", "ninja");
-        ninja.shouldExecuteOk(testPath);
+        ninja.shouldExecuteOk;
     }
 }
 
@@ -59,8 +59,8 @@ unittest {
         writeFile("in.txt", ["foo", "bar", "baz"]);
 
         runReggae("-b", "ninja");
-        ninja.shouldExecuteOk(testPath);
-        ["cat", "out.c"].shouldExecuteOk(testPath);
+        ninja.shouldExecuteOk;
+        ["cat", "out.c"].shouldExecuteOk;
         shouldEqualLines("out.c",
                          ["foo foo",
                           "bar bar",

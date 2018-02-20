@@ -19,7 +19,7 @@ unittest {
 
     // try one of the build systems and build the app
     const testPath = options.workingDir;
-    buildCmd(getValue!string.to!Backend, testPath).shouldExecuteOk(testPath);
+    buildCmd(getValue!string.to!Backend, testPath).shouldExecuteOk(WorkDir(testPath));
 
     // it should now run ok
     "hello".shouldSucceed.shouldEqual(["Hello world!"]);

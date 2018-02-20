@@ -18,7 +18,7 @@ unittest {
         writeHelloWorldApp;
 
         runReggae("-b", "ninja");
-        ninja.shouldExecuteOk(testPath);
+        ninja.shouldExecuteOk;
         shouldSucceed("app").shouldEqual(["Hello world!"]);
     }
 }
@@ -34,7 +34,7 @@ unittest {
         writeHelloWorldApp;
 
         runReggae("-b", "ninja", "-dname=foo");
-        ninja.shouldExecuteOk(testPath);
+        ninja.shouldExecuteOk;
         shouldSucceed("foo").shouldEqual(["Hello world!"]);
     }
 }

@@ -3,7 +3,6 @@ module tests.it.runtime.dub;
 
 import tests.it.runtime;
 import reggae.reggae;
-import std.path;
 
 
 @("dub project with no reggaefile ninja")
@@ -16,7 +15,7 @@ unittest {
         shouldNotExist("reggaefile.d");
         writelnUt("\n\nReggae output:\n\n", runReggae("-b", "ninja", "--dflags=-g -debug").lines.join("\n"), "-----\n");
         shouldExist("reggaefile.d");
-        auto output = ninja.shouldExecuteOk(testPath);
+        auto output = ninja.shouldExecuteOk;
         output.shouldContain("-g -debug");
 
         shouldSucceed("atest").shouldEqual(
@@ -44,7 +43,7 @@ unittest {
 unittest {
     with(immutable ReggaeSandbox("dub_prebuild")) {
         runReggae("-b", "ninja", "--dflags=-g -debug");
-        ninja.shouldExecuteOk(testPath);
+        ninja.shouldExecuteOk;
         shouldSucceed("ut");
     }
 }
@@ -54,7 +53,7 @@ unittest {
 unittest {
     with(immutable ReggaeSandbox("dub_postbuild")) {
         runReggae("-b", "ninja", "--dflags=-g -debug");
-        ninja.shouldExecuteOk(testPath);
+        ninja.shouldExecuteOk;
         shouldExist("foo.txt");
         shouldSucceed("postbuild");
     }
@@ -111,7 +110,7 @@ unittest {
         mkdirRecurse(buildPath(testPath, "source"));
         writeFile("source/foo.d", `unittest { assert(false); }`);
         runReggae("-b", "ninja");
-        ninja.shouldExecuteOk(testPath);
+        ninja.shouldExecuteOk;
 
         shouldFail("ut");
     }
@@ -126,7 +125,7 @@ unittest {
 
     with(immutable ReggaeSandbox("dub")) {
         runReggae("-b", "make", "--dflags=-g -debug");
-        make(["VERBOSE=1"]).shouldExecuteOk(testPath).shouldContain("-g -debug");
+        make(["VERBOSE=1"]).shouldExecuteOk.shouldContain("-g -debug");
         {
             const ret = execute(["touch", buildPath(testPath, "dub.json")]);
             ret.status.shouldEqual(0);
@@ -150,7 +149,7 @@ unittest {
 
     with(immutable ReggaeSandbox("dub")) {
         runReggae("-b", "make", "--dflags=-g -debug");
-        make(["VERBOSE=1"]).shouldExecuteOk(testPath).shouldContain("-g -debug");
+        make(["VERBOSE=1"]).shouldExecuteOk.shouldContain("-g -debug");
         {
             const ret = execute(["touch", buildPath(testPath, "dub.selections.json")]);
             ret.status.shouldEqual(0);
@@ -190,7 +189,7 @@ unittest {
                 int lebar() { return 42; }
         });
         runReggae("-b", "ninja");
-        ninja.shouldExecuteOk(testPath);
+        ninja.shouldExecuteOk;
         shouldSucceed("foo").shouldEqual(
             [
                 "3",
@@ -225,7 +224,7 @@ unittest {
             int lebar() { return 3; }
         });
         runReggae("-b", "ninja");
-        ninja.shouldExecuteOk(testPath);
+        ninja.shouldExecuteOk;
     }
 }
 
@@ -260,8 +259,8 @@ unittest {
             extern(C) int lebaz() { return 42; }
         });
 
-        ["dmd", "-c", "baz.d"].shouldExecuteOk(testPath);
+        ["dmd", "-c", "baz.d"].shouldExecuteOk;
         runReggae("-b", "ninja");
-        ninja.shouldExecuteOk(testPath);
+        ninja.shouldExecuteOk;
     }
 }

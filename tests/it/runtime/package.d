@@ -6,6 +6,7 @@ import reggae.reggae;
 
 // calls reggae.run, which is basically main, but with a
 // fake file
+@DontTest
 auto testRun(string[] args) {
     auto output = FakeFile();
     run(output, args);
@@ -13,12 +14,16 @@ auto testRun(string[] args) {
 }
 
 struct ReggaeSandbox {
-    Sandbox sandbox;
+
     alias sandbox this;
+
+    Sandbox sandbox;
+    static string currentTestPath;
 
     static ReggaeSandbox opCall() {
         ReggaeSandbox ret;
         ret.sandbox = Sandbox();
+        currentTestPath = ret.testPath;
         return ret;
     }
 
@@ -26,6 +31,10 @@ struct ReggaeSandbox {
         auto ret = ReggaeSandbox();
         ret.copyProject(projectName);
         return ret;
+    }
+
+    ~this() @safe {
+        currentTestPath = null;
     }
 
     auto runReggae(string[] args...) const {
@@ -55,7 +64,7 @@ struct ReggaeSandbox {
                        in string file = __FILE__,
                        ulong line = __LINE__ ) const {
         import tests.utils;
-        return [buildPath(testPath, arg)].shouldExecuteOk(testPath, file, line);
+        return [buildPath(testPath, arg)].shouldExecuteOk(WorkDir(testPath), file, line);
     }
 
     auto shouldFail(in string arg, in string file = __FILE__, ulong line = __LINE__) const {

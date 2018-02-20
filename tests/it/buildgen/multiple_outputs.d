@@ -14,8 +14,8 @@ private void doBuild(string module_)(in string reggaefileName, ref Options optio
     const testPath = options.workingDir;
     remove(buildPath(testPath, "protocol.d"));
     rename(buildPath(testPath, reggaefileName), buildPath(testPath, "reggaefile.d"));
-    ["dmd", buildPath(testPath, "compiler.d")].shouldExecuteOk(testPath);
-    ["dmd", buildPath(testPath, "translator.d")].shouldExecuteOk(testPath);
+    ["dmd", buildPath(testPath, "compiler.d")].shouldExecuteOk(WorkDir(testPath));
+    ["dmd", buildPath(testPath, "translator.d")].shouldExecuteOk(WorkDir(testPath));
 
     justDoTestBuild!module_(options);
 }

@@ -19,7 +19,7 @@ unittest {
         writeFile("reggaefile.d", reggaefileStr);
 
         runReggae("-b", "make");
-        make.shouldExecuteOk(testPath);
+        make.shouldExecuteOk;
 
         // no option passed, static if failed and 2nd was "built"
         shouldNotExist("1st.txt");
@@ -36,7 +36,7 @@ unittest {
         writeFile("reggaefile.d", reggaefileStr);
 
         runReggae("-b", "make", "-d", "1st=true");
-        make.shouldExecuteOk(testPath);
+        make.shouldExecuteOk;
 
         // option passed, static if succeeds and 1st was "built"
         shouldExist("1st.txt");

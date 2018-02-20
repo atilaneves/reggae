@@ -105,12 +105,17 @@ struct DubInfo {
         return DubInfo(packages.map!(a => a.dup).array);
     }
 
-    Target[] toTargets(Flag!"main" includeMain = Yes.main,
+    Target[] toTargets(in Flag!"main" includeMain = Yes.main,
                        in string compilerFlags = "",
-                       Flag!"allTogether" allTogether = No.allTogether) @safe const {
+                       in Flag!"allTogether" allTogether = No.allTogether,
+                       in string dubObjsDir = "")
+        @safe const
+    {
 
         import reggae.config: options;
+        import reggae.build: targetObjsDir;
         import std.functional: not;
+        import std.path: buildPath, absolutePath;
 
         Target[] targets;
 
@@ -125,10 +130,10 @@ struct DubInfo {
         foreach(const i, const dubPackage; packages) {
             const importPaths = allImportPaths();
             const stringImportPaths = dubPackage.allOf!(a => a.packagePaths(a.stringImportPaths))(packages);
-
+            const isMainPackage = i == 0;
             //the path must be explicit for the other packages, implicit for the "main"
             //package
-            const projDir = i == 0 ? "" : dubPackage.path;
+            const projDir = isMainPackage ? "" : dubPackage.path;
 
             const sharedFlag = targetType == TargetType.dynamicLibrary ? ["-fPIC"] : [];
             immutable flags = chain(dubPackage.dflags,
@@ -146,13 +151,24 @@ struct DubInfo {
                 .array;
 
             auto func = allTogether ? &dlangPackageObjectFilesTogether : &dlangPackageObjectFiles;
-            targets ~= func(files, flags, importPaths, stringImportPaths, projDir);
+            auto packageTargets = func(files, flags, importPaths, stringImportPaths, projDir);
+
             // add any object files that are meant to be linked
-            targets ~= dubPackage
+            packageTargets ~= dubPackage
                 .files
                 .filter!isObjectFile
                 .map!(a => Target(inDubPackagePath(dubPackage.path, a)))
                 .array;
+
+
+            // go through dub dependencies and optionally put the object files in dubObjsDir
+            if(!isMainPackage && dubObjsDir != "") {
+                foreach(ref target; packageTargets) {
+                    target.rawOutputs[0] = buildPath(dubObjsDir, target.rawOutputs[0]).absolutePath;
+                }
+            }
+
+            targets ~= packageTargets;
         }
 
         return targets ~ allStaticLibrarySources;

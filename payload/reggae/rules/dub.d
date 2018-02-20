@@ -18,11 +18,19 @@ static if(isDubProject) {
     import std.traits;
 
     /**
+       Where to place the object files for dub dependencies
+     */
+    struct DubObjsDir {
+        string value;
+    }
+
+    /**
      Builds the main dub target (equivalent of "dub build")
     */
     Target dubDefaultTarget(CompilerFlags compilerFlags = CompilerFlags(),
                             LinkerFlags linkerFlags = LinkerFlags(),
-                            Flag!"allTogether" allTogether = No.allTogether)
+                            Flag!"allTogether" allTogether = No.allTogether,
+                            DubObjsDir dubObjsDir = DubObjsDir())
         ()
     {
         import std.string: split;
@@ -39,6 +47,7 @@ static if(isDubProject) {
                 linkerFlags,
                 Yes.main,
                 allTogether,
+                dubObjsDir,
             );
     }
 
@@ -47,7 +56,8 @@ static if(isDubProject) {
        A target corresponding to `dub test`
      */
     Target dubTestTarget(CompilerFlags compilerFlags = CompilerFlags(),
-                         LinkerFlags linkerFlags = LinkerFlags())
+                         LinkerFlags linkerFlags = LinkerFlags(),
+                         DubObjsDir dubObjsDir = DubObjsDir())
                          ()
     {
         import std.typecons: No, Yes;
@@ -56,7 +66,7 @@ static if(isDubProject) {
         else
             enum allTogether = Yes.allTogether;
 
-        return dubTestTarget!(compilerFlags, linkerFlags, allTogether)();
+        return dubTestTarget!(compilerFlags, linkerFlags, allTogether, dubObjsDir)();
     }
 
     /**
@@ -64,7 +74,8 @@ static if(isDubProject) {
      */
     Target dubTestTarget(CompilerFlags compilerFlags = CompilerFlags(),
                          LinkerFlags linkerFlags = LinkerFlags(),
-                         Flag!"allTogether" allTogether)
+                         Flag!"allTogether" allTogether,
+                         DubObjsDir dubObjsDir = DubObjsDir())
                          ()
     {
         import std.string: split;
@@ -85,7 +96,8 @@ static if(isDubProject) {
                             actualCompilerFlags,
                             actualLinkerFlags,
                             Yes.main,
-                            allTogether);
+                            allTogether,
+                            dubObjsDir);
     }
 
     /**
@@ -96,6 +108,7 @@ static if(isDubProject) {
                                   LinkerFlags linkerFlags = LinkerFlags(),
                                   Flag!"main" includeMain = Yes.main,
                                   Flag!"allTogether" allTogether = No.allTogether,
+                                  DubObjsDir dubObjsDir = DubObjsDir(),
                                   alias objsFunction = () { Target[] t; return t; },
                                   )
         () if(isCallable!objsFunction)
@@ -108,7 +121,8 @@ static if(isDubProject) {
                                       compilerFlags.value,
                                       linkerFlags.value.split(" "),
                                       includeMain,
-                                      allTogether);
+                                      allTogether,
+                                      dubObjsDir);
     }
 
 
@@ -118,7 +132,8 @@ static if(isDubProject) {
                      in string compilerFlags,
                      in string[] linkerFlags = [],
                      in Flag!"main" includeMain = Yes.main,
-                     in Flag!"allTogether" allTogether = No.allTogether)
+                     in Flag!"allTogether" allTogether = No.allTogether,
+                     in DubObjsDir dubObjsDir = DubObjsDir())
     {
 
         import reggae.rules.common: staticLibraryTarget;
@@ -132,18 +147,17 @@ static if(isDubProject) {
             ? "-shared"
             : "";
         const allLinkerFlags = (linkerFlags ~ dubInfo.linkerFlags ~ sharedFlags).join(" ");
-        auto dubObjs = dubInfo.toTargets(includeMain, compilerFlags, allTogether);
-        auto allObjs = objsFunction() ~ dubObjs;
-
         const postBuildCommands = dubInfo.postBuildCommands;
 
-        string realName() {
-            // otherwise the target wouldn't be top-level in the presence of
-            // postBuildCommands
-            return postBuildCommands == ""
-                ? targetName.value
-                : buildPath("$project", targetName.value);
-        }
+        // otherwise the target wouldn't be top-level in the presence of
+        // postBuildCommands
+        const realName = postBuildCommands == ""
+            ? targetName.value
+            : buildPath("$project", targetName.value);
+
+        const realDubObjsDir = buildPath(dubObjsDir.value, realName ~ ".objs");
+        auto dubObjs = dubInfo.toTargets(includeMain, compilerFlags, allTogether, realDubObjsDir);
+        auto allObjs = objsFunction() ~ dubObjs;
 
         auto target = isStaticLibrary
             ? staticLibraryTarget(realName, allObjs)[0]

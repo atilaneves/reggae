@@ -7,7 +7,7 @@ import std.conv: ConvException;
 import std.path: absolutePath, buildPath;
 import std.file: exists;
 
-enum version_ = "0.5.16";
+enum version_ = "0.5.20+";
 
 Options defaultOptions;
 
@@ -90,8 +90,9 @@ struct Options {
         auto langFiles = [dlangFile, pythonFile, rubyFile, jsFile, luaFile];
         auto foundFiles = langFiles.filter!exists.array;
 
-        enforce(foundFiles.length < 2, text("Reggae builds may only use one language. Found: ",
-                                            foundFiles.map!(a => reggaeFileLanguage(a).to!string).join(", ")));
+        enforce(foundFiles.length < 2,
+                text("Reggae builds may only use one language. Found: ",
+                     foundFiles.map!(a => reggaeFileLanguage(a).to!string).join(", ")));
 
         if(!foundFiles.empty) return foundFiles.front;
 
@@ -221,7 +222,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             "export", "Export build system - removes dependencies on reggae itself", &options.export_,
             "verbose", "Verbose output", &options.verbose,
             "dub_local", "Project uses dub local packages", &options.dubLocalPackages,
-            );
+        );
 
         if(helpInfo.helpWanted) {
             defaultGetoptPrinter("Usage: reggae -b <ninja|make|binary|tup> </path/to/project>",

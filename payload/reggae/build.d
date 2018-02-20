@@ -142,7 +142,14 @@ Target inTopLevelObjDirOf(Target target, string dirName, Flag!"topLevel" isTopLe
 
 
 string topLevelDirName(in Target target) @safe pure {
-    return buildPath(".reggae", "objs", target._outputs[0].expandBuildDir ~ ".objs");
+    import std.path: isAbsolute, buildPath;
+    return target._outputs[0].isAbsolute
+        ? buildPath(target._outputs[0], targetObjsDir(target))
+        : buildPath(".reggae", "objs", targetObjsDir(target));
+}
+
+string targetObjsDir(in Target target) @safe pure {
+    return target._outputs[0].expandBuildDir ~ ".objs";
 }
 
 //targets that have outputs with $builddir or $project in them want to be placed

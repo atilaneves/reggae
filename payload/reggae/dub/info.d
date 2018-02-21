@@ -119,7 +119,9 @@ struct DubInfo {
 
         import reggae.config: options;
         import reggae.build: targetObjsDir;
+        import reggae.path: deabsolutePath;
         import std.functional: not;
+        import std.string: replace;
         import std.path: buildPath, absolutePath, baseName, dirName;
 
         Target[] targets;
@@ -158,13 +160,16 @@ struct DubInfo {
             auto func = allTogether ? &dlangPackageObjectFilesTogether : &dlangPackageObjectFiles;
             auto packageTargets = func(files, flags, importPaths, stringImportPaths, projDir);
 
+            // e.g. /foo/bar -> foo/bar
+            const deabsWorkingDir = options.workingDir.deabsolutePath;
+
             // go through dub dependencies and optionally put the object files in dubObjsDir
             if(!isMainPackage && dubObjsDir.globalDir != "") {
                 foreach(ref target; packageTargets) {
                     target.rawOutputs[0] = buildPath(dubObjsDir.globalDir,
-                                                     target.rawOutputs[0].dirName,
-                                                     dubObjsDir.targetDir,
-                                                     target.rawOutputs[0].baseName);
+                                                     target.rawOutputs[0].replace(deabsWorkingDir,
+                                                                                  buildPath(deabsWorkingDir,
+                                                                                            dubObjsDir.targetDir)));
                 }
             }
 

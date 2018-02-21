@@ -195,6 +195,7 @@ enum coreFiles = [
 enum otherFiles = [
     "backend/ninja.d", "backend/make.d", "backend/tup.d",
     "dub/info.d", "rules/dub.d",
+    "path.d",
     ];
 
 version(minimal) {

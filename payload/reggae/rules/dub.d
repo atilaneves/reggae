@@ -159,10 +159,4 @@ static if(isDubProject) {
             ? target
             : Target.phony("postBuild", postBuildCommands, target);
     }
-
-    private string deabsolutePath(in string path) {
-        version(Windows) throw new Exception("not implemented yet");
-        return path[1..$];
-    }
-
 }

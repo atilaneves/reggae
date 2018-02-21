@@ -3,6 +3,7 @@ module tests.it.runtime.dub;
 
 import tests.it.runtime;
 import reggae.reggae;
+import reggae.path: deabsolutePath;
 
 
 @("dub project with no reggaefile ninja")
@@ -299,13 +300,15 @@ unittest {
             int add(int i, int j) { return i + j; }
         });
 
-        runReggae("-b", "ninja", "--dub-objs-dir=" ~ testPath);
+        const dubObjsDir = buildPath(testPath, "objsdir");
+        runReggae("-b", "ninja", "--dub-objs-dir=" ~ dubObjsDir);
         ninja.shouldExecuteOk;
 
         import std.path: buildPath;
-        shouldExist(buildPath(testPath.deabsolutePath,
-                              "bar",
+        shouldExist(buildPath("objsdir",
+                              testPath.deabsolutePath,
                               "foo.objs",
+                              "bar",
                               "source.o"));
     }
 }
@@ -345,10 +348,4 @@ unittest {
         runReggae("-b", "ninja", "--dub-objs-dir=" ~ testPath);
         ninja.shouldExecuteOk;
     }
-}
-
-
-private string deabsolutePath(in string path) {
-    version(Windows) throw new Exception("not implemented yet");
-    return path[1..$];
 }

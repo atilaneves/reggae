@@ -267,11 +267,9 @@ unittest {
 }
 
 
-@("dub objs option")
-@Tags("dub", "ninja")
+@("dub objs option path dependency")
+@Tags("dub", "ninja", "dubObjsDir")
 unittest {
-
-    import std.format;
 
     with(immutable ReggaeSandbox()) {
 
@@ -301,20 +299,63 @@ unittest {
         });
 
         const dubObjsDir = buildPath(testPath, "objsdir");
-        runReggae("-b", "ninja", "--dub-objs-dir=" ~ dubObjsDir);
+        const output = runReggae("-b", "ninja", "--dub-objs-dir=" ~ dubObjsDir);
+        writelnUt(output);
         ninja.shouldExecuteOk;
 
         import std.path: buildPath;
         shouldExist(buildPath("objsdir",
                               testPath.deabsolutePath,
                               "foo.objs",
+                              testPath.deabsolutePath,
                               "bar",
                               "source.o"));
     }
 }
 
+@("dub objs option registry dependency")
+@Tags("dub", "ninja", "dubObjsDir")
+unittest {
+
+    import reggae.path: dubPackagesDir, deabsolutePath;
+
+    with(immutable ReggaeSandbox()) {
+
+        writeFile("reggaefile.d", q{
+            import reggae;
+            mixin build!(dubDefaultTarget!());
+        });
+
+        writeFile("dub.sdl",`
+            name "foo"
+            targetType "executable"
+            dependency "dubnull" version="==0.0.1"
+        `);
+
+        writeFile("source/app.d", q{
+            import dubnull;
+            void main() { dummy(); }
+        });
+
+        const dubObjsDir = buildPath(testPath, "objsdir");
+        const output = runReggae("-b", "ninja", "--dub-objs-dir=" ~ dubObjsDir);
+        writelnUt(output);
+
+        ninja.shouldExecuteOk;
+
+        import std.path: buildPath;
+        const dubNullDir = buildPath(dubPackagesDir, "dubnull-0.0.1", "dubnull").deabsolutePath;
+        shouldExist(buildPath("objsdir",
+                              testPath.deabsolutePath,
+                              "foo.objs",
+                              dubNullDir,
+                              "source.o"));
+    }
+}
+
+
 @("object source files with dub objs option")
-@Tags(["dub", "ninja"])
+@Tags("dub", "ninja", "dubObjsDir")
 unittest {
     with(immutable ReggaeSandbox()) {
         writeFile("dub.sdl", `
@@ -345,7 +386,10 @@ unittest {
         });
 
         ["dmd", "-c", "baz.d"].shouldExecuteOk;
-        runReggae("-b", "ninja", "--dub-objs-dir=" ~ testPath);
+
+        const output = runReggae("-b", "ninja", "--dub-objs-dir=" ~ testPath);
+        writelnUt(output);
+
         ninja.shouldExecuteOk;
     }
 }

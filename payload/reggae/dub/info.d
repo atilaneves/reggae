@@ -167,9 +167,9 @@ struct DubInfo {
             if(!isMainPackage && dubObjsDir.globalDir != "") {
                 foreach(ref target; packageTargets) {
                     target.rawOutputs[0] = buildPath(dubObjsDir.globalDir,
-                                                     target.rawOutputs[0].replace(deabsWorkingDir,
-                                                                                  buildPath(deabsWorkingDir,
-                                                                                            dubObjsDir.targetDir)));
+                                                     options.projectPath.deabsolutePath,
+                                                     dubObjsDir.targetDir,
+                                                     target.rawOutputs[0]);
                 }
             }
 

@@ -94,4 +94,12 @@ struct FakeFile {
         else
             lines ~= soFar;
     }
+
+    string toString() @safe pure nothrow const {
+        import std.array: join;
+        return "--------------------\n" ~
+            lines.join("\n") ~
+            soFar ~ "\n" ~
+            "--------------------\n";
+    }
 }

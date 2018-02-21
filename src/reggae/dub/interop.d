@@ -272,17 +272,11 @@ private void dubFetch(T)(auto ref T output,
 // dub fetch can sometimes take >10s (!) despite the package already being
 // on disk
 bool needDubFetch(in string dubPackage, in string version_) {
+    import reggae.path: dubPackagesDir;
     import std.path: buildPath;
-    import std.process: environment;
     import std.file: exists;
 
-    const packageDir = dubPackage ~ "-" ~ version_;
-    version(Windows)
-        const path = buildPath("C:\\Users", environment["USERNAME"], "AppData", "Roaming", "dub", "packages", packageDir);
-    else
-        const path = buildPath(environment["HOME"], ".dub", "packages", packageDir);
-
-    return !path.exists;
+    return !buildPath(dubPackagesDir, dubPackage ~ "-" ~ version_).exists;
 }
 
 

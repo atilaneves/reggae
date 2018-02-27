@@ -214,6 +214,7 @@ struct DubInfo {
 
     string[] linkerFlags() @safe const pure nothrow {
         const allLibs = packages.map!(a => a.libs).join;
+        // FIXME: -L-l only works on Linux
         return
             allLibs.map!(a => "-L-l" ~ a).array ~
             packages.map!(a => a.lflags.map!(b => "-L" ~ b)).join;

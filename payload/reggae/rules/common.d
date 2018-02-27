@@ -341,12 +341,12 @@ version(Windows) {
 }
 
 package string objFileName(in string srcFileName) pure {
-    import std.path: stripExtension, defaultExtension, isRooted, stripDrive;
+    import reggae.path: deabsolutePath;
+    import std.path: stripExtension, defaultExtension, isRooted;
     import std.array: replace;
 
-    immutable localFileName = srcFileName.isRooted
-        ? srcFileName.stripDrive[1..$]
-        : srcFileName;
+    immutable localFileName = srcFileName.deabsolutePath;
+
     return localFileName.stripExtension.defaultExtension(objExt).replace("..", "__");
 }
 

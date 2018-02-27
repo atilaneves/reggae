@@ -1,10 +1,10 @@
 module reggae.path;
 
 string deabsolutePath(in string path) @safe pure {
-    import std.path: isAbsolute;
+    import std.path: isRooted, stripDrive;
     version(Windows) throw new Exception("not implemented yet");
-    return path.isAbsolute
-        ? path[1..$]
+    return path.isRooted
+        ? path.stripDrive[1..$]
         : path;
 }
 

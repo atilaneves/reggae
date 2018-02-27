@@ -55,7 +55,7 @@ struct DubPackage {
             static if(is(Unqual!(typeof(elt)) == TargetType))
                 lines ~= `TargetType.` ~ elt.to!string;
             else static if(is(Unqual!(typeof(elt)) == string))
-                lines ~= `"` ~ elt.to!string ~ `"`;
+                lines ~= "`" ~ elt.to!string ~ "`";
             else
                 lines ~= elt.to!string;
         }

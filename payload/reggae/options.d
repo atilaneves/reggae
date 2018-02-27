@@ -128,7 +128,7 @@ struct Options {
 
         foreach(member; this.tupleof) {
             static if(isSomeString!(typeof(member)))
-                repr ~= `"` ~ text(member) ~ `", `;
+                repr ~= "`" ~ text(member) ~ "`, ";
             else static if(isAssociativeArray!(typeof(member)))
                 {}
             else

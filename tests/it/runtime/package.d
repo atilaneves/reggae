@@ -62,13 +62,13 @@ struct ReggaeSandbox {
 
     auto shouldSucceed(in string arg,
                        in string file = __FILE__,
-                       ulong line = __LINE__ ) const {
+                       in size_t line = __LINE__ ) const {
         import tests.utils;
         import std.path: buildPath;
         return [buildPath(testPath, arg)].shouldExecuteOk(WorkDir(testPath), file, line);
     }
 
-    auto shouldFail(in string arg, in string file = __FILE__, ulong line = __LINE__) const {
+    auto shouldFail(in string arg, in string file = __FILE__, in size_t line = __LINE__) const {
         import tests.utils;
         import std.path: buildPath;
         return [buildPath(testPath, arg)].shouldFailToExecute(testPath, file, line);

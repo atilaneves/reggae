@@ -104,7 +104,12 @@ string projectPath(in string name) {
     return inOrigPath("tests", "projects", name);
 }
 
-extern(C) char* mkdtemp(char*);
+version(Posix)
+    extern(C) char* mkdtemp(char*);
+else
+    char* mkdtemp(char*) {
+        throw new Exception("No mkdtemp function on Windows");
+    }
 
 string newTestDir() {
     import std.conv;
@@ -212,31 +217,35 @@ void doTestBuildFor(string module_ = __MODULE__)(ref Options options, string[] a
 }
 
 void prepareTestBuild(string module_ = __MODULE__)(ref Options options) {
-    import std.file;
-    import std.string;
-    import std.path;
-    import std.algorithm: canFind;
-    import reggae.config;
+    version(Windows) {
+        assert(false);
+    } else {
+        import std.file: symlink;
+        import std.string;
+        import std.path;
+        import std.algorithm: canFind;
+        import reggae.config;
 
-    mkdirRecurse(buildPath(options.workingDir, ".reggae"));
-    symlink(buildPath(testsPath, "dcompile"), buildPath(options.workingDir, ".reggae", "dcompile"));
+        mkdirRecurse(buildPath(options.workingDir, ".reggae"));
+        symlink(buildPath(testsPath, "dcompile"), buildPath(options.workingDir, ".reggae", "dcompile"));
 
-    // copy the project files over, that way the tests can modify them
-    immutable projectsPath = buildPath(origPath, "tests", "projects");
-    immutable projectName = module_.split(".")[0];
-    immutable projectPath = buildPath(projectsPath, projectName);
+        // copy the project files over, that way the tests can modify them
+        immutable projectsPath = buildPath(origPath, "tests", "projects");
+        immutable projectName = module_.split(".")[0];
+        immutable projectPath = buildPath(projectsPath, projectName);
 
-    // change the directory of the project to be where the build dir is
-    options.projectPath = buildPath(origPath, (options.workingDir).relativePath(origPath));
-    auto modulePath = buildPath(projectsPath, module_.split(".").join(dirSeparator));
+        // change the directory of the project to be where the build dir is
+        options.projectPath = buildPath(origPath, (options.workingDir).relativePath(origPath));
+        auto modulePath = buildPath(projectsPath, module_.split(".").join(dirSeparator));
 
-    // copy all project files over to the build directory
-    if(module_.canFind("reggaefile")) {
-        copyProjectFiles(projectPath, options.workingDir);
-        options.projectPath = options.workingDir;
+        // copy all project files over to the build directory
+        if(module_.canFind("reggaefile")) {
+            copyProjectFiles(projectPath, options.workingDir);
+            options.projectPath = options.workingDir;
+        }
+
+        setOptions(options);
     }
-
-    setOptions(options);
 }
 
 void justDoTestBuild(string module_ = __MODULE__)(in Options options, string[] args = []) {
@@ -251,7 +260,7 @@ void justDoTestBuild(string module_ = __MODULE__)(in Options options, string[] a
 string[] buildCmdShouldRunOk(alias module_ = __MODULE__)(in Options options,
                                                          string[] args = [],
                                                          string file = __FILE__,
-                                                         ulong line = __LINE__ ) {
+                                                         size_t line = __LINE__ ) {
     import tests.utils;
     auto cmdArgs = buildCmd(options, args);
 

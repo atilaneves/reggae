@@ -25,7 +25,7 @@ void generateBuild(string project)(string[] args = []) {
 // runs ninja, make, etc. in an integraton test
 void shouldBuild(string project)(string[] args = [],
                                  string file = __FILE__,
-                                 ulong line = __LINE__ ) {
+                                 size_t line = __LINE__ ) {
     import reggae.config;
     enum module_ = projectToModule(project);
     buildCmdShouldRunOk!module_(options, args, file, line);

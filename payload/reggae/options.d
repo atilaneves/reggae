@@ -6,7 +6,7 @@ import std.file: thisExePath;
 import std.path: absolutePath, buildPath;
 import std.file: exists;
 
-enum version_ = "0.5.24";
+enum version_ = "0.5.24+";
 
 Options defaultOptions;
 

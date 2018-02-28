@@ -100,15 +100,13 @@ private from!"reggae.dub.info".DubInfo _getDubInfo(T)(auto ref T output,
     if("default" !in gDubInfos) {
 
         if(!buildPath(options.projectPath, "dub.selections.json").exists) {
-            output.log("Calling `dub upgrade` to create dub.selections.json");
-            callDub(options, ["dub", "upgrade"]);
+            callDub(output, options, ["dub", "upgrade"]);
         }
 
         DubConfigurations getConfigsImpl() {
             immutable dubBuildArgs = ["dub", "--annotate", "build", "--compiler=" ~ options.dCompiler,
                                       "--print-configs", "--build=docs"];
-            output.log("Querying dub for build configurations");
-            immutable dubBuildOutput = callDub(options, dubBuildArgs, Yes.maybeNoDeps);
+            immutable dubBuildOutput = callDub(output, options, dubBuildArgs, Yes.maybeNoDeps);
             return getConfigurations(dubBuildOutput);
         }
 
@@ -128,15 +126,13 @@ private from!"reggae.dub.info".DubInfo _getDubInfo(T)(auto ref T output,
         Exception dubDescribeFailure;
 
         if(configs.configurations.empty) {
-            output.log("Calling `dub describe`");
-            const descOutput = callDub(options, ["dub", "describe"], Yes.maybeNoDeps);
+            const descOutput = callDub(output, options, ["dub", "describe"], Yes.maybeNoDeps);
             oneConfigOk = true;
             gDubInfos["default"] = getDubInfo(descOutput);
         } else {
             foreach(config; configs.configurations) {
                 try {
-                    output.log("Calling `dub describe` for configuration ", config);
-                    const descOutput = callDub(options, ["dub", "describe", "-c", config], Yes.maybeNoDeps);
+                    const descOutput = callDub(output, options, ["dub", "describe", "-c", config], Yes.maybeNoDeps);
                     gDubInfos[config] = getDubInfo(descOutput);
 
                     // dub adds certain flags to certain configurations automatically but these flags
@@ -168,10 +164,13 @@ private from!"reggae.dub.info".DubInfo _getDubInfo(T)(auto ref T output,
     return gDubInfos["default"];
 }
 
-private string callDub(in from!"reggae.options".Options options,
-                       in string[] rawArgs,
-                       from!"std.typecons".Flag!"maybeNoDeps" maybeNoDeps = from!"std.typecons".No.maybeNoDeps)
+private string callDub(T)(
+    auto ref T output,
+    in from!"reggae.options".Options options,
+    in string[] rawArgs,
+    from!"std.typecons".Flag!"maybeNoDeps" maybeNoDeps = from!"std.typecons".No.maybeNoDeps)
 {
+    import reggae.io: log;
     import std.process: execute, Config;
     import std.exception: enforce;
     import std.conv: text;
@@ -182,15 +181,19 @@ private string callDub(in from!"reggae.options".Options options,
     const hasSelections = buildPath(options.projectPath, "dub.selections.json").exists;
     string[] emptyArgs;
     const noDepsArgs = hasSelections && maybeNoDeps ? ["--nodeps", "--skip-registry=all"] : emptyArgs;
-    const args = rawArgs ~ noDepsArgs ~ dubEnvArgs;
+    const archArg = rawArgs[1] == "fetch" || rawArgs[1] == "upgrade"
+        ? emptyArgs
+        : ["--arch=" ~ options.dubArch.text];
+    const args = rawArgs ~ noDepsArgs ~ dubEnvArgs ~ archArg;
     const string[string] env = null;
     Config config = Config.none;
     size_t maxOutput = size_t.max;
     const workDir = options.projectPath;
 
+    output.log("Calling `", args.join(" "), "`");
     const ret = execute(args, env, config, maxOutput, workDir);
     enforce(ret.status == 0,
-            text("Error calling '", args.join(" "), "' (", ret.status, ")", ":\n",
+            text("Error calling `", args.join(" "), "` (", ret.status, ")", ":\n",
                  ret.output));
 
     return ret.output;
@@ -258,9 +261,8 @@ private void dubFetch(T)(auto ref T output,
 
         const cmd = ["dub", "fetch", dubPackage, "--version=" ~ version_] ~ dubEnvArgs;
 
-        output.log("Fetching package with command '", cmd.join(" "), "'");
         try
-            callDub(options, cmd);
+            callDub(output, options, cmd);
         catch(Exception ex) {
             // local packages can't be fetched, so it's normal to get an error
             if(!options.dubLocalPackages)

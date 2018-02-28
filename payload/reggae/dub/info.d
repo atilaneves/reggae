@@ -4,6 +4,7 @@ import reggae.build;
 import reggae.rules;
 import reggae.types;
 import reggae.sorting;
+import reggae.options: Options;
 
 public import std.typecons: Yes, No;
 import std.typecons: Flag;
@@ -55,7 +56,7 @@ struct DubPackage {
             static if(is(Unqual!(typeof(elt)) == TargetType))
                 lines ~= `TargetType.` ~ elt.to!string;
             else static if(is(Unqual!(typeof(elt)) == string))
-                lines ~= `"` ~ elt.to!string ~ `"`;
+                lines ~= "`" ~ elt.to!string ~ "`";
             else
                 lines ~= elt.to!string;
         }
@@ -123,6 +124,7 @@ struct DubInfo {
         import std.functional: not;
         import std.string: replace;
         import std.path: buildPath, absolutePath, baseName, dirName;
+        import std.range: only;
 
         Target[] targets;
 
@@ -143,11 +145,13 @@ struct DubInfo {
             const projDir = isMainPackage ? "" : dubPackage.path;
 
             const sharedFlag = targetType == TargetType.dynamicLibrary ? ["-fPIC"] : [];
+
             immutable flags = chain(dubPackage.dflags,
-                                    dubPackage.versions.map!(a => "-version=" ~ a).array,
-                                    [options.dflags],
+                                    dubPackage.versions.map!(a => "-version=" ~ a),
+                                    only(options.dflags),
                                     sharedFlag,
-                                    [deUnitTest(i, compilerFlags)])
+                                    only(archFlag(options)),
+                                    only(deUnitTest(i, compilerFlags)))
                 .join(" ");
 
             const files = dubPackage.files.
@@ -189,14 +193,7 @@ struct DubInfo {
 
     TargetName targetName() @safe const pure nothrow {
         const fileName = packages[0].targetFileName;
-        switch(targetType) with(TargetType) {
-        default:
-            return TargetName(fileName);
-        case library:
-            return TargetName("lib" ~ fileName ~ ".a");
-        case dynamicLibrary:
-            return TargetName("lib" ~ fileName ~ ".so");
-        }
+        return .targetName(targetType, fileName);
     }
 
     TargetType targetType() @safe const pure nothrow {
@@ -212,10 +209,35 @@ struct DubInfo {
             : [];
     }
 
-    string[] linkerFlags() @safe const pure nothrow {
+    // template due to purity - in the 2nd build with the payload this is pure,
+    // but in the 1st build to generate the reggae executable it's not.
+    // See reggae.config.
+    string[] linkerFlags()() const {
+        import reggae.config: options;
+        import std.array: join;
+
         const allLibs = packages.map!(a => a.libs).join;
+
+        string libFlag(in string lib) {
+            version(Posix)
+                return "-L-l" ~ lib;
+            else {
+                import reggae.config: options;
+                import reggae.options: DubArchitecture;
+
+                final switch(options.dubArch) with(DubArchitecture) {
+                    case x86:
+                        return "-L-l" ~ lib;
+                    case x86_64:
+                    case x86_mscoff:
+                        return lib ~ ".lib";
+                }
+            }
+        }
+
         return
-            allLibs.map!(a => "-L-l" ~ a).array ~
+            allLibs.map!libFlag.array ~
+            archFlag(options) ~
             packages.map!(a => a.lflags.map!(b => "-L" ~ b)).join;
     }
 
@@ -266,4 +288,46 @@ private string[] allOf(alias F)(in DubPackage pack, in DubPackage[] packages) @t
         }
     }
     return result;
+}
+
+// The arch flag doesn't show up in dub describe. Sigh.
+private string archFlag(in Options options) @safe pure nothrow {
+    import reggae.options: DubArchitecture;
+
+    final switch(options.dubArch) with(DubArchitecture) {
+        case DubArchitecture.x86:
+            return "-m32";
+        case DubArchitecture.x86_64:
+            return "-m64";
+        case DubArchitecture.x86_mscoff:
+            return "-m32mscoff";
+    }
+}
+
+TargetName targetName(in TargetType targetType, in string fileName) @safe pure nothrow {
+
+    import reggae.rules.common: exeExt;
+
+    switch(targetType) with(TargetType) {
+    default:
+        return TargetName(fileName);
+
+    case executable:
+        version(Posix)
+            return TargetName(fileName);
+        else
+            return TargetName(fileName ~ exeExt);
+
+    case library:
+        version(Posix)
+            return TargetName("lib" ~ fileName ~ ".a");
+        else
+            return TargetName(fileName ~ ".lib");
+
+    case dynamicLibrary:
+        version(Posix)
+            return TargetName("lib" ~ fileName ~ ".so");
+        else
+            return TargetName(fileName ~ ".dll");
+    }
 }

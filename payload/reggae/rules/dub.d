@@ -67,6 +67,7 @@ static if(isDubProject) {
                          Flag!"allTogether" allTogether)
                          ()
     {
+        import reggae.dub.info: TargetType, targetName;
         import std.string: split;
 
         const config = "unittest" in configToDubInfo ? "unittest" : "default";
@@ -80,7 +81,7 @@ static if(isDubProject) {
 
         // since dmd has a bug pertaining to separate compilation and __traits(getUnitTests),
         // we default here to compiling all-at-once for the unittest build
-        return dubTarget!()(TargetName("ut"),
+        return dubTarget!()(targetName(TargetType.executable, "ut"),
                             configToDubInfo[config],
                             actualCompilerFlags,
                             actualLinkerFlags,

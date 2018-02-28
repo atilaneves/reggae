@@ -46,7 +46,8 @@ struct NinjaEntry {
     string mainLine;
     string[] paramLines;
     string toString() @safe pure nothrow const {
-        return (mainLine ~ paramLines.map!(a => "  " ~ a).array).join("\n");
+        import std.string: replace;
+        return (mainLine ~ paramLines.map!(a => "  " ~ a.replace(`C:\`, `\`)).array).join("\n");
     }
 }
 
@@ -113,7 +114,10 @@ struct Ninja {
 
     //includes rerunning reggae
     const(NinjaEntry)[] allBuildEntries() @safe {
-        immutable files = _options.reggaeFileDependencies.join(" ");
+        import std.path: stripDrive;
+        import std.algorithm: map;
+
+        immutable files = _options.reggaeFileDependencies.map!stripDrive.join(" ");
         auto paramLines = _options.oldNinja ? [] : ["pool = console"];
 
         const(NinjaEntry)[] rerunEntries() {
@@ -175,14 +179,14 @@ private:
 
         buildEntries ~= NinjaEntry(buildLine(target) ~
                                    cmdTypeToNinjaString(target.getCommandType, language) ~
-                                   " " ~ target.dependenciesInProjectPath(_projectPath).join(" "),
+                                   " " ~ targetDependencies(target),
                                    paramLines);
     }
 
     void phonyRule(Target target) @safe {
         //no projectPath for phony rules since they don't generate output
         immutable outputs = target.expandOutputs("").join(" ");
-        auto buildLine = "build " ~ outputs ~ ": _phony " ~ target.dependenciesInProjectPath(_projectPath).join(" ");
+        auto buildLine = "build " ~ outputs ~ ": _phony " ~ targetDependencies(target);
         if(!target.implicitTargets.empty) buildLine ~= " | " ~ target.implicitsInProjectPath(_projectPath).join(" ");
         buildEntries ~= NinjaEntry(buildLine,
                                    ["cmd = " ~ target.shellCommand(_options),
@@ -218,7 +222,7 @@ private:
                 throw new Exception(text("Could not find both $in and $out.\nCommand: ",
                                          shellCommand, "\nCaptures: ", mat.captures, "\n",
                                          "outputs: ", target.rawOutputs.join(" "), "\n",
-                                         "dependencies: ", target.dependenciesInProjectPath(_projectPath).join(" ")));
+                                         "dependencies: ", targetDependencies(target)));
         }
 
         immutable before  = mat.captures[1].strip;
@@ -232,7 +236,7 @@ private:
         immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAddRule);
 
         immutable deps = implicitInput.empty
-            ? target.dependenciesInProjectPath(_projectPath).join(" ")
+            ? targetDependencies(target)
             : implicitInput;
 
         auto buildLine = buildLine(target) ~ ruleName ~ " " ~ deps;
@@ -256,7 +260,7 @@ private:
         immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAdd);
 
         immutable buildLine = buildLine(target) ~ ruleName ~
-            " " ~ target.dependenciesInProjectPath(_projectPath).join(" ");
+            " " ~ targetDependencies(target);
         buildEntries ~= NinjaEntry(buildLine);
 
         if(haveToAdd) {
@@ -355,6 +359,15 @@ private:
         if(cmd == "") return "";
         return cmd.splitter(" ").front;
     }
+
+    private string targetDependencies(in Target target) @safe pure const {
+        import std.path: stripDrive;
+        import std.algorithm: map;
+        import std.array: join;
+
+        return target.dependenciesInProjectPath(_projectPath).map!stripDrive.join(" ");
+    }
+
 }
 
 

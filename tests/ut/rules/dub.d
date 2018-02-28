@@ -25,7 +25,7 @@ unittest {
     const expected = Target("app",
                             Command(CommandType.link,
                                     assocList([assocEntry("flags",
-                                                          ["-L-L$FOO"])])),
+                                                          ["-m64", "-L-L$FOO"])])),
                             []);
     actual.shouldEqual(expected);
 }
@@ -64,7 +64,7 @@ unittest {
                                         assocList(
                                              [
                                                  assocEntry("includes", ["-Isource", "-I/tmp/proj"]),
-                                                 assocEntry("flags", ["-g", "-debug"]),
+                                                 assocEntry("flags", ["-m64", "-g", "-debug"]),
                                                  assocEntry("stringImports", empty),
                                                  assocEntry("DEPFILE", ["source/luad.o.dep"])
                                              ])),
@@ -74,7 +74,7 @@ unittest {
     const expected = Target("app",
                             Command(CommandType.link,
                                     assocList([assocEntry("flags",
-                                                          empty)])),
+                                                          ["-m64"])])),
                             [compileTarget, Target("$LIB/liblua.a")]);
 
     actual.shouldEqual(expected);
@@ -82,7 +82,7 @@ unittest {
     options.dCompiler = "dmd";
     options.projectPath = "/proj";
     actual.shellCommand(options).split(" ").filter!(a => a != "").
-        shouldEqual(["dmd", "-ofapp", "source/luad.o", "$LIB/liblua.a"]);
+        shouldEqual(["dmd", "-ofapp", "-m64", "source/luad.o", "$LIB/liblua.a"]);
 }
 
 
@@ -107,7 +107,7 @@ unittest {
                                     Command(CommandType.compile,
                                             assocList([
                                                           assocEntry("includes", ["-I/leproj"]),
-                                                          assocEntry("flags", ["-g"]),
+                                                          assocEntry("flags", ["-m64", "-g"]),
                                                           assocEntry("stringImports", empty),
                                                           assocEntry("DEPFILE", ["path/myapp/src.o.dep"]),
                                                           ])),
@@ -131,13 +131,13 @@ unittest {
 
     string[] empty;
     const expected = Target("libfoo.a",
-                            Command(CommandType.link, assocList([assocEntry("flags", empty)])),
+                            Command(CommandType.link, assocList([assocEntry("flags", ["-m64"])])),
                             [
                                 Target("path/myapp/src.o",
                                        Command(CommandType.compile,
                                                assocList([
                                                              assocEntry("includes", ["-I/leproj"]),
-                                                             assocEntry("flags", ["-g"]),
+                                                             assocEntry("flags", ["-m64", "-g"]),
                                                              assocEntry("stringImports", empty),
                                                              assocEntry("DEPFILE", ["path/myapp/src.o.dep"]),
                                                          ])),

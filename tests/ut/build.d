@@ -4,6 +4,8 @@ import unit_threaded;
 import reggae;
 import reggae.options;
 import std.array;
+import std.format;
+import std.path;
 
 
 void testIsLeaf() {
@@ -302,7 +304,11 @@ unittest {
     auto build = Build(Target("app", "dmd -of$out $in", [Target("foo.d"), Target("$LIB/liblua.a")]));
     Options options;
     options.projectPath = "/proj";
-    build.targets[0].shellCommand(options).shouldEqual("dmd -ofapp /proj/foo.d $LIB/liblua.a");
+
+    const srcFile = buildPath("/proj", "foo.d");
+    const libFile = buildPath("$LIB/liblua.a");
+    build.targets[0].shellCommand(options).shouldEqual(
+        "dmd -ofapp %s %s".format(srcFile, libFile));
     build.targets[0].dependenciesInProjectPath(options.projectPath)
-        .shouldEqual(["/proj/foo.d", "$LIB/liblua.a"]);
+        .shouldEqual([srcFile, libFile]);
 }

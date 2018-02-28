@@ -78,7 +78,7 @@ void testUnityNoFiles() {
 
 
 private void shouldEqualLines(string actual, string[] expected,
-                              in string file = __FILE__, in ulong line = __LINE__) {
+                              in string file = __FILE__, in size_t line = __LINE__) {
     import std.string;
     actual.split("\n").shouldEqual(expected, file, line);
 }

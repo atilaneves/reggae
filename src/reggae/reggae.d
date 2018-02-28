@@ -250,25 +250,28 @@ struct Binary {
 
 
 private string compileBinaries(T)(auto ref T output, in Options options) {
+
+    import reggae.rules.common: objExt;
+
     buildDCompile(output, options);
 
     immutable buildGenName = getBuildGenName(options);
     if(options.isScriptBuild) return buildGenName;
 
     const buildGenCmd = getCompileBuildGenCmd(options);
-    immutable buildObjName = "build.o";
+    immutable buildObjName = "build" ~ objExt;
     buildBinary(output, options, Binary(buildObjName, buildGenCmd));
 
     const reggaeFileDeps = getReggaeFileDependenciesDlang;
     auto objFiles = [buildObjName];
     if(!reggaeFileDeps.empty) {
-        immutable rest = "rest.o";
+        immutable rest = "rest" ~ objExt;
         buildBinary(output,
                     options,
                     Binary(rest,
                            [options.dCompiler,
                             "-c",
-                            "-of" ~ "rest.o"] ~
+                            "-of" ~ rest] ~
                            importPaths(options) ~
                            reggaeFileDeps));
         objFiles ~= rest;
@@ -295,11 +298,22 @@ void buildDCompile(T)(auto ref T output, in Options options) {
     buildBinary(output, options, Binary("dcompile", cmd));
 }
 
-private bool isExecutable(in char[] path) @trusted nothrow @nogc //TODO: @safe
+private bool isExecutable(in char[] path) @trusted nothrow //TODO: @safe
 {
-    import core.sys.posix.unistd;
-    import std.internal.cstring;
-    return (access(path.tempCString(), X_OK) == 0);
+    version(Posix) {
+        import core.sys.posix.unistd;
+        import std.internal.cstring;
+        return (access(path.tempCString(), X_OK) == 0);
+    } else {
+        import core.sys.windows.winbase: GetBinaryTypeW, DWORD;
+        import std.conv: to;
+
+        DWORD type;
+        try
+            return GetBinaryTypeW(&path.to!wstring[0], &type) != 0;
+        catch(Exception _)
+            assert(false, "Conversion erro from string to wstring");
+    }
 }
 
 private void buildBinary(T)(auto ref T output, in Options options, in Binary bin) {
@@ -333,8 +347,12 @@ private const(string)[] getCompileBuildGenCmd(in Options options) @safe {
     immutable buildBinFlags = options.backend == Backend.binary
         ? ["-O", "-inline"]
         : [];
-    const commonBefore = ["./dcompile",
-                          "--objFile=" ~ "build.o",
+    version(Windows)
+        enum dcompile = "dcompile";
+    else
+        enum dcompile = "./dcompile";
+    const commonBefore = [dcompile,
+                          "--objFile=" ~ "build" ~ objExt,
                           "--depFile=" ~ "reggaefile.dep",
                           options.dCompiler] ~
         importPaths(options) ~

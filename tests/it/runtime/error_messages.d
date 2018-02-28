@@ -11,6 +11,8 @@ import tests.it.runtime;
 }
 
 @("Non-existent build description error message") unittest {
+    import std.path: buildPath;
+
     with(immutable ReggaeSandbox()) {
         writeFile("foo.txt");
         runReggae("-b", "binary").shouldThrowWithMessage(

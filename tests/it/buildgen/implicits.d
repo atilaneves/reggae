@@ -2,6 +2,7 @@ module tests.it.buildgen.implicits;
 
 
 import tests.it.buildgen;
+import std.path: buildPath;
 
 
 @("Implicit dependencies cause the target to rebuild")

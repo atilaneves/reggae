@@ -2,16 +2,13 @@ module tests.it;
 
 public import reggae;
 public import unit_threaded;
-public import std.path;
 
 immutable string origPath;
 
 shared static this() {
-    import std.file;
-    import std.path;
-    import std.algorithm;
-    import std.range;
-    import std.stdio: writeln;
+    import std.file: mkdirRecurse, rmdirRecurse, getcwd, dirEntries, SpanMode, exists, isDir;
+    import std.path: buildNormalizedPath, absolutePath;
+    import std.algorithm: map, find;
 
     auto paths = [".", ".."].map!(a => buildNormalizedPath(getcwd, a))
         .find!(a => buildNormalizedPath(a, "dub.json").exists);

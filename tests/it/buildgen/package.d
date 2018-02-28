@@ -57,8 +57,9 @@ void shouldFail(T)(T args, string file = __FILE__, size_t line = __LINE__) {
 void shouldEqualLines(string fileName, string[] lines,
                       string file = __FILE__, size_t line = __LINE__) {
     import reggae.config;
-    import std.file;
-    import std.string;
+    import std.file: readText;
+    import std.string: chomp, split;
+    import std.path: buildPath;
 
     readText(buildPath(options.workingDir, fileName)).chomp.split("\n")
         .shouldEqual(lines, file, line);

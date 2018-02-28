@@ -2,6 +2,7 @@ module tests.it.buildgen.automatic_dependency;
 
 
 import tests.it.buildgen;
+import std.path: buildPath;
 
 
 @("C++ dependencies get automatically computed with objectFile")

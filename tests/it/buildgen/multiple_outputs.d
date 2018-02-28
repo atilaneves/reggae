@@ -1,13 +1,14 @@
 module tests.it.buildgen.multiple_outputs;
 
 import tests.it.buildgen;
-import std.file;
+import std.path: buildPath;
 
 enum project = "multiple_outputs";
 
 
 private void doBuild(string module_)(in string reggaefileName, ref Options options) {
     import tests.utils;
+    import std.file: remove, rename;
 
     prepareTestBuild!module_(options);
 

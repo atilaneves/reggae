@@ -4,6 +4,7 @@ module tests.it.runtime.dub;
 import tests.it.runtime;
 import reggae.reggae;
 import reggae.path: deabsolutePath;
+import std.path: buildPath;
 
 
 @("dub project with no reggaefile ninja")

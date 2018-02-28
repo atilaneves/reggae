@@ -212,24 +212,19 @@ private void callPreBuildCommands(in from!"reggae.options".Options options,
     import std.string: replace;
     import std.exception: enforce;
     import std.conv: text;
-    import core.exception: RangeError;
 
     const string[string] env = null;
     Config config = Config.none;
     size_t maxOutput = size_t.max;
     immutable workDir = options.projectPath;
 
-    () @trusted {
-        try {
-            foreach(c; dubInfo.packages[0].preBuildCommands) {
-                auto cmd = c.replace("$project", options.projectPath);
-                immutable ret = executeShell(cmd, env, config, maxOutput, workDir);
-                enforce(ret.status == 0, text("Error calling ", cmd, ":\n", ret.output));
-            }
-        } catch(RangeError e) {
-            assert(false, "FATAL ERROR: dubInfo has no packages\n" ~ dubInfo.text);
-        }
-    }();
+    if(dubInfo.packages.length == 0) return;
+
+    foreach(c; dubInfo.packages[0].preBuildCommands) {
+        auto cmd = c.replace("$project", options.projectPath);
+        immutable ret = executeShell(cmd, env, config, maxOutput, workDir);
+        enforce(ret.status == 0, text("Error calling ", cmd, ":\n", ret.output));
+    }
 }
 
 private void dubFetch(T)(auto ref T output,
@@ -297,7 +292,9 @@ void writeDubConfig(T)(auto ref T output,
 
         file.writeln("enum isDubProject = true;");
         auto dubInfo = _getDubInfo(output, options);
-        const targetType = dubInfo.packages[0].targetType;
+        const targetType = dubInfo.packages.length
+            ? dubInfo.packages[0].targetType
+            : TargetType.sourceLibrary;
 
         file.writeln(`const configToDubInfo = assocList([`);
 

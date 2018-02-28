@@ -19,6 +19,12 @@ enum BuildLanguage {
     Lua,
 }
 
+enum DubArchitecture {
+    x86,
+    x86_64,
+    x86_mscoff,
+}
+
 struct Options {
     Backend backend;
     string projectPath;
@@ -43,6 +49,12 @@ struct Options {
     bool dubLocalPackages;
     string[] dependencies;
     string dubObjsDir;
+
+    version(Windows)
+        DubArchitecture dubArch = DubArchitecture.x86;
+    else
+        DubArchitecture dubArch = DubArchitecture.x86_64;
+
     string[string] userVars; //must always be the last member variable
 
     Options dup() @safe pure const nothrow {
@@ -122,15 +134,18 @@ struct Options {
 
     string toString() @safe const pure {
         import std.conv: text;
-        import std.traits: isSomeString, isAssociativeArray;
+        import std.traits: isSomeString, isAssociativeArray, Unqual;
 
         string repr = "Options(Backend.";
 
         foreach(member; this.tupleof) {
+
             static if(isSomeString!(typeof(member)))
                 repr ~= "`" ~ text(member) ~ "`, ";
             else static if(isAssociativeArray!(typeof(member)))
                 {}
+            else static if(is(Unqual!(typeof(member)) == DubArchitecture))
+                repr ~= `DubArchitecture.` ~ text(member) ~ ", ";
             else
                 repr ~= text(member, ", ");
         }
@@ -224,6 +239,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             "verbose", "Verbose output", &options.verbose,
             "dub_local", "Project uses dub local packages", &options.dubLocalPackages,
             "dub-objs-dir", "Directory to place object files for dub dependencies", &options.dubObjsDir,
+            "dub-arch", "Architecture (x86, x86_64, x86_mscoff)", &options.dubArch,
         );
 
         if(helpInfo.helpWanted) {
@@ -232,7 +248,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             options.help = true;
         }
     } catch(ConvException ex) {
-        throw new Exception("Unsupported backend, -b must be one of: make|ninja|tup|binary");
+        throw new Exception("Could not convert enum option: " ~ ex.msg);
     }
 
     enforce(!options.perModule || !options.allAtOnce, "Cannot specify both --per_module and --all_at_once");

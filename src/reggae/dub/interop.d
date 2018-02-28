@@ -177,12 +177,13 @@ private string callDub(T)(
     import std.string: join, split;
     import std.path: buildPath;
     import std.file: exists;
-    import std.algorithm: canFind;
 
     const hasSelections = buildPath(options.projectPath, "dub.selections.json").exists;
     string[] emptyArgs;
     const noDepsArgs = hasSelections && maybeNoDeps ? ["--nodeps", "--skip-registry=all"] : emptyArgs;
-    const archArg = rawArgs.canFind("fetch") ? emptyArgs: ["--arch=" ~ options.dubArch.text];
+    const archArg = rawArgs[1] == "fetch" || rawArgs[1] == "upgrade"
+        ? emptyArgs
+        : ["--arch=" ~ options.dubArch.text];
     const args = rawArgs ~ noDepsArgs ~ dubEnvArgs ~ archArg;
     const string[string] env = null;
     Config config = Config.none;

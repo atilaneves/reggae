@@ -220,7 +220,7 @@ void prepareTestBuild(string module_ = __MODULE__)(ref Options options) {
     version(Windows) {
         assert(false);
     } else {
-        import std.file: symlink;
+        import std.file: symlink, mkdirRecurse;
         import std.string;
         import std.path;
         import std.algorithm: canFind;

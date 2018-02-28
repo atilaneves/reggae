@@ -1,9 +1,11 @@
+/**
+   Wrapper structs to ensure type-safety and readability, as well
+   as helper types to use as arguments to build commands.
+ */
 module reggae.types;
 
 import reggae.rules.common: exeExt;
 import std.path: baseName, stripExtension, defaultExtension;
-
-//Wrapper structs to ensure type-safety and readability
 
 @safe:
 

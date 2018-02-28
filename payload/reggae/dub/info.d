@@ -193,14 +193,7 @@ struct DubInfo {
 
     TargetName targetName() @safe const pure nothrow {
         const fileName = packages[0].targetFileName;
-        switch(targetType) with(TargetType) {
-        default:
-            return TargetName(fileName);
-        case library:
-            return TargetName("lib" ~ fileName ~ ".a");
-        case dynamicLibrary:
-            return TargetName("lib" ~ fileName ~ ".so");
-        }
+        return .targetName(targetType, fileName);
     }
 
     TargetType targetType() @safe const pure nothrow {
@@ -308,5 +301,33 @@ private string archFlag(in Options options) @safe pure nothrow {
             return "-m64";
         case DubArchitecture.x86_mscoff:
             return "-m32mscoff";
+    }
+}
+
+TargetName targetName(in TargetType targetType, in string fileName) @safe pure nothrow {
+
+    import reggae.rules.common: exeExt;
+
+    switch(targetType) with(TargetType) {
+    default:
+        return TargetName(fileName);
+
+    case executable:
+        version(Posix)
+            return TargetName(fileName);
+        else
+            return TargetName(fileName ~ exeExt);
+
+    case library:
+        version(Posix)
+            return TargetName("lib" ~ fileName ~ ".a");
+        else
+            return TargetName(fileName ~ ".lib");
+
+    case dynamicLibrary:
+        version(Posix)
+            return TargetName("lib" ~ fileName ~ ".so");
+        else
+            return TargetName(fileName ~ ".dll");
     }
 }

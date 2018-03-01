@@ -46,8 +46,27 @@ struct NinjaEntry {
     string mainLine;
     string[] paramLines;
     string toString() @safe pure nothrow const {
-        import std.string: replace;
-        return (mainLine ~ paramLines.map!(a => "  " ~ a.replace(`C:\`, `\`)).array).join("\n");
+
+        // ninja freaks out if there's a Windows drive in the path
+        // because of the colon
+        string noDrive(string path) {
+            version(Posix)
+                return path;
+            else {
+                import std.string: replace;
+                import std.algorithm: canFind;
+
+                foreach(c; 'A' .. 'Z' + 1) {
+                    const drive = cast(char)c ~ `:\`;
+                    if(path.canFind(drive)) return path.replace(drive, `\`);
+                }
+                return path;
+            }
+        }
+
+        import std.array: join;
+        import std.range: chain, only;
+        return chain(only(mainLine), paramLines.map!(a => "  " ~ noDrive(a))).join("\n");
     }
 }
 

@@ -140,6 +140,7 @@ private auto runDCompiler(in string projectPath,
     import std.process: execute;
     import std.exception: enforce;
     import std.conv:text;
+    import std.path: buildPath;
 
     immutable compiler = "dmd";
     const compArgs = [compiler] ~ flags.splitter.array ~

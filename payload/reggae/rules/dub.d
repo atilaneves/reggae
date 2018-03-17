@@ -8,21 +8,28 @@ module reggae.rules.dub;
 
 import reggae.config;
 
+enum CompilationMode {
+    module_,  /// compile per module
+    package_, /// compile per package
+    all,      /// compile all source files
+    options,  /// whatever the command-line option was
+}
+
 static if(isDubProject) {
 
     import reggae.dub.info;
     import reggae.types;
     import reggae.build;
     import reggae.rules.common;
-    import std.typecons;
     import std.traits;
+    import std.typecons;
 
     /**
      Builds the main dub target (equivalent of "dub build")
     */
     Target dubDefaultTarget(CompilerFlags compilerFlags = CompilerFlags(),
                             LinkerFlags linkerFlags = LinkerFlags(),
-                            Flag!"allTogether" allTogether = No.allTogether)
+                            CompilationMode compilationMode = CompilationMode.options)
         ()
     {
         import std.string: split;
@@ -38,7 +45,7 @@ static if(isDubProject) {
                 compilerFlags.value,
                 linkerFlags,
                 Yes.main,
-                allTogether,
+                compilationMode,
             );
     }
 
@@ -52,11 +59,11 @@ static if(isDubProject) {
     {
         import std.typecons: No, Yes;
         static if (__VERSION__ >= 2079)
-            enum allTogether = No.allTogether;
+            enum compilationMode = CompilationMode.options;
         else
-            enum allTogether = Yes.allTogether;
+            enum compilationMode = CompilationMode.all;
 
-        return dubTestTarget!(compilerFlags, linkerFlags, allTogether)();
+        return dubTestTarget!(compilerFlags, linkerFlags, compilationMode)();
     }
 
     /**
@@ -64,7 +71,7 @@ static if(isDubProject) {
      */
     Target dubTestTarget(CompilerFlags compilerFlags = CompilerFlags(),
                          LinkerFlags linkerFlags = LinkerFlags(),
-                         Flag!"allTogether" allTogether)
+                         CompilationMode compilationMode)
                          ()
     {
         import reggae.dub.info: TargetType, targetName;
@@ -86,7 +93,7 @@ static if(isDubProject) {
                             actualCompilerFlags,
                             actualLinkerFlags,
                             Yes.main,
-                            allTogether);
+                            compilationMode);
     }
 
     /**
@@ -96,7 +103,7 @@ static if(isDubProject) {
                                   CompilerFlags compilerFlags = CompilerFlags(),
                                   LinkerFlags linkerFlags = LinkerFlags(),
                                   Flag!"main" includeMain = Yes.main,
-                                  Flag!"allTogether" allTogether = No.allTogether,
+                                  CompilationMode compilationMode = CompilationMode.options,
                                   alias objsFunction = () { Target[] t; return t; },
                                   )
         () if(isCallable!objsFunction)
@@ -109,7 +116,7 @@ static if(isDubProject) {
                                       compilerFlags.value,
                                       linkerFlags.value.split(" "),
                                       includeMain,
-                                      allTogether);
+                                      compilationMode);
     }
 
 
@@ -119,7 +126,7 @@ static if(isDubProject) {
                      in string compilerFlags,
                      in string[] linkerFlags = [],
                      in Flag!"main" includeMain = Yes.main,
-                     in Flag!"allTogether" allTogether = No.allTogether)
+                     in CompilationMode compilationMode = CompilationMode.options)
     {
 
         import reggae.rules.common: staticLibraryTarget;
@@ -146,7 +153,7 @@ static if(isDubProject) {
 
         auto dubObjs = dubInfo.toTargets(includeMain,
                                          compilerFlags,
-                                         allTogether,
+                                         compilationMode,
                                          DubObjsDir(options.dubObjsDir, realName ~ ".objs"));
         auto allObjs = objsFunction() ~ dubObjs;
 

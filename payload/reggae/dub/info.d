@@ -103,6 +103,8 @@ struct DubObjsDir {
 
 struct DubInfo {
 
+    import reggae.rules.dub: CompilationMode;
+
     DubPackage[] packages;
 
     DubInfo dup() @safe pure nothrow const {
@@ -113,7 +115,7 @@ struct DubInfo {
 
     Target[] toTargets(in Flag!"main" includeMain = Yes.main,
                        in string compilerFlags = "",
-                       in Flag!"allTogether" allTogether = No.allTogether,
+                       in CompilationMode compilationMode = CompilationMode.options,
                        in DubObjsDir dubObjsDir = DubObjsDir())
         @safe const
     {
@@ -161,8 +163,17 @@ struct DubInfo {
                 map!(a => buildPath(dubPackage.path, a))
                 .array;
 
-            auto func = allTogether ? &dlangObjectFilesTogether : &dlangObjectFiles;
-            auto packageTargets = func(files, flags, importPaths, stringImportPaths, projDir);
+
+            auto compileFunc() {
+                final switch(compilationMode) with(CompilationMode) {
+                    case all: return &dlangObjectFilesTogether;
+                    case module_: return &dlangObjectFilesPerModule;
+                    case package_: return &dlangObjectFilesPerPackage;
+                    case options: return &dlangObjectFiles;
+                }
+            }
+
+            auto packageTargets = compileFunc()(files, flags, importPaths, stringImportPaths, projDir);
 
             // e.g. /foo/bar -> foo/bar
             const deabsWorkingDir = options.workingDir.deabsolutePath;

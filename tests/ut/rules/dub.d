@@ -20,7 +20,7 @@ unittest {
                                 "-g -debug",
                                 [],
                                 Yes.main,
-                                No.allTogether,
+                                CompilationMode.all,
     );
     const expected = Target("app",
                             Command(CommandType.link,
@@ -54,7 +54,7 @@ unittest {
                                 "-g -debug",
                                 [],
                                 Yes.main,
-                                No.allTogether,
+                                CompilationMode.options,
     );
 
     string[] empty;

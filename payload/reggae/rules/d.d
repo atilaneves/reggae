@@ -17,8 +17,10 @@ import std.array;
 
 
 
-//generate object file(s) for a D package. By default generates one per package,
-//if reggae.config.perModule is true, generates one per module
+/**
+   Generate object file(s) for D sources.
+   Depending on command-line options compiles all files together, per package, or per module.
+*/
 Target[] dlangObjectFiles(in string[] srcFiles,
                           in string flags = "",
                           in string[] importPaths = [],
@@ -38,7 +40,7 @@ Target[] dlangObjectFiles(in string[] srcFiles,
     return func(srcFiles, flags, importPaths, stringImportPaths, projDir);
 }
 
-/// Generate object files for a D package, compiling the whole package together.
+/// Generate object files for D sources, compiling the whole package together.
 Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
                                     in string flags = "",
                                     in string[] importPaths = [],
@@ -60,7 +62,7 @@ Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
                                                a.map!(a => Target(a)).array)).array;
 }
 
-/// Generate object fiels for a D package, compiling each module separately
+/// Generate object fiels for D sources, compiling each module separately
 Target[] dlangObjectFilesPerModule(in string[] srcFiles,
                                    in string flags = "",
                                    in string[] importPaths = [],
@@ -75,7 +77,7 @@ Target[] dlangObjectFilesPerModule(in string[] srcFiles,
                                          projDir)).array;
 }
 
-/// Generate object files for a D package, compiling all of them together
+/// Generate object files for D sources, compiling all of them together
 Target[] dlangObjectFilesTogether(in string[] srcFiles,
                                   in string flags = "",
                                   in string[] importPaths = [],

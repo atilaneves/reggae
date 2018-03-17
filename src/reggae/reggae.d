@@ -238,8 +238,9 @@ private void createBuild(T)(auto ref T output, in Options options) {
     immutable retRunBuildgen = execute([buildPath(options.workingDir, hiddenDir, buildGenName)]);
     enforce(retRunBuildgen.status == 0,
             text("Couldn't execute the produced ", buildGenName, " binary:\n", retRunBuildgen.output));
+    output.log("Build generated");
 
-    if(retRunBuildgen.output.length )output.log(retRunBuildgen.output);
+    if(retRunBuildgen.output.length) output.log(retRunBuildgen.output);
 }
 
 

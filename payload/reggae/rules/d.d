@@ -19,27 +19,33 @@ import std.array;
 
 //generate object file(s) for a D package. By default generates one per package,
 //if reggae.config.perModule is true, generates one per module
-Target[] dlangPackageObjectFiles(in string[] srcFiles, in string flags = "",
-                                 in string[] importPaths = [], in string[] stringImportPaths = [],
-                                 in string projDir = "$project") @safe {
+Target[] dlangObjectFiles(in string[] srcFiles,
+                          in string flags = "",
+                          in string[] importPaths = [],
+                          in string[] stringImportPaths = [],
+                          in string projDir = "$project")
+    @safe
+{
 
     import reggae.config: options;
 
     auto func = options.perModule
-        ? &dlangPackageObjectFilesPerModule
+        ? &dlangObjectFilesPerModule
         : options.allAtOnce
-            ? &dlangPackageObjectFilesTogether
-            : &dlangPackageObjectFilesPerPackage;
+            ? &dlangObjectFilesTogether
+            : &dlangObjectFilesPerPackage;
 
     return func(srcFiles, flags, importPaths, stringImportPaths, projDir);
 }
 
-Target[] dlangPackageObjectFilesPerPackage(in string[] srcFiles,
-                                           in string flags = "",
-                                           in string[] importPaths = [],
-                                           in string[] stringImportPaths = [],
-                                           in string projDir = "$project")
-    @trusted pure {
+/// Generate object files for a D package, compiling the whole package together.
+Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
+                                    in string flags = "",
+                                    in string[] importPaths = [],
+                                    in string[] stringImportPaths = [],
+                                    in string projDir = "$project")
+    @trusted pure
+{
 
     if(srcFiles.empty) return [];
     auto command(in string[] files) {
@@ -54,9 +60,14 @@ Target[] dlangPackageObjectFilesPerPackage(in string[] srcFiles,
                                                a.map!(a => Target(a)).array)).array;
 }
 
-Target[] dlangPackageObjectFilesPerModule(in string[] srcFiles, in string flags = "",
-                                          in string[] importPaths = [], in string[] stringImportPaths = [],
-                                          in string projDir = "$project") @trusted pure {
+/// Generate object fiels for a D package, compiling each module separately
+Target[] dlangObjectFilesPerModule(in string[] srcFiles,
+                                   in string flags = "",
+                                   in string[] importPaths = [],
+                                   in string[] stringImportPaths = [],
+                                   in string projDir = "$project")
+    @trusted pure
+{
     return srcFiles.map!(a => objectFile(const SourceFile(a),
                                          const Flags(flags),
                                          const ImportPaths(importPaths),
@@ -64,10 +75,14 @@ Target[] dlangPackageObjectFilesPerModule(in string[] srcFiles, in string flags 
                                          projDir)).array;
 }
 
-// compiles all source files in one go
-Target[] dlangPackageObjectFilesTogether(in string[] srcFiles, in string flags = "",
-                                         in string[] importPaths = [], in string[] stringImportPaths = [],
-                                         in string projDir = "$project") @trusted pure {
+/// Generate object files for a D package, compiling all of them together
+Target[] dlangObjectFilesTogether(in string[] srcFiles,
+                                  in string flags = "",
+                                  in string[] importPaths = [],
+                                  in string[] stringImportPaths = [],
+                                  in string projDir = "$project")
+    @trusted pure
+{
 
     if(srcFiles.empty) return [];
     auto command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
@@ -97,7 +112,8 @@ Target scriptlike(App app,
                   ImportPaths importPaths = ImportPaths(),
                   StringImportPaths stringImportPaths = StringImportPaths(),
                   alias linkWithFunction = () { return cast(Target[])[];})
-    () @trusted {
+    () @trusted
+{
     auto linkWith = linkWithFunction();
     import reggae.config: options;
     return scriptlike(options.projectPath, app, flags, importPaths, stringImportPaths, linkWith);
@@ -111,7 +127,9 @@ Target scriptlike(in string projectPath,
                   in App app, in Flags flags,
                   in ImportPaths importPaths,
                   in StringImportPaths stringImportPaths,
-                  Target[] linkWith) @trusted {
+                  Target[] linkWith)
+    @trusted
+{
 
     import std.path;
 
@@ -123,8 +141,8 @@ Target scriptlike(in string projectPath,
                                 importPaths.value, stringImportPaths.value);
 
     const files = dMainDepSrcs(output).map!(a => a.removeProjectPath).array;
-    auto dependencies = [mainObj] ~ dlangPackageObjectFiles(files, flags.value,
-                                                             importPaths.value, stringImportPaths.value);
+    auto dependencies = [mainObj] ~ dlangObjectFiles(files, flags.value,
+                                                     importPaths.value, stringImportPaths.value);
 
     return link(ExeName(app.exeFileName.value), dependencies ~ linkWith);
 }
@@ -148,6 +166,7 @@ private auto runDCompiler(in string projectPath,
         stringImportPaths.map!(a => "-J" ~ buildPath(projectPath, a)).array ~
         ["-o-", "-v", "-c", srcFileName];
     const compRes = execute(compArgs);
-    enforce(compRes.status == 0, text("scriptlike could not run ", compArgs.join(" "), ":\n", compRes.output));
+    enforce(compRes.status == 0,
+            text("scriptlike could not run ", compArgs.join(" "), ":\n", compRes.output));
     return compRes.output;
 }

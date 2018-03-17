@@ -161,7 +161,7 @@ struct DubInfo {
                 map!(a => buildPath(dubPackage.path, a))
                 .array;
 
-            auto func = allTogether ? &dlangPackageObjectFilesTogether : &dlangPackageObjectFiles;
+            auto func = allTogether ? &dlangObjectFilesTogether : &dlangObjectFiles;
             auto packageTargets = func(files, flags, importPaths, stringImportPaths, projDir);
 
             // e.g. /foo/bar -> foo/bar

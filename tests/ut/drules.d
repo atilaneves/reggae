@@ -39,12 +39,12 @@ void testDCompileIncludePathsMake() {
 }
 
 
-@("dlangPackageObjectFilesPerPackage")
+@("dlangObjectFilesPerPackage")
 unittest {
-    auto build = Build(dlangPackageObjectFilesPerPackage(["path/to/src/foo.d",
-                                                          "path/to/src/bar.d",
-                                                          "other/weird.d"],
-                                              "-O", ["path/to/src", "other/path"]));
+    auto build = Build(dlangObjectFilesPerPackage(["path/to/src/foo.d",
+                                                   "path/to/src/bar.d",
+                                                   "other/weird.d"],
+                                                  "-O", ["path/to/src", "other/path"]));
     build.shouldEqual(Build(Target("path/to/src.o",
                                    compileCommand("path/to/src.d",
                                                   "-O",
@@ -58,12 +58,12 @@ unittest {
                           ));
 }
 
-@("dlangPackageObjectFilesPerPackage ..")
+@("dlangObjectFilesPerPackage ..")
 unittest {
-    auto build = Build(dlangPackageObjectFilesPerModule(["/project/source/main.d",
-                                                         "/project/../../common/source/foo.d",
-                                                         "/project/../../common/source/bar.d",
-                                                         ]));
+    auto build = Build(dlangObjectFilesPerModule(["/project/source/main.d",
+                                                  "/project/../../common/source/foo.d",
+                                                  "/project/../../common/source/bar.d",
+                                                 ]));
     build.shouldEqual(Build(Target("project/source/main.o",
                                    compileCommand("/project/source/main.d"),
                                    Target("/project/source/main.d")),
@@ -78,6 +78,6 @@ unittest {
 
 
 void testObjectFilesEmpty() {
-    dlangPackageObjectFilesPerPackage([]).shouldEqual([]);
-    dlangPackageObjectFilesPerModule([]).shouldEqual([]);
+    dlangObjectFilesPerPackage([]).shouldEqual([]);
+    dlangObjectFilesPerModule([]).shouldEqual([]);
 }

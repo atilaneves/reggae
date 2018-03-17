@@ -6,7 +6,7 @@
 
 module reggae.rules.dub;
 
-import reggae.config; // isDubProject
+import reggae.config;
 
 static if(isDubProject) {
 

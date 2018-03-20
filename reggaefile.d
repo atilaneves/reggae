@@ -44,7 +44,7 @@ version(minimal) {
     //the unit test binary
     alias ut = dubTestTarget!(CompilerFlags(commonFlags ~ " -cov"),
                               LinkerFlags(),
-                              Yes.allTogether);
+                              CompilationMode.all);
 
     //the cucumber test target
     enum cuke = Target.phony("cuke", "cd $project && cucumber", [main]);

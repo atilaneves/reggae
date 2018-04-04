@@ -193,6 +193,23 @@ static if(isDubProject) {
                        startingIndex);
     }
 
+    /**
+       All dub object files for a configuration
+     */
+    Target[] dubObjectFiles(Configuration config,
+                            CompilerFlags compilerFlags = CompilerFlags(),
+                            Flag!"main" includeMain = No.main,
+                            CompilationMode compilationMode = CompilationMode.options)
+        ()
+    {
+        const dubInfo = configToDubInfo[config.value];
+        return objs!()(dubInfo.targetName,
+                       dubInfo,
+                       includeMain,
+                       compilerFlags.value,
+                       compilationMode);
+    }
+
     private Target[] objs(alias objsFunction = () { Target[] t; return t;})
                          (in TargetName targetName,
                           in DubInfo dubInfo,

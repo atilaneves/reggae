@@ -15,12 +15,12 @@ unittest {
     dubInfo.packages = [DubPackage()];
     dubInfo.packages[0].lflags = ["-L$FOO"];
     Target[] objects;
-    const actual = dubTarget!()(TargetName("app"),
-                                dubInfo,
-                                "-g -debug",
-                                [],
-                                Yes.main,
-                                CompilationMode.all,
+    const actual = dubTarget(TargetName("app"),
+                             dubInfo,
+                             "-g -debug",
+                             [],
+                             Yes.main,
+                             CompilationMode.all,
     );
     const expected = Target("app",
                             Command(CommandType.link,
@@ -49,12 +49,12 @@ unittest {
     dubInfo.packages[0].files = ["$LIB/liblua.a", "source/luad/foo.d"];
     dubInfo.packages[0].importPaths = ["source"];
     Target[] objects;
-    const actual = dubTarget!()(TargetName("app"),
-                                dubInfo,
-                                "-g -debug",
-                                [],
-                                Yes.main,
-                                CompilationMode.options,
+    const actual = dubTarget(TargetName("app"),
+                             dubInfo,
+                             "-g -debug",
+                             [],
+                             Yes.main,
+                             CompilationMode.options,
     );
 
     string[] empty;

@@ -16,7 +16,6 @@ import std.algorithm;
 import std.array;
 
 
-
 /**
    Generate object file(s) for D sources.
    Depending on command-line options compiles all files together, per package, or per module.

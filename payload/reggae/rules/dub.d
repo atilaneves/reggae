@@ -15,6 +15,10 @@ enum CompilationMode {
     options,  /// whatever the command-line option was
 }
 
+struct DubPackageName {
+    string value;
+}
+
 static if(isDubProject) {
 
     import reggae.dub.info;
@@ -38,15 +42,14 @@ static if(isDubProject) {
         const dubInfo = configToDubInfo[config];
         enum targetName = dubInfo.targetName;
         enum linkerFlags = dubInfo.mainLinkerFlags ~ linkerFlags.value.split(" ");
-        return dubTarget!(() { Target[] t; return t;})
-            (
-                targetName,
-                dubInfo,
-                compilerFlags.value,
-                linkerFlags,
-                Yes.main,
-                compilationMode,
-            );
+        return dubTarget(
+            targetName,
+            dubInfo,
+            compilerFlags.value,
+            linkerFlags,
+            Yes.main,
+            compilationMode,
+        );
     }
 
 
@@ -91,12 +94,12 @@ static if(isDubProject) {
         const extraLinkerFlags = hasMain ? [] : ["-main"];
         const actualLinkerFlags = extraLinkerFlags ~ linkerFlags.value.split(" ");
 
-        return dubTarget!()(targetName(TargetType.executable, "ut"),
-                            configToDubInfo[config],
-                            actualCompilerFlags,
-                            actualLinkerFlags,
-                            Yes.main,
-                            compilationMode);
+        return dubTarget(targetName(TargetType.executable, "ut"),
+                         configToDubInfo[config],
+                         actualCompilerFlags,
+                         actualLinkerFlags,
+                         Yes.main,
+                         compilationMode);
     }
 
     /**
@@ -114,23 +117,48 @@ static if(isDubProject) {
         import std.string: split;
 
         const dubInfo = configToDubInfo[config.value];
-        return dubTarget!objsFunction(dubInfo.targetName,
-                                      dubInfo,
-                                      compilerFlags.value,
-                                      linkerFlags.value.split(" "),
-                                      includeMain,
-                                      compilationMode);
+        return dubTarget(dubInfo.targetName,
+                         dubInfo,
+                         compilerFlags.value,
+                         linkerFlags.value.split(" "),
+                         includeMain,
+                         compilationMode,
+                         objsFunction());
+    }
+
+    Target dubTarget(
+        TargetName targetName,
+        Configuration config,
+        CompilerFlags compilerFlags = CompilerFlags(),
+        LinkerFlags linkerFlags = LinkerFlags(),
+        Flag!"main" includeMain = Yes.main,
+        CompilationMode compilationMode = CompilationMode.options,
+        alias objsFunction = () { Target[] t; return t; },
+     )
+        ()
+    {
+        import std.array: split;
+        return dubTarget(targetName,
+                         configToDubInfo[config.value],
+                         compilerFlags.value,
+                         linkerFlags.value.split(" "),
+                         includeMain,
+                         compilationMode,
+                         objsFunction(),
+            );
     }
 
 
-    Target dubTarget(alias objsFunction = () { Target[] t; return t;})
-                    (in TargetName targetName,
-                     in DubInfo dubInfo,
-                     in string compilerFlags,
-                     in string[] linkerFlags = [],
-                     in Flag!"main" includeMain = Yes.main,
-                     in CompilationMode compilationMode = CompilationMode.options,
-                     in size_t startingIndex = 0)
+    Target dubTarget(
+        in TargetName targetName,
+        in DubInfo dubInfo,
+        in string compilerFlags,
+        in string[] linkerFlags = [],
+        in Flag!"main" includeMain = Yes.main,
+        in CompilationMode compilationMode = CompilationMode.options,
+        Target[] extraObjects = [],
+        in size_t startingIndex = 0,
+        )
     {
 
         import reggae.rules.common: staticLibraryTarget;
@@ -148,12 +176,13 @@ static if(isDubProject) {
             : "";
         const allLinkerFlags = (linkerFlags ~ dubInfo.linkerFlags ~ sharedFlags).join(" ");
 
-        auto allObjs = objs!objsFunction(targetName,
-                                         dubInfo,
-                                         includeMain,
-                                         compilerFlags,
-                                         compilationMode,
-                                         startingIndex);
+        auto allObjs = objs(targetName,
+                            dubInfo,
+                            includeMain,
+                            compilerFlags,
+                            compilationMode,
+                            extraObjects,
+                            startingIndex);
 
         const name = realName(targetName, dubInfo);
         auto target = isStaticLibrary
@@ -185,37 +214,83 @@ static if(isDubProject) {
     {
         const dubInfo = configToDubInfo[config.value];
         const startingIndex = 1;
-        return objs!()(dubInfo.targetName,
-                       dubInfo,
-                       No.main,
-                       compilerFlags.value,
-                       CompilationMode.options,
-                       startingIndex);
+        return objs(dubInfo.targetName,
+                    dubInfo,
+                    No.main,
+                    compilerFlags.value,
+                    CompilationMode.options,
+                    [], // extra objects
+                    startingIndex);
     }
+
+
 
     /**
        All dub object files for a configuration
      */
-    Target[] dubObjectFiles(Configuration config,
-                            CompilerFlags compilerFlags = CompilerFlags(),
-                            Flag!"main" includeMain = No.main,
-                            CompilationMode compilationMode = CompilationMode.options)
+    Target[] dubObjects(Configuration config,
+                        CompilerFlags compilerFlags = CompilerFlags(),
+                        Flag!"main" includeMain = No.main,
+                        CompilationMode compilationMode = CompilationMode.options)
         ()
     {
         const dubInfo = configToDubInfo[config.value];
-        return objs!()(dubInfo.targetName,
-                       dubInfo,
-                       includeMain,
-                       compilerFlags.value,
-                       compilationMode);
+        return objs(dubInfo.targetName,
+                    dubInfo,
+                    includeMain,
+                    compilerFlags.value,
+                    compilationMode);
     }
 
-    private Target[] objs(alias objsFunction = () { Target[] t; return t;})
-                         (in TargetName targetName,
+    /**
+       Object files from one dub package
+     */
+    Target[] dubPackageObjects(
+        DubPackageName dubPackageName,
+        CompilerFlags compilerFlags = CompilerFlags(),
+        CompilationMode compilationMode = CompilationMode.all,
+        Flag!"main" includeMain = No.main,
+        )
+        ()
+    {
+        return dubPackageObjects!(
+            dubPackageName,
+            Configuration("default"),
+            compilerFlags,
+            compilationMode,
+            includeMain
+        );
+    }
+
+    /**
+       Object files from one dub package
+     */
+    Target[] dubPackageObjects(
+        DubPackageName dubPackageName,
+        Configuration config = Configuration("default"),
+        CompilerFlags compilerFlags = CompilerFlags(),
+        CompilationMode compilationMode = CompilationMode.all,
+        Flag!"main" includeMain = No.main,
+        )
+        ()
+    {
+        return configToDubInfo[config.value].packageNameToTargets(
+            dubPackageName.value,
+            includeMain,
+            compilerFlags.value,
+            compilationMode,
+        );
+    }
+
+
+
+
+    private Target[] objs(in TargetName targetName,
                           in DubInfo dubInfo,
                           in Flag!"main" includeMain,
                           in string compilerFlags,
                           in CompilationMode compilationMode,
+                          Target[] extraObjects = [],
                           in size_t startingIndex = 0)
     {
 
@@ -224,7 +299,7 @@ static if(isDubProject) {
                                          compilationMode,
                                          dubObjsDir(targetName, dubInfo),
                                          startingIndex);
-        auto allObjs = objsFunction() ~ dubObjs;
+        auto allObjs = dubObjs ~ extraObjects;
 
         return allObjs;
     }

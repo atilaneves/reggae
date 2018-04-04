@@ -36,7 +36,6 @@ Target[] objectFiles(alias sourcesFunc = Sources!(),
     return srcFilesToObjectTargets(srcFiles, flags, includes, stringImports);
 }
 
-@safe:
 
 /**
  An object file, typically from one source file in a certain language
@@ -50,7 +49,7 @@ Target objectFile(in SourceFile srcFile,
                   in Flags flags = Flags(),
                   in ImportPaths includePaths = ImportPaths(),
                   in StringImportPaths stringImportPaths = StringImportPaths(),
-                  in string projDir = "$project") pure {
+                  in string projDir = "$project") @safe pure {
 
     auto cmd = compileCommand(srcFile.value, flags.value, includePaths.value, stringImportPaths.value, projDir);
     return Target(srcFile.value.objFileName, cmd, [Target(srcFile.value)]);
@@ -97,7 +96,7 @@ Target executable(in string projectPath,
  If any D files are found, the linker is the D compiler, and so on with
  C++ and C. If none of those apply, the D compiler is used.
  */
-Target link(ExeName exeName, alias dependenciesFunc, Flags flags = Flags())() @safe {
+Target link(ExeName exeName, alias dependenciesFunc, Flags flags = Flags())() {
     auto dependencies = dependenciesFunc();
     return link(exeName, dependencies, flags);
 }
@@ -338,7 +337,7 @@ version(Windows) {
     immutable exeExt = "";
 }
 
-package string objFileName(in string srcFileName) pure {
+package string objFileName(in string srcFileName) @safe pure {
     import reggae.path: deabsolutePath;
     import std.path: stripExtension, defaultExtension, isRooted;
     import std.array: replace;
@@ -348,14 +347,14 @@ package string objFileName(in string srcFileName) pure {
     return localFileName.stripExtension.defaultExtension(objExt).replace("..", "__");
 }
 
-string removeProjectPath(in string path) {
+string removeProjectPath(in string path) @safe {
     import std.path: relativePath, absolutePath;
     import reggae.config: options;
     //relativePath is @system
     return () @trusted { return path.absolutePath.relativePath(options.projectPath.absolutePath); }();
 }
 
-string removeProjectPath(in string projectPath, in string path) pure {
+string removeProjectPath(in string projectPath, in string path) @safe pure {
     import std.path: relativePath, absolutePath;
     //relativePath is @system
     return () @trusted { return path.absolutePath.relativePath(projectPath.absolutePath); }();
@@ -368,7 +367,7 @@ Command compileCommand(in string srcFileName,
                        in string[] includePaths = [],
                        in string[] stringImportPaths = [],
                        in string projDir = "$project",
-                       Flag!"justCompile" justCompile = Yes.justCompile) pure {
+                       Flag!"justCompile" justCompile = Yes.justCompile) @safe pure {
 
     string maybeExpand(string path) {
         return path.startsWith(gBuilddir) ? expandBuildDir(path) : buildPath(projDir, path);
@@ -399,7 +398,7 @@ enum Language {
     unknown,
 }
 
-Language getLanguage(in string srcFileName) pure nothrow {
+Language getLanguage(in string srcFileName) @safe pure nothrow {
     switch(srcFileName.extension) with(Language) {
     case ".d":
         return D;

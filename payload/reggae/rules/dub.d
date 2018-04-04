@@ -58,10 +58,15 @@ static if(isDubProject) {
                          ()
     {
         import std.typecons: No, Yes;
+
         static if (__VERSION__ >= 2079)
             enum compilationMode = CompilationMode.options;
-        else
+        else {
+            // since dmd has a bug pertaining to separate compilation and __traits(getUnitTests),
+            // we default here to compiling all-at-once for the unittest build
+
             enum compilationMode = CompilationMode.all;
+        }
 
         return dubTestTarget!(compilerFlags, linkerFlags, compilationMode)();
     }
@@ -86,8 +91,6 @@ static if(isDubProject) {
         const extraLinkerFlags = hasMain ? [] : ["-main"];
         const actualLinkerFlags = extraLinkerFlags ~ linkerFlags.value.split(" ");
 
-        // since dmd has a bug pertaining to separate compilation and __traits(getUnitTests),
-        // we default here to compiling all-at-once for the unittest build
         return dubTarget!()(targetName(TargetType.executable, "ut"),
                             configToDubInfo[config],
                             actualCompilerFlags,
@@ -126,7 +129,8 @@ static if(isDubProject) {
                      in string compilerFlags,
                      in string[] linkerFlags = [],
                      in Flag!"main" includeMain = Yes.main,
-                     in CompilationMode compilationMode = CompilationMode.options)
+                     in CompilationMode compilationMode = CompilationMode.options,
+                     in size_t startingIndex = 0)
     {
 
         import reggae.rules.common: staticLibraryTarget;
@@ -143,28 +147,83 @@ static if(isDubProject) {
             ? "-shared"
             : "";
         const allLinkerFlags = (linkerFlags ~ dubInfo.linkerFlags ~ sharedFlags).join(" ");
-        const postBuildCommands = dubInfo.postBuildCommands;
 
-        // otherwise the target wouldn't be top-level in the presence of
-        // postBuildCommands
-        const realName = postBuildCommands == ""
-            ? targetName.value
-            : buildPath("$project", targetName.value);
+        auto allObjs = objs!objsFunction(targetName,
+                                         dubInfo,
+                                         includeMain,
+                                         compilerFlags,
+                                         compilationMode,
+                                         startingIndex);
+
+        const name = realName(targetName, dubInfo);
+        auto target = isStaticLibrary
+            ? staticLibraryTarget(name, allObjs)[0]
+            : link(ExeName(name),
+                   allObjs,
+                   Flags(allLinkerFlags));
+
+        return dubInfo.postBuildCommands == ""
+            ? target
+            : Target.phony("postBuild", dubInfo.postBuildCommands, target);
+    }
+
+    /**
+       All dub packages object files from the dependencies, but nothing from the
+       main package (the one actually being built).
+     */
+    Target[] dubDependencies(CompilerFlags compilerFlags = CompilerFlags())
+        () // runtime args
+    {
+        return dubDependencies!(Configuration("default"), compilerFlags)();
+    }
+
+
+    ///ditto
+    Target[] dubDependencies(Configuration config,
+                             CompilerFlags compilerFlags = CompilerFlags())
+        () // runtime args
+    {
+        const dubInfo = configToDubInfo[config.value];
+        const startingIndex = 1;
+        return objs!()(dubInfo.targetName,
+                       dubInfo,
+                       No.main,
+                       compilerFlags.value,
+                       CompilationMode.options,
+                       startingIndex);
+    }
+
+    private Target[] objs(alias objsFunction = () { Target[] t; return t;})
+                         (in TargetName targetName,
+                          in DubInfo dubInfo,
+                          in Flag!"main" includeMain,
+                          in string compilerFlags,
+                          in CompilationMode compilationMode,
+                          in size_t startingIndex = 0)
+    {
 
         auto dubObjs = dubInfo.toTargets(includeMain,
                                          compilerFlags,
                                          compilationMode,
-                                         DubObjsDir(options.dubObjsDir, realName ~ ".objs"));
+                                         dubObjsDir(targetName, dubInfo),
+                                         startingIndex);
         auto allObjs = objsFunction() ~ dubObjs;
 
-        auto target = isStaticLibrary
-            ? staticLibraryTarget(realName, allObjs)[0]
-            : link(ExeName(realName),
-                   allObjs,
-                   Flags(allLinkerFlags));
+        return allObjs;
+    }
 
-        return postBuildCommands == ""
-            ? target
-            : Target.phony("postBuild", postBuildCommands, target);
+    private string realName(in TargetName targetName, in DubInfo dubInfo) {
+        import std.path: buildPath;
+        // otherwise the target wouldn't be top-level in the presence of
+        // postBuildCommands
+        return dubInfo.postBuildCommands == ""
+            ? targetName.value
+            : buildPath("$project", targetName.value);
+    }
+
+    private auto dubObjsDir(in TargetName targetName, in DubInfo dubInfo) {
+        import reggae.config: options;
+        import reggae.dub.info: DubObjsDir;
+        return DubObjsDir(options.dubObjsDir, realName(targetName, dubInfo) ~ ".objs");
     }
 }

@@ -37,6 +37,15 @@ struct App {
 
 struct Flags {
     string value;
+
+    this(string value) @safe @nogc pure nothrow {
+        this.value = value;
+    }
+
+    this(string[] values) @safe pure nothrow {
+        import std.array: join;
+        this.value = values.join(" ");
+    }
 }
 
 struct CompilerFlags {

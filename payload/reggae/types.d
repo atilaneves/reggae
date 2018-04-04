@@ -201,3 +201,8 @@ auto Sources(string dir, Files files = Files(), F = Filter!(a => true))() {
 struct SourceFile {
     string value;
 }
+
+
+struct ProjectDir {
+    string value = "$project";
+}

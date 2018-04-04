@@ -16,6 +16,63 @@ import std.algorithm;
 import std.array;
 
 
+Target[] dlangObjects(
+    alias sourcesFunc = Sources!(),
+    CompilerFlags compilerFlags = CompilerFlags(),
+    ImportPaths importPaths = ImportPaths(),
+    StringImportPaths stringImportPaths = StringImportPaths(),
+    ProjectDir projectDir = ProjectDir(),
+    )
+    ()
+{
+    return dlangObjectFiles(
+        sourcesToFileNames!sourcesFunc,
+        compilerFlags.value,
+        importPaths.value,
+        stringImportPaths.value,
+        projectDir.value,
+    );
+}
+
+
+Target[] dlangObjectsPerPackage(
+    alias sourcesFunc = Sources!(),
+    CompilerFlags compilerFlags = CompilerFlags(),
+    ImportPaths importPaths = ImportPaths(),
+    StringImportPaths stringImportPaths = StringImportPaths(),
+    ProjectDir projectDir = ProjectDir(),
+    )
+    ()
+{
+    return dlangObjectFilesPerPackage(
+        sourcesToFileNames!sourcesFunc,
+        compilerFlags.value,
+        importPaths.value,
+        stringImportPaths.value,
+        projectDir.value,
+    );
+}
+
+Target[] dlangObjectsPerModule(
+    alias sourcesFunc = Sources!(),
+    CompilerFlags compilerFlags = CompilerFlags(),
+    ImportPaths importPaths = ImportPaths(),
+    StringImportPaths stringImportPaths = StringImportPaths(),
+    ProjectDir projectDir = ProjectDir(),
+    )
+    ()
+{
+    return dlangObjectFilesPerModule(
+        sourcesToFileNames!sourcesFunc,
+        compilerFlags.value,
+        importPaths.value,
+        stringImportPaths.value,
+        projectDir.value,
+    );
+}
+
+
+
 /**
    Generate object file(s) for D sources.
    Depending on command-line options compiles all files together, per package, or per module.

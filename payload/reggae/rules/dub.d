@@ -283,7 +283,27 @@ static if(isDubProject) {
     }
 
 
+    ImportPaths dubImportPaths(Configuration config = Configuration("default"))() {
+        return ImportPaths(configToDubInfo[config.value].allImportPaths);
+    }
 
+    /**
+       Link a target taking into account the dub linker flags
+     */
+    Target dubLink(TargetName targetName,
+                   Configuration config = Configuration("default"),
+                   alias objsFunction = () { Target[] t; return t; },
+                   LinkerFlags linkerFlags = LinkerFlags()
+        )
+        ()
+    {
+        import std.array: join;
+        return link!(
+            ExeName(targetName.value),
+            objsFunction,
+            Flags((linkerFlags.value ~ configToDubInfo[config.value].linkerFlags).join(" "))
+        );
+    }
 
     private Target[] objs(in TargetName targetName,
                           in DubInfo dubInfo,

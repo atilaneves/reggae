@@ -119,16 +119,40 @@ struct DubInfo {
                        in DubObjsDir dubObjsDir = DubObjsDir())
         @safe const
     {
-
-        import reggae.config: options;
-        import reggae.build: targetObjsDir;
-        import reggae.path: deabsolutePath;
-        import std.functional: not;
-        import std.string: replace;
-        import std.path: buildPath, absolutePath, baseName, dirName;
-        import std.range: only;
-
         Target[] targets;
+
+        foreach(i; 0 .. packages.length) {
+            targets ~= packageIndexToTargets(i, includeMain, compilerFlags, compilationMode, dubObjsDir);
+        }
+
+        return targets ~ allStaticLibrarySources;
+    }
+
+    // dubPackage[i] -> Target[]
+    private Target[] packageIndexToTargets(
+        in size_t dubPackageIndex,
+        in Flag!"main" includeMain = Yes.main,
+        in string compilerFlags = "",
+        in CompilationMode compilationMode = CompilationMode.options,
+        in DubObjsDir dubObjsDir = DubObjsDir())
+        @safe const
+    {
+        import reggae.path: deabsolutePath;
+        import reggae.config: options;
+        import std.range: chain, only;
+        import std.algorithm: filter;
+        import std.array: array;
+        import std.functional: not;
+
+        const dubPackage = packages[dubPackageIndex];
+        const importPaths = allImportPaths();
+        const stringImportPaths = dubPackage.allOf!(a => a.packagePaths(a.stringImportPaths))(packages);
+        const isMainPackage = dubPackageIndex == 0;
+        //the path must be explicit for the other packages, implicit for the "main"
+        //package
+        const projDir = isMainPackage ? "" : dubPackage.path;
+
+        const sharedFlag = targetType == TargetType.dynamicLibrary ? ["-fPIC"] : [];
 
         // -unittest should only apply to the main package
         string deUnitTest(T)(in T index, in string flags) {
@@ -138,68 +162,54 @@ struct DubInfo {
                 : flags.replace("-unittest", "").replace("-main", "");
         }
 
-        foreach(const i, const dubPackage; packages) {
-            const importPaths = allImportPaths();
-            const stringImportPaths = dubPackage.allOf!(a => a.packagePaths(a.stringImportPaths))(packages);
-            const isMainPackage = i == 0;
-            //the path must be explicit for the other packages, implicit for the "main"
-            //package
-            const projDir = isMainPackage ? "" : dubPackage.path;
+        const flags = chain(dubPackage.dflags,
+                            dubPackage.versions.map!(a => "-version=" ~ a),
+                            only(options.dflags),
+                            sharedFlag,
+                            only(archFlag(options)),
+                            only(deUnitTest(dubPackageIndex, compilerFlags)))
+            .join(" ");
 
-            const sharedFlag = targetType == TargetType.dynamicLibrary ? ["-fPIC"] : [];
-
-            immutable flags = chain(dubPackage.dflags,
-                                    dubPackage.versions.map!(a => "-version=" ~ a),
-                                    only(options.dflags),
-                                    sharedFlag,
-                                    only(archFlag(options)),
-                                    only(deUnitTest(i, compilerFlags)))
-                .join(" ");
-
-            const files = dubPackage.files.
-                filter!(a => includeMain || a != dubPackage.mainSourceFile).
-                filter!(not!isStaticLibrary).
-                filter!(not!isObjectFile).
-                map!(a => buildPath(dubPackage.path, a))
-                .array;
+        const files = dubPackage.files.
+            filter!(a => includeMain || a != dubPackage.mainSourceFile).
+            filter!(not!isStaticLibrary).
+            filter!(not!isObjectFile).
+            map!(a => buildPath(dubPackage.path, a))
+            .array;
 
 
-            auto compileFunc() {
-                final switch(compilationMode) with(CompilationMode) {
-                    case all: return &dlangObjectFilesTogether;
-                    case module_: return &dlangObjectFilesPerModule;
-                    case package_: return &dlangObjectFilesPerPackage;
-                    case options: return &dlangObjectFiles;
-                }
+        auto compileFunc() {
+            final switch(compilationMode) with(CompilationMode) {
+                case all: return &dlangObjectFilesTogether;
+                case module_: return &dlangObjectFilesPerModule;
+                case package_: return &dlangObjectFilesPerPackage;
+                case options: return &dlangObjectFiles;
             }
-
-            auto packageTargets = compileFunc()(files, flags, importPaths, stringImportPaths, projDir);
-
-            // e.g. /foo/bar -> foo/bar
-            const deabsWorkingDir = options.workingDir.deabsolutePath;
-
-            // go through dub dependencies and optionally put the object files in dubObjsDir
-            if(!isMainPackage && dubObjsDir.globalDir != "") {
-                foreach(ref target; packageTargets) {
-                    target.rawOutputs[0] = buildPath(dubObjsDir.globalDir,
-                                                     options.projectPath.deabsolutePath,
-                                                     dubObjsDir.targetDir,
-                                                     target.rawOutputs[0]);
-                }
-            }
-
-            // add any object files that are meant to be linked
-            packageTargets ~= dubPackage
-                .files
-                .filter!isObjectFile
-                .map!(a => Target(inDubPackagePath(dubPackage.path, a)))
-                .array;
-
-
-            targets ~= packageTargets;
         }
 
-        return targets ~ allStaticLibrarySources;
+        auto packageTargets = compileFunc()(files, flags, importPaths, stringImportPaths, projDir);
+
+        // e.g. /foo/bar -> foo/bar
+        const deabsWorkingDir = options.workingDir.deabsolutePath;
+
+        // go through dub dependencies and optionally put the object files in dubObjsDir
+        if(!isMainPackage && dubObjsDir.globalDir != "") {
+            foreach(ref target; packageTargets) {
+                target.rawOutputs[0] = buildPath(dubObjsDir.globalDir,
+                                                 options.projectPath.deabsolutePath,
+                                                 dubObjsDir.targetDir,
+                                                 target.rawOutputs[0]);
+            }
+        }
+
+        // add any object files that are meant to be linked
+        packageTargets ~= dubPackage
+            .files
+            .filter!isObjectFile
+            .map!(a => Target(inDubPackagePath(dubPackage.path, a)))
+            .array;
+
+        return packageTargets;
     }
 
     TargetName targetName() @safe const pure nothrow {

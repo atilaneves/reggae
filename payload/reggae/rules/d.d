@@ -118,7 +118,7 @@ Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
                                                a.map!(a => Target(a)).array)).array;
 }
 
-/// Generate object fiels for D sources, compiling each module separately
+/// Generate object files for D sources, compiling each module separately
 Target[] dlangObjectFilesPerModule(in string[] srcFiles,
                                    in string flags = "",
                                    in string[] importPaths = [],

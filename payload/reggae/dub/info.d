@@ -79,7 +79,10 @@ struct DubPackage {
 
 bool isStaticLibrary(in string fileName) @safe pure nothrow {
     import std.path: extension;
-    return fileName.extension == ".a";
+    version(Windows)
+        return fileName.extension == ".lib";
+    else
+        return fileName.extension == ".a";
 }
 
 bool isObjectFile(in string fileName) @safe pure nothrow {

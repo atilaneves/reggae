@@ -62,14 +62,14 @@ static if(isDubProject) {
     {
         import std.typecons: No, Yes;
 
-        static if (__VERSION__ >= 2079)
-            enum compilationMode = CompilationMode.options;
-        else {
-            // since dmd has a bug pertaining to separate compilation and __traits(getUnitTests),
-            // we default here to compiling all-at-once for the unittest build
 
+        static if (__VERSION__ < 2079 || __VERSION__ >= 2081) {
+            // these dmd versions have a bug pertaining to separate compilation and __traits(getUnitTests),
+            // we default here to compiling all-at-once for the unittest build
             enum compilationMode = CompilationMode.all;
         }
+        else
+            enum compilationMode = CompilationMode.options;
 
         return dubTestTarget!(compilerFlags, linkerFlags, compilationMode)();
     }

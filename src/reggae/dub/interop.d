@@ -273,7 +273,9 @@ bool needDubFetch(in string dubPackage, in string version_) {
     import std.path: buildPath;
     import std.file: exists;
 
-    return !buildPath(dubPackagesDir, dubPackage ~ "-" ~ version_).exists;
+    return !buildPath(dubPackagesDir,
+                      dubPackage ~ "-" ~ version_, dubPackage ~ ".lock")
+        .exists;
 }
 
 

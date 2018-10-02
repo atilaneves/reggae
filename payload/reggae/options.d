@@ -88,7 +88,7 @@ struct Options {
         }
     }
 
-    private string _dubProjectFile() @safe nothrow {
+    package string _dubProjectFile() @safe nothrow {
         foreach(fileName; ["dub.sdl", "dub.json", "package.json"]) {
             const name = buildPath(projectPath, fileName);
             if(name.exists) return name;

@@ -11,6 +11,7 @@ import std.exception;
 @safe:
 
 enum isTargetLike(T) = is(typeof(() {
+    import std.traits: Unqual;
     auto target = T.init;
     auto deps = target.dependencyTargets;
     static assert(is(Unqual!(typeof(deps[0])) == Unqual!T));

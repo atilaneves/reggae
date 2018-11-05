@@ -39,6 +39,7 @@ void testDCompileIncludePathsMake() {
 }
 
 
+@ShouldFail
 @("dlangObjectFilesPerPackage")
 unittest {
     auto build = Build(dlangObjectFilesPerPackage(["path/to/src/foo.d",

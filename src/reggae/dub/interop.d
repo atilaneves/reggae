@@ -220,10 +220,13 @@ private void callPreBuildCommands(in from!"reggae.options".Options options,
 
     if(dubInfo.packages.length == 0) return;
 
-    foreach(c; dubInfo.packages[0].preBuildCommands) {
-        auto cmd = c.replace("$project", options.projectPath);
-        immutable ret = executeShell(cmd, env, config, maxOutput, workDir);
-        enforce(ret.status == 0, text("Error calling ", cmd, ":\n", ret.output));
+
+    foreach(const package_; dubInfo.packages) {
+        foreach(const dubCommandString; package_.preBuildCommands) {
+            auto cmd = dubCommandString.replace("$project", options.projectPath);
+            const ret = executeShell(cmd, env, config, maxOutput, workDir);
+            enforce(ret.status == 0, text("Error calling ", cmd, ":\n", ret.output));
+        }
     }
 }
 

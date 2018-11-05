@@ -1,0 +1,4 @@
+name "dub_depends_on_prebuild"
+targetType "executable"
+targetName "app"
+dependency "prebuild" path="../dub_prebuild"

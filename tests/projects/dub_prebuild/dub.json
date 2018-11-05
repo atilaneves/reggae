@@ -3,13 +3,20 @@
     "targetType": "executable",
     "configurations": [
         { "name": "executable" },
-        { "name": "unittest",
-          "preBuildCommands": ["dub run unit-threaded -c gen_ut_main -- -f ut.d"],
-          "mainSourceFile": "ut.d",
-          "excludedSourceFiles": ["source/lemain.d"],
-          "dependencies": {
-              "unit-threaded": "~>0.7.10"
-          }
+        {
+            "name": "library",
+            "targetType": "library",
+            "excludedSourceFiles": ["source/lemain.d"],
+            "preBuildCommands": ["touch $PACKAGE_DIR/el_prebuildo.txt"]
+        },
+        {
+            "name": "unittest",
+            "preBuildCommands": ["dub run unit-threaded -c gen_ut_main -- -f ut.d"],
+            "mainSourceFile": "ut.d",
+            "excludedSourceFiles": ["source/lemain.d"],
+            "dependencies": {
+                "unit-threaded": "~>0.7.10"
+            }
         }
     ]
 }

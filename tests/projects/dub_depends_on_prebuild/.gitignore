@@ -1,0 +1,14 @@
+.dub
+docs.json
+__dummy.html
+docs/
+dub_depends_on_prebuild.so
+dub_depends_on_prebuild.dylib
+dub_depends_on_prebuild.dll
+dub_depends_on_prebuild.a
+dub_depends_on_prebuild.lib
+dub_depends_on_prebuild-test-*
+*.exe
+*.o
+*.obj
+*.lst

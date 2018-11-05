@@ -394,3 +394,22 @@ unittest {
         ninja.shouldExecuteOk;
     }
 }
+
+
+@ShouldFail
+@("dub project that depends on package with prebuild")
+@Tags(["dub", "ninja"])
+unittest {
+
+    import std.path;
+
+    with(immutable ReggaeSandbox("dub_depends_on_prebuild")) {
+
+        copyProject("dub_prebuild", buildPath("..", "dub_prebuild"));
+
+        runReggae("-b", "ninja", "--dflags=-g -debug");
+        ninja.shouldExecuteOk;
+        shouldSucceed("app");
+        shouldExist(inSandboxPath("../dub_prebuild/el_prebuildo.txt"));
+    }
+}

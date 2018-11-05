@@ -40,6 +40,7 @@
                                   "tests/projects/export_proj/hello.d",
                                   "tests/projects/dub_postbuild/source/app.d",
                                   "tests/projects/dub_postbuild/reggaefile.d",
+                                  "tests/projects/dub_depends_on_prebuild/source/app.d"
                                  ],
           "stringImportPaths": ["tests/json"],
           "dependencies": {

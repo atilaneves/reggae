@@ -74,10 +74,11 @@ struct ReggaeSandbox {
         return [buildPath(testPath, arg)].shouldFailToExecute(testPath, file, line);
     }
 
-    void copyProject(in string projectName) const {
+    void copyProject(in string projectName, in string testSubPath = ".") const {
         import std.path;
-        const projPath = buildPath(origPath, "tests", "projects", projectName);
-        copyProjectFiles(projPath, testPath);
+        const fromPath = buildPath(origPath, "tests", "projects", projectName);
+        const toPath = buildPath(testPath, testSubPath);
+        copyProjectFiles(fromPath, toPath);
     }
 
 

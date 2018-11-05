@@ -396,7 +396,6 @@ unittest {
 }
 
 
-@ShouldFail
 @("dub project that depends on package with prebuild")
 @Tags(["dub", "ninja"])
 unittest {

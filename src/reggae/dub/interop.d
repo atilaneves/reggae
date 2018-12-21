@@ -70,7 +70,7 @@ void createReggaefile(T)(auto ref T output,
     import std.regex: regex, replaceFirst;
 
     output.log("Creating reggaefile.d from dub information");
-    auto file = File(buildPath(options.workingDir, "reggaefile.d"), "w");
+    auto file = File(buildPath(options.projectPath, "reggaefile.d"), "w");
 
     file.writeln(q{
         import reggae;

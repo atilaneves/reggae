@@ -338,9 +338,13 @@ struct Target {
 
     Language getLanguage() @safe pure const nothrow {
         import reggae.range: Leaves;
-        const leaves = () @trusted { return Leaves(this).array; }();
+        import reggae.rules.common: getLanguage;
+        import std.algorithm: any;
+
+        auto leaves = () @trusted { return Leaves(this).array; }();
+
         foreach(language; [Language.D, Language.Cplusplus, Language.C]) {
-            if(leaves.any!(a => a._outputs.length && reggae.rules.common.getLanguage(a._outputs[0]) == language))
+            if(leaves.any!(a => a._outputs.length && .getLanguage(a._outputs[0]) == language))
                 return language;
         }
 

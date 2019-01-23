@@ -308,7 +308,9 @@ Target[] staticLibrary(in string projectPath,
 }
 
 Target[] staticLibraryTarget(in string name, Target[] objects) {
-    return [Target([buildPath("$builddir", name)],
+    import std.path: extension;
+    const realName = name.extension == libExt ? name : name ~ libExt;
+    return [Target([buildPath("$builddir", realName)],
                    staticLibraryShellCommand,
                    objects)];
 }
@@ -332,9 +334,11 @@ private Target[] srcFilesToObjectTargets(in string[] srcFiles,
 version(Windows) {
     immutable objExt = ".obj";
     immutable exeExt = ".exe";
+    immutable libExt = ".lib";
 } else {
     immutable objExt = ".o";
     immutable exeExt = "";
+    immutable libExt = ".a";
 }
 
 package string objFileName(in string srcFileName) @safe pure {

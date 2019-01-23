@@ -412,3 +412,42 @@ unittest {
         shouldExist(inSandboxPath("../dub_prebuild/el_prebuildo.txt"));
     }
 }
+
+
+@("static library")
+@Tags(["dub", "ninja"])
+unittest {
+
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl", `
+            name "foo"
+            targetType "executable"
+            targetName "d++"
+
+            configuration "executable" {
+            }
+
+            configuration "library" {
+                targetType "library"
+                targetName "dpp"
+                excludedSourceFiles "source/main.d"
+            }
+        `);
+
+        writeFile("reggaefile.d",
+                  q{
+                      import reggae;
+                      alias lib = dubConfigurationTarget!(Configuration("library"));
+                      enum mainObj = objectFile(SourceFile("source/main.d"));
+                      alias exe = link!(ExeName("d++"), targetConcat!(lib, mainObj));
+                      mixin build!(exe);
+                  });
+
+        writeFile("source/main.d", "void main() {}");
+        writeFile("source/foo/bar/mod.d", "module foo.bar.mod; int add1(int i, int j) { return i + j + 1; }");
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldSucceed("d++");
+    }
+}

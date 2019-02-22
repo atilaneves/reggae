@@ -44,7 +44,7 @@
                                  ],
           "stringImportPaths": ["tests/json"],
           "dependencies": {
-              "unit-threaded": "~>0.7.0"
+              "unit-threaded": "*"
           }
         }
     ]

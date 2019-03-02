@@ -284,11 +284,14 @@ struct DubInfo {
 
     string[] allImportPaths() @safe nothrow const {
         import reggae.config: options;
+        import std.algorithm: sorted = sort, uniq;
+        import std.array: array;
 
         string[] paths;
         auto rng = packages.map!(a => a.packagePaths(a.importPaths));
         foreach(p; rng) paths ~= p;
-        return paths ~ options.projectPath;
+        auto allPaths = paths ~ options.projectPath;
+        return allPaths.sorted.uniq.array;
     }
 
     // must be at the very end

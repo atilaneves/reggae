@@ -51,10 +51,13 @@ struct Flags {
 struct CompilerFlags {
     string value;
 
-    this(string value) { this.value = value; }
-    this(string[] value) {
+    this(string value) @safe @nogc pure nothrow {
+        this.value = value;
+    }
+
+    this(string[] values...) @safe pure nothrow {
         import std.string: join;
-        this.value = value.join(" ");
+        this.value = values.join(" ");
     }
 }
 

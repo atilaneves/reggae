@@ -30,6 +30,7 @@ int main(string[] args) {
         "tests.ut.reflect",
         "tests.ut.range",
         "tests.ut.ctaa",
+        "tests.ut.types",
         "tests.it.backend.binary",
         "tests.it.buildgen.arbitrary",
         "tests.it.buildgen.reggaefile_errors",

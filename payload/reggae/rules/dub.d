@@ -63,7 +63,7 @@ static if(isDubProject) {
         import std.typecons: No, Yes;
 
 
-        static if (__VERSION__ < 2079 || __VERSION__ >= 2081) {
+        static if (__VERSION__ < 2079 || (__VERSION__ >= 2081 && __VERSION__ < 2084)) {
             // these dmd versions have a bug pertaining to separate compilation and __traits(getUnitTests),
             // we default here to compiling all-at-once for the unittest build
             enum compilationMode = CompilationMode.all;

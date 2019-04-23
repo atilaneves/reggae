@@ -3,7 +3,7 @@ module tests.it.runtime.user_vars;
 import tests.it.runtime;
 
 
-immutable reggaefileStr = q{
+enum reggaefileStr = q{
         import reggae;
         static if(userVars.get("1st", false))
             mixin build!(Target("1st.txt", "touch $out"));

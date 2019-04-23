@@ -16,6 +16,15 @@ struct AssocList(K, V) {
     import std.array: empty, front;
 
     AssocEntry!(K, V)[] entries;
+    /**
+       Workaround for weird CTFE bug
+     */
+    private bool _isEmpty;
+
+    this(AssocEntry!(K, V)[] entries) pure {
+        this.entries = entries;
+        _isEmpty = entries.empty;
+    }
 
     const(V) opIndex(in K key) pure const nothrow {
         auto res = entries.find!(a => a.key == key);
@@ -29,6 +38,8 @@ struct AssocList(K, V) {
 
     T get(T)(in K key, T defaultValue) pure const {
         import std.conv: to;
+        // workaround for a bug
+        if(__ctfe && _isEmpty) return defaultValue;
         auto res = entries.find!(a => a.key == key);
         return res.empty ? defaultValue : res.front.value.to!T;
     }

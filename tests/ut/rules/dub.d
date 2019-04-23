@@ -63,7 +63,7 @@ unittest {
                                 Command(CommandType.compile,
                                         assocList(
                                              [
-                                                 assocEntry("includes", ["-Isource", "-I/tmp/proj"]),
+                                                 assocEntry("includes", ["-I/tmp/proj", "-Isource"]),
                                                  assocEntry("flags", ["-m64", "-g", "-debug"]),
                                                  assocEntry("stringImports", empty),
                                                  assocEntry("DEPFILE", ["source/luad.o.dep"])

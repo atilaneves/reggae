@@ -47,7 +47,7 @@ version(minimal) {
                               CompilationMode.all);
 
     //the cucumber test target
-    enum cuke = Target.phony("cuke", "cd $project && cucumber", [main]);
+    //enum cuke = Target.phony("cuke", "cd $project && cucumber", [main]);
 
     mixin build!(main, ut); //optional(cuke));
 }

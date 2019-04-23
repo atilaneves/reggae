@@ -39,7 +39,7 @@ static if(isDubProject) {
         import std.string: split;
 
         enum config = "default";
-        const dubInfo = configToDubInfo[config];
+        enum dubInfo = configToDubInfo[config];
         enum targetName = dubInfo.targetName;
         enum linkerFlags = dubInfo.mainLinkerFlags ~ linkerFlags.value.split(" ");
         return dubTarget(

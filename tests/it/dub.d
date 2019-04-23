@@ -10,6 +10,7 @@ unittest {
     import std.algorithm: find;
     import std.format: format;
     import std.process;
+    import std.array: replace;
 
     const string[string] env = null;
     Config config = Config.none;
@@ -49,7 +50,7 @@ unittest {
         if(ret.status != 0)
             throw new Exception("Could not call dub describe:\n" ~ ret.output);
 
-        ret.output.find("{").shouldBeSameJsonAs(
+        ret.output.find("{").replace("/", `\/`).shouldBeSameJsonAs(
             import("foobar.json").format(testPath, testPath, testPath, testPath, testPath,
                                          testPath, testPath, testPath, testPath, testPath, testPath));
     }

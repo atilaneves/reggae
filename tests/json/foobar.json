@@ -1,199 +1,209 @@
 {
-    "rootPackage": "foo",
-    "configuration": "application",
-    "buildType": "debug",
-    "compiler": "dmd",
     "architecture": [
         "x86_64"
+    ],
+    "buildType": "debug",
+    "compiler": "dmd",
+    "configuration": "application",
+    "packages": [
+        {
+            "active": true,
+            "authors": [],
+            "buildRequirements": [],
+            "configuration": "application",
+            "copyFiles": [],
+            "copyright": "",
+            "debugVersions": [],
+            "dependencies": [
+                "bar"
+            ],
+            "description": "",
+            "dflags": [],
+            "extraDependencyFiles": [],
+            "files": [
+                {
+                    "path": "source\/app.d",
+                    "role": "source"
+                }
+            ],
+            "homepage": "",
+            "importPaths": [
+                "source\/"
+            ],
+            "lflags": [],
+            "libs": [],
+            "license": "",
+            "mainSourceFile": "source\/app.d",
+            "name": "foo",
+            "options": [],
+            "path": "%s\/",
+            "postBuildCommands": [],
+            "postGenerateCommands": [],
+            "postRunCommands": [],
+            "preBuildCommands": [],
+            "preGenerateCommands": [],
+            "preRunCommands": [],
+            "stringImportPaths": [],
+            "targetFileName": "foo",
+            "targetName": "foo",
+            "targetPath": "",
+            "targetType": "executable",
+            "version": "~master",
+            "versions": [
+                "lefoo"
+            ],
+            "workingDirectory": ""
+        },
+        {
+            "active": true,
+            "authors": [],
+            "buildRequirements": [],
+            "configuration": "library",
+            "copyFiles": [],
+            "copyright": "",
+            "debugVersions": [],
+            "dependencies": [],
+            "description": "",
+            "dflags": [],
+            "extraDependencyFiles": [],
+            "files": [
+                {
+                    "path": "source\/bar.d",
+                    "role": "source"
+                }
+            ],
+            "homepage": "",
+            "importPaths": [
+                "source\/"
+            ],
+            "lflags": [],
+            "libs": [],
+            "license": "",
+            "mainSourceFile": "",
+            "name": "bar",
+            "options": [],
+            "path": "%s\/bar\/",
+            "postBuildCommands": [],
+            "postGenerateCommands": [],
+            "postRunCommands": [],
+            "preBuildCommands": [],
+            "preGenerateCommands": [],
+            "preRunCommands": [],
+            "stringImportPaths": [],
+            "targetFileName": "libbar.a",
+            "targetName": "bar",
+            "targetPath": "",
+            "targetType": "library",
+            "version": "~master",
+            "versions": [],
+            "workingDirectory": ""
+        }
     ],
     "platform": [
         "linux",
         "posix"
     ],
-    "packages": [
-        {
-            "path": "%s/",
-            "name": "foo",
-            "version": "~master",
-            "description": "",
-            "homepage": "",
-            "authors": [],
-            "copyright": "",
-            "license": "",
-            "dependencies": [
-                "bar"
-            ],
-            "active": true,
-            "configuration": "application",
-            "targetType": "executable",
-            "targetPath": "",
-            "targetName": "foo",
-            "targetFileName": "foo",
-            "workingDirectory": "",
-            "mainSourceFile": "source/app.d",
-            "dflags": [],
-            "lflags": [],
-            "libs": [],
-            "copyFiles": [],
-            "versions": ["lefoo"],
-            "debugVersions": [],
-            "importPaths": [
-                "source/"
-            ],
-            "stringImportPaths": [],
-            "preGenerateCommands": [],
-            "postGenerateCommands": [],
-            "preBuildCommands": [],
-            "postBuildCommands": [],
-            "buildRequirements": [],
-            "options": [],
-            "files": [
-                {
-                    "role": "source",
-                    "path": "source/app.d"
-                }
-            ]
-        },
-        {
-            "path": "%s/bar/",
-            "name": "bar",
-            "version": "~master",
-            "description": "",
-            "homepage": "",
-            "authors": [],
-            "copyright": "",
-            "license": "",
-            "dependencies": [],
-            "active": true,
-            "configuration": "library",
-            "targetType": "library",
-            "targetPath": "",
-            "targetName": "bar",
-            "targetFileName": "libbar.a",
-            "workingDirectory": "",
-            "mainSourceFile": "",
-            "dflags": [],
-            "lflags": [],
-            "libs": [],
-            "copyFiles": [],
-            "versions": [],
-            "debugVersions": [],
-            "importPaths": [
-                "source/"
-            ],
-            "stringImportPaths": [],
-            "preGenerateCommands": [],
-            "postGenerateCommands": [],
-            "preBuildCommands": [],
-            "postBuildCommands": [],
-            "buildRequirements": [],
-            "options": [],
-            "files": [
-                {
-                    "role": "source",
-                    "path": "source/bar.d"
-                }
-            ]
-        }
-    ],
+    "rootPackage": "foo",
     "targets": [
         {
-            "rootPackage": "foo",
-            "packages": [
-                "foo"
-            ],
-            "rootConfiguration": "application",
             "buildSettings": {
-                "targetType": 2,
-                "targetPath": "%s",
-                "targetName": "foo",
-                "workingDirectory": "",
-                "mainSourceFile": "%s/source/app.d",
+                "copyFiles": [],
+                "debugVersionFilters": [],
+                "debugVersions": [],
                 "dflags": [],
+                "extraDependencyFiles": [],
+                "importFiles": [],
+                "importPaths": [
+                    "%s\/source\/",
+                    "%s\/bar\/source\/"
+                ],
                 "lflags": [],
                 "libs": [],
                 "linkerFiles": [
-                    "%s/bar/libbar.a"
+                    "%s\/bar\/libbar.a"
                 ],
+                "mainSourceFile": "%s\/source\/app.d",
+                "options": {},
+                "postBuildCommands": [],
+                "postGenerateCommands": [],
+                "postRunCommands": [],
+                "preBuildCommands": [],
+                "preGenerateCommands": [],
+                "preRunCommands": [],
+                "requirements": {},
                 "sourceFiles": [
-                    "%s/source/app.d"
+                    "%s\/source\/app.d"
                 ],
-                "copyFiles": [],
+                "stringImportFiles": [],
+                "stringImportPaths": [],
+                "targetName": "foo",
+                "targetPath": "%s",
+                "targetType": 2,
+                "versionFilters": [],
                 "versions": [
                     "lefoo",
                     "Have_foo",
                     "Have_bar"
                 ],
-                "debugVersions": [],
-                "importPaths": [
-                    "%s/source/",
-                    "%s/bar/source/"
-                ],
-                "stringImportPaths": [],
-                "importFiles": [],
-                "stringImportFiles": [],
-                "preGenerateCommands": [],
-                "postGenerateCommands": [],
-                "preBuildCommands": [],
-                "postBuildCommands": [],
-                "requirements": [],
-                "options": [
-                    "debugMode",
-                    "debugInfo",
-                    "warningsAsErrors"
-                ]
+                "workingDirectory": ""
             },
             "dependencies": [
                 "bar"
             ],
             "linkDependencies": [
                 "bar"
-            ]
+            ],
+            "packages": [
+                "foo"
+            ],
+            "rootConfiguration": "application",
+            "rootPackage": "foo"
         },
         {
-            "rootPackage": "bar",
-            "packages": [
-                "bar"
-            ],
-            "rootConfiguration": "library",
             "buildSettings": {
-                "targetType": 6,
-                "targetPath": "%s/bar",
-                "targetName": "bar",
-                "workingDirectory": "",
-                "mainSourceFile": "",
+                "copyFiles": [],
+                "debugVersionFilters": [],
+                "debugVersions": [],
                 "dflags": [],
+                "extraDependencyFiles": [],
+                "importFiles": [],
+                "importPaths": [
+                    "%s\/bar\/source\/"
+                ],
                 "lflags": [],
                 "libs": [],
                 "linkerFiles": [],
+                "mainSourceFile": "",
+                "options": {},
+                "postBuildCommands": [],
+                "postGenerateCommands": [],
+                "postRunCommands": [],
+                "preBuildCommands": [],
+                "preGenerateCommands": [],
+                "preRunCommands": [],
+                "requirements": {},
                 "sourceFiles": [
-                    "%s/bar/source/bar.d"
+                    "%s\/bar\/source\/bar.d"
                 ],
-                "copyFiles": [],
+                "stringImportFiles": [],
+                "stringImportPaths": [],
+                "targetName": "bar",
+                "targetPath": "%s\/bar",
+                "targetType": 6,
+                "versionFilters": [],
                 "versions": [
                     "lefoo",
                     "Have_bar"
                 ],
-                "debugVersions": [],
-                "importPaths": [
-                    "%s/bar/source/"
-                ],
-                "stringImportPaths": [],
-                "importFiles": [],
-                "stringImportFiles": [],
-                "preGenerateCommands": [],
-                "postGenerateCommands": [],
-                "preBuildCommands": [],
-                "postBuildCommands": [],
-                "requirements": [],
-                "options": [
-                    "debugMode",
-                    "debugInfo",
-                    "warningsAsErrors"
-                ]
+                "workingDirectory": ""
             },
             "dependencies": [],
-            "linkDependencies": []
+            "linkDependencies": [],
+            "packages": [
+                "bar"
+            ],
+            "rootConfiguration": "library",
+            "rootPackage": "bar"
         }
     ]
 }

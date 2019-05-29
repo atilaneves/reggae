@@ -90,12 +90,16 @@ static if(isDubProject) {
         auto actualCompilerFlags = compilerFlags.value;
         if("unittest" !in configToDubInfo) actualCompilerFlags ~= " -unittest";
 
-        const hasMain = configToDubInfo[config].packages[0].mainSourceFile != "";
+        const dubInfo = configToDubInfo[config];
+        const hasMain = dubInfo.packages[0].mainSourceFile != "";
         const extraLinkerFlags = hasMain ? [] : ["-main"];
         const actualLinkerFlags = extraLinkerFlags ~ linkerFlags.value.split(" ");
+        const name = dubInfo.targetName == configToDubInfo["default"].targetName
+            ? targetName(TargetType.executable, "ut")
+            : dubInfo.targetName;
 
-        return dubTarget(targetName(TargetType.executable, "ut"),
-                         configToDubInfo[config],
+        return dubTarget(name,
+                         dubInfo,
                          actualCompilerFlags,
                          actualLinkerFlags,
                          Yes.main,

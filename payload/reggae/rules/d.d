@@ -81,6 +81,7 @@ Target[] dlangObjectFiles(in string[] srcFiles,
                           in string flags = "",
                           in string[] importPaths = [],
                           in string[] stringImportPaths = [],
+                          Target[] implicits = [],
                           in string projDir = "$project")
     @safe
 {
@@ -93,7 +94,7 @@ Target[] dlangObjectFiles(in string[] srcFiles,
             ? &dlangObjectFilesTogether
             : &dlangObjectFilesPerPackage;
 
-    return func(srcFiles, flags, importPaths, stringImportPaths, projDir);
+    return func(srcFiles, flags, importPaths, stringImportPaths, implicits, projDir);
 }
 
 /// Generate object files for D sources, compiling the whole package together.
@@ -101,6 +102,7 @@ Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
                                     in string flags = "",
                                     in string[] importPaths = [],
                                     in string[] stringImportPaths = [],
+                                    Target[] implicits = [],
                                     in string projDir = "$project")
     @trusted pure
 {
@@ -115,7 +117,8 @@ Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
     }
     return srcFiles.byPackage.map!(a => Target(a[0].packagePath.objFileName,
                                                command(a),
-                                               a.map!(a => Target(a)).array)).array;
+                                               a.map!(a => Target(a)).array,
+                                               implicits)).array;
 }
 
 /// Generate object files for D sources, compiling each module separately
@@ -123,6 +126,7 @@ Target[] dlangObjectFilesPerModule(in string[] srcFiles,
                                    in string flags = "",
                                    in string[] importPaths = [],
                                    in string[] stringImportPaths = [],
+                                   Target[] implicits = [],
                                    in string projDir = "$project")
     @trusted pure
 {
@@ -130,6 +134,7 @@ Target[] dlangObjectFilesPerModule(in string[] srcFiles,
                                          const Flags(flags),
                                          const ImportPaths(importPaths),
                                          const StringImportPaths(stringImportPaths),
+                                         implicits,
                                          projDir)).array;
 }
 
@@ -138,13 +143,14 @@ Target[] dlangObjectFilesTogether(in string[] srcFiles,
                                   in string flags = "",
                                   in string[] importPaths = [],
                                   in string[] stringImportPaths = [],
+                                  Target[] implicits = [],
                                   in string projDir = "$project")
     @trusted pure
 {
 
     if(srcFiles.empty) return [];
     auto command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
-    return [Target(srcFiles[0].packagePath.objFileName, command, srcFiles.map!(a => Target(a)).array)];
+    return [Target(srcFiles[0].packagePath.objFileName, command, srcFiles.map!(a => Target(a)).array, implicits)];
 }
 
 

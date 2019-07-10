@@ -49,10 +49,11 @@ Target objectFile(in SourceFile srcFile,
                   in Flags flags = Flags(),
                   in ImportPaths includePaths = ImportPaths(),
                   in StringImportPaths stringImportPaths = StringImportPaths(),
+                  Target[] implicits = [],
                   in string projDir = "$project") @safe pure {
 
     auto cmd = compileCommand(srcFile.value, flags.value, includePaths.value, stringImportPaths.value, projDir);
-    return Target(srcFile.value.objFileName, cmd, [Target(srcFile.value)]);
+    return Target(srcFile.value.objFileName, cmd, [Target(srcFile.value)], implicits);
 }
 
 /**

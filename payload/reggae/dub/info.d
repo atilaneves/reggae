@@ -191,7 +191,7 @@ struct DubInfo {
             }
         }
 
-        auto packageTargets = compileFunc()(files, flags, importPaths, stringImportPaths, projDir);
+        auto packageTargets = compileFunc()(files, flags, importPaths, stringImportPaths, [], projDir);
 
         // e.g. /foo/bar -> foo/bar
         const deabsWorkingDir = options.workingDir.deabsolutePath;

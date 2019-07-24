@@ -143,9 +143,9 @@ private bool byOptionalKey(JSONValue json, in string key, bool def) {
 //std.json has no conversion to bool
 private bool boolean(JSONValue json) @trusted {
     import std.exception: enforce;
-    enforce!JSONException(json.type == JSON_TYPE.TRUE || json.type == JSON_TYPE.FALSE,
+    enforce!JSONException(json.type == JSONType.true_ || json.type == JSONType.false_,
                           "JSONValue is not a boolean");
-    return json.type == JSON_TYPE.TRUE;
+    return json.type == JSONType.true_;
 }
 
 private string getOptional(JSONValue json, in string key) @trusted {

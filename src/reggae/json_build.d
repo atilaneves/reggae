@@ -116,7 +116,7 @@ private Build jsonToBuildImpl(in string projectPath, in string jsonString) {
 }
 
 private long version_(in JSONValue json) {
-    return json.type == JSON_TYPE.OBJECT
+    return json.type == JSONType.object
         ? json.object["version"].integer
         : 0;
 }
@@ -284,7 +284,7 @@ private const(Options) jsonToOptionsImpl(in Options options,
     import std.exception;
     import std.conv;
 
-    assert(defaultOptionsObj.type == JSON_TYPE.OBJECT,
+    assert(defaultOptionsObj.type == JSONType.object,
            text("jsonToOptions requires an object, not ", defaultOptionsObj.type));
 
     Options defaultOptions;
@@ -302,9 +302,9 @@ private const(Options) jsonToOptionsImpl(in Options options,
                 if(member in defaultOptionsObj) {
                     static if(is(T == bool)) {
                         mixin(`immutable type = defaultOptionsObj.object["` ~ member ~ `"].type;`);
-                        if(type == JSON_TYPE.TRUE)
+                        if(type == JSONType.true_)
                             mixin("defaultOptions." ~ member ~ ` = true;`);
-                        else if(type == JSON_TYPE.FALSE)
+                        else if(type == JSONType.false_)
                             mixin("defaultOptions." ~ member ~ ` = false;`);
                     }
                     else

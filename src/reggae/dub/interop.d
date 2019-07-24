@@ -238,7 +238,7 @@ private void dubFetch(T)(auto ref T output,
     import std.array: join, replace;
     import std.stdio: writeln;
     import std.path: buildPath;
-    import std.json: parseJSON, JSON_TYPE;
+    import std.json: parseJSON, JSONType;
     import std.file: readText;
 
     const fileName = buildPath(options.projectPath, "dub.selections.json");
@@ -249,7 +249,7 @@ private void dubFetch(T)(auto ref T output,
     foreach(dubPackage, versionJson; versions.object) {
 
         // skip the ones with a defined path
-        if(versionJson.type != JSON_TYPE.STRING) continue;
+        if(versionJson.type != JSONType.string) continue;
 
         // versions are usually `==1.2.3`, so strip the sign
         const version_ = versionJson.str.replace("==", "");

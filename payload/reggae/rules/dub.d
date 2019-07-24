@@ -94,7 +94,12 @@ static if(isDubProject) {
         const hasMain = dubInfo.packages[0].mainSourceFile != "";
         const extraLinkerFlags = hasMain ? [] : ["-main"];
         const actualLinkerFlags = extraLinkerFlags ~ linkerFlags.value.split(" ");
-        const name = dubInfo.targetName == configToDubInfo["default"].targetName
+        const defaultTargetHasName = configToDubInfo["default"].packages.length > 0;
+        const sameNameAsDefaultTarget =
+            defaultTargetHasName
+            && dubInfo.targetName == configToDubInfo["default"].targetName;
+        const name = sameNameAsDefaultTarget
+            // don't emit two targets with the same name
             ? targetName(TargetType.executable, "ut")
             : dubInfo.targetName;
 

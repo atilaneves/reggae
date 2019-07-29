@@ -103,7 +103,7 @@ private from!"reggae.dub.info".DubInfo _getDubInfo(T)(auto ref T output,
             callDub(output, options, ["dub", "upgrade"]);
         }
 
-        DubConfigurations getConfigsImpl() {
+        DubConfigurations tryGetConfigs() {
             immutable dubBuildArgs = ["dub", "--annotate", "build", "--compiler=" ~ options.dCompiler,
                                       "--print-configs", "--build=docs"];
             immutable dubBuildOutput = callDub(output, options, dubBuildArgs, Yes.maybeNoDeps);
@@ -112,11 +112,11 @@ private from!"reggae.dub.info".DubInfo _getDubInfo(T)(auto ref T output,
 
         DubConfigurations getConfigs() {
             try {
-                return getConfigsImpl;
+                return tryGetConfigs;
             } catch(Exception _) {
                 output.log("Calling `dub fetch` since getting the configuration failed");
                 dubFetch(output, options);
-                return getConfigsImpl;
+                return tryGetConfigs;
             }
         }
 

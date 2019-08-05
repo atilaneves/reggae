@@ -306,7 +306,8 @@ private bool isExecutable(in char[] path) @trusted nothrow //TODO: @safe
         import std.internal.cstring;
         return (access(path.tempCString(), X_OK) == 0);
     } else {
-        import core.sys.windows.winbase: GetBinaryTypeW, DWORD;
+        import core.sys.windows.winbase: GetBinaryTypeW;
+        import core.sys.windows.windef: DWORD;
         import std.conv: to;
 
         DWORD type;

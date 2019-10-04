@@ -5,12 +5,12 @@ dist: trusty
 matrix:
   include:
     - d: dmd-nightly
-    - d: dmd-2.087.0
+    - d: dmd-2.088.0
+    - d: dmd-2.087.1
     - d: dmd-2.086.1
-    - d: dmd-2.084.1
+    - d: ldc-1.17.0
     - d: ldc-1.16.0
     - d: ldc-1.15.0
-    - d: ldc-1.14.0
   allow_failures:
     - d: dmd-nightly
 

@@ -2,6 +2,12 @@
 
 set -euo pipefail
 
+if [[ "$(uname)" == "Darwin" ]] ; then
+    NUM_PROC=$(sysctl -n hw.ncpu)
+else
+    NUM_PROC=$(nproc)
+fi
+
 #1st parameter is the backend to use (e.g. make, ninja)
 
 if [ "$#" -ne 1 ]; then
@@ -21,4 +27,4 @@ $COMP -ofbin/reggae -Isrc -Ipayload -Jpayload/reggae src/reggae/*.d src/reggae/d
 cd bin || exit 1
 echo "Running boostrapped reggae with backend $BACKEND"
 ./reggae -b $BACKEND --dc=$DMD ..
-$BACKEND -j`nproc`
+$BACKEND -j$NUM_PROC

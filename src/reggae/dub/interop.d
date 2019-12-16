@@ -93,6 +93,7 @@ private from!"reggae.dub.info".DubInfo _getDubInfo(T)(auto ref T output,
     import std.path: buildPath;
     import std.stdio: writeln;
     import std.typecons: Yes;
+    import std.conv: text;
 
     version(unittest)
         gDubInfos = null;
@@ -138,10 +139,19 @@ private from!"reggae.dub.info".DubInfo _getDubInfo(T)(auto ref T output,
                     // dub adds certain flags to certain configurations automatically but these flags
                     // don't know up in the output to `dub describe`. Special case them here.
 
-                    // unittest should only apply to the main package, hence [0]
-                    // this doesn't show up in `dub describe`, it's secret info that dub knows
-                    // so we have to add it manually here
-                    if(config == "unittest") gDubInfos[config].packages[0].dflags ~= " -unittest";
+                    // unittest should only apply to the main package, hence [0].
+                    // This doesn't show up in `dub describe`, it's secret info that dub knows
+                    // so we have to add it manually here.
+                    if(config == "unittest") {
+                        if(config !in gDubInfos)
+                            throw new Exception(
+                                text("Configuration `", config, "` not found in ",
+                                     () @trusted { return gDubInfos.keys; }()));
+                        if(gDubInfos[config].packages.length == 0)
+                            throw new Exception(
+                                text("No main package in `", config, "` configuration"));
+                        gDubInfos[config].packages[0].dflags ~= " -unittest";
+                    }
 
                     callPreBuildCommands(options, gDubInfos[config]);
 

@@ -32,8 +32,8 @@ languages together.  Mixing D and C/C++ is usually a bit painful, for
 instance. In the future it may include support for other statically
 compiled languages. PRs welcome!
 
-reggae is really a flexible DAG describing API that happens to good at
-building software.
+reggae is really a flexible DAG describing API that happens to be good
+at building software.
 
 Features
 --------

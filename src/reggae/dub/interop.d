@@ -153,7 +153,11 @@ private from!"reggae.dub.info".DubInfo _getDubInfo(T)(auto ref T output,
                         gDubInfos[config].packages[0].dflags ~= " -unittest";
                     }
 
-                    callPreBuildCommands(options, gDubInfos[config]);
+                    try
+                        callPreBuildCommands(options, gDubInfos[config]);
+                    catch(Exception e) {
+                        output.log("Error calling prebuild commands: ", e.msg);
+                    }
 
                     oneConfigOk = true;
 

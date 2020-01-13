@@ -12,6 +12,8 @@ DubInfo getDubInfo(in string origString) @trusted {
     import std.array;
     import std.range: iota;
     import core.exception: RangeError;
+    import std.conv: text;
+    import std.exception: enforce;
 
     string nextOpenCurly(string str) {
         return str[str.indexOf("{") .. $];
@@ -97,6 +99,9 @@ DubInfo getDubInfo(in string origString) @trusted {
                     }
                 }
             }
+
+            enforce(info.packages.length > 0,
+                    text("Parsing dub describe JSON yielded 0 dub packages"));
 
             return info;
         }

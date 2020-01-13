@@ -153,7 +153,11 @@ private from!"reggae.dub.info".DubInfo _getDubInfo(T)(auto ref T output,
                         gDubInfos[config].packages[0].dflags ~= " -unittest";
                     }
 
-                    callPreBuildCommands(options, gDubInfos[config]);
+                    try
+                        callPreBuildCommands(output, options, gDubInfos[config]);
+                    catch(Exception e) {
+                        output.log("Error calling prebuild commands: ", e.msg);
+                    }
 
                     oneConfigOk = true;
 
@@ -215,9 +219,11 @@ private string[] dubEnvArgs() {
     return environment.get("REGGAE_DUB_ARGS", "").split(" ");
 }
 
-private void callPreBuildCommands(in from!"reggae.options".Options options,
-                                  in from!"reggae.dub.json".DubInfo dubInfo)
+private void callPreBuildCommands(T)(auto ref T output,
+                                     in from!"reggae.options".Options options,
+                                     in from!"reggae.dub.json".DubInfo dubInfo)
 {
+    import reggae.io: log;
     import std.process: executeShell, Config;
     import std.string: replace;
     import std.exception: enforce;
@@ -230,10 +236,10 @@ private void callPreBuildCommands(in from!"reggae.options".Options options,
 
     if(dubInfo.packages.length == 0) return;
 
-
     foreach(const package_; dubInfo.packages) {
         foreach(const dubCommandString; package_.preBuildCommands) {
             auto cmd = dubCommandString.replace("$project", options.projectPath);
+            output.log("Executing pre-build command `", cmd, "`");
             const ret = executeShell(cmd, env, config, maxOutput, workDir);
             enforce(ret.status == 0, text("Error calling ", cmd, ":\n", ret.output));
         }
@@ -297,7 +303,6 @@ void writeDubConfig(T)(auto ref T output,
                        from!"std.stdio".File file) {
     import reggae.io: log;
     import reggae.dub.info: TargetType;
-    import std.stdio: writeln;
 
     output.log("Writing dub configuration");
 

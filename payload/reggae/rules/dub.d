@@ -84,15 +84,17 @@ static if(isDubProject) {
     {
         import reggae.dub.info: TargetType, targetName;
         import std.string: split;
+        import std.exception : enforce;
+        import std.conv: text;
 
         const config = "unittest" in configToDubInfo ? "unittest" : "default";
-
         auto actualCompilerFlags = compilerFlags.value;
         if("unittest" !in configToDubInfo) actualCompilerFlags ~= " -unittest";
-
         const dubInfo = configToDubInfo[config];
+        enforce(dubInfo.packages.length, text("No dub packages found for config '", config, "'"));
         const hasMain = dubInfo.packages[0].mainSourceFile != "";
-        const extraLinkerFlags = hasMain ? [] : ["-main"];
+        const string[] emptyStrings;
+        const extraLinkerFlags = hasMain ? emptyStrings : ["-main"];
         const actualLinkerFlags = extraLinkerFlags ~ linkerFlags.value.split(" ");
         const defaultTargetHasName = configToDubInfo["default"].packages.length > 0;
         const sameNameAsDefaultTarget =

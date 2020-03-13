@@ -429,3 +429,14 @@ unittest {
         shouldSucceed("d++");
     }
 }
+
+
+@("dub project with failing prebuild command")
+@Tags(["dub", "ninja"])
+unittest {
+    with(immutable ReggaeSandbox("dub_prebuild_oops")) {
+        runReggae("-b", "ninja", "--dflags=-g -debug")
+            .shouldThrowWithMessage(
+                "Error calling foo bar baz quux:\n/bin/sh: foo: command not found\n");
+    }
+}

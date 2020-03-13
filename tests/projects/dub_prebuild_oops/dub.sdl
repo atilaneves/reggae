@@ -1,0 +1,3 @@
+name "prebuild_oops"
+targetType "library"
+preBuildCommands "foo bar baz quux"  # designed to fail

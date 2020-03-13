@@ -1,8 +1,8 @@
 /**
    A module for providing interop between reggae and dub
 */
-
 module reggae.dub.interop;
+
 
 import reggae.from;
 
@@ -157,12 +157,14 @@ private from!"reggae.dub.info".DubInfo _getDubInfo(T)(auto ref T output,
                         callPreBuildCommands(output, options, gDubInfos[config]);
                     catch(Exception e) {
                         output.log("Error calling prebuild commands: ", e.msg);
+                        throw e;
                     }
 
                     oneConfigOk = true;
 
                 } catch(Exception ex) {
-                    if(dubDescribeFailure !is null) dubDescribeFailure = ex;
+                    output.log("Catching exception in calling le dub describe");
+                    if(dubDescribeFailure is null) dubDescribeFailure = ex;
                 }
             }
 
@@ -172,7 +174,11 @@ private from!"reggae.dub.info".DubInfo _getDubInfo(T)(auto ref T output,
             gDubInfos["default"] = gDubInfos[configs.default_];
        }
 
-        if(!oneConfigOk) throw dubDescribeFailure;
+        if(!oneConfigOk) {
+            assert(dubDescribeFailure !is null,
+                   "Internal error: no configurations worked and no exception to throw");
+            throw dubDescribeFailure;
+        }
     }
 
     return gDubInfos["default"];

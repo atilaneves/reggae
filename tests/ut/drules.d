@@ -82,18 +82,3 @@ void testObjectFilesEmpty() {
     dlangObjectFilesPerPackage([]).shouldEqual([]);
     dlangObjectFilesPerModule([]).shouldEqual([]);
 }
-
-void testObjectFilesImplicitTargets() {
-    auto build = Build(dlangObjectFilesPerPackage(["foo.d"],
-                                                  "-O",
-                                                  ["include"],
-                                                  [],
-                                                  [Target("f.json")]));
-
-    build.shouldEqual(Build(Target("foo.o",
-                                   compileCommand("foo.d",
-                                                  "-O",
-                                                  ["include"]),
-                                   [Target("path/to/src/foo.d")],
-                                   [Target("f.json")])));
-}

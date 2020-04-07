@@ -40,7 +40,7 @@ unittest {
     }
 }
 
-@ShouldFail("Weird linker errors")
+
 @("dub project with no reggaefile and prebuild command")
 @Tags(["dub", "ninja"])
 unittest {
@@ -50,6 +50,7 @@ unittest {
         shouldSucceed("ut");
     }
 }
+
 
 @("dub project with postbuild command")
 @Tags(["dub", "ninja"])

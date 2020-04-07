@@ -5,29 +5,39 @@ public import unit_threaded;
 
 immutable string origPath;
 
-shared static this() {
+shared static this() nothrow {
     import std.file: mkdirRecurse, rmdirRecurse, getcwd, dirEntries, SpanMode, exists, isDir;
     import std.path: buildNormalizedPath, absolutePath;
     import std.algorithm: map, find;
 
-    auto paths = [".", ".."].map!(a => buildNormalizedPath(getcwd, a))
-        .find!(a => buildNormalizedPath(a, "dub.json").exists);
-    assert(!paths.empty, "Error: Cannot find reggae top dir using dub.json");
-    origPath = paths.front.absolutePath;
+    try {
+        auto paths = [".", ".."].map!(a => buildNormalizedPath(getcwd, a))
+            .find!(a => buildNormalizedPath(a, "dub.json").exists);
+        assert(!paths.empty, "Error: Cannot find reggae top dir using dub.json");
+        origPath = paths.front.absolutePath;
 
-    if(testsPath.exists) {
-        writelnUt("[IT] Removing old test path ", testsPath);
-        foreach(entry; dirEntries(testsPath, SpanMode.shallow)) {
-            if(isDir(entry.name)) {
-                rmdirRecurse(entry);
+        if(testsPath.exists) {
+            writelnUt("[IT] Removing old test path ", testsPath);
+            foreach(entry; dirEntries(testsPath, SpanMode.shallow)) {
+                if(isDir(entry.name)) {
+                    rmdirRecurse(entry);
+                }
             }
         }
+
+        writelnUt("[IT] Creating new test path ", testsPath);
+        mkdirRecurse(testsPath);
+
+        buildDCompile();
+    } catch(Exception e) {
+        import std.stdio: stderr;
+        try
+            stderr.writeln("Shared static ctor failed: ", e);
+        catch(Exception e2) {
+            import core.stdc.stdio;
+            printf("Shared static ctor failed\n");
+        }
     }
-
-    writelnUt("[IT] Creating new test path ", testsPath);
-    mkdirRecurse(testsPath);
-
-    buildDCompile();
 }
 
 private void buildDCompile() {
@@ -41,16 +51,16 @@ private void buildDCompile() {
     import std.process: execute, Config;
     import std.array: join;
     import reggae.file;
+    import reggae.rules.common: exeExt;
 
     enum fileNames = ["dcompile.d", "dependencies.d"];
 
-    const exeName = buildPath("tmp", "dcompile");
+    const exeName = buildPath("tmp", "dcompile", exeExt);
     immutable needToRecompile =
         !exeName.exists ||
         fileNames.
-        any!(a => buildPath(origPath, "payload", "reggae", a).
-        newerThan(buildPath(testsPath, a)));
-
+            any!(a => buildPath(origPath, "payload", "reggae", a).
+                          newerThan(buildPath(testsPath, a)));
     if(!needToRecompile)
         return;
 

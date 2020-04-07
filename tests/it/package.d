@@ -104,20 +104,14 @@ string projectPath(in string name) {
     return inOrigPath("tests", "projects", name);
 }
 
-version(Posix)
-    extern(C) char* mkdtemp(char*);
-else
-    char* mkdtemp(char*) {
-        throw new Exception("No mkdtemp function on Windows");
-    }
-
 string newTestDir() {
+    import unit_threaded.integration: mkdtemp;
     import std.conv;
     import std.path;
     import std.algorithm;
 
     char[100] template_;
-    std.algorithm.copy(buildPath(testsPath, "XXXXXX") ~ '\0', template_[]);
+    std.algorithm.copy(buildPath(testsPath, "YYYYYYXXXXXX") ~ '\0', template_[]);
     auto ret = mkdtemp(&template_[0]).to!string;
 
     return ret.absolutePath;

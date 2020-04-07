@@ -12,8 +12,14 @@ enum copyFileName = "copy.txt";
 
 
 private Build binaryBuild() {
-    mixin build!(Target(copyFileName, `cp $in $out`, Target(origFileName)),
+    version(Windows)
+        enum cmd = `copy $in $out`;
+    else
+        enum cmd = `cp $in $out`;
+
+    mixin build!(Target(copyFileName, cmd, Target(origFileName)),
                  optional(Target.phony(`opt`, `echo Optional!`)));
+
     return buildFunc();
 }
 

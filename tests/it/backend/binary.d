@@ -59,6 +59,7 @@ private struct FakeFile {
     import std.range;
     import std.algorithm: map;
     import std.conv: to;
+    import std.string: splitLines;
 
     enum fooSrcName = "foo.txt";
     enum barSrcName = "bar.txt";
@@ -77,15 +78,18 @@ private struct FakeFile {
 
     auto foo = Target("$project/foo", "echo foo >> $out", [], [Target(fooSrcName)]);
     auto bar = Target("$project/bar", "echo bar >> $out", [], [Target(barSrcName)]);
-    auto mids = iota(10).map!(a => Target.phony("$project/" ~a.to!string, "echo " ~ a.to!string, [foo, bar])).array;
+    auto mids = 10.iota
+        .map!(a => Target.phony("$project/" ~a.to!string, "echo " ~ a.to!string, [foo, bar]))
+        .array
+        ;
     auto top = Target.phony("top", "echo top", mids);
 
     auto binary = Binary(Build(top), getOptions(["reggae", "--export", "-b", "binary"]));
     binary.run(["./build"]);
 
     // only one line -> rule only called once
-    readText("foo").chomp.split("\n").shouldEqual(["foo"]);
-    readText("bar").chomp.split("\n").shouldEqual(["bar"]);
+    readText("foo").chomp.splitLines.shouldEqual(["foo"]);
+    readText("bar").chomp.splitLines.shouldEqual(["bar"]);
 }
 
 

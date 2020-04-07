@@ -40,6 +40,11 @@ shared static this() nothrow {
     }
 }
 
+private string dcompileName() @safe pure nothrow {
+    import reggae.rules.common: exeExt;
+    return "dcompile" ~ exeExt;
+}
+
 private void buildDCompile() {
     import std.meta: aliasSeqOf;
     import std.exception: enforce;
@@ -55,7 +60,7 @@ private void buildDCompile() {
 
     enum fileNames = ["dcompile.d", "dependencies.d"];
 
-    const exeName = buildPath("tmp", "dcompile", exeExt);
+    const exeName = buildPath("tmp", dcompileName);
     immutable needToRecompile =
         !exeName.exists ||
         fileNames.
@@ -221,35 +226,39 @@ void doTestBuildFor(string module_ = __MODULE__)(ref Options options, string[] a
 }
 
 void prepareTestBuild(string module_ = __MODULE__)(ref Options options) {
+    import std.file: mkdirRecurse;
+    import std.string;
+    import std.path;
+    import std.algorithm: canFind;
+    import reggae.config;
+
     version(Windows) {
-        assert(false);
-    } else {
-        import std.file: symlink, mkdirRecurse;
-        import std.string;
-        import std.path;
-        import std.algorithm: canFind;
-        import reggae.config;
-
-        mkdirRecurse(buildPath(options.workingDir, ".reggae"));
-        symlink(buildPath(testsPath, "dcompile"), buildPath(options.workingDir, ".reggae", "dcompile"));
-
-        // copy the project files over, that way the tests can modify them
-        immutable projectsPath = buildPath(origPath, "tests", "projects");
-        immutable projectName = module_.split(".")[0];
-        immutable projectPath = buildPath(projectsPath, projectName);
-
-        // change the directory of the project to be where the build dir is
-        options.projectPath = buildPath(origPath, (options.workingDir).relativePath(origPath));
-        auto modulePath = buildPath(projectsPath, module_.split(".").join(dirSeparator));
-
-        // copy all project files over to the build directory
-        if(module_.canFind("reggaefile")) {
-            copyProjectFiles(projectPath, options.workingDir);
-            options.projectPath = options.workingDir;
+        static void symlink(in string org, in string dst) {
+            import std.file: copy;
+            copy(org, dst);
         }
+    } else
+          import std.file: symlink;
 
-        setOptions(options);
+    mkdirRecurse(buildPath(options.workingDir, ".reggae"));
+    symlink(buildPath(testsPath, dcompileName), buildPath(options.workingDir, ".reggae", dcompileName));
+
+    // copy the project files over, that way the tests can modify them
+    immutable projectsPath = buildPath(origPath, "tests", "projects");
+    immutable projectName = module_.split(".")[0];
+    immutable projectPath = buildPath(projectsPath, projectName);
+
+    // change the directory of the project to be where the build dir is
+    options.projectPath = buildPath(origPath, (options.workingDir).relativePath(origPath));
+    auto modulePath = buildPath(projectsPath, module_.split(".").join(dirSeparator));
+
+    // copy all project files over to the build directory
+    if(module_.canFind("reggaefile")) {
+        copyProjectFiles(projectPath, options.workingDir);
+        options.projectPath = options.workingDir;
     }
+
+    setOptions(options);
 }
 
 void justDoTestBuild(string module_ = __MODULE__)(in Options options, string[] args = []) {

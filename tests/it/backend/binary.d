@@ -65,7 +65,7 @@ private struct FakeFile {
     import std.range;
     import std.algorithm: map;
     import std.conv: to;
-    import std.string: splitLines;
+    import std.string: splitLines, stripRight;
 
     enum fooSrcName = "foo.txt";
     enum barSrcName = "bar.txt";
@@ -94,8 +94,8 @@ private struct FakeFile {
     binary.run(["./build"]);
 
     // only one line -> rule only called once
-    readText("foo").chomp.splitLines.shouldEqual(["foo"]);
-    readText("bar").chomp.splitLines.shouldEqual(["bar"]);
+    readText("foo").splitLines.map!stripRight.shouldEqual(["foo"]);
+    readText("bar").splitLines.map!stripRight.shouldEqual(["bar"]);
 }
 
 

@@ -74,4 +74,4 @@ test_script:
  - echo %DC%
  - echo %PATH%
  - '%DC% --version'
- - dub test
+ - dub test -- tests.it.runtime.dub

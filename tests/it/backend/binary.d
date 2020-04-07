@@ -112,7 +112,12 @@ private struct FakeFile {
 @("List of targets with $project in the name") unittest {
     import std.path;
 
-    auto build = Build(optional(Target("$project/../druntime/" ~ copyFileName, `cp $in $out`, Target(origFileName))),
+    version(Windows)
+        enum cmd = `copy $in $out`;
+    else
+        enum cmd = `cp $in $out`;
+
+    auto build = Build(optional(Target(buildPath("$project", "..", "druntime", copyFileName), cmd, Target(origFileName))),
                        Target.phony(`opt`, `echo Optional!`));
     auto file = FakeFile();
     auto binary = Binary(build, getOptions(["reggae", "-b", "binary"]), file);

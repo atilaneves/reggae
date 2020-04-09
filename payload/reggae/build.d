@@ -178,11 +178,21 @@ string realTargetPath(in string dirName, in string output) @trusted pure {
 //replace $builddir with the current directory
 string expandBuildDir(in string output) @trusted pure {
     import std.path: buildNormalizedPath;
-    import std.algorithm;
-    return output.
-        splitter.
-        map!(a => a.canFind(gBuilddir) ? a.replace(gBuilddir, ".").buildNormalizedPath : a).
-        join(" ");
+    import std.algorithm: map, splitter;
+    import std.string: join, replace;
+
+    string fix(string path) {
+        version(Windows)
+            return path.replace(`\C:`, `\C`);
+        else
+            return path;
+    }
+
+    return output
+        .splitter
+        .map!(a => a.canFind(gBuilddir) ? a.replace(gBuilddir, ".").buildNormalizedPath : a)
+        .map!fix
+        .join(" ");
 }
 
  enum isTarget(alias T) =

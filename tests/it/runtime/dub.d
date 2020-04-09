@@ -54,7 +54,7 @@ unittest {
 
 
 @("postbuild")
-@Tags(["dub", "ninja"])
+@Tags(["dub", "ninja", "posix"])
 unittest {
     with(immutable ReggaeSandbox("dub_postbuild")) {
         runReggae("-b", "ninja");
@@ -395,6 +395,7 @@ unittest {
 }
 
 
+// See #73 for "posix"
 @("staticLibrary.implicit")
 @Tags(["dub", "ninja", "posix"])
 unittest {

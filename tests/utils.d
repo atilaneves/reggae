@@ -18,6 +18,7 @@ auto shouldExecuteOk(in string[] args, in WorkDir workDir,
     import std.process;
     import std.array;
     import std.string;
+    import std.algorithm: map;
 
     const string[string] env = null;
     Config config = Config.none;
@@ -25,7 +26,7 @@ auto shouldExecuteOk(in string[] args, in WorkDir workDir,
 
     immutable res = execute(args, env, config, maxOutput, workDir.value);
 
-    auto lines = res.output.chomp.split("\n");
+    auto lines = res.output.chomp.splitLines;
     if(res.status != 0)
         throw new UnitTestException(["Could not execute '" ~ args.join(" ") ~
                                      "' in path " ~ workDir.value ~ ":"] ~

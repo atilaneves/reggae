@@ -394,8 +394,23 @@ private:
     }
 
     string buildLine(Target target) @safe pure const {
-        import std.array: join;
-        immutable outputs = target.expandOutputs(_projectPath).join(" ");
+        import std.algorithm: map;
+
+        string fix(string path) {
+            version(Windows) {
+                import std.path: isRooted;
+                return path.isRooted && path.length >=2 && path[1] == ':'
+                    ? path[0] ~ "$:" ~ path[2..$]  // ninja doesn't like colons in the path
+                    : path;
+            } else
+                  return path;
+        }
+
+        const outputs = target
+            .expandOutputs(_projectPath)
+            .map!fix
+            .join(" ");
+
         return "build " ~ outputs ~ ": ";
     }
 

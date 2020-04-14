@@ -163,7 +163,7 @@ private from!"reggae.dub.info".DubInfo _getDubInfo(T)(auto ref T output,
                     oneConfigOk = true;
 
                 } catch(Exception ex) {
-                    output.log("Catching exception in calling le dub describe");
+                    output.log("ERROR: exception in calling dub describe: ", ex.msg);
                     if(dubDescribeFailure is null) dubDescribeFailure = ex;
                 }
             }

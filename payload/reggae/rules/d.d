@@ -49,6 +49,7 @@ Target[] dlangObjectsPerPackage(
         compilerFlags.value,
         importPaths.value,
         stringImportPaths.value,
+        [], // implicits
         projectDir.value,
     );
 }

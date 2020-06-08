@@ -110,6 +110,7 @@ Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
 {
 
     if(srcFiles.empty) return [];
+
     auto command(in string[] files) {
         return compileCommand(files[0].packagePath ~ ".d",
                               flags,
@@ -117,10 +118,29 @@ Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
                               stringImportPaths,
                               projDir);
     }
-    return srcFiles.byPackage.map!(a => Target(a[0].packagePath.objFileName,
-                                               command(a),
-                                               a.map!(a => Target(a)).array,
-                                               implicits)).array;
+
+    // the object file for a D package containing pkgFiles
+    static string outputFileName(in string[] pkgFiles) {
+        import std.path: baseName;
+        import std.algorithm.iteration: map;
+        import std.array: join;
+
+        const path = packagePath(pkgFiles[0]) ~ "_" ~
+            pkgFiles
+            .map!(a => baseName(a, ".d"))
+            .join("_")
+            ;
+
+        return objFileName(path);
+    }
+
+    return srcFiles
+        .byPackage
+        .map!(a => Target(outputFileName(a),
+                          command(a),
+                          a.map!(a => Target(a)).array,
+                          implicits))
+        .array;
 }
 
 /// Generate object files for D sources, compiling each module separately

@@ -5,12 +5,15 @@ import std.range: isInputRange;
 
 
 string[][] byPackage(R)(R files) if(isInputRange!R) {
+
     string[][string] packageToFiles;
+
     foreach(file; files) {
         auto package_ = file.filePackage;
         if(package_ !in packageToFiles) packageToFiles[package_] = [];
         packageToFiles[package_] ~= file;
     }
+
     return () @trusted { return packageToFiles.values; }();
 }
 

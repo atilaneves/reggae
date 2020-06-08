@@ -59,7 +59,7 @@ unittest {
 
     string[] empty;
 
-    auto compileTarget = Target("source/luad.o",
+    auto compileTarget = Target("source/luad_foo.o",
                                 Command(CommandType.compile,
                                         assocList(
                                              [
@@ -82,7 +82,7 @@ unittest {
     options.dCompiler = "dmd";
     options.projectPath = "/proj";
     actual.shellCommand(options).split(" ").filter!(a => a != "").
-        shouldEqual(["dmd", "-ofapp", "-m64", "source/luad.o", "$LIB/liblua.a"]);
+        shouldEqual(["dmd", "-ofapp", "-m64", "source/luad_foo.o", "$LIB/liblua.a"]);
 }
 
 
@@ -103,7 +103,7 @@ unittest {
     string[] empty;
     const expected = Target("$builddir/libfoo.a",
                             Command("ar rcs $out $in"),
-                            [Target("path/myapp/src.o",
+                            [Target("path/myapp/src_file1_file2.o",
                                     Command(CommandType.compile,
                                             assocList([
                                                           assocEntry("includes", ["-I/leproj"]),
@@ -133,7 +133,7 @@ unittest {
     const expected = Target("libfoo.a",
                             Command(CommandType.link, assocList([assocEntry("flags", ["-m64"])])),
                             [
-                                Target("path/myapp/src.o",
+                                Target("path/myapp/src_file1_file2.o",
                                        Command(CommandType.compile,
                                                assocList([
                                                              assocEntry("includes", ["-I/leproj"]),

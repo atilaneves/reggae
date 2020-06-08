@@ -289,7 +289,7 @@ unittest {
                               "foo.objs",
                               testPath.deabsolutePath,
                               "bar",
-                              "source.o"));
+                              "source_bar.o"));
     }
 }
 
@@ -329,7 +329,7 @@ unittest {
                               testPath.deabsolutePath,
                               "foo.objs",
                               dubNullDir,
-                              "source.o"));
+                              "source_dubnull.o"));
     }
 }
 

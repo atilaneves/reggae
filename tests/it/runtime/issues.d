@@ -30,7 +30,6 @@ unittest {
 }
 
 
-@ShouldFail
 @("62")
 @Tags(["dub", "make"])
 unittest {

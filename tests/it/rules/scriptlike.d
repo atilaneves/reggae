@@ -13,7 +13,7 @@ import tests.it;
                      [Target("d/main.o",
                              compileCommand("d/main.d", "-debug -O", ["d"], ["resources/text"]),
                              [Target("d/main.d")]),
-                      Target("d.o",
+                      Target("d_logger_constants.o",
                              compileCommand("d.d", "-debug -O", ["d"], ["resources/text"]),
                              [Target("d/logger.d"), Target("d/constants.d")]),
                       Target("cpp/maths.o",

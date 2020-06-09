@@ -342,14 +342,17 @@ version(Windows) {
     immutable libExt = ".a";
 }
 
-package string objFileName(in string srcFileName) @safe pure {
+string objFileName(in string srcFileName) @safe pure {
     import reggae.path: deabsolutePath;
-    import std.path: stripExtension, defaultExtension, isRooted;
+    import std.path: stripExtension;
     import std.array: replace;
 
-    immutable localFileName = srcFileName.deabsolutePath;
+    auto tmp = srcFileName
+        .deabsolutePath
+        .stripExtension
+        ;
 
-    return localFileName.stripExtension.defaultExtension(objExt).replace("..", "__");
+    return (tmp ~ objExt).replace("..", "__");
 }
 
 string removeProjectPath(in string path) @safe {
@@ -372,18 +375,24 @@ Command compileCommand(in string srcFileName,
                        in string[] includePaths = [],
                        in string[] stringImportPaths = [],
                        in string projDir = "$project",
-                       Flag!"justCompile" justCompile = Yes.justCompile) @safe pure {
+                       Flag!"justCompile" justCompile = Yes.justCompile)
+    @safe pure
+{
 
     string maybeExpand(string path) {
-        return path.startsWith(gBuilddir) ? expandBuildDir(path) : buildPath(projDir, path);
+        return path.startsWith(gBuilddir)
+            ? expandBuildDir(path)
+            : buildPath(projDir, path);
     }
 
     auto includeParams = includePaths.map!(a => "-I" ~ maybeExpand(a)). array;
     auto flagParams = flags.splitter.array;
     immutable language = getLanguage(srcFileName);
 
-    auto params = [assocEntry("includes", includeParams),
-                   assocEntry("flags", flagParams)];
+    auto params = [
+        assocEntry("includes", includeParams),
+        assocEntry("flags", flagParams)
+    ];
 
     if(language == Language.D)
         params ~= assocEntry("stringImports",

@@ -152,12 +152,14 @@ Target[] dlangObjectFilesPerModule(in string[] srcFiles,
                                    in string projDir = "$project")
     @trusted pure
 {
-    return srcFiles.map!(a => objectFile(const SourceFile(a),
-                                         const Flags(flags),
-                                         const ImportPaths(importPaths),
-                                         const StringImportPaths(stringImportPaths),
-                                         implicits,
-                                         projDir)).array;
+    return srcFiles
+        .map!(a => objectFile(const SourceFile(a),
+                              const Flags(flags),
+                              const ImportPaths(importPaths),
+                              const StringImportPaths(stringImportPaths),
+                              implicits,
+                              projDir))
+        .array;
 }
 
 /// Generate object files for D sources, compiling all of them together

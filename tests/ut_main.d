@@ -26,6 +26,7 @@ mixin runTestsMain!(
     "tests.ut.dub.config",
     "tests.ut.rules.link",
     "tests.ut.rules.dub",
+    "tests.ut.rules.common",
     "tests.ut.reflect",
     "tests.ut.range",
     "tests.ut.ctaa",

@@ -103,7 +103,7 @@ unittest {
     string[] empty;
     const expected = Target("$builddir/libfoo.a",
                             Command("ar rcs $out $in"),
-                            [Target("path/myapp/src_file1_file2.o",
+                            [Target("path/myapp/src_file1.o",
                                     Command(CommandType.compile,
                                             assocList([
                                                           assocEntry("includes", ["-I/leproj"]),
@@ -133,7 +133,7 @@ unittest {
     const expected = Target("libfoo.a",
                             Command(CommandType.link, assocList([assocEntry("flags", ["-m64"])])),
                             [
-                                Target("path/myapp/src_file1_file2.o",
+                                Target("path/myapp/src_file1.o",
                                        Command(CommandType.compile,
                                                assocList([
                                                              assocEntry("includes", ["-I/leproj"]),

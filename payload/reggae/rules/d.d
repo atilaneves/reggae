@@ -123,15 +123,7 @@ Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
     // the object file for a D package containing pkgFiles
     static string outputFileName(in string[] pkgFiles) {
         import std.path: baseName;
-        import std.algorithm.iteration: map;
-        import std.array: join;
-
-        const path = packagePath(pkgFiles[0]) ~ "_" ~
-            pkgFiles
-            .map!(a => baseName(a, ".d"))
-            .join("_")
-            ;
-
+        const path = packagePath(pkgFiles[0]) ~ "_" ~ pkgFiles[0].baseName(".d");
         return objFileName(path);
     }
 

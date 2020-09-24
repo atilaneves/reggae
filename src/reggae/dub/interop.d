@@ -88,7 +88,7 @@ private from!"reggae.dub.info".DubInfo _getDubInfo(T)(auto ref T output,
                                                       in from!"reggae.options".Options options)
 {
     import reggae.io: log;
-    import reggae.dub.json: getDubInfo;
+    import reggae.dub.json: jsonStringToDubInfo;
     import std.array;
     import std.file: exists;
     import std.path: buildPath;
@@ -96,8 +96,7 @@ private from!"reggae.dub.info".DubInfo _getDubInfo(T)(auto ref T output,
     import std.typecons: Yes;
     import std.conv: text;
 
-    version(unittest)
-        gDubInfos = null;
+    version(unittest) gDubInfos = null;
 
     if("default" !in gDubInfos) {
 
@@ -130,12 +129,12 @@ private from!"reggae.dub.info".DubInfo _getDubInfo(T)(auto ref T output,
         if(configs.configurations.empty) {
             const descOutput = callDub(output, options, ["dub", "describe"], Yes.maybeNoDeps);
             oneConfigOk = true;
-            gDubInfos["default"] = getDubInfo(descOutput);
+            gDubInfos["default"] = jsonStringToDubInfo(descOutput);
         } else {
             foreach(config; configs.configurations) {
                 try {
                     const descOutput = callDub(output, options, ["dub", "describe", "-c", config], Yes.maybeNoDeps);
-                    gDubInfos[config] = getDubInfo(descOutput);
+                    gDubInfos[config] = jsonStringToDubInfo(descOutput);
 
                     // dub adds certain flags to certain configurations automatically but these flags
                     // don't know up in the output to `dub describe`. Special case them here.

@@ -10,7 +10,7 @@ import std.string;
 unittest {
     import std.format: format;
     const path = "/path/to";
-    const info = getDubInfo(import("foobar.json").format(path, path, path, path, path, path, path, path, path, path, path));
+    const info = jsonStringToDubInfo(import("foobar.json").format(path, path, path, path, path, path, path, path, path, path, path));
     info.shouldEqual(
         DubInfo(
             [
@@ -59,7 +59,7 @@ unittest {
 unittest {
     import std.format: format;
     const path = "/path/to";
-    auto info = getDubInfo(import("foobar.json").format(path, path, path, path, path, path, path, path, path, path, path));
+    auto info = jsonStringToDubInfo(import("foobar.json").format(path, path, path, path, path, path, path, path, path, path, path));
 
     info.targetName.shouldEqual(TargetName("foo"));
 
@@ -127,7 +127,7 @@ unittest {
         }
     };
 
-    getDubInfo(jsonString).shouldEqual(
+    jsonStringToDubInfo(jsonString).shouldEqual(
         DubInfo(
             [
                 DubPackage(

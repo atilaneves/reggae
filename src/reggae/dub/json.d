@@ -6,7 +6,7 @@ import std.json;
 import std.algorithm: map, filter;
 
 
-DubInfo getDubInfo(in string origString) @trusted {
+DubInfo jsonStringToDubInfo(in string origString) @trusted {
 
     import std.string: indexOf;
     import std.array;

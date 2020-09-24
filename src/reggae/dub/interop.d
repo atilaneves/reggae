@@ -35,9 +35,10 @@ DubConfigurations getConfigurations(in string rawOutput) pure {
 
     if(configs.length == 0) return DubConfigurations();
 
+    enum defaultMarker = " [default]";
+
     string default_;
     foreach(ref config; configs) {
-        const defaultMarker = " [default]";
         if(config.canFind(defaultMarker)) {
             assert(default_ is null);
             config = config.replace(defaultMarker, "");

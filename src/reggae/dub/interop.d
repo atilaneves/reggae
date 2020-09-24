@@ -84,8 +84,8 @@ void createReggaefile(T)(auto ref T output,
 }
 
 
-private from!"reggae.dub.info".DubInfo _getDubInfo(T)(auto ref T output,
-                                                      in from!"reggae.options".Options options)
+private from!"reggae.dub.info".DubInfo getDubInfo(T)(auto ref T output,
+                                                     in from!"reggae.options".Options options)
 {
     import reggae.io: log;
     import reggae.dub.json: jsonStringToDubInfo;
@@ -317,7 +317,7 @@ void writeDubConfig(T)(auto ref T output,
     if(options.isDubProject) {
 
         file.writeln("enum isDubProject = true;");
-        auto dubInfo = _getDubInfo(output, options);
+        auto dubInfo = getDubInfo(output, options);
         const targetType = dubInfo.packages.length
             ? dubInfo.packages[0].targetType
             : TargetType.sourceLibrary;

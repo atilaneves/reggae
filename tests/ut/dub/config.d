@@ -2,7 +2,7 @@ module tests.ut.dub.config;
 
 
 import unit_threaded;
-import reggae.dub.interop;
+import reggae.dub.interop.configurations;
 
 
 immutable reggaeOutput = `Package std_data_json can be upgraded from 0.12.0 to 0.14.0.
@@ -31,10 +31,12 @@ Error executing command build:
 
 void testGetConfigs() {
 
-    getConfigurations(reggaeOutput).shouldEqual(DubConfigurations(["executable", "unittest"],
-                                                                  "executable"));
-    getConfigurations(dubOutput).shouldEqual(DubConfigurations(["application", "library", "library-nonet"],
-                                                               "application"));
+    outputStringToConfigurations(reggaeOutput).should ==
+        DubConfigurations(["executable", "unittest"],
+                          "executable");
+    outputStringToConfigurations(dubOutput).should ==
+        DubConfigurations(["application", "library", "library-nonet"],
+                          "application");
     DubConfigurations emptyConfigs;
-    getConfigurations(noConfigOutput).shouldEqual(emptyConfigs);
+    outputStringToConfigurations(noConfigOutput).should == emptyConfigs;
 }

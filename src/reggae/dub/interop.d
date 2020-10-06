@@ -18,6 +18,7 @@ struct DubConfigurations {
 }
 
 
+// public because of unit tests
 DubConfigurations getConfigurations(in string rawOutput) pure {
 
     import std.algorithm: findSkip, filter, map, canFind, startsWith;
@@ -62,8 +63,8 @@ void maybeCreateReggaefile(T)(auto ref T output,
 }
 
 // default build for a dub project when there is no reggaefile
-void createReggaefile(T)(auto ref T output,
-                         in from!"reggae.options".Options options)
+private void createReggaefile(T)(auto ref T output,
+                                 in from!"reggae.options".Options options)
 {
     import reggae.io: log;
     import std.stdio: File;
@@ -75,7 +76,7 @@ void createReggaefile(T)(auto ref T output,
 
     file.writeln(q{
         import reggae;
-        enum commonFlags = "-w -g -debug";
+        enum commonFlags = "-w -g -debug";  // FIXME: dmd-specific
         mixin build!(dubDefaultTarget!(CompilerFlags(commonFlags)),
                         dubTestTarget!(CompilerFlags(commonFlags)));
     }.replaceFirst(regex(`^        `), ""));
@@ -293,7 +294,7 @@ private void dubFetch(T)(auto ref T output,
 
 // dub fetch can sometimes take >10s (!) despite the package already being
 // on disk
-bool needDubFetch(in string dubPackage, in string version_) {
+private bool needDubFetch(in string dubPackage, in string version_) {
     import reggae.path: dubPackagesDir;
     import std.path: buildPath;
     import std.file: exists;

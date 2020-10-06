@@ -11,8 +11,8 @@ import std.typecons: Flag;
 import std.algorithm: map, filter, find, splitter;
 import std.array: array, join;
 import std.path: buildPath;
-import std.traits: isCallable;
 import std.range: chain;
+
 
 enum TargetType {
     autodetect,

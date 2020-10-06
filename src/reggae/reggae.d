@@ -34,7 +34,7 @@ version(minimal) {
     void maybeCreateReggaefile(T...)(T) {}
     void writeDubConfig(T...)(T) {}
 } else {
-    import reggae.dub.interop;
+    import reggae.dub.interop: writeDubConfig, maybeCreateReggaefile;
 }
 
 mixin template reggaeGen(targets...) {

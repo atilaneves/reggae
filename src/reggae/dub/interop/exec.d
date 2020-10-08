@@ -105,7 +105,7 @@ package from!"reggae.dub.info".DubInfo getDubInfo(T)(auto ref T output,
                                                      in from!"reggae.options".Options options)
 {
     import reggae.dub.interop: gDubInfos;
-    import reggae.dub.interop.configurations: DubConfigurations, getConfigs;
+    import reggae.dub.interop.configurations: getConfigs;
     import reggae.dub.interop.exec: callDub;
     import reggae.io: log;
     import reggae.dub.json: jsonStringToDubInfo;

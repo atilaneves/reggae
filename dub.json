@@ -12,6 +12,9 @@
     "sourcePaths": ["src", "payload"],
     "excludedSourceFiles": ["payload/reggae/buildgen_main.d", "payload/reggae/dcompile.d"],
     "mainSourceFile": "src/reggae/reggae_main.d",
+    "dependencies": {
+        "dub": "~>1.14.0"
+    },
     "configurations": [
         { "name": "executable" },
         { "name": "unittest",

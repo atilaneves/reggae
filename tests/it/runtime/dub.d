@@ -7,7 +7,7 @@ import reggae.path: deabsolutePath;
 import std.path: buildPath;
 
 
-@("dub project with no reggaefile ninja")
+@("noreggaefile.ninja")
 @Tags(["dub", "ninja"])
 unittest {
 
@@ -31,7 +31,7 @@ unittest {
     }
 }
 
-@("dub project with no reggaefile tup")
+@("noreggaefile.tup")
 @Tags(["dub", "tup"])
 unittest {
     with(immutable ReggaeSandbox("dub")) {
@@ -41,7 +41,7 @@ unittest {
 }
 
 
-@("dub project with no reggaefile and prebuild command")
+@("prebuild")
 @Tags(["dub", "ninja"])
 unittest {
     with(immutable ReggaeSandbox("dub_prebuild")) {
@@ -52,7 +52,7 @@ unittest {
 }
 
 
-@("dub project with postbuild command")
+@("postbuild")
 @Tags(["dub", "ninja"])
 unittest {
     with(immutable ReggaeSandbox("dub_postbuild")) {
@@ -64,7 +64,7 @@ unittest {
 }
 
 
-@("project with dependencies not on file system already no dub.selections.json")
+@("dependencies not on file system already no dub.selections.json")
 @Tags(["dub", "ninja"])
 unittest {
 
@@ -91,7 +91,7 @@ unittest {
 }
 
 
-@("simple dub project with no main function but with unit tests")
+@("no main function but with unit tests")
 @Tags(["dub", "ninja"])
 unittest {
     import std.file: mkdirRecurse;
@@ -375,7 +375,7 @@ unittest {
 }
 
 
-@("dub project that depends on package with prebuild")
+@("depends on package with prebuild")
 @Tags(["dub", "ninja"])
 unittest {
 
@@ -432,7 +432,7 @@ unittest {
 }
 
 
-@("dub project with failing prebuild command")
+@("failing prebuild command")
 @Tags(["dub", "ninja"])
 unittest {
     with(immutable ReggaeSandbox("dub_prebuild_oops")) {

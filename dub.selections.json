@@ -1,6 +1,7 @@
 {
 	"fileVersion": 1,
 	"versions": {
+		"dub": "1.14.0",
 		"unit-threaded": "0.10.8"
 	}
 }

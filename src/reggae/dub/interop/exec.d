@@ -106,9 +106,8 @@ package from!"reggae.dub.info".DubInfo getDubInfo(T)(auto ref T output,
 {
     import reggae.dub.interop: gDubInfos;
     import reggae.dub.interop.configurations: getConfigs;
-    import reggae.dub.interop.exec: callDub;
+    import reggae.dub.interop.exec: callDub, configToDubInfo;
     import reggae.io: log;
-    import reggae.dub.json: jsonStringToDubInfo;
     import std.array;
     import std.file: exists;
     import std.path: buildPath;
@@ -127,17 +126,15 @@ package from!"reggae.dub.info".DubInfo getDubInfo(T)(auto ref T output,
         const configs = getConfigs(output, options);
 
         bool oneConfigOk;
-        Exception dubDescribeFailure;
+        Exception dubInfoFailure;
 
         if(configs.configurations.empty) {
-            const descOutput = callDub(output, options, ["dub", "describe"], Yes.maybeNoDeps);
+            gDubInfos["default"] = configToDubInfo(output, options, "");
             oneConfigOk = true;
-            gDubInfos["default"] = jsonStringToDubInfo(descOutput);
         } else {
             foreach(config; configs.configurations) {
                 try {
-                    const descOutput = callDub(output, options, ["dub", "describe", "-c", config], Yes.maybeNoDeps);
-                    gDubInfos[config] = jsonStringToDubInfo(descOutput);
+                    gDubInfos[config] = configToDubInfo(output, options, config);
 
                     // dub adds certain flags to certain configurations automatically but these flags
                     // don't know up in the output to `dub describe`. Special case them here.
@@ -166,8 +163,8 @@ package from!"reggae.dub.info".DubInfo getDubInfo(T)(auto ref T output,
                     oneConfigOk = true;
 
                 } catch(Exception ex) {
-                    output.log("ERROR: exception in calling dub describe: ", ex.msg);
-                    if(dubDescribeFailure is null) dubDescribeFailure = ex;
+                    output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);
+                    if(dubInfoFailure is null) dubInfoFailure = ex;
                 }
             }
 
@@ -178,9 +175,9 @@ package from!"reggae.dub.info".DubInfo getDubInfo(T)(auto ref T output,
        }
 
         if(!oneConfigOk) {
-            assert(dubDescribeFailure !is null,
+            assert(dubInfoFailure !is null,
                    "Internal error: no configurations worked and no exception to throw");
-            throw dubDescribeFailure;
+            throw dubInfoFailure;
         }
     }
 
@@ -212,4 +209,20 @@ private void callPreBuildCommands(T)(auto ref T output,
             enforce(ret.status == 0, text("Error calling ", cmd, ":\n", ret.output));
         }
     }
+}
+
+
+from!"reggae.dub.info".DubInfo configToDubInfo
+    (O)
+    (auto ref O output, in from!"reggae.options".Options options, in string config)
+{
+
+    import reggae.dub.json: jsonStringToDubInfo;
+    import std.typecons: Yes;
+
+    auto cmd = ["dub", "describe"];
+    if(config != "") cmd ~= ["-c", config];
+    const descOutput = callDub(output, options, cmd, Yes.maybeNoDeps);
+
+    return jsonStringToDubInfo(descOutput);
 }

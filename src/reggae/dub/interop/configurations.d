@@ -14,10 +14,15 @@ struct DubConfigurations {
 
 
 DubConfigurations getConfigs(O)(auto ref O output, in from!"reggae.options".Options options) {
-    import reggae.dub.interop.dublib: dubConfigurations, ProjectPath, systemPackagesPath, userPackagesPath;
+
+    import reggae.dub.interop.dublib: dubConfigurations, ProjectPath,
+        systemPackagesPath, userPackagesPath, Compiler;
+    import std.conv: to;
+
     return dubConfigurations(
         ProjectPath(options.projectPath),
         systemPackagesPath,
-        userPackagesPath)
-    ;
+        userPackagesPath,
+        options.dCompiler.to!Compiler,
+    );
 }

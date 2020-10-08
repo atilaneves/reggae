@@ -64,6 +64,7 @@ from!"reggae.dub.interop.configurations".DubConfigurations dubConfigurations(
     in ProjectPath projectPath,
     in SystemPackagesPath systemPackagesPath,
     in UserPackagesPath userPackagesPath,
+    in Compiler compiler,
     )
     @trusted  // dub...
 {
@@ -73,7 +74,7 @@ from!"reggae.dub.interop.configurations".DubConfigurations dubConfigurations(
     auto proj = project(projectPath, systemPackagesPath, userPackagesPath);
     auto generator = new InfoGenerator(proj);
 
-    generator.generate(generatorSettings(Compiler.dmd));
+    generator.generate(generatorSettings(compiler));
 
     return DubConfigurations(generator.configurations, generator.defaultConfiguration);
 }

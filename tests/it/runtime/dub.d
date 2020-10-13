@@ -15,10 +15,10 @@ unittest {
 
     with(immutable ReggaeSandbox("dub")) {
         shouldNotExist("reggaefile.d");
-        writelnUt("\n\nReggae output:\n\n", runReggae("-b", "ninja", "--dflags=-g -debug").lines.join("\n"), "-----\n");
+        writelnUt("\n\nReggae output:\n\n", runReggae("-b", "ninja").lines.join("\n"), "-----\n");
         shouldExist("reggaefile.d");
         auto output = ninja.shouldExecuteOk;
-        output.shouldContain("-g -debug");
+        output.shouldContain("-debug -g");
 
         shouldSucceed("atest").shouldEqual(
             ["Why hello!",
@@ -35,7 +35,7 @@ unittest {
 @Tags(["dub", "tup"])
 unittest {
     with(immutable ReggaeSandbox("dub")) {
-        runReggae("-b", "tup", "--dflags=-g -debug").
+        runReggae("-b", "tup").
             shouldThrowWithMessage("dub integration not supported with the tup backend");
     }
 }
@@ -45,7 +45,7 @@ unittest {
 @Tags(["dub", "ninja"])
 unittest {
     with(immutable ReggaeSandbox("dub_prebuild")) {
-        runReggae("-b", "ninja", "--dflags=-g -debug");
+        runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
         shouldSucceed("ut");
     }
@@ -56,7 +56,7 @@ unittest {
 @Tags(["dub", "ninja"])
 unittest {
     with(immutable ReggaeSandbox("dub_postbuild")) {
-        runReggae("-b", "ninja", "--dflags=-g -debug");
+        runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
         shouldExist("foo.txt");
         shouldSucceed("postbuild");
@@ -108,7 +108,7 @@ unittest {
 
         writeFile("reggaefile.d", q{
             import reggae;
-            mixin build!(dubTestTarget!(CompilerFlags("-g -debug")));
+            mixin build!(dubTestTarget!());
         });
 
         mkdirRecurse(buildPath(testPath, "source"));
@@ -129,8 +129,8 @@ unittest {
     import std.path: buildPath;
 
     with(immutable ReggaeSandbox("dub")) {
-        runReggae("-b", "make", "--dflags=-g -debug");
-        make(["VERBOSE=1"]).shouldExecuteOk.shouldContain("-g -debug");
+        runReggae("-b", "make");
+        make(["VERBOSE=1"]).shouldExecuteOk.shouldContain("-debug -g");
         {
             const ret = execute(["touch", buildPath(testPath, "dub.selections.json")]);
             ret.status.shouldEqual(0);
@@ -385,7 +385,7 @@ unittest {
 
         copyProject("dub_prebuild", buildPath("..", "dub_prebuild"));
 
-        runReggae("-b", "ninja", "--dflags=-g -debug");
+        runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
         shouldSucceed("app");
         shouldExist(inSandboxPath("../dub_prebuild/el_prebuildo.txt"));
@@ -436,7 +436,7 @@ unittest {
 @Tags(["dub", "ninja"])
 unittest {
     with(immutable ReggaeSandbox("dub_prebuild_oops")) {
-        runReggae("-b", "ninja", "--dflags=-g -debug")
+        runReggae("-b", "ninja")
             .shouldThrowWithMessage(
                 "Error calling foo bar baz quux:\n/bin/sh: foo: command not found\n");
     }

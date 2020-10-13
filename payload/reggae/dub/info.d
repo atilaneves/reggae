@@ -27,8 +27,8 @@ enum TargetType {
 
 
 struct DubPackage {
-    string name;
-    string path;
+    string name; /// target name
+    string path; /// path to the dub package
     string mainSourceFile;
     string targetFileName;
     string[] dflags;

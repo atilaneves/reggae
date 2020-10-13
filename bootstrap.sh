@@ -18,7 +18,6 @@ fi
 BACKEND=$1
 
 DC="${DC:-dmd}"
-echo "DC: $DC"
 
 rm -rf bin
 
@@ -27,5 +26,5 @@ dub build --compiler="$DC"
 
 cd bin || exit 1
 echo "Running boostrapped reggae with backend $BACKEND"
-./reggae -b $BACKEND --dc="$DC" ..
+./reggae -b "$BACKEND" --dc="$DC" ..
 $BACKEND -j"$NUM_PROC"

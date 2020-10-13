@@ -98,7 +98,7 @@ package from!"reggae.dub.info".DubInfo configToDubInfo2
     );
 
     auto generator = new InfoGenerator(proj);
-    generator.generate(generatorSettings(options.dCompiler.to!Compiler));
+    generator.generate(generatorSettings(options.dCompiler.to!Compiler, config));
 
     return DubInfo(generator.dubPackages);
 }
@@ -175,7 +175,7 @@ struct DubPackages {
     }
 }
 
-auto generatorSettings(in Compiler compiler = Compiler.dmd) @safe {
+auto generatorSettings(in Compiler compiler = Compiler.dmd, in string config = "") @safe {
     import dub.compilers.compiler: getCompiler;
     import dub.generators.generator: GeneratorSettings;
     import std.conv;
@@ -186,6 +186,7 @@ auto generatorSettings(in Compiler compiler = Compiler.dmd) @safe {
     const compilerName = compiler.text;
     ret.compiler = () @trusted { return getCompiler(compilerName); }();
     ret.platform.compilerBinary = compilerName;  // FIXME? (absolute path?)
+    ret.config = config;
 
     return ret;
 }

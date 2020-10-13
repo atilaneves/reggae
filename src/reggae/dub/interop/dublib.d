@@ -120,8 +120,13 @@ package from!"reggae.dub.info".DubInfo configToDubInfo
         userPackagesPath,
     );
 
+    Compiler compiler() {
+        if(options.dCompiler == "ldc2") return Compiler.ldc;
+        return options.dCompiler.to!Compiler;
+    }
+
     auto generator = new InfoGenerator(proj);
-    generator.generate(generatorSettings(options.dCompiler.to!Compiler, config));
+    generator.generate(generatorSettings(compiler, config));
 
     return DubInfo(generator.dubPackages);
 }

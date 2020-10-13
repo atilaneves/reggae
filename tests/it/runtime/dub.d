@@ -209,7 +209,7 @@ unittest {
     }
 }
 
-@("object source files")
+@("object source files.simple")
 @Tags(["dub", "ninja"])
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -334,7 +334,7 @@ unittest {
 }
 
 
-@("object source files with dub objs option")
+@("object source files.with dub objs option")
 @Tags("dub", "ninja", "dubObjsDir")
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -439,5 +439,53 @@ unittest {
         runReggae("-b", "ninja", "--dflags=-g -debug")
             .shouldThrowWithMessage(
                 "Error calling foo bar baz quux:\n/bin/sh: foo: command not found\n");
+    }
+}
+
+
+@("libs")
+@Tags(["dub", "ninja"])
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl", `
+            name "foo"
+            targetType "executable"
+            libs "utils"
+            lflags "-L$PACKAGE_DIR"
+
+            configuration "executable" {
+            }
+
+            configuration "library" {
+                targetType "library"
+                targetName "dpp"
+                excludedSourceFiles "source/main.d"
+            }
+        `);
+
+        writeFile("reggaefile.d",
+                  q{
+                      import reggae;
+                      alias exe = dubDefaultTarget!(
+                      );
+                      mixin build!(exe);
+                  });
+
+        writeFile("source/main.d",
+                  q{
+                      extern(C) int twice(int);
+                      void main() {
+                          assert(twice(2) == 4);
+                          assert(twice(3) == 6);
+                      }
+                  });
+
+        writeFile("utils.c", "int twice(int i) { return i * 2; }");
+        shouldExecuteOk(["gcc", "-o", inSandboxPath("utils.o"), "-c", inSandboxPath("utils.c")]);
+        shouldExecuteOk(["ar", "rcs", inSandboxPath("libutils.a"), inSandboxPath("utils.o")]);
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldSucceed("foo");
     }
 }

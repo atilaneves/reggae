@@ -8,6 +8,29 @@ import reggae.from;
 import dub.generators.generator: ProjectGenerator;
 
 
+// Not shared because, for unknown reasons, dub registers compilers
+// in thread-local storage so we register the compilers in all
+// threads. In normal dub usage it's done in of one dub's static
+// constructors. In one thread.
+static this() nothrow {
+    import dub.compilers.compiler: registerCompiler;
+    import dub.compilers.dmd: DMDCompiler;
+    import dub.compilers.ldc: LDCCompiler;
+    import dub.compilers.gdc: GDCCompiler;
+
+    try {
+        registerCompiler(new DMDCompiler);
+        registerCompiler(new LDCCompiler);
+        registerCompiler(new GDCCompiler);
+    } catch(Exception e) {
+        import std.stdio: stderr;
+        try
+            stderr.writeln("ERROR: ", e);
+        catch(Exception _) {}
+    }
+}
+
+
 /// What it says on the tin
 struct ProjectPath {
     string value;
@@ -101,29 +124,6 @@ package from!"reggae.dub.info".DubInfo configToDubInfo
     generator.generate(generatorSettings(options.dCompiler.to!Compiler, config));
 
     return DubInfo(generator.dubPackages);
-}
-
-
-// Not shared because, for unknown reasons, dub registers compilers
-// in thread-local storage so we register the compilers in all
-// threads. In normal dub usage it's done in of one dub's static
-// constructors. In one thread.
-static this() nothrow {
-    import dub.compilers.compiler: registerCompiler;
-    import dub.compilers.dmd: DMDCompiler;
-    import dub.compilers.ldc: LDCCompiler;
-    import dub.compilers.gdc: GDCCompiler;
-
-    try {
-        registerCompiler(new DMDCompiler);
-        registerCompiler(new LDCCompiler);
-        registerCompiler(new GDCCompiler);
-    } catch(Exception e) {
-        import std.stdio: stderr;
-        try
-            stderr.writeln("ERROR: ", e);
-        catch(Exception _) {}
-    }
 }
 
 
@@ -303,10 +303,7 @@ class InfoGenerator: ProjectGenerator {
                                                    BuildSetting.noOptions /*???*/);
             DubPackage pkg;
 
-            // pkg.name = targetInfo.pack.name;
-            // apparently name is target name??
-            // FIXME?
-            pkg.name = newBuildSettings.targetName;
+            pkg.name = targetInfo.pack.name;
             pkg.path = targetInfo.pack.path.toNativeString;
             pkg.targetFileName = newBuildSettings.targetName;
             pkg.files = newBuildSettings.sourceFiles.dup;

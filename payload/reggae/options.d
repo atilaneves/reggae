@@ -47,7 +47,8 @@ struct Options {
     string[] dependencies;
     string dubObjsDir;
     bool dubDepObjsInsteadOfStaticLib;
-    string dubBuildType;
+    string dubBuildType = "debug";
+
 
     version(Windows)
         DubArchitecture dubArch = DubArchitecture.x86;

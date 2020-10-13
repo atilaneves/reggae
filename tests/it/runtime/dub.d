@@ -749,3 +749,29 @@ unittest {
         shouldFail("ut");
     }
 }
+
+
+@ShouldFail
+@("buildtype.release")
+@Tags("dub", "ninja")
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile(
+            "dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "executable"`,
+            ],
+        );
+        writeFile(
+            "source/app.d",
+            [
+                q{void main() {}},
+            ],
+        );
+
+        runReggae("-b", "ninja", "--dub-build-type=release");
+        "-release -O".should.be in ninja.shouldExecuteOk;
+    }
+
+}

@@ -32,9 +32,7 @@ private void createReggaefile(T)(auto ref T output,
 
     file.writeln(q{
         import reggae;
-        enum commonFlags = "-w -g -debug";  // FIXME: dmd-specific
-        mixin build!(dubDefaultTarget!(CompilerFlags(commonFlags)),
-                        dubTestTarget!(CompilerFlags(commonFlags)));
+        mixin build!(dubDefaultTarget!(), dubTestTarget!());
     }.replaceFirst(regex(`^        `), ""));
 
     if(!options.noFetch) dubFetch(output, options);

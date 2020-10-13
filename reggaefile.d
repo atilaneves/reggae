@@ -38,11 +38,10 @@ version(minimal) {
     //the actual reggae binary
     //could also be dubConfigurationTarget(ExeName("reggae"), Configuration("executable"), Flags(...))
     //or use the `scriptlike` rule to figure out dependencies itself
-    enum commonFlags = "-g -debug -w";
-    alias main = dubDefaultTarget!(CompilerFlags(commonFlags));
+    alias main = dubDefaultTarget!();
 
     //the unit test binary
-    alias ut = dubTestTarget!(CompilerFlags(commonFlags ~ " -cov"),
+    alias ut = dubTestTarget!(CompilerFlags("-cov"),
                               LinkerFlags(),
                               CompilationMode.all);
 

@@ -17,14 +17,18 @@ fi
 
 BACKEND=$1
 
-COMP=${DMD:="dmd"}
+DC="${DC:-dmd}"
 
 rm -rf bin
 
-echo "Compiling reggae"
-$COMP -ofbin/reggae -Isrc -Ipayload -Jpayload/reggae src/reggae/*.d src/reggae/dub/*.d src/reggae/dub/interop/*.d payload/reggae/backend/*.d payload/reggae/{options,reflect,config,build,types,sorting,dependencies,range,buildgen,package,ctaa,file,path}.d payload/reggae/rules/*.d payload/reggae/core/*.d payload/reggae/core/rules/*.d payload/reggae/dub/info.d
+echo "Compiling reggae with dub"
+dub build --compiler="$DC"
 
 cd bin || exit 1
-echo "Running boostrapped reggae with backend $BACKEND"
-./reggae -b $BACKEND --dc=$DMD ..
-$BACKEND -j$NUM_PROC
+
+# See https://github.com/atilaneves/reggae/issues/83
+if [[ "$DC" == "dmd" ]]; then
+    echo "Running boostrapped reggae with backend $BACKEND"
+    ./reggae -b "$BACKEND" --dc="$DC" ..
+    $BACKEND -j"$NUM_PROC"
+fi

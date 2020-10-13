@@ -46,12 +46,36 @@ private void dcompile(string[] args) {
 
 private string[] compilerArgs(string[] args, in string objFile) @safe pure {
     auto compArgs = args[1 .. $] ~ ["-of" ~ objFile, "-c", "-v"];
-    return args[1] == "gdc" ? mapToGdcOptions(compArgs) : compArgs;
+
+    switch(args[1]) {
+        default:
+            return compArgs;
+        case "gdc":
+            return mapToGdcOptions(compArgs);
+        case "ldc":
+        case "ldc2":
+            return mapToLdcOptions(compArgs);
+    }
 }
 
 //takes a dmd command line and maps arguments to gdc ones
 private string[] mapToGdcOptions(in string[] compArgs) @safe pure {
     string[string] options = ["-v": "-fd-verbose", "-O": "-O2", "-debug": "-fdebug", "-of": "-o"];
+
+    string doMap(string a) {
+        foreach(k, v; options) {
+            if(a.startsWith(k)) a = a.replace(k, v);
+        }
+        return a;
+    }
+
+    return compArgs.map!doMap.array;
+}
+
+
+//takes a dmd command line and maps arguments to gdc ones
+private string[] mapToLdcOptions(in string[] compArgs) @safe pure {
+    string[string] options = ["-v": "-fd-verbose", "-O": "-O2", "-debug": "-d-debug"];
 
     string doMap(string a) {
         foreach(k, v; options) {

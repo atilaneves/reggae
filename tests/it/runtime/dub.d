@@ -7,7 +7,7 @@ import reggae.path: deabsolutePath;
 import std.path: buildPath;
 
 
-@("dub project with no reggaefile ninja")
+@("noreggaefile.ninja")
 @Tags(["dub", "ninja"])
 unittest {
 
@@ -15,10 +15,10 @@ unittest {
 
     with(immutable ReggaeSandbox("dub")) {
         shouldNotExist("reggaefile.d");
-        writelnUt("\n\nReggae output:\n\n", runReggae("-b", "ninja", "--dflags=-g -debug").lines.join("\n"), "-----\n");
+        writelnUt("\n\nReggae output:\n\n", runReggae("-b", "ninja").lines.join("\n"), "-----\n");
         shouldExist("reggaefile.d");
         auto output = ninja.shouldExecuteOk;
-        output.shouldContain("-g -debug");
+        output.shouldContain("-debug -g");
 
         shouldSucceed("atest").shouldEqual(
             ["Why hello!",
@@ -31,32 +31,32 @@ unittest {
     }
 }
 
-@("dub project with no reggaefile tup")
+@("noreggaefile.tup")
 @Tags(["dub", "tup"])
 unittest {
     with(immutable ReggaeSandbox("dub")) {
-        runReggae("-b", "tup", "--dflags=-g -debug").
+        runReggae("-b", "tup").
             shouldThrowWithMessage("dub integration not supported with the tup backend");
     }
 }
 
 
-@("dub project with no reggaefile and prebuild command")
+@("prebuild")
 @Tags(["dub", "ninja"])
 unittest {
     with(immutable ReggaeSandbox("dub_prebuild")) {
-        runReggae("-b", "ninja", "--dflags=-g -debug");
+        runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
         shouldSucceed("ut");
     }
 }
 
 
-@("dub project with postbuild command")
+@("postbuild")
 @Tags(["dub", "ninja"])
 unittest {
     with(immutable ReggaeSandbox("dub_postbuild")) {
-        runReggae("-b", "ninja", "--dflags=-g -debug");
+        runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
         shouldExist("foo.txt");
         shouldSucceed("postbuild");
@@ -64,7 +64,7 @@ unittest {
 }
 
 
-@("project with dependencies not on file system already no dub.selections.json")
+@("dependencies not on file system already no dub.selections.json")
 @Tags(["dub", "ninja"])
 unittest {
 
@@ -91,7 +91,7 @@ unittest {
 }
 
 
-@("simple dub project with no main function but with unit tests")
+@("no main function but with unit tests")
 @Tags(["dub", "ninja"])
 unittest {
     import std.file: mkdirRecurse;
@@ -108,7 +108,7 @@ unittest {
 
         writeFile("reggaefile.d", q{
             import reggae;
-            mixin build!(dubTestTarget!(CompilerFlags("-g -debug")));
+            mixin build!(dubTestTarget!());
         });
 
         mkdirRecurse(buildPath(testPath, "source"));
@@ -129,8 +129,8 @@ unittest {
     import std.path: buildPath;
 
     with(immutable ReggaeSandbox("dub")) {
-        runReggae("-b", "make", "--dflags=-g -debug");
-        make(["VERBOSE=1"]).shouldExecuteOk.shouldContain("-g -debug");
+        runReggae("-b", "make");
+        make(["VERBOSE=1"]).shouldExecuteOk.shouldContain("-debug -g");
         {
             const ret = execute(["touch", buildPath(testPath, "dub.selections.json")]);
             ret.status.shouldEqual(0);
@@ -209,7 +209,7 @@ unittest {
     }
 }
 
-@("object source files")
+@("object source files.simple")
 @Tags(["dub", "ninja"])
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -334,7 +334,7 @@ unittest {
 }
 
 
-@("object source files with dub objs option")
+@("object source files.with dub objs option")
 @Tags("dub", "ninja", "dubObjsDir")
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -375,7 +375,7 @@ unittest {
 }
 
 
-@("dub project that depends on package with prebuild")
+@("depends on package with prebuild")
 @Tags(["dub", "ninja"])
 unittest {
 
@@ -385,7 +385,7 @@ unittest {
 
         copyProject("dub_prebuild", buildPath("..", "dub_prebuild"));
 
-        runReggae("-b", "ninja", "--dflags=-g -debug");
+        runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
         shouldSucceed("app");
         shouldExist(inSandboxPath("../dub_prebuild/el_prebuildo.txt"));
@@ -432,12 +432,181 @@ unittest {
 }
 
 
-@("dub project with failing prebuild command")
+@("failing prebuild command")
 @Tags(["dub", "ninja"])
 unittest {
     with(immutable ReggaeSandbox("dub_prebuild_oops")) {
-        runReggae("-b", "ninja", "--dflags=-g -debug")
+        runReggae("-b", "ninja")
             .shouldThrowWithMessage(
                 "Error calling foo bar baz quux:\n/bin/sh: foo: command not found\n");
+    }
+}
+
+
+@("libs.plain")
+@Tags(["dub", "ninja"])
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl", `
+            name "foo"
+            targetType "executable"
+            libs "utils"
+            lflags "-L$PACKAGE_DIR"
+
+            configuration "executable" {
+            }
+
+            configuration "library" {
+                targetType "library"
+                targetName "dpp"
+                excludedSourceFiles "source/main.d"
+            }
+        `);
+
+        writeFile("reggaefile.d",
+                  q{
+                      import reggae;
+                      alias exe = dubDefaultTarget!(
+                      );
+                      mixin build!(exe);
+                  });
+
+        writeFile("source/main.d",
+                  q{
+                      extern(C) int twice(int);
+                      void main() {
+                          assert(twice(2) == 4);
+                          assert(twice(3) == 6);
+                      }
+                  });
+
+        writeFile("utils.c", "int twice(int i) { return i * 2; }");
+        shouldExecuteOk(["gcc", "-o", inSandboxPath("utils.o"), "-c", inSandboxPath("utils.c")]);
+        shouldExecuteOk(["ar", "rcs", inSandboxPath("libutils.a"), inSandboxPath("utils.o")]);
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldSucceed("foo");
+    }
+}
+
+
+@("libs.posix")
+@Tags(["dub", "ninja"])
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl", `
+            name "foo"
+            targetType "executable"
+            libs "utils" platform="posix"
+            lflags "-L$PACKAGE_DIR"
+
+            configuration "executable" {
+            }
+
+            configuration "library" {
+                targetType "library"
+                targetName "dpp"
+                excludedSourceFiles "source/main.d"
+            }
+        `);
+
+        writeFile("reggaefile.d",
+                  q{
+                      import reggae;
+                      alias exe = dubDefaultTarget!(
+                      );
+                      mixin build!(exe);
+                  });
+
+        writeFile("source/main.d",
+                  q{
+                      extern(C) int twice(int);
+                      void main() {
+                          assert(twice(2) == 4);
+                          assert(twice(3) == 6);
+                      }
+                  });
+
+        writeFile("utils.c", "int twice(int i) { return i * 2; }");
+        shouldExecuteOk(["gcc", "-o", inSandboxPath("utils.o"), "-c", inSandboxPath("utils.c")]);
+        shouldExecuteOk(["ar", "rcs", inSandboxPath("libutils.a"), inSandboxPath("utils.o")]);
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldSucceed("foo");
+    }
+}
+
+
+@("dflags.debug")
+@Tags("dub", "ninja")
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl", `
+            name "foo"
+            targetType "executable"
+        `);
+
+        writeFile("source/main.d",
+                  q{
+                      void main() {
+                          debug assert(false);
+                      }
+                  });
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldFail("foo");
+    }
+}
+
+
+@("unittest.dependency")
+@Tags(["dub", "ninja"])
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl", `
+            name "foo"
+            targetType "executable"
+            dependency "bar" path="bar"
+        `);
+        writeFile("source/app.d", q{
+            void main() {
+            }
+        });
+        writeFile("bar/dub.sdl", `
+            name "bar"
+        `);
+        writeFile("bar/source/bar.d", q{
+            module bar;
+            unittest {
+                assert(1 == 2);
+            }
+        });
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldSucceed("ut");
+    }
+}
+
+
+@("unittest.self")
+@Tags(["dub", "ninja"])
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl", `
+            name "foo"
+            targetType "executable"
+        `);
+        writeFile("source/app.d", q{
+            void main() {
+            }
+
+            unittest { assert(1 == 2); }
+        });
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldFail("ut");
     }
 }

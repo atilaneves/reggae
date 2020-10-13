@@ -126,9 +126,16 @@ package from!"reggae.dub.info".DubInfo configToDubInfo
     }
 
     auto generator = new InfoGenerator(proj);
-    generator.generate(generatorSettings(compiler, config));
+    generator.generate(generatorSettings(options.dCompiler.toCompiler, config));
 
     return DubInfo(generator.dubPackages);
+}
+
+
+Compiler toCompiler(in string compiler) @safe pure {
+    import std.conv: to;
+    if(compiler == "ldc2") return Compiler.ldc;
+    return compiler.to!Compiler;
 }
 
 

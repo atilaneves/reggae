@@ -1,3 +1,6 @@
+/**
+   Extract build information by using dub as a library
+ */
 module reggae.dub.interop.dublib;
 
 

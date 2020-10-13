@@ -129,7 +129,7 @@ struct DubInfo {
             targets ~= packageIndexToTargets(i, includeMain, compilerFlags, compilationMode, dubObjsDir);
         }
 
-        return targets ~ allStaticLibrarySources;
+        return targets ~ allObjectFileSources ~ allStaticLibrarySources;
     }
 
     // dubPackage[i] -> Target[]
@@ -181,7 +181,6 @@ struct DubInfo {
             map!(a => buildPath(dubPackage.path, a))
             .array;
 
-
         auto compileFunc() {
             final switch(compilationMode) with(CompilationMode) {
                 case all: return &dlangObjectFilesTogether;
@@ -205,13 +204,6 @@ struct DubInfo {
                                                  target.rawOutputs[0]);
             }
         }
-
-        // add any object files that are meant to be linked
-        packageTargets ~= dubPackage
-            .files
-            .filter!isObjectFile
-            .map!(a => Target(inDubPackagePath(dubPackage.path, a)))
-            .array;
 
         return packageTargets;
     }
@@ -304,6 +296,30 @@ struct DubInfo {
             map!(a => Target(a)).
             array;
     }
+
+    private Target[] allObjectFileSources() @trusted nothrow const pure {
+        import std.algorithm.iteration: filter, map, uniq;
+        import std.algorithm.sorting: sort;
+        import std.array: array, join;
+
+        string[] objectFiles =
+        packages
+            .map!(a => cast(string[]) a
+                  .files
+                  .filter!isObjectFile
+                  .map!(b => inDubPackagePath(a.path, b))
+                  .array
+            )
+            .join
+            .array;
+        sort(objectFiles);
+
+        return objectFiles
+            .uniq
+            .map!(a => Target(a))
+            .array;
+    }
+
 
     // all postBuildCommands in one shell command. Empty if there are none
     string postBuildCommands() @safe pure nothrow const {

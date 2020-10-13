@@ -81,7 +81,7 @@ package from!"reggae.dub.interop.configurations".DubConfigurations dubConfigurat
 }
 
 
-package from!"reggae.dub.info".DubInfo configToDubInfo2
+package from!"reggae.dub.info".DubInfo configToDubInfo
     (O)
     (auto ref O output, in from!"reggae.options".Options options, in string config)
     @trusted  // dub
@@ -178,7 +178,8 @@ struct DubPackages {
 auto generatorSettings(in Compiler compiler = Compiler.dmd, in string config = "") @safe {
     import dub.compilers.compiler: getCompiler;
     import dub.generators.generator: GeneratorSettings;
-    import std.conv;
+    import dub.platform: determineBuildPlatform;
+    import std.conv: text;
 
     GeneratorSettings ret;
 
@@ -187,6 +188,7 @@ auto generatorSettings(in Compiler compiler = Compiler.dmd, in string config = "
     ret.compiler = () @trusted { return getCompiler(compilerName); }();
     ret.platform.compilerBinary = compilerName;  // FIXME? (absolute path?)
     ret.config = config;
+    ret.platform = () @trusted { return determineBuildPlatform; }();
 
     return ret;
 }
@@ -285,18 +287,47 @@ class InfoGenerator: ProjectGenerator {
                 binary targets to be built.
     */
     override void generateTargets(GeneratorSettings settings, in TargetInfo[string] targets) @trusted {
+
         import dub.compilers.buildsettings: BuildSetting;
 
-        foreach(targetName, targetInfo; targets) {
+        bool[string] visited;
+
+        void visitTargetRec(string targetName) {
+            if (targetName in visited) return;
+            visited[targetName] = true;
+
+            const targetInfo = targets[targetName];
 
             auto newBuildSettings = targetInfo.buildSettings.dup;
             settings.compiler.prepareBuildSettings(newBuildSettings,
                                                    BuildSetting.noOptions /*???*/);
             DubPackage pkg;
-            pkg.name = targetName;
-            pkg.dflags = newBuildSettings.dflags;
+
+            // pkg.name = targetInfo.pack.name;
+            // apparently name is target name??
+            // FIXME?
+            pkg.name = newBuildSettings.targetName;
+            pkg.path = targetInfo.pack.path.toNativeString;
+            pkg.targetFileName = newBuildSettings.targetName;
+            pkg.files = newBuildSettings.sourceFiles.dup;
+            pkg.targetType = cast(typeof(pkg.targetType)) newBuildSettings.targetType;
+            pkg.dependencies = targetInfo.dependencies.dup;
+
+            enum sameNameProperties = [
+                "mainSourceFile", "dflags", "lflags", "importPaths",
+                "stringImportPaths", "versions", "libs",
+                "preBuildCommands", "postBuildCommands",
+                ];
+            static foreach(prop; sameNameProperties) {
+                mixin(`pkg.`, prop, ` = newBuildSettings.`, prop, `;`);
+            }
+
             dubPackages ~= pkg;
+
+            foreach(dep; targetInfo.dependencies) visitTargetRec(dep);
         }
+
+        visitTargetRec(m_project.rootPackage.name);
     }
 
     string[] configurations() @trusted const {

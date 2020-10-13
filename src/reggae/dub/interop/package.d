@@ -50,7 +50,8 @@ private from!"reggae.dub.info".DubInfo getDubInfo
 {
     import reggae.dub.interop: gDubInfos;
     import reggae.dub.interop.configurations: getConfigs;
-    import reggae.dub.interop.exec: callDub, configToDubInfo;
+    import reggae.dub.interop.exec: callDub;
+    import reggae.dub.interop.dublib: configToDubInfo;
     import reggae.io: log;
     import std.array: empty;
     import std.file: exists;

@@ -443,7 +443,7 @@ unittest {
 }
 
 
-@("libs")
+@("libs.plain")
 @Tags(["dub", "ninja"])
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -487,5 +487,76 @@ unittest {
         runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
         shouldSucceed("foo");
+    }
+}
+
+
+@("libs.posix")
+@Tags(["dub", "ninja"])
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl", `
+            name "foo"
+            targetType "executable"
+            libs "utils" platform="posix"
+            lflags "-L$PACKAGE_DIR"
+
+            configuration "executable" {
+            }
+
+            configuration "library" {
+                targetType "library"
+                targetName "dpp"
+                excludedSourceFiles "source/main.d"
+            }
+        `);
+
+        writeFile("reggaefile.d",
+                  q{
+                      import reggae;
+                      alias exe = dubDefaultTarget!(
+                      );
+                      mixin build!(exe);
+                  });
+
+        writeFile("source/main.d",
+                  q{
+                      extern(C) int twice(int);
+                      void main() {
+                          assert(twice(2) == 4);
+                          assert(twice(3) == 6);
+                      }
+                  });
+
+        writeFile("utils.c", "int twice(int i) { return i * 2; }");
+        shouldExecuteOk(["gcc", "-o", inSandboxPath("utils.o"), "-c", inSandboxPath("utils.c")]);
+        shouldExecuteOk(["ar", "rcs", inSandboxPath("libutils.a"), inSandboxPath("utils.o")]);
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldSucceed("foo");
+    }
+}
+
+
+@("dflags.debug")
+@Tags("dub", "ninja")
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl", `
+            name "foo"
+            targetType "executable"
+        `);
+
+        writeFile("source/main.d",
+                  q{
+                      void main() {
+                          debug assert(false);
+                      }
+                  });
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldFail("foo");
     }
 }

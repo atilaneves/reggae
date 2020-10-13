@@ -18,6 +18,7 @@ fi
 BACKEND=$1
 
 DC="${DC:-dmd}"
+echo "DC: $DC"
 
 rm -rf bin
 

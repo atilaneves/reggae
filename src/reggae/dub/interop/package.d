@@ -130,7 +130,7 @@ private from!"reggae.dub.info".DubInfo getDubInfo
 
 private void callPreBuildCommands(T)(auto ref T output,
                                      in from!"reggae.options".Options options,
-                                     in from!"reggae.dub.json".DubInfo dubInfo)
+                                     in from!"reggae.dub.info".DubInfo dubInfo)
     @safe
 {
     import reggae.io: log;

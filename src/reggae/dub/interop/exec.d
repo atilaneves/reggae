@@ -99,19 +99,3 @@ private bool needDubFetch(in string dubPackage, in string version_) {
                       dubPackage ~ "-" ~ version_, dubPackage ~ ".lock")
         .exists;
 }
-
-
-package from!"reggae.dub.info".DubInfo configToDubInfo
-    (O)
-    (auto ref O output, in from!"reggae.options".Options options, in string config)
-{
-
-    import reggae.dub.json: jsonStringToDubInfo;
-    import std.typecons: Yes;
-
-    auto cmd = ["dub", "describe"];
-    if(config != "") cmd ~= ["-c", config];
-    const descOutput = callDub(output, options, cmd, Yes.maybeNoDeps);
-
-    return jsonStringToDubInfo(descOutput);
-}

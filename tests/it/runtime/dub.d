@@ -562,7 +562,7 @@ unittest {
 }
 
 
-@("dependency.unittest")
+@("unittest.dependency")
 @Tags(["dub", "ninja"])
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -587,5 +587,26 @@ unittest {
         runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
         shouldSucceed("ut");
+    }
+}
+
+
+@("unittest.self")
+@Tags(["dub", "ninja"])
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl", `
+            name "foo"
+            targetType "executable"
+        `);
+        writeFile("source/app.d", q{
+            void main() {
+            }
+
+            unittest { assert(1 == 2); }
+        });
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldFail("ut");
     }
 }

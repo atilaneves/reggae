@@ -21,10 +21,14 @@ DC="${DC:-dmd}"
 
 rm -rf bin
 
-echo "Compiling reggae"
+echo "Compiling reggae with dub"
 dub build --compiler="$DC"
 
 cd bin || exit 1
-echo "Running boostrapped reggae with backend $BACKEND"
-./reggae -b "$BACKEND" --dc="$DC" ..
-$BACKEND -j"$NUM_PROC"
+
+# See https://github.com/atilaneves/reggae/issues/83
+if [[ "$DC" == "dmd" ]]; then
+    echo "Running boostrapped reggae with backend $BACKEND"
+    ./reggae -b "$BACKEND" --dc="$DC" ..
+    $BACKEND -j"$NUM_PROC"
+fi

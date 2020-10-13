@@ -45,7 +45,6 @@ mixin runTestsMain!(
     "tests.it.buildgen.two_builds_reggaefile",
     "tests.it.buildgen.empty_reggaefile",
     "tests.it",
-    "tests.it.dub",
     "tests.it.rules.scriptlike",
     "tests.it.rules.json_build",
     "tests.it.rules.object_files",

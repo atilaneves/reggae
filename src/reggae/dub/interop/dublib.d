@@ -72,16 +72,36 @@ package from!"reggae.dub.interop.configurations".DubConfigurations dubConfigurat
     @trusted  // dub...
 {
     import reggae.dub.interop.configurations: DubConfigurations;
-    import reggae.dub.interop.dublib: project, generatorSettings, InfoGenerator;
+    import reggae.dub.interop.dublib: project, InfoGenerator;
 
     auto proj = project(projectPath, systemPackagesPath, userPackagesPath);
     auto generator = new InfoGenerator(proj);
 
-    generator.generate(generatorSettings(compiler));
-
     return DubConfigurations(generator.configurations, generator.defaultConfiguration);
 }
 
+
+package from!"reggae.dub.info".DubInfo configToDubInfo2
+    (O)
+    (auto ref O output, in from!"reggae.options".Options options, in string config)
+    @trusted  // dub
+{
+    import reggae.dub.info: DubInfo;
+    import reggae.dub.interop.dublib: project, generatorSettings, InfoGenerator,
+        systemPackagesPath, userPackagesPath, ProjectPath, Compiler;
+    import std.conv: to;
+
+    auto proj = project(
+        ProjectPath(options.projectPath),
+        systemPackagesPath,
+        userPackagesPath,
+    );
+
+    auto generator = new InfoGenerator(proj);
+    generator.generate(generatorSettings(options.dCompiler.to!Compiler));
+
+    return DubInfo(generator.dubPackages);
+}
 
 
 // Not shared because, for unknown reasons, dub registers compilers

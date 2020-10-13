@@ -27,7 +27,7 @@ enum TargetType {
 
 
 struct DubPackage {
-    string name; /// target name
+    string name;
     string path; /// path to the dub package
     string mainSourceFile;
     string targetFileName;
@@ -40,7 +40,6 @@ struct DubPackage {
     string[] versions;
     string[] dependencies;
     string[] libs;
-    bool active;
     string[] preBuildCommands;
     string[] postBuildCommands;
 

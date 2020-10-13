@@ -11,10 +11,6 @@ public import reggae.dub.interop.reggaefile;
 from!"reggae.dub.info".DubInfo[string] gDubInfos;
 
 
-@safe:
-
-
-
 void writeDubConfig(T)(auto ref T output,
                        in from!"reggae.options".Options options,
                        from!"std.stdio".File file) {
@@ -134,6 +130,7 @@ private from!"reggae.dub.info".DubInfo getDubInfo
 private void callPreBuildCommands(T)(auto ref T output,
                                      in from!"reggae.options".Options options,
                                      in from!"reggae.dub.json".DubInfo dubInfo)
+    @safe
 {
     import reggae.io: log;
     import std.process: executeShell, Config;

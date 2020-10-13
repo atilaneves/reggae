@@ -357,10 +357,7 @@ TargetName targetName(in TargetType targetType, in string fileName) @safe pure n
         return TargetName(fileName);
 
     case executable:
-        version(Posix)
-            return TargetName(fileName);
-        else
-            return TargetName(fileName ~ exeExt);
+        return TargetName(fileName ~ exeExt);
 
     case library:
         version(Posix)

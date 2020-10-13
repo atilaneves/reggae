@@ -185,7 +185,7 @@ auto generatorSettings(in Compiler compiler = Compiler.dmd) @safe {
     ret.buildType = "debug";  // FIXME
     const compilerName = compiler.text;
     ret.compiler = () @trusted { return getCompiler(compilerName); }();
-    ret.platform.compilerBinary = compilerName;  // FIXME?
+    ret.platform.compilerBinary = compilerName;  // FIXME? (absolute path?)
 
     return ret;
 }

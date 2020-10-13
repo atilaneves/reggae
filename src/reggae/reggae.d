@@ -440,7 +440,7 @@ import reggae.options;
     try {
         writeDubConfig(output, options, file);
     } catch(Exception ex) {
-        stderr.writeln("Could not write dub configuration, try 'dub upgrade': ", ex.msg);
+        stderr.writeln("Could not write dub configuration: ", ex.msg);
         throw ex;
     }
 }

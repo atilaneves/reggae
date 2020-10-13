@@ -299,7 +299,7 @@ struct DubInfo {
         import std.algorithm: filter, map;
         import std.array: array, join;
         return packages.
-            map!(a => cast(string[])a.files.filter!isStaticLibrary.array).
+            map!(a => cast(string[]) a.files.filter!isStaticLibrary.array).
             join.
             map!(a => Target(a)).
             array;

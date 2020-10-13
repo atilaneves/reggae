@@ -63,7 +63,7 @@ enum Compiler {
 }
 
 
-from!"reggae.dub.interop.configurations".DubConfigurations dubConfigurations(
+package from!"reggae.dub.interop.configurations".DubConfigurations dubConfigurations(
     in ProjectPath projectPath,
     in SystemPackagesPath systemPackagesPath,
     in UserPackagesPath userPackagesPath,

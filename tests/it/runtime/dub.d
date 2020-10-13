@@ -560,3 +560,32 @@ unittest {
         shouldFail("foo");
     }
 }
+
+
+@("dependency.unittest")
+@Tags(["dub", "ninja"])
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl", `
+            name "foo"
+            targetType "executable"
+            dependency "bar" path="bar"
+        `);
+        writeFile("source/app.d", q{
+            void main() {
+            }
+        });
+        writeFile("bar/dub.sdl", `
+            name "bar"
+        `);
+        writeFile("bar/source/bar.d", q{
+            module bar;
+            unittest {
+                assert(1 == 2);
+            }
+        });
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldSucceed("ut");
+    }
+}

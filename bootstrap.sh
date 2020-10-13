@@ -17,14 +17,14 @@ fi
 
 BACKEND=$1
 
-COMP=${DMD:="dmd"}
+DC="${DC:-dmd}"
 
 rm -rf bin
 
 echo "Compiling reggae"
-dub build --compiler=$COMP
+dub build --compiler="$DC"
 
 cd bin || exit 1
 echo "Running boostrapped reggae with backend $BACKEND"
-./reggae -b $BACKEND --dc=$DMD ..
-$BACKEND -j$NUM_PROC
+./reggae -b $BACKEND --dc="$DC" ..
+$BACKEND -j"$NUM_PROC"

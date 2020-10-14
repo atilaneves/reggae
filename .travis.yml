@@ -6,7 +6,6 @@ matrix:
   include:
     - d: dmd-nightly
     - d: dmd-2.093.1
-    - d: ldc-1.23.0
   allow_failures:
     - d: dmd-nightly
 

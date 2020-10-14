@@ -436,9 +436,9 @@ unittest {
 @Tags(["dub", "ninja"])
 unittest {
     with(immutable ReggaeSandbox("dub_prebuild_oops")) {
-        runReggae("-b", "ninja")
-            .shouldThrowWithMessage(
-                "Error calling foo bar baz quux:\n/bin/sh: foo: command not found\n");
+        auto thrownInfo = runReggae("-b", "ninja").shouldThrow;
+        "Error calling foo bar baz quux:".should.be in thrownInfo.msg;
+        "not found".should.be in thrownInfo.msg;
     }
 }
 

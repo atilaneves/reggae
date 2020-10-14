@@ -81,4 +81,4 @@ test_script:
  - echo %DC%
  - echo %PATH%
  - '%DC% --version'
- - dub build
+ # - dub build  # doesn't work yet

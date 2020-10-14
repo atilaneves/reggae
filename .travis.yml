@@ -4,11 +4,11 @@ dist: focal
 
 matrix:
   include:
-#    - d: dmd-nightly
+    - d: dmd-nightly
     - d: dmd-2.093.1
-  #   - d: ldc-1.23.0
-  # allow_failures:
-  #   - d: dmd-nightly
+    - d: ldc-1.23.0
+  allow_failures:
+    - d: dmd-nightly
 
 addons:
   apt:
@@ -18,39 +18,14 @@ addons:
 install:
   - gem install bundler
   - bundle install
-  # - git clone https://github.com/martine/ninja.git
-  # - cd ninja
-  # - ./configure.py --bootstrap
-  # - export PATH=$PWD:$PATH
-  # - cd ..
   - dub fetch unit-threaded --version=0.7.21
   - dub fetch unit-threaded --version=0.7.11
   - dub fetch unit-threaded --version=0.7.8
   - dub fetch cerealed --version=0.6.8
-  # - git clone https://github.com/D-Programming-Language/dub.git
-  # - cd dub
-  # - dub build
-  # - export PATH=$PWD/bin:$PATH
-  # - cd ..
-  # - git clone https://github.com/atilaneves/reggae-python
-  # - cd reggae-python
-  # - export PYTHONPATH=$PWD
-  # - cd ..
-  # - git clone https://github.com/atilaneves/reggae-ruby
-  # - cd reggae-ruby
-  # - export RUBYLIB=$PWD/lib
-  # - export PATH=$PATH:$PWD/bin
-  # - cd ..
 
 script:
   - ./bootstrap.sh make
-  # the Travis CI machines don't like tup
-  # installing the right ruby version in travis for D projects is a pain
-  - |
-    if [ "$DC" == dmd ]; then
-      bin/ut ~@tup ~@travis_oops;
-      cucumber --tags ~@tup --tags ~@ruby --tags ~@lua;
-    fi
+  - ./run-tests.sh
 
 after_success:
  - bash <(curl -s https://codecov.io/bash)

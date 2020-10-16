@@ -64,7 +64,9 @@ void run(T)(auto ref T output, string[] args) {
 }
 
 void run(T)(auto ref T output, Options options) {
+
     if(options.earlyExit) return;
+
     enforce(options.projectPath != "", "A project path must be specified");
 
     // write out the library source files to be compiled/interpreted

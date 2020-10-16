@@ -58,9 +58,14 @@ package void dubFetch(T)(auto ref T output,
     import std.stdio: writeln;
     import std.path: buildPath;
     import std.json: parseJSON, JSONType;
-    import std.file: readText;
+    import std.file: readText, exists;
 
     const fileName = buildPath(options.projectPath, "dub.selections.json");
+    if(!fileName.exists) {
+        const cmd = ["dub", "upgrade"] ~ dubEnvArgs;
+        callDub(output, options, cmd);
+    }
+
     auto json = parseJSON(readText(fileName));
 
     auto versions = json["versions"];
@@ -74,7 +79,6 @@ package void dubFetch(T)(auto ref T output,
         const version_ = versionJson.str.replace("==", "");
 
         if(!needDubFetch(dubPackage, version_)) continue;
-
 
         const cmd = ["dub", "fetch", dubPackage, "--version=" ~ version_] ~ dubEnvArgs;
 

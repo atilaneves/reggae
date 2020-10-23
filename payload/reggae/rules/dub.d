@@ -173,7 +173,6 @@ static if(isDubProject) {
     {
 
         import reggae.rules.common: staticLibraryTarget, link;
-        import reggae.config: options;
         import reggae.dub.info: DubObjsDir;
         import std.array: join;
         import std.path: buildPath;

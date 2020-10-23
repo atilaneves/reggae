@@ -610,3 +610,46 @@ unittest {
         shouldFail("ut");
     }
 }
+
+@ShouldFail
+@("subpackages")
+@Tags(["dub", "ninja"])
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.json", `
+            {
+                "name": "oops",
+                "targetType": "none",
+                "subPackages": [
+                    {
+                        "name": "pkg1",
+                        "targetType": "staticLibrary"
+                    },
+                    {
+                        "name": "pkg2",
+                        "targetType": "executable",
+                        "sourceFiles": ["main.d"],
+                        "dependencies": {
+                            "oops:pkg1": "*"
+                        }
+                    }
+                ],
+                "dependencies": {
+                    "oops:pkg1": "*",
+                    "oops:pkg2": "*"
+                }
+            }
+        `);
+        writeFile("main.d", q{
+            void main() {
+                import oops;
+                import std.stdio;
+                writeln(3.twice);
+            }
+        });
+        writeFile("source/oops.d", "module oops; int twice(int i) { return i * 2; }");
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldFail("ut");
+    }
+}

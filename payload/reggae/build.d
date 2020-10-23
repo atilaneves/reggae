@@ -582,12 +582,13 @@ struct Command {
 
     Command expandVariables() @safe pure {
         switch(type) with(CommandType) {
-        case shell:
-            auto cmd = Command(expandBuildDir(command));
-            cmd.type = this.type;
-            return cmd;
-        default:
-            return this;
+            case shell:
+            case phony:
+                auto cmd = Command(expandBuildDir(command));
+                cmd.type = this.type;
+                return cmd;
+            default:
+                return this;
         }
     }
 

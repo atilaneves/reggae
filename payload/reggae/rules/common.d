@@ -302,18 +302,23 @@ Target[] staticLibrary(in string projectPath,
 
 
     version(Posix)
-        return staticLibraryTarget(name,
-                                   objectFiles(projectPath, srcDirs, excDirs, srcFiles, excFiles, flags, includes, stringImports));
+        return staticLibraryTarget(
+            name,
+            objectFiles(projectPath, srcDirs, excDirs, srcFiles, excFiles, flags, includes, stringImports)
+        );
     else
         throw new Exception("Can only create static libraries on Posix");
 }
 
-Target[] staticLibraryTarget(in string name, Target[] objects) {
+Target[] staticLibraryTarget(in string name, Target[] objects) @safe pure {
     import std.path: extension;
     const realName = name.extension == libExt ? name : name ~ libExt;
-    return [Target([buildPath("$builddir", realName)],
-                   staticLibraryShellCommand,
-                   objects)];
+    auto target = Target(
+        [buildPath("$builddir", realName)],
+        staticLibraryShellCommand,
+        objects,
+    );
+    return [target];
 }
 
 private enum staticLibraryShellCommand = "ar rcs $out $in";

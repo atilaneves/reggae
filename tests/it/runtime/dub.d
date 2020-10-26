@@ -393,7 +393,7 @@ unittest {
 }
 
 
-@("static library")
+@("staticLibrary.implicit")
 @Tags(["dub", "ninja"])
 unittest {
 
@@ -408,6 +408,45 @@ unittest {
 
             configuration "library" {
                 targetType "library"
+                targetName "dpp"
+                excludedSourceFiles "source/main.d"
+            }
+        `);
+
+        writeFile("reggaefile.d",
+                  q{
+                      import reggae;
+                      alias lib = dubConfigurationTarget!(Configuration("library"));
+                      enum mainObj = objectFile(SourceFile("source/main.d"));
+                      alias exe = link!(ExeName("d++"), targetConcat!(lib, mainObj));
+                      mixin build!(exe);
+                  });
+
+        writeFile("source/main.d", "void main() {}");
+        writeFile("source/foo/bar/mod.d", "module foo.bar.mod; int add1(int i, int j) { return i + j + 1; }");
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldSucceed("d++");
+    }
+}
+
+
+@("staticLibrary.explicit")
+@Tags(["dub", "ninja"])
+unittest {
+
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl", `
+            name "foo"
+            targetType "executable"
+            targetName "d++"
+
+            configuration "executable" {
+            }
+
+            configuration "library" {
+                targetType "staticLibrary"
                 targetName "dpp"
                 excludedSourceFiles "source/main.d"
             }
@@ -606,6 +645,49 @@ unittest {
             unittest { assert(1 == 2); }
         });
         runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldFail("ut");
+    }
+}
+
+
+@("subpackages")
+@Tags(["dub", "ninja"])
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.json", `
+            {
+                "name": "oops",
+                "targetType": "none",
+                "subPackages": [
+                    {
+                        "name": "pkg1",
+                        "targetType": "staticLibrary"
+                    },
+                    {
+                        "name": "pkg2",
+                        "targetType": "executable",
+                        "sourceFiles": ["main.d"],
+                        "dependencies": {
+                            "oops:pkg1": "*"
+                        }
+                    }
+                ],
+                "dependencies": {
+                    "oops:pkg1": "*",
+                    "oops:pkg2": "*"
+                }
+            }
+        `);
+        writeFile("main.d", q{
+            void main() {
+                import oops;
+                import std.stdio;
+                writeln(3.twice);
+            }
+        });
+        writeFile("source/oops.d", "module oops; int twice(int i) { return i * 2; }");
+        runReggae("-b", "ninja", "--dub-static-lib-deps");
         ninja.shouldExecuteOk;
         shouldFail("ut");
     }

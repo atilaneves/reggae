@@ -120,11 +120,6 @@ package from!"reggae.dub.info".DubInfo configToDubInfo
         userPackagesPath,
     );
 
-    Compiler compiler() {
-        if(options.dCompiler == "ldc2") return Compiler.ldc;
-        return options.dCompiler.to!Compiler;
-    }
-
     auto generator = new InfoGenerator(proj);
     generator.generate(generatorSettings(options.dCompiler.toCompiler, config));
 
@@ -155,8 +150,12 @@ struct DubPackages {
     private PackageManager _packageManager;
     private string _userPackagesPath;
 
-    this(in SystemPackagesPath systemPackagesPath, in UserPackagesPath userPackagesPath) @safe {
-        _packageManager = packageManager(systemPackagesPath, userPackagesPath);
+    this(in ProjectPath projectPath,
+         in SystemPackagesPath systemPackagesPath,
+         in UserPackagesPath userPackagesPath)
+        @safe
+    {
+        _packageManager = packageManager(projectPath, systemPackagesPath, userPackagesPath);
         _userPackagesPath = userPackagesPath.value;
     }
 
@@ -183,9 +182,9 @@ struct DubPackages {
                 NativePath(buildPath(_userPackagesPath, "packages", name ~ "-" ~ version_, name)),
             );
         }();
-
     }
 }
+
 
 auto generatorSettings(in Compiler compiler = Compiler.dmd, in string config = "") @safe {
     import dub.compilers.compiler: getCompiler;
@@ -212,17 +211,18 @@ auto project(in ProjectPath projectPath,
     @trusted
 {
     import dub.project: Project;
-    auto pkg = dubPackage(projectPath);
-    return new Project(packageManager(systemPackagesPath, userPackagesPath), pkg);
+    import dub.internal.vibecompat.inet.path: NativePath;
+
+    auto pkgManager = packageManager(projectPath, systemPackagesPath, userPackagesPath);
+
+    return new Project(pkgManager, NativePath(projectPath.value));
 }
 
 
 private auto dubPackage(in ProjectPath projectPath) @trusted {
     import dub.internal.vibecompat.inet.path: NativePath;
     import dub.package_: Package;
-
-    const nativeProjectPath = NativePath(projectPath.value);
-    return new Package(recipe(projectPath), nativeProjectPath);
+    return new Package(recipe(projectPath), NativePath(projectPath.value));
 }
 
 
@@ -247,14 +247,15 @@ private auto recipe(in ProjectPath projectPath) @safe {
     } else if(inProjectPath("dub.json").exists) {
         auto text = readText(inProjectPath("dub.json"));
         auto json = () @trusted { return dub.internal.vibecompat.data.json.parseJson(text); }();
-        () @trusted { parseJson(recipe, json, "parent"); }();
+        () @trusted { parseJson(recipe, json, "" /*parent*/); }();
         return recipe;
     } else
         throw new Exception("Could not find dub.sdl or dub.json in " ~ projectPath.value);
 }
 
 
-auto packageManager(in SystemPackagesPath systemPackagesPath,
+auto packageManager(in ProjectPath projectPath,
+                    in SystemPackagesPath systemPackagesPath,
                     in UserPackagesPath userPackagesPath)
     @trusted
 {
@@ -265,7 +266,13 @@ auto packageManager(in SystemPackagesPath systemPackagesPath,
     const systemPath = NativePath(systemPackagesPath.value);
     const refreshPackages = false;
 
-    return new PackageManager(userPath, systemPath, refreshPackages);
+    auto pkgManager = new PackageManager(userPath, systemPath, refreshPackages);
+    // In dub proper, this initialisation is done in commandline.d
+    // in the function runDubCommandLine. If not not, subpackages
+    // won't work.
+    pkgManager.getOrLoadPackage(NativePath(projectPath.value));
+
+    return pkgManager;
 }
 
 

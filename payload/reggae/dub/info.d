@@ -189,7 +189,32 @@ struct DubInfo {
             }
         }
 
-        auto packageTargets = compileFunc()(files, flags, importPaths, stringImportPaths, [], projDir);
+        Target[] compileThenLinkStaticLib(
+            in string[] srcFiles,
+            in string flags,
+            in string[] importPaths,
+            in string[] stringImportPaths,
+            Target[] implicits,
+            in string projDir
+            )
+        {
+            import reggae.rules.common: staticLibraryTarget;
+            return staticLibraryTarget(dubPackage.targetFileName,
+                compileFunc()(srcFiles, flags, importPaths, stringImportPaths, implicits, projDir));
+        }
+
+        auto targetsFunc() {
+            import reggae.config: options;
+            import std.functional: toDelegate;
+
+            const staticLib = dubPackage.targetType == TargetType.staticLibrary &&
+                options.dubStaticLibInsteadOfObjs;
+            return staticLib
+                ? &compileThenLinkStaticLib
+                : () @trusted { return compileFunc.toDelegate; }();
+        }
+
+        auto packageTargets = targetsFunc()(files, flags, importPaths, stringImportPaths, [], projDir);
 
         // e.g. /foo/bar -> foo/bar
         const deabsWorkingDir = options.workingDir.deabsolutePath;

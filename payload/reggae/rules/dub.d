@@ -172,8 +172,7 @@ static if(isDubProject) {
         )
     {
 
-        import reggae.rules.common: staticLibraryTarget;
-        import reggae.config: options;
+        import reggae.rules.common: staticLibraryTarget, link;
         import reggae.dub.info: DubObjsDir;
         import std.array: join;
         import std.path: buildPath;
@@ -196,11 +195,14 @@ static if(isDubProject) {
                             startingIndex);
 
         const name = realName(targetName, dubInfo);
+
         auto target = isStaticLibrary
             ? staticLibraryTarget(name, allObjs)[0]
-            : link(ExeName(name),
-                   allObjs,
-                   Flags(allLinkerFlags));
+            : dubInfo.targetType == TargetType.none
+                ? Target.phony(name, "", allObjs)
+                : link(ExeName(name),
+                       allObjs,
+                       Flags(allLinkerFlags));
 
         return dubInfo.postBuildCommands == ""
             ? target
@@ -339,9 +341,11 @@ static if(isDubProject) {
         import std.path: buildPath;
         // otherwise the target wouldn't be top-level in the presence of
         // postBuildCommands
-        return dubInfo.postBuildCommands == ""
+        auto ret =  dubInfo.postBuildCommands == ""
             ? targetName.value
             : buildPath("$project", targetName.value);
+        if(ret == "") ret = "placeholder";
+        return ret;
     }
 
     private auto dubObjsDir(in TargetName targetName, in DubInfo dubInfo) {

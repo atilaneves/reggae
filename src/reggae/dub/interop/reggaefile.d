@@ -35,5 +35,5 @@ private void createReggaefile(T)(auto ref T output,
         mixin build!(dubDefaultTarget!(), dubTestTarget!());
     }.replaceFirst(regex(`^        `), ""));
 
-    if(!options.noFetch) dubFetch(output, options);
+    dubFetch(output, options);
 }

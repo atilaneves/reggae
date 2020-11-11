@@ -60,6 +60,8 @@ package void dubFetch(T)(auto ref T output,
     import std.json: parseJSON, JSONType;
     import std.file: readText, exists;
 
+    if(options.noFetch) return;
+
     const fileName = buildPath(options.projectPath, "dub.selections.json");
     if(!fileName.exists) {
         const cmd = ["dub", "upgrade"] ~ dubEnvArgs;

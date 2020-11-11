@@ -338,16 +338,13 @@ class InfoGenerator: ProjectGenerator {
 
         bool[string] visited;
 
-        void visitTargetRec(in string targetName) {
-            if (targetName in visited) return;
-            visited[targetName] = true;
-
-            dubPackages ~= nameToDubPackage(targetName);
-
-            foreach(dep; targets[targetName].dependencies) visitTargetRec(dep);
+        const rootName = m_project.rootPackage.name;
+        dubPackages ~= nameToDubPackage(rootName);
+        foreach(i, dep; targets[rootName].linkDependencies) {
+            if (dep in visited) continue;
+            visited[dep] = true;
+            dubPackages ~= nameToDubPackage(dep);
         }
-
-        visitTargetRec(m_project.rootPackage.name);
     }
 
     string[] configurations() @trusted const {

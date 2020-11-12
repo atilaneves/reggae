@@ -311,14 +311,15 @@ struct DubInfo {
     }
 
     // must be at the very end
-    private Target[] allStaticLibrarySources() @trusted nothrow const pure {
+    private Target[] allStaticLibrarySources() @trusted /*join*/ nothrow const pure {
         import std.algorithm: filter, map;
         import std.array: array, join;
-        return packages.
-            map!(a => cast(string[]) a.files.filter!isStaticLibrary.array).
-            join.
-            map!(a => Target(a)).
-            array;
+
+        return packages
+            .map!(a => cast(string[]) a.files.filter!isStaticLibrary.array)
+            .join
+            .map!(a => Target(a))
+            .array;
     }
 
     private Target[] allObjectFileSources() @trusted nothrow const pure {

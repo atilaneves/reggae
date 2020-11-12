@@ -309,14 +309,8 @@ class InfoGenerator: ProjectGenerator {
 
         import dub.compilers.buildsettings: BuildSetting;
 
-        bool[string] visited;
-
-        void visitTargetRec(string targetName) {
-            if (targetName in visited) return;
-            visited[targetName] = true;
-
+        DubPackage nameToDubPackage(in string targetName) {
             const targetInfo = targets[targetName];
-
             auto newBuildSettings = targetInfo.buildSettings.dup;
             settings.compiler.prepareBuildSettings(newBuildSettings,
                                                    BuildSetting.noOptions /*???*/);
@@ -338,12 +332,19 @@ class InfoGenerator: ProjectGenerator {
                 mixin(`pkg.`, prop, ` = newBuildSettings.`, prop, `;`);
             }
 
-            dubPackages ~= pkg;
-
-            foreach(dep; targetInfo.dependencies) visitTargetRec(dep);
+            return pkg;
         }
 
-        visitTargetRec(m_project.rootPackage.name);
+
+        bool[string] visited;
+
+        const rootName = m_project.rootPackage.name;
+        dubPackages ~= nameToDubPackage(rootName);
+        foreach(i, dep; targets[rootName].linkDependencies) {
+            if (dep in visited) continue;
+            visited[dep] = true;
+            dubPackages ~= nameToDubPackage(dep);
+        }
     }
 
     string[] configurations() @trusted const {

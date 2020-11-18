@@ -23,7 +23,6 @@ mixin runTestsMain!(
     "tests.ut.dependencies",
     "tests.ut.default_rules",
     "tests.ut.rules.link",
-    "tests.ut.rules.dub",
     "tests.ut.rules.common",
     "tests.ut.reflect",
     "tests.ut.range",

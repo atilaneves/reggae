@@ -280,6 +280,7 @@ class InfoGenerator: ProjectGenerator {
     import reggae.dub.info: DubPackage;
     import dub.project: Project;
     import dub.generators.generator: GeneratorSettings;
+    import dub.compilers.buildsettings: BuildSettings;
 
     DubPackage[] dubPackages;
 
@@ -309,7 +310,7 @@ class InfoGenerator: ProjectGenerator {
 
         import dub.compilers.buildsettings: BuildSetting;
 
-        DubPackage nameToDubPackage(in string targetName) {
+        DubPackage nameToDubPackage(in string targetName, in bool isFirstPackage = false) {
             const targetInfo = targets[targetName];
             auto newBuildSettings = targetInfo.buildSettings.dup;
             settings.compiler.prepareBuildSettings(newBuildSettings,
@@ -327,10 +328,13 @@ class InfoGenerator: ProjectGenerator {
                 "mainSourceFile", "dflags", "lflags", "importPaths",
                 "stringImportPaths", "versions", "libs",
                 "preBuildCommands", "postBuildCommands",
-                ];
+            ];
             static foreach(prop; sameNameProperties) {
                 mixin(`pkg.`, prop, ` = newBuildSettings.`, prop, `;`);
             }
+
+            if(isFirstPackage)  // unfortunately due to dub's `invokeLinker`
+                adjustMainPackage(pkg, settings, newBuildSettings);
 
             return pkg;
         }
@@ -339,12 +343,42 @@ class InfoGenerator: ProjectGenerator {
         bool[string] visited;
 
         const rootName = m_project.rootPackage.name;
-        dubPackages ~= nameToDubPackage(rootName);
+        dubPackages ~= nameToDubPackage(rootName, true);
+
         foreach(i, dep; targets[rootName].linkDependencies) {
             if (dep in visited) continue;
             visited[dep] = true;
             dubPackages ~= nameToDubPackage(dep);
         }
+    }
+
+    private static adjustMainPackage(ref DubPackage pkg, in GeneratorSettings settings, in BuildSettings buildSettings) {
+        import std.algorithm.searching: canFind, startsWith;
+        import std.algorithm.iteration: filter, map;
+        import std.array: array;
+
+        // this is copied from dub's DMDCompiler.invokeLinker since
+        // unfortunately that function modifies the arguments before
+        // calling the linker, but we can't call it either since it
+        // has side-effects. Until dub gets refactored, this has to
+        // be maintained in parallel. Sigh.
+
+        pkg.lflags = pkg.lflags.map!(a => "-L" ~ a).array;
+
+        if(settings.platform.platform.canFind("linux"))
+            pkg.lflags = "-L--no-as-needed" ~ pkg.lflags;
+
+        static bool isLinkerDFlag(in string arg) {
+            switch (arg) {
+            default:
+                if (arg.startsWith("-defaultlib=")) return true;
+                return false;
+            case "-g", "-gc", "-m32", "-m64", "-shared", "-lib", "-m32mscoff":
+                return true;
+            }
+        }
+
+        pkg.lflags ~= buildSettings.dflags.filter!isLinkerDFlag.array;
     }
 
     string[] configurations() @trusted const {

@@ -169,7 +169,6 @@ struct DubInfo {
                             dubPackage.versions.map!(a => "-version=" ~ a),
                             only(options.dflags),
                             sharedFlag,
-                            only(archFlag(options)),
                             only(deUnitTest(dubPackageIndex, compilerFlags)))
             .join(" ");
 
@@ -271,11 +270,10 @@ struct DubInfo {
     // See reggae.config.
     string[] linkerFlags()() const {
         import reggae.config: options;
-        import std.array: join;
 
-        const allLibs = packages.map!(a => a.libs).join;
+        const allLibs = packages[0].libs;
 
-        string libFlag(in string lib) {
+        static string libFlag(in string lib) {
             version(Posix)
                 return "-L-l" ~ lib;
             else {
@@ -293,9 +291,9 @@ struct DubInfo {
         }
 
         return
-            allLibs.map!libFlag.array ~
-            archFlag(options) ~
-            packages.map!(a => a.lflags.map!(b => "-L" ~ b)).join;
+            packages[0].libs.map!libFlag.array ~
+            packages[0].lflags
+            ;
     }
 
     string[] allImportPaths() @safe nothrow const {
@@ -375,19 +373,6 @@ private string[] allOf(alias F)(in DubPackage pack, in DubPackage[] packages) @t
     return result;
 }
 
-// The arch flag doesn't show up in dub describe. Sigh.
-private string archFlag(in Options options) @safe pure nothrow {
-    import reggae.options: DubArchitecture;
-
-    final switch(options.dubArch) with(DubArchitecture) {
-        case DubArchitecture.x86:
-            return "-m32";
-        case DubArchitecture.x86_64:
-            return "-m64";
-        case DubArchitecture.x86_mscoff:
-            return "-m32mscoff";
-    }
-}
 
 TargetName targetName(in TargetType targetType, in string fileName) @safe pure nothrow {
 

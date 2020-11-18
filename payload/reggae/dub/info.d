@@ -294,7 +294,7 @@ struct DubInfo {
         return
             packages[0].libs.map!libFlag.array ~
             archFlag(options) ~
-            packages[0].lflags.map!(a => "-L" ~ a).array
+            packages[0].lflags
             ;
     }
 

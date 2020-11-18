@@ -5,33 +5,6 @@ import reggae;
 import unit_threaded;
 
 
-@("dubTarget with lflags")
-unittest {
-
-    import reggae.rules.dub: dubTarget;
-    import std.typecons: Yes, No;
-
-    DubInfo dubInfo;
-    dubInfo.packages = [DubPackage()];
-    dubInfo.packages[0].lflags = ["-L$FOO"];
-    Target[] objects;
-    const actual = dubTarget(TargetName("app"),
-                             dubInfo,
-                             "-g -debug",
-                             [],
-                             Yes.main,
-                             CompilationMode.all,
-    );
-    const expected = Target("app",
-                            Command(CommandType.link,
-                                    assocList([assocEntry("flags",
-                                                          ["-m64", "-L-L$FOO"])])),
-                            []);
-    actual.shouldEqual(expected);
-}
-
-
-
 @("dubTarget with static library source with env var in path")
 unittest {
 

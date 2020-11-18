@@ -271,11 +271,10 @@ struct DubInfo {
     // See reggae.config.
     string[] linkerFlags()() const {
         import reggae.config: options;
-        import std.array: join;
 
-        const allLibs = packages.map!(a => a.libs).join;
+        const allLibs = packages[0].libs;
 
-        string libFlag(in string lib) {
+        static string libFlag(in string lib) {
             version(Posix)
                 return "-L-l" ~ lib;
             else {
@@ -293,9 +292,10 @@ struct DubInfo {
         }
 
         return
-            allLibs.map!libFlag.array ~
+            packages[0].libs.map!libFlag.array ~
             archFlag(options) ~
-            packages.map!(a => a.lflags.map!(b => "-L" ~ b)).join;
+            packages[0].lflags.map!(a => "-L" ~ a).array
+            ;
     }
 
     string[] allImportPaths() @safe nothrow const {

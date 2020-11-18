@@ -578,6 +578,56 @@ unittest {
 }
 
 
+@("libs.dependency")
+@Tags(["dub", "ninja"])
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl", `
+            name "foo"
+            targetType "executable"
+            dependency "bar" path="bar"
+        `);
+
+        writeFile("reggaefile.d",
+                  q{
+                      import reggae;
+                      mixin build!(dubDefaultTarget!());
+                  });
+
+        writeFile("source/main.d",
+                  q{
+                      import bar;
+                      void main() {
+                          assert(times4(2) == 8);
+                          assert(times4(3) == 12);
+                      }
+                  });
+
+        writeFile("bar/dub.sdl", `
+            name "bar"
+            targetType "library"
+            lflags "-L$PACKAGE_DIR"
+            libs "utils"
+        `);
+
+        writeFile("bar/source/bar.d", q{
+                module bar;
+                extern(C) int twice(int);
+                int times4(int i) { return 2 * twice(i); }
+            }
+        );
+
+        writeFile("bar/utils.c", "int twice(int i) { return i * 2; }");
+        shouldExecuteOk(["gcc", "-o", inSandboxPath("bar/utils.o"), "-c", inSandboxPath("bar/utils.c")]);
+        shouldExecuteOk(["ar", "rcs", inSandboxPath("bar/libutils.a"), inSandboxPath("bar/utils.o")]);
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldSucceed("foo");
+    }
+}
+
+
 @("dflags.debug")
 @Tags("dub", "ninja")
 unittest {

@@ -188,38 +188,17 @@ struct DubInfo {
             }
         }
 
-        Target[] compileToStaticLib(
-            in string[] srcFiles,
-            in string flags,
-            in string[] importPaths,
-            in string[] stringImportPaths,
-            Target[] implicits,
-            in string projDir
-            )
-        {
-            // dub builds static library dependencies by calling dmd
-            // -lib on all the source files. dmd in turn has its own
-            // code to produce static libraries instead of calling
-            // an external tool, and this can affect linker outcomes.
-            return dlangObjectFilesTogether(
-                srcFiles,
-                "-lib " ~ flags,
-                importPaths,
-                stringImportPaths,
-                implicits,
-                projDir,
-            );
-        }
-
         auto targetsFunc() {
+            import reggae.rules.d: dlangStaticLibraryTogether;
             import reggae.config: options;
-            import std.functional: toDelegate;
 
-            const staticLib = dubPackage.targetType == TargetType.staticLibrary &&
+            const staticLib =
+                dubPackage.targetType == TargetType.staticLibrary &&
                 options.dubStaticLibInsteadOfObjs;
+
             return staticLib
-                ? &compileToStaticLib
-                : () @trusted { return compileFunc.toDelegate; }();
+                ? &dlangStaticLibraryTogether
+                : compileFunc;
         }
 
         auto packageTargets = targetsFunc()(files, flags, importPaths, stringImportPaths, [], projDir);

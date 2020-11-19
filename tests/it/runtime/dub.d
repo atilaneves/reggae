@@ -736,7 +736,11 @@ unittest {
                 writeln(3.twice);
             }
         });
-        writeFile("source/oops.d", "module oops; int twice(int i) { return i * 2; }");
+        writeFile("source/oops.d", q{
+            module oops;
+            int twice(int i) { return i * 2; }
+        });
+
         runReggae("-b", "ninja", "--dub-static-lib-deps");
         ninja.shouldExecuteOk;
         shouldFail("ut");

@@ -6,6 +6,7 @@ import std.file;
 
 
 @("optional")
+@Flaky
 @Values("ninja", "make", "binary")
 unittest {
 

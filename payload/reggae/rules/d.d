@@ -164,10 +164,32 @@ Target[] dlangObjectFilesTogether(in string[] srcFiles,
                                   in string projDir = "$project")
     @trusted pure
 {
+    import reggae.rules.common: objFileName, libFileName;
+    import std.algorithm.searching: canFind;
+    import std.algorithm.iteration: splitter;
+    import std.array: join;
+    import std.path: stripExtension, baseName;
+    import std.range: take;
 
     if(srcFiles.empty) return [];
+
+    string outputFileName() {
+
+        // then number in `take` is arbitrary but larger than 1 to try to get
+        // unique file names without making the file name too long.
+        const name = srcFiles
+            .take(4)
+            .map!baseName
+            .map!stripExtension
+            .join("_")
+            ~ ".d";
+        const path = packagePath(srcFiles[0]) ~ "_" ~ name;
+        const isStaticLibrary = flags.splitter(" ").canFind("-lib");
+        return isStaticLibrary ? libFileName(path) : objFileName(path);
+    }
+
     auto command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
-    return [Target(srcFiles[0].packagePath.objFileName, command, srcFiles.map!(a => Target(a)).array, implicits)];
+    return [Target(outputFileName, command, srcFiles.map!(a => Target(a)).array, implicits)];
 }
 
 

@@ -348,6 +348,15 @@ version(Windows) {
 }
 
 string objFileName(in string srcFileName) @safe pure {
+    return extFileName(srcFileName, objExt);
+}
+
+string libFileName(in string srcFileName) @safe pure {
+    return extFileName(srcFileName, libExt);
+}
+
+
+string extFileName(in string srcFileName, in string extension) @safe pure {
     import reggae.path: deabsolutePath;
     import std.path: stripExtension;
     import std.array: replace;
@@ -357,8 +366,9 @@ string objFileName(in string srcFileName) @safe pure {
         .stripExtension
         ;
 
-    return (tmp ~ objExt).replace("..", "__");
+    return (tmp ~ extension).replace("..", "__");
 }
+
 
 string removeProjectPath(in string path) @safe {
     import std.path: relativePath, absolutePath;

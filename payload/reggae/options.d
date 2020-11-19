@@ -48,7 +48,7 @@ struct Options {
     bool dubLocalPackages;
     string[] dependencies;
     string dubObjsDir;
-    bool dubStaticLibInsteadOfObjs;
+    bool dubDepObjsInsteadOfStaticLib;
 
     version(Windows)
         DubArchitecture dubArch = DubArchitecture.x86;
@@ -241,7 +241,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             "dub_local", "Project uses dub local packages", &options.dubLocalPackages,
             "dub-objs-dir", "Directory to place object files for dub dependencies", &options.dubObjsDir,
             "dub-arch", "Architecture (x86, x86_64, x86_mscoff)", &options.dubArch,
-            "dub-static-lib-deps", "Use a static library for dub dependencies", &options.dubStaticLibInsteadOfObjs,
+            "dub-deps-objs", "Use object files instead of static library for dub dependencies", &options.dubDepObjsInsteadOfStaticLib,
         );
 
         if(helpInfo.helpWanted) {

@@ -192,11 +192,12 @@ struct DubInfo {
             import reggae.rules.d: dlangStaticLibraryTogether;
             import reggae.config: options;
 
-            const staticLib =
+            const isStaticLibDep =
                 dubPackage.targetType == TargetType.staticLibrary &&
-                options.dubStaticLibInsteadOfObjs;
+                dubPackageIndex != 0 &&
+                !options.dubDepObjsInsteadOfStaticLib;
 
-            return staticLib
+            return isStaticLibDep
                 ? &dlangStaticLibraryTogether
                 : compileFunc;
         }

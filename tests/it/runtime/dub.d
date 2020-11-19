@@ -279,7 +279,7 @@ unittest {
         });
 
         const dubObjsDir = buildPath(testPath, "objsdir");
-        const output = runReggae("-b", "ninja", "--dub-objs-dir=" ~ dubObjsDir);
+        const output = runReggae("-b", "ninja", "--dub-objs-dir=" ~ dubObjsDir, "--dub-deps-objs");
         writelnUt(output);
         ninja.shouldExecuteOk;
 
@@ -292,6 +292,7 @@ unittest {
                               "source_bar.o"));
     }
 }
+
 
 @("dub objs option registry dependency")
 @Tags("dub", "ninja", "dubObjsDir")
@@ -318,7 +319,7 @@ unittest {
         });
 
         const dubObjsDir = buildPath(testPath, "objsdir");
-        const output = runReggae("-b", "ninja", "--dub-objs-dir=" ~ dubObjsDir);
+        const output = runReggae("-b", "ninja", "--dub-objs-dir=" ~ dubObjsDir, "--dub-deps-objs");
         writelnUt(output);
 
         ninja.shouldExecuteOk;
@@ -741,7 +742,7 @@ unittest {
             int twice(int i) { return i * 2; }
         });
 
-        runReggae("-b", "ninja", "--dub-static-lib-deps");
+        runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
         shouldFail("ut");
     }

@@ -162,13 +162,89 @@ Target[] dlangObjectFilesTogether(in string[] srcFiles,
                                   in string[] stringImportPaths = [],
                                   Target[] implicits = [],
                                   in string projDir = "$project")
-    @trusted pure
+    @safe pure
 {
-
-    if(srcFiles.empty) return [];
-    auto command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
-    return [Target(srcFiles[0].packagePath.objFileName, command, srcFiles.map!(a => Target(a)).array, implicits)];
+    import reggae.rules.common: objFileName;
+    return dlangTargetTogether(
+        &objFileName,
+        srcFiles,
+        flags,
+        importPaths,
+        stringImportPaths,
+        implicits,
+        projDir
+    );
 }
+
+
+/**
+   Generate a static library for D sources, compiling all of them together.
+   With dmd, this results in a different static library than compiling the
+   source into object files then using `ar` to create the .a.
+*/
+Target[] dlangStaticLibraryTogether(in string[] srcFiles,
+                                    in string flags = "",
+                                    in string[] importPaths = [],
+                                    in string[] stringImportPaths = [],
+                                    Target[] implicits = [],
+                                    in string projDir = "$project")
+    @safe pure
+{
+    import reggae.rules.common: libFileName;
+    return dlangTargetTogether(
+        &libFileName,
+        srcFiles,
+        "-lib " ~ flags,
+        importPaths,
+        stringImportPaths,
+        implicits,
+        projDir
+    );
+}
+
+
+private Target[] dlangTargetTogether(
+    string function(in string) @safe pure toFileName,
+    in string[] srcFiles,
+    in string flags = "",
+    in string[] importPaths = [],
+    in string[] stringImportPaths = [],
+    Target[] implicits = [],
+    in string projDir = "$project",
+    )
+    @safe pure
+{
+    if(srcFiles.empty) return [];
+
+    // when building a .o or .a for multiple source files, this generates a name
+    // designed to avoid filename clashes (see arsd-official)
+    string outputNameForSrcFiles() @safe pure {
+        import reggae.sorting: packagePath;
+        import std.array: join;
+        import std.path: stripExtension, baseName;
+        import std.range: take;
+
+        // then number in `take` is arbitrary but larger than 1 to try to get
+        // unique file names without making the file name too long.
+        const name = srcFiles
+            .take(4)
+            .map!baseName
+            .map!stripExtension
+            .join("_")
+
+            ~ ".d";
+        return packagePath(srcFiles[0]) ~ "_" ~ name;
+    }
+
+    const outputFileName = toFileName(outputNameForSrcFiles);
+    auto command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
+
+    return [Target(outputFileName, command, srcFiles.map!(a => Target(a)).array, implicits)];
+}
+
+
+
+
 
 
 /**

@@ -188,29 +188,18 @@ struct DubInfo {
             }
         }
 
-        Target[] compileThenLinkStaticLib(
-            in string[] srcFiles,
-            in string flags,
-            in string[] importPaths,
-            in string[] stringImportPaths,
-            Target[] implicits,
-            in string projDir
-            )
-        {
-            import reggae.rules.common: staticLibraryTarget;
-            return staticLibraryTarget(dubPackage.targetFileName,
-                compileFunc()(srcFiles, flags, importPaths, stringImportPaths, implicits, projDir));
-        }
-
         auto targetsFunc() {
+            import reggae.rules.d: dlangStaticLibraryTogether;
             import reggae.config: options;
-            import std.functional: toDelegate;
 
-            const staticLib = dubPackage.targetType == TargetType.staticLibrary &&
-                options.dubStaticLibInsteadOfObjs;
-            return staticLib
-                ? &compileThenLinkStaticLib
-                : () @trusted { return compileFunc.toDelegate; }();
+            const isStaticLibDep =
+                dubPackage.targetType == TargetType.staticLibrary &&
+                dubPackageIndex != 0 &&
+                !options.dubDepObjsInsteadOfStaticLib;
+
+            return isStaticLibDep
+                ? &dlangStaticLibraryTogether
+                : compileFunc;
         }
 
         auto packageTargets = targetsFunc()(files, flags, importPaths, stringImportPaths, [], projDir);

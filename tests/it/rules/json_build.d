@@ -42,7 +42,7 @@ unittest {
 unittest {
     import reggae.config;
     const testPath = newTestDir;
-    setOptions(getOptions(["reggae", "-b", "ninja", "--per_module", "testPath"]));
+    setOptions(getOptions(["reggae", "-b", "ninja", "--per-module", "testPath"]));
     mkdir(buildPath(testPath, "src"));
 
     foreach(fileName; ["foo.d", "bar.d"]) {

@@ -29,7 +29,11 @@ void writeDubConfig(T)(auto ref T output,
 
     file.writeln("import reggae.dub.info;");
     file.writeln("enum isDubProject = true;");
+
+    output.log("Getting dub build information");
     auto dubInfo = getDubInfo(output, options);
+    output.log("Got     dub build information");
+
     const targetType = dubInfo.packages.length
         ? dubInfo.packages[0].targetType
         : TargetType.sourceLibrary;
@@ -42,6 +46,8 @@ void writeDubConfig(T)(auto ref T output,
     }
     file.writeln(`]);`);
     file.writeln;
+
+    output.log("Finished writing dub configuration");
 }
 
 

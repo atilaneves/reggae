@@ -205,6 +205,11 @@ auto generatorSettings(in Compiler compiler = Compiler.dmd, in string config = "
 }
 
 
+auto project(in ProjectPath projectPath) @safe {
+    return project(projectPath, systemPackagesPath, userPackagesPath);
+}
+
+
 auto project(in ProjectPath projectPath,
              in SystemPackagesPath systemPackagesPath,
              in UserPackagesPath userPackagesPath)
@@ -392,4 +397,16 @@ class InfoGenerator: ProjectGenerator {
         auto settings = generatorSettings();
         return m_project.getDefaultConfiguration(settings.platform);
     }
+}
+
+
+auto getPackage(
+    in from!"reggae.options".Options options,
+    in string dubPackage,
+    in string version_)
+    @trusted
+{
+    import dub.dependency: Version;
+    auto proj = project(ProjectPath(options.projectPath));
+    return proj.packageManager.getPackage(dubPackage, Version(version_));
 }

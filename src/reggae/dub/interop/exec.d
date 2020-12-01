@@ -69,7 +69,6 @@ package void dubFetch(T)(auto ref T output,
     }
 
     auto json = parseJSON(readText(fileName));
-
     auto versions = json["versions"];
 
     foreach(dubPackage, versionJson; versions.object) {
@@ -80,7 +79,7 @@ package void dubFetch(T)(auto ref T output,
         // versions are usually `==1.2.3`, so strip the sign
         const version_ = versionJson.str.replace("==", "");
 
-        if(!needDubFetch(dubPackage, version_)) continue;
+        if(!needDubFetch(options, dubPackage, version_)) continue;
 
         const cmd = ["dub", "fetch", dubPackage, "--version=" ~ version_] ~ dubEnvArgs;
 
@@ -94,14 +93,34 @@ package void dubFetch(T)(auto ref T output,
     }
 }
 
+
+private bool needDubFetch(
+    in from!"reggae.options".Options options,
+    in string dubPackage,
+    in string version_)
+    @safe
+{
+    import reggae.dub.interop.dublib: getPackage;
+
+    // first check the file system explicitly
+    if(pkgExistsOnFS(dubPackage, version_)) return false;
+    // next ask dub (this is slower)
+    if(getPackage(options, dubPackage, version_)) return false;
+
+    return true;
+}
+
+
 // dub fetch can sometimes take >10s (!) despite the package already being
 // on disk
-private bool needDubFetch(in string dubPackage, in string version_) {
+private bool pkgExistsOnFS(in string dubPackage, in string version_) {
     import reggae.path: dubPackagesDir;
     import std.path: buildPath;
     import std.file: exists;
 
-    return !buildPath(dubPackagesDir,
-                      dubPackage ~ "-" ~ version_, dubPackage ~ ".lock")
-        .exists;
+    return buildPath(
+        dubPackagesDir,
+        dubPackage ~ "-" ~ version_,
+        dubPackage ~ ".lock"
+    ).exists;
 }

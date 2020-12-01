@@ -57,6 +57,7 @@ package void dubFetch(T)(auto ref T output,
     import std.path: buildPath;
     import std.json: parseJSON, JSONType;
     import std.file: readText, exists;
+    import std.parallelism: parallel;
 
     const fileName = buildPath(options.projectPath, "dub.selections.json");
     if(!fileName.exists) {
@@ -86,7 +87,7 @@ package void dubFetch(T)(auto ref T output,
             pkgsToFetch ~= VersionedPackage(dubPackage, version_);
     }
 
-    foreach(pkg; pkgsToFetch) {
+    foreach(pkg; pkgsToFetch.parallel) {
         const cmd = ["dub", "fetch", pkg.name, "--version=" ~ pkg.version_] ~ dubEnvArgs;
         callDub(output, options, cmd);
     }

@@ -61,6 +61,7 @@ package void dubFetch(T)(auto ref T output,
 
     const fileName = buildPath(options.projectPath, "dub.selections.json");
     if(!fileName.exists) {
+        output.log("Creating dub.selections.json");
         const cmd = ["dub", "upgrade"] ~ dubEnvArgs;
         callDub(output, options, cmd);
     }

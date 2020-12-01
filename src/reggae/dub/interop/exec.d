@@ -53,9 +53,7 @@ package void dubFetch(T)(auto ref T output,
     @trusted
 {
     import reggae.io: log;
-    import reggae.dub.interop.exec: callDub, dubEnvArgs;
-    import std.array: join, replace;
-    import std.stdio: writeln;
+    import std.array: replace;
     import std.path: buildPath;
     import std.json: parseJSON, JSONType;
     import std.file: readText, exists;
@@ -69,18 +67,27 @@ package void dubFetch(T)(auto ref T output,
     auto json = parseJSON(readText(fileName));
     auto versions = json["versions"];
 
+    static struct VersionedPackage {
+        string name;
+        string version_;
+    }
+
+    VersionedPackage[] pkgsToFetch;
+
     foreach(dubPackage, versionJson; versions.object) {
 
         // skip the ones with a defined path
         if(versionJson.type != JSONType.string) continue;
 
-        // versions are usually `==1.2.3`, so strip the sign
+        // versions are usually `==1.2.3`, so strip the equals sign
         const version_ = versionJson.str.replace("==", "");
 
-        if(!needDubFetch(options, dubPackage, version_)) continue;
+        if(needDubFetch(options, dubPackage, version_))
+            pkgsToFetch ~= VersionedPackage(dubPackage, version_);
+    }
 
-        const cmd = ["dub", "fetch", dubPackage, "--version=" ~ version_] ~ dubEnvArgs;
-
+    foreach(pkg; pkgsToFetch) {
+        const cmd = ["dub", "fetch", pkg.name, "--version=" ~ pkg.version_] ~ dubEnvArgs;
         callDub(output, options, cmd);
     }
 }

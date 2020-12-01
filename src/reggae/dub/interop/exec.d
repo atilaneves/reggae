@@ -81,13 +81,7 @@ package void dubFetch(T)(auto ref T output,
 
         const cmd = ["dub", "fetch", dubPackage, "--version=" ~ version_] ~ dubEnvArgs;
 
-        try
-            callDub(output, options, cmd);
-        catch(Exception ex) {
-            // local packages can't be fetched, so it's normal to get an error
-            if(!options.dubLocalPackages)
-                throw ex;
-        }
+        callDub(output, options, cmd);
     }
 }
 

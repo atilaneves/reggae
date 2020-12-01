@@ -44,7 +44,6 @@ struct Options {
     bool version_;
     bool export_;
     bool verbose;
-    bool dubLocalPackages;
     string[] dependencies;
     string dubObjsDir;
     bool dubDepObjsInsteadOfStaticLib;
@@ -236,7 +235,6 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             "version", "Prints version information", &options.version_,
             "export", "Export build system - removes dependencies on reggae itself", &options.export_,
             "verbose", "Verbose output", &options.verbose,
-            "dub-local", "Project uses dub local packages", &options.dubLocalPackages,
             "dub-objs-dir", "Directory to place object files for dub dependencies", &options.dubObjsDir,
             "dub-arch", "Architecture (x86, x86_64, x86_mscoff)", &options.dubArch,
             "dub-deps-objs", "Use object files instead of static library for dub dependencies", &options.dubDepObjsInsteadOfStaticLib,

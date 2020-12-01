@@ -352,7 +352,10 @@ class InfoGenerator: ProjectGenerator {
         }
     }
 
-    private static adjustMainPackage(ref DubPackage pkg, in GeneratorSettings settings, in BuildSettings buildSettings) {
+    private static adjustMainPackage(ref DubPackage pkg,
+                                     in GeneratorSettings settings,
+                                     in BuildSettings buildSettings)
+    {
         import std.algorithm.searching: canFind, startsWith;
         import std.algorithm.iteration: filter, map;
         import std.array: array;

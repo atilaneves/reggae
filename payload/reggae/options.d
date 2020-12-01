@@ -32,7 +32,6 @@ struct Options {
     string cCompiler;
     string cppCompiler;
     string dCompiler;
-    bool noFetch;
     bool help;
     bool perModule;
     bool allAtOnce;
@@ -60,7 +59,7 @@ struct Options {
     Options dup() @safe pure const nothrow {
         return Options(backend,
                        projectPath, dflags, ranFromPath, cCompiler, cppCompiler, dCompiler,
-                       noFetch, help, perModule, isDubProject, oldNinja, noCompilationDB, cacheBuildInfo);
+                       help, perModule, isDubProject, oldNinja, noCompilationDB, cacheBuildInfo);
     }
 
     //finished setup
@@ -228,7 +227,6 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             "dc", "D compiler to use (default dmd).", &options.dCompiler,
             "cc", "C compiler to use (default gcc).", &options.cCompiler,
             "cxx", "C++ compiler to use (default g++).", &options.cppCompiler,
-            "nofetch", "Assume dub packages are present (no dub fetch).", &options.noFetch,
             "per-module", "Compile D files per module (default is per package)", &options.perModule,
             "all-at-once", "Compile D files all at once (default is per package)", &options.allAtOnce,
             "old-ninja", "Generate a Ninja build compatible with older versions of Ninja", &options.oldNinja,

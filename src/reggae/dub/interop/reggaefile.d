@@ -22,7 +22,6 @@ private void createReggaefile(T)(auto ref T output,
                                  in from!"reggae.options".Options options)
 {
     import reggae.io: log;
-    import reggae.dub.interop.exec: dubFetch;
     import std.stdio: File;
     import std.path: buildPath;
     import std.regex: regex, replaceFirst;
@@ -34,6 +33,4 @@ private void createReggaefile(T)(auto ref T output,
         import reggae;
         mixin build!(dubDefaultTarget!(), dubTestTarget!());
     }.replaceFirst(regex(`^        `), ""));
-
-    dubFetch(output, options);
 }

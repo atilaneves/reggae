@@ -16,20 +16,30 @@ void writeDubConfig(T)(auto ref T output,
                        from!"std.stdio".File file) {
     import reggae.io: log;
     import reggae.dub.info: TargetType;
-    import reggae.dub.interop.exec: dubFetch;
+    import reggae.dub.interop.fetch: dubFetch;
+    import reggae.dub.interop.dublib: Dub;
 
     output.log("Writing dub configuration");
+    scope(exit) output.log("Finished writing dub configuration");
 
     if(!options.isDubProject) {
         file.writeln("enum isDubProject = false;");
         return;
     }
 
-    dubFetch(output, options);
+    output.log("Creating dub");
+    auto dub = Dub(options);
+    output.log("Created dub");
+
+    dubFetch(output, dub, options);
 
     file.writeln("import reggae.dub.info;");
     file.writeln("enum isDubProject = true;");
+
+    output.log("Getting dub build information");
     auto dubInfo = getDubInfo(output, options);
+    output.log("Got     dub build information");
+
     const targetType = dubInfo.packages.length
         ? dubInfo.packages[0].targetType
         : TargetType.sourceLibrary;
@@ -68,7 +78,9 @@ private from!"reggae.dub.info".DubInfo getDubInfo
             callDub(output, options, ["dub", "upgrade"]);
         }
 
+        output.log("Getting configs");
         const configs = getConfigs(output, options);
+        output.log("Got configs");
 
         bool oneConfigOk;
         Exception dubInfoFailure;

@@ -31,6 +31,25 @@ static this() nothrow {
 }
 
 
+struct Dub {
+    import reggae.options: Options;
+    import dub.project: Project;
+
+    private Project _project;
+    private InfoGenerator _generator;
+
+    this(in Options options) @safe {
+        _project = project(ProjectPath(options.projectPath));
+        _generator = new InfoGenerator(_project);
+    }
+
+    auto getPackage(in string dubPackage, in string version_) @trusted /*dub*/ {
+        import dub.dependency: Version;
+        return _project.packageManager.getPackage(dubPackage, Version(version_));
+    }
+}
+
+
 /// What it says on the tin
 struct ProjectPath {
     string value;
@@ -205,6 +224,11 @@ auto generatorSettings(in Compiler compiler = Compiler.dmd, in string config = "
 }
 
 
+auto project(in ProjectPath projectPath) @safe {
+    return project(projectPath, systemPackagesPath, userPackagesPath);
+}
+
+
 auto project(in ProjectPath projectPath,
              in SystemPackagesPath systemPackagesPath,
              in UserPackagesPath userPackagesPath)
@@ -284,7 +308,7 @@ class InfoGenerator: ProjectGenerator {
 
     DubPackage[] dubPackages;
 
-    this(Project project) {
+    this(Project project) @trusted {
         super(project);
     }
 
@@ -352,7 +376,10 @@ class InfoGenerator: ProjectGenerator {
         }
     }
 
-    private static adjustMainPackage(ref DubPackage pkg, in GeneratorSettings settings, in BuildSettings buildSettings) {
+    private static adjustMainPackage(ref DubPackage pkg,
+                                     in GeneratorSettings settings,
+                                     in BuildSettings buildSettings)
+    {
         import std.algorithm.searching: canFind, startsWith;
         import std.algorithm.iteration: filter, map;
         import std.array: array;

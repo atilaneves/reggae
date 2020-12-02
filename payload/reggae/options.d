@@ -32,7 +32,6 @@ struct Options {
     string cCompiler;
     string cppCompiler;
     string dCompiler;
-    bool noFetch;
     bool help;
     bool perModule;
     bool allAtOnce;
@@ -45,7 +44,6 @@ struct Options {
     bool version_;
     bool export_;
     bool verbose;
-    bool dubLocalPackages;
     string[] dependencies;
     string dubObjsDir;
     bool dubDepObjsInsteadOfStaticLib;
@@ -60,7 +58,7 @@ struct Options {
     Options dup() @safe pure const nothrow {
         return Options(backend,
                        projectPath, dflags, ranFromPath, cCompiler, cppCompiler, dCompiler,
-                       noFetch, help, perModule, isDubProject, oldNinja, noCompilationDB, cacheBuildInfo);
+                       help, perModule, isDubProject, oldNinja, noCompilationDB, cacheBuildInfo);
     }
 
     //finished setup
@@ -228,7 +226,6 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             "dc", "D compiler to use (default dmd).", &options.dCompiler,
             "cc", "C compiler to use (default gcc).", &options.cCompiler,
             "cxx", "C++ compiler to use (default g++).", &options.cppCompiler,
-            "nofetch", "Assume dub packages are present (no dub fetch).", &options.noFetch,
             "per-module", "Compile D files per module (default is per package)", &options.perModule,
             "all-at-once", "Compile D files all at once (default is per package)", &options.allAtOnce,
             "old-ninja", "Generate a Ninja build compatible with older versions of Ninja", &options.oldNinja,
@@ -238,7 +235,6 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             "version", "Prints version information", &options.version_,
             "export", "Export build system - removes dependencies on reggae itself", &options.export_,
             "verbose", "Verbose output", &options.verbose,
-            "dub-local", "Project uses dub local packages", &options.dubLocalPackages,
             "dub-objs-dir", "Directory to place object files for dub dependencies", &options.dubObjsDir,
             "dub-arch", "Architecture (x86, x86_64, x86_mscoff)", &options.dubArch,
             "dub-deps-objs", "Use object files instead of static library for dub dependencies", &options.dubDepObjsInsteadOfStaticLib,

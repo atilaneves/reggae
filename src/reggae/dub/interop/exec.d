@@ -1,8 +1,7 @@
 module reggae.dub.interop.exec;
 
-import reggae.from;
 
-@safe:
+import reggae.from;
 
 
 package string callDub(T)(
@@ -41,67 +40,8 @@ package string callDub(T)(
 }
 
 
-package string[] dubEnvArgs() {
+package string[] dubEnvArgs() @safe {
     import std.process: environment;
     import std.string: split;
     return environment.get("REGGAE_DUB_ARGS", "").split(" ");
-}
-
-
-package void dubFetch(T)(auto ref T output,
-                         in from!"reggae.options".Options options)
-    @trusted
-{
-    import reggae.io: log;
-    import reggae.dub.interop.exec: callDub, dubEnvArgs;
-    import std.array: join, replace;
-    import std.stdio: writeln;
-    import std.path: buildPath;
-    import std.json: parseJSON, JSONType;
-    import std.file: readText, exists;
-
-    if(options.noFetch) return;
-
-    const fileName = buildPath(options.projectPath, "dub.selections.json");
-    if(!fileName.exists) {
-        const cmd = ["dub", "upgrade"] ~ dubEnvArgs;
-        callDub(output, options, cmd);
-    }
-
-    auto json = parseJSON(readText(fileName));
-
-    auto versions = json["versions"];
-
-    foreach(dubPackage, versionJson; versions.object) {
-
-        // skip the ones with a defined path
-        if(versionJson.type != JSONType.string) continue;
-
-        // versions are usually `==1.2.3`, so strip the sign
-        const version_ = versionJson.str.replace("==", "");
-
-        if(!needDubFetch(dubPackage, version_)) continue;
-
-        const cmd = ["dub", "fetch", dubPackage, "--version=" ~ version_] ~ dubEnvArgs;
-
-        try
-            callDub(output, options, cmd);
-        catch(Exception ex) {
-            // local packages can't be fetched, so it's normal to get an error
-            if(!options.dubLocalPackages)
-                throw ex;
-        }
-    }
-}
-
-// dub fetch can sometimes take >10s (!) despite the package already being
-// on disk
-private bool needDubFetch(in string dubPackage, in string version_) {
-    import reggae.path: dubPackagesDir;
-    import std.path: buildPath;
-    import std.file: exists;
-
-    return !buildPath(dubPackagesDir,
-                      dubPackage ~ "-" ~ version_, dubPackage ~ ".lock")
-        .exists;
 }

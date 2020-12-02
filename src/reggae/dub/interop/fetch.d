@@ -9,22 +9,10 @@ package void dubFetch(T)(auto ref T output,
     @trusted
 {
     import reggae.dub.interop.exec: callDub, dubEnvArgs;
-    import reggae.io: log;
     import std.array: replace;
-    import std.path: buildPath;
     import std.json: parseJSON, JSONType;
-    import std.file: readText, exists;
+    import std.file: readText;
     import std.parallelism: parallel;
-
-    const fileName = buildPath(options.projectPath, "dub.selections.json");
-    if(!fileName.exists) {
-        output.log("Creating dub.selections.json");
-        const cmd = ["dub", "upgrade"] ~ dubEnvArgs;
-        callDub(output, options, cmd);
-    }
-
-    auto json = parseJSON(readText(fileName));
-    auto versions = json["versions"];
 
     static struct VersionedPackage {
         string name;
@@ -32,8 +20,9 @@ package void dubFetch(T)(auto ref T output,
     }
 
     VersionedPackage[] pkgsToFetch;
+    const json = parseJSON(readText(dubSelectionsJson(output, options)));
 
-    foreach(dubPackage, versionJson; versions.object) {
+    foreach(dubPackage, versionJson; json["versions"].object) {
 
         // skip the ones with a defined path
         if(versionJson.type != JSONType.string) continue;
@@ -49,6 +38,28 @@ package void dubFetch(T)(auto ref T output,
         const cmd = ["dub", "fetch", pkg.name, "--version=" ~ pkg.version_] ~ dubEnvArgs;
         callDub(output, options, cmd);
     }
+}
+
+
+private string dubSelectionsJson(O)(ref O output, in from!"reggae.options".Options options) @safe {
+
+    import reggae.dub.interop.exec: callDub, dubEnvArgs;
+    import reggae.io: log;
+    import std.path: buildPath;
+    import std.file: exists;
+    import std.exception: enforce;
+
+    const path = buildPath(options.projectPath, "dub.selections.json");
+
+    if(!path.exists) {
+        output.log("Creating dub.selections.json");
+        const cmd = ["dub", "upgrade"] ~ dubEnvArgs;
+        callDub(output, options, cmd);
+    }
+
+    enforce(path.exists, "Could not create dub.selections.json");
+
+    return path;
 }
 
 

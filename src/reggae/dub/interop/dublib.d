@@ -32,6 +32,7 @@ static this() nothrow {
 
 
 struct Dub {
+    import reggae.dub.interop.configurations: DubConfigurations;
     import reggae.options: Options;
     import dub.project: Project;
 
@@ -39,13 +40,24 @@ struct Dub {
     private InfoGenerator _generator;
 
     this(in Options options) @safe {
+        import std.exception: enforce;
+        import std.path: buildPath;
+        import std.file: exists;
+
+        const path = buildPath(options.projectPath, "dub.selections.json");
+        enforce(path.exists, "Cannot create dub instance without dub.selections.json");
+
         _project = project(ProjectPath(options.projectPath));
-        _generator = new InfoGenerator(_project);
     }
 
     auto getPackage(in string dubPackage, in string version_) @trusted /*dub*/ {
         import dub.dependency: Version;
         return _project.packageManager.getPackage(dubPackage, Version(version_));
+    }
+
+    DubConfigurations getConfigs(in from!"reggae.options".Options options) {
+        auto settings = generatorSettings(options.dCompiler.toCompiler);
+        return DubConfigurations(_project.configurations, _project.getDefaultConfiguration(settings.platform));
     }
 }
 
@@ -102,24 +114,6 @@ enum Compiler {
     dmd,
     ldc,
     gdc,
-}
-
-
-package from!"reggae.dub.interop.configurations".DubConfigurations dubConfigurations(
-    in ProjectPath projectPath,
-    in SystemPackagesPath systemPackagesPath,
-    in UserPackagesPath userPackagesPath,
-    in Compiler compiler,
-    )
-    @trusted  // dub...
-{
-    import reggae.dub.interop.configurations: DubConfigurations;
-    import reggae.dub.interop.dublib: project, InfoGenerator;
-
-    auto proj = project(projectPath, systemPackagesPath, userPackagesPath);
-    auto generator = new InfoGenerator(proj);
-
-    return DubConfigurations(generator.configurations, generator.defaultConfiguration);
 }
 
 
@@ -406,14 +400,5 @@ class InfoGenerator: ProjectGenerator {
         }
 
         pkg.lflags ~= buildSettings.dflags.filter!isLinkerDFlag.array;
-    }
-
-    string[] configurations() @trusted const {
-        return m_project.configurations;
-    }
-
-    string defaultConfiguration() @trusted const {
-        auto settings = generatorSettings();
-        return m_project.getDefaultConfiguration(settings.platform);
     }
 }

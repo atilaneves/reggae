@@ -7,7 +7,8 @@ import reggae.from;
 package void dubFetch(O)(
     auto ref O output,
     ref from!"reggae.dub.interop.dublib".Dub dub,
-    in from!"reggae.options".Options options)
+    in from!"reggae.options".Options options,
+    in string dubSelectionsJson)
     @trusted
 {
     import reggae.dub.interop.exec: callDub, dubEnvArgs;
@@ -22,7 +23,7 @@ package void dubFetch(O)(
     }
 
     VersionedPackage[] pkgsToFetch;
-    const json = parseJSON(readText(dubSelectionsJson(output, options)));
+    const json = parseJSON(readText(dubSelectionsJson));
 
     foreach(dubPackage, versionJson; json["versions"].object) {
 
@@ -40,28 +41,6 @@ package void dubFetch(O)(
         const cmd = ["dub", "fetch", pkg.name, "--version=" ~ pkg.version_] ~ dubEnvArgs;
         callDub(output, options, cmd);
     }
-}
-
-
-private string dubSelectionsJson(O)(ref O output, in from!"reggae.options".Options options) @safe {
-
-    import reggae.dub.interop.exec: callDub, dubEnvArgs;
-    import reggae.io: log;
-    import std.path: buildPath;
-    import std.file: exists;
-    import std.exception: enforce;
-
-    const path = buildPath(options.projectPath, "dub.selections.json");
-
-    if(!path.exists) {
-        output.log("Creating dub.selections.json");
-        const cmd = ["dub", "upgrade"] ~ dubEnvArgs;
-        callDub(output, options, cmd);
-    }
-
-    enforce(path.exists, "Could not create dub.selections.json");
-
-    return path;
 }
 
 

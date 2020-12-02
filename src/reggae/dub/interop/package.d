@@ -16,7 +16,7 @@ void writeDubConfig(T)(auto ref T output,
                        from!"std.stdio".File file) {
     import reggae.io: log;
     import reggae.dub.info: TargetType;
-    import reggae.dub.interop.exec: dubFetch;
+    import reggae.dub.interop.fetch: dubFetch;
 
     output.log("Writing dub configuration");
 

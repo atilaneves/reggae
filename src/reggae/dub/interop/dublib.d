@@ -31,6 +31,25 @@ static this() nothrow {
 }
 
 
+struct Dub {
+    import reggae.options: Options;
+    import dub.project: Project;
+
+    private Project _project;
+    private InfoGenerator _generator;
+
+    this(in Options options) @safe {
+        _project = project(ProjectPath(options.projectPath));
+        _generator = new InfoGenerator(_project);
+    }
+
+    auto getPackage(in string dubPackage, in string version_) @trusted /*dub*/ {
+        import dub.dependency: Version;
+        return _project.packageManager.getPackage(dubPackage, Version(version_));
+    }
+}
+
+
 /// What it says on the tin
 struct ProjectPath {
     string value;
@@ -289,7 +308,7 @@ class InfoGenerator: ProjectGenerator {
 
     DubPackage[] dubPackages;
 
-    this(Project project) {
+    this(Project project) @trusted {
         super(project);
     }
 
@@ -397,16 +416,4 @@ class InfoGenerator: ProjectGenerator {
         auto settings = generatorSettings();
         return m_project.getDefaultConfiguration(settings.platform);
     }
-}
-
-
-auto getPackage(
-    in from!"reggae.options".Options options,
-    in string dubPackage,
-    in string version_)
-    @trusted
-{
-    import dub.dependency: Version;
-    auto proj = project(ProjectPath(options.projectPath));
-    return proj.packageManager.getPackage(dubPackage, Version(version_));
 }

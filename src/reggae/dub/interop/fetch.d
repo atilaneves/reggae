@@ -4,8 +4,10 @@ module reggae.dub.interop.fetch;
 import reggae.from;
 
 
-package void dubFetch(T)(auto ref T output,
-                         in from!"reggae.options".Options options)
+package void dubFetch(O)(
+    auto ref O output,
+    ref from!"reggae.dub.interop.dublib".Dub dub,
+    in from!"reggae.options".Options options)
     @trusted
 {
     import reggae.dub.interop.exec: callDub, dubEnvArgs;
@@ -30,7 +32,7 @@ package void dubFetch(T)(auto ref T output,
         // versions are usually `==1.2.3`, so strip the equals sign
         const version_ = versionJson.str.replace("==", "");
 
-        if(needDubFetch(options, dubPackage, version_))
+        if(needDubFetch(dub, dubPackage, version_))
             pkgsToFetch ~= VersionedPackage(dubPackage, version_);
     }
 
@@ -64,17 +66,15 @@ private string dubSelectionsJson(O)(ref O output, in from!"reggae.options".Optio
 
 
 private bool needDubFetch(
-    in from!"reggae.options".Options options,
+    ref from!"reggae.dub.interop.dublib".Dub dub,
     in string dubPackage,
     in string version_)
     @safe
 {
-    import reggae.dub.interop.dublib: getPackage;
-
     // first check the file system explicitly
     if(pkgExistsOnFS(dubPackage, version_)) return false;
     // next ask dub (this is slower)
-    if(getPackage(options, dubPackage, version_)) return false;
+    if(dub.getPackage(dubPackage, version_)) return false;
 
     return true;
 }

@@ -27,16 +27,17 @@ Only exists in order to get dependencies for each compilation step.
  */
 private void dcompile(string[] args) {
 
-    import reggae.dependencies: dependenciesToFile;
-
     string depFile, objFile;
-    auto helpInfo = getopt(args,
-                           std.getopt.config.passThrough,
-                           "depFile", "The dependency file to write", &depFile,
-                           "objFile", "The object file to output", &objFile,
-        );
+    auto helpInfo = getopt(
+        args,
+        std.getopt.config.passThrough,
+        "depFile", "The dependency file to write", &depFile,
+        "objFile", "The object file to output", &objFile,
+    );
+
     enforce(args.length >= 2, "Usage: dcompile --objFile <objFile> --depFile <depFile> <compiler> <compiler args>");
     enforce(!depFile.empty && !objFile.empty, "The --depFile and --objFile 'options' are mandatory");
+
     const compArgs = compilerArgs(args, objFile);
     const fewerArgs = compArgs[0..$-1]; //non-verbose
     const compRes = execute(compArgs);
@@ -114,4 +115,13 @@ string[] dMainDependencies(in string output) @safe {
     }
 
     return dependencies;
+}
+
+
+string[] dependenciesToFile(in string objFile, in string[] deps) @safe pure nothrow {
+    import std.array: join;
+    return [
+        objFile ~ ": \\",
+        deps.join(" "),
+    ];
 }

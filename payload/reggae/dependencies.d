@@ -1,25 +1,6 @@
 module reggae.dependencies;
 
 
-import std.range.primitives: isInputRange;
-
-
-string[] dependenciesFromFile(R)(R lines) if(isInputRange!R) {
-    import std.algorithm: map, filter, find;
-    import std.string: strip;
-    import std.array: empty, join, array, replace, split;
-
-    if(lines.empty) return [];
-    return lines
-        .map!(a => a.replace(`\`, ``).strip)
-        .join(" ")
-        .find(":")
-        .split(" ")
-        .filter!(a => a != "")
-        .array[1..$];
-}
-
-
 /**
  * Given the output of compiling a file, return
  * the list of D files to compile to link the executable.
@@ -42,13 +23,4 @@ string[] dMainDepSrcs()(in string output) {
     }
 
     return dependencies;
-}
-
-
-string[] dependenciesToFile(in string objFile, in string[] deps) @safe pure nothrow {
-    import std.array: join;
-    return [
-        objFile ~ ": \\",
-        deps.join(" "),
-    ];
 }

@@ -18,8 +18,8 @@ import std.conv;
 import std.array: replace, empty;
 import std.string: strip;
 import std.getopt;
+import std.range.primitives: isInputRange;
 
-@safe:
 
 struct BinaryOptions {
     bool list;
@@ -46,7 +46,7 @@ struct BinaryOptions {
         this.args = args[1..$];
     }
 
-    bool earlyReturn() const pure nothrow {
+    bool earlyReturn() @safe const pure nothrow {
         return _earlyReturn;
     }
 }
@@ -112,7 +112,7 @@ struct BinaryT(T) {
             build.targets.filter!(a => args.canFind(a.expandOutputs(options.projectPath))).array;
     }
 
-    string[] listTargets(BinaryOptions binaryOptions) pure {
+    string[] listTargets(BinaryOptions binaryOptions) @safe pure {
 
         string targetOutputsString(in Target target) {
             return "- " ~ target.expandOutputs(options.projectPath).join(" ");
@@ -146,7 +146,7 @@ private:
         return didAnything;
     }
 
-    void handleTarget(Target target, ref bool didAnything) {
+    void handleTarget(Target target, ref bool didAnything) @safe {
         const outs = target.expandOutputs(options.projectPath);
         immutable depFileName = outs[0] ~ ".dep";
         if(depFileName.exists) {
@@ -156,14 +156,14 @@ private:
         didAnything = checkTimestamps(target) || didAnything;
     }
 
-    void handleOptions(BinaryOptions binaryOptions) {
+    void handleOptions(BinaryOptions binaryOptions) @safe {
         if(binaryOptions.list) {
             output.writeln("List of available top-level targets:");
             foreach(l; listTargets(binaryOptions)) output.writeln(l);
         }
     }
 
-    bool checkReRun() {
+    bool checkReRun() @safe {
         // don't bother if the build system was exported
         if(options.export_) return false;
 
@@ -186,7 +186,7 @@ private:
         return false;
     }
 
-    bool checkTimestamps(Target target) {
+    bool checkTimestamps(Target target) @safe {
         auto allDeps = chain(target.dependencyTargets, target.implicitTargets);
         immutable isPhonyLike = target.getCommandType == CommandType.phony ||
             allDeps.empty;
@@ -210,7 +210,7 @@ private:
 
     //always run phony rules with no dependencies at top-level
     //ByDepthLevel won't include them
-    bool checkChildlessPhony(Target target) {
+    bool checkChildlessPhony(Target target) @safe {
         if(target.getCommandType == CommandType.phony &&
            target.dependencyTargets.empty && target.implicitTargets.empty) {
             executeCommand(target);
@@ -221,7 +221,6 @@ private:
 
     //Checks dependencies listed in the .dep file created by the compiler
     bool checkDeps(Target target, in string depFileName) @trusted {
-        import reggae.dependencies: dependenciesFromFile;
 
         auto file = File(depFileName);
         auto lines = file.byLine.map!(a => a.to!string);
@@ -260,4 +259,22 @@ private:
 bool anyNewer(in string projectPath, in string[] dependencies, in Target target) @safe {
     return cartesianProduct(dependencies, target.expandOutputs(projectPath)).
         any!(a => a[0].newerThan(a[1]));
+}
+
+
+
+
+string[] dependenciesFromFile(R)(R lines) if(isInputRange!R) {
+    import std.algorithm: map, filter, find;
+    import std.string: strip;
+    import std.array: empty, join, array, replace, split;
+
+    if(lines.empty) return [];
+    return lines
+        .map!(a => a.replace(`\`, ``).strip)
+        .join(" ")
+        .find(":")
+        .split(" ")
+        .filter!(a => a != "")
+        .array[1..$];
 }

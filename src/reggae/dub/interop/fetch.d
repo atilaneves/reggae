@@ -12,12 +12,14 @@ package void dubFetch(O)(
     @trusted
 {
     import reggae.dub.interop.exec: callDub, dubEnvArgs;
+    import reggae.io: log;
     import std.array: replace;
     import std.json: parseJSON, JSONType;
     import std.file: readText;
     import std.parallelism: parallel;
 
     const(VersionedPackage)[] pkgsToFetch;
+
     const json = parseJSON(readText(dubSelectionsJson));
 
     foreach(dubPackageName, versionJson; json["versions"].object) {
@@ -32,10 +34,15 @@ package void dubFetch(O)(
         if(needDubFetch(dub, pkg)) pkgsToFetch ~= pkg;
     }
 
+    output.log("Fetching dub packages");
     foreach(pkg; pkgsToFetch.parallel) {
         const cmd = ["dub", "fetch", pkg.name, "--version=" ~ pkg.version_] ~ dubEnvArgs;
         callDub(output, options, cmd);
     }
+
+    output.log("Reloading project");
+    dub.reinit;
+    output.log("Project reloaded");
 }
 
 
@@ -65,10 +72,14 @@ private bool pkgExistsOnFS(in VersionedPackage pkg) @safe {
     import reggae.path: dubPackagesDir;
     import std.path: buildPath;
     import std.file: exists;
+    import std.string: replace;
+
+    // Some versions include a `+` and that becomes `_` in the path
+    const version_ = pkg.version_.replace("+", "_");
 
     return buildPath(
         dubPackagesDir,
-        pkg.name ~ "-" ~ pkg.version_,
+        pkg.name ~ "-" ~ version_,
         pkg.name ~ ".lock"
     ).exists;
 }

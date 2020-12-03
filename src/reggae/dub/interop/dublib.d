@@ -68,6 +68,10 @@ struct Dub {
         generator.generate(generatorSettings(options.dCompiler.toCompiler, config));
         return DubInfo(generator.dubPackages);
     }
+
+    void reinit() @trusted {
+        _project.reinit;
+    }
 }
 
 

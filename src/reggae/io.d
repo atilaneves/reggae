@@ -1,10 +1,22 @@
 module reggae.io;
 
 
+import reggae.from;
+
+
+immutable from!"std.datetime.systime".SysTime gStartTime;
+
+shared static this() {
+    import std.datetime: Clock;
+    gStartTime = Clock.currTime;
+}
+
+
 void log(O, T...)(auto ref O output, auto ref T args) {
     import std.functional: forward;
     output.writeln("[Reggae]  ", secondsSinceStartString, "s  ", forward!args);
 }
+
 
 private string secondsSinceStartString() @safe {
     import std.string: rightJustify;
@@ -12,11 +24,8 @@ private string secondsSinceStartString() @safe {
     return ("+" ~ (sinceStart / 1000.0).to!string).rightJustify(8, ' ');
 }
 
+
 private auto sinceStart() @safe {
-    import std.datetime: Clock, SysTime;
-    static SysTime startTime;
-
-    if(startTime == startTime.init) startTime = Clock.currTime;
-
-    return (Clock.currTime - startTime).total!"msecs";
+    import std.datetime: Clock;
+    return (Clock.currTime - gStartTime).total!"msecs";
 }

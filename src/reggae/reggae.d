@@ -359,11 +359,10 @@ private const(string)[] getCompileBuildGenCmd(in Options options) @safe {
                           "--objFile=" ~ "build" ~ objExt,
                           "--depFile=" ~ "reggaefile.dep",
                           options.dCompiler] ~
-        importPaths(options) ~
-        ["-g",
-         "-debug"];
-    const commonAfter = buildBinFlags ~
-        options.reggaeFilePath ~ reggaeSrcs;
+        importPaths(options)
+        // ~ ["-g", "-debug"]
+        ;
+    const commonAfter = buildBinFlags ~ options.reggaeFilePath ~ reggaeSrcs;
     version(minimal) return commonBefore ~ "-version=minimal" ~ commonAfter;
     else return commonBefore ~ commonAfter;
 }

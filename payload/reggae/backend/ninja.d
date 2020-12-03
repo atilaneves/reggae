@@ -1,17 +1,10 @@
 module reggae.backend.ninja;
 
 
-import reggae.build;
-import reggae.range;
-import reggae.rules;
-import reggae.options;
-import std.array;
-import std.range;
-import std.algorithm;
-import std.exception: enforce;
-import std.conv;
-import std.string: strip;
-import std.path: defaultExtension, absolutePath;
+import reggae.build: CommandType;
+import reggae.rules.common: Language;
+import reggae.options: Options;
+
 
 string cmdTypeToNinjaString(CommandType commandType, Language language) @safe pure {
     final switch(commandType) with(CommandType) {
@@ -66,6 +59,8 @@ struct NinjaEntry {
 
         import std.array: join;
         import std.range: chain, only;
+        import std.algorithm.iteration: map;
+
         return chain(only(mainLine), paramLines.map!(a => "  " ~ noDrive(a))).join("\n");
     }
 }
@@ -84,6 +79,8 @@ private bool hasDepFile(in CommandType type) @safe pure nothrow {
  * Pre-built rules
  */
 NinjaEntry[] defaultRules(in Options options) @safe pure {
+
+    import reggae.build: Command;
 
     NinjaEntry createNinjaEntry(in CommandType type, in Language language) @safe pure {
         string[] paramLines = ["command = " ~ Command.builtinTemplate(type, language, options)];
@@ -106,6 +103,9 @@ NinjaEntry[] defaultRules(in Options options) @safe pure {
 
 
 struct Ninja {
+
+    import reggae.build: Build, Target;
+
     NinjaEntry[] buildEntries;
     NinjaEntry[] ruleEntries;
 
@@ -134,7 +134,8 @@ struct Ninja {
     //includes rerunning reggae
     const(NinjaEntry)[] allBuildEntries() @safe {
         import std.path: stripDrive;
-        import std.algorithm: map;
+        import std.algorithm.iteration: map;
+        import std.array: join;
 
         immutable files = _options.reggaeFileDependencies.map!stripDrive.join(" ");
         auto paramLines = _options.oldNinja ? [] : ["pool = console"];
@@ -150,6 +151,8 @@ struct Ninja {
 
     //includes rerunning reggae
     const(NinjaEntry)[] allRuleEntries() @safe pure const {
+        import std.array: join;
+
         return ruleEntries ~ defaultRules(_options) ~
             NinjaEntry("rule _rerun",
                        ["command = " ~ _options.rerunArgs.join(" "),
@@ -186,6 +189,8 @@ private:
 
     //@trusted because of join
     void defaultRule(Target target) @trusted {
+        import std.array: join;
+
         string[] paramLines;
 
         foreach(immutable param; target.commandParamNames) {
@@ -203,6 +208,8 @@ private:
     }
 
     void phonyRule(Target target) @safe {
+        import std.array: join, empty;
+
         //no projectPath for phony rules since they don't generate output
         immutable outputs = target.expandOutputs("").join(" ");
         auto buildLine = "build " ~ outputs ~ ": _phony " ~ targetDependencies(target);
@@ -213,6 +220,9 @@ private:
     }
 
     void customRule(Target target) @safe {
+
+        import std.algorithm.searching: canFind;
+
         //rawCmdString is used because ninja needs to find where $in and $out are,
         //so shellCommand wouldn't work
         immutable shellCommand = target.rawCmdString(_projectPath);
@@ -229,7 +239,11 @@ private:
     }
 
     void explicitInOutRule(Target target, in string shellCommand, in string implicitInput = "") @safe {
-        import std.regex;
+        import std.regex: regex, match;
+        import std.array: empty, join;
+        import std.string: strip;
+        import std.conv: text;
+
         auto reg = regex(`^[^ ]+ +(.*?)(\$in|\$out)(.*?)(\$in|\$out)(.*?)$`);
 
         auto mat = shellCommand.match(reg);
@@ -288,6 +302,10 @@ private:
     }
 
     void implicitInputRule(Target target, in string shellCommand) @safe {
+
+        import std.algorithm.searching: canFind;
+        import std.array: replace;
+
         string input;
 
         immutable cmdLine = () @trusted {
@@ -311,12 +329,16 @@ private:
                               in string between = "",
                               in string last = "", in string after = "") @trusted pure const {
 
+        import std.array: empty;
+        import std.algorithm.searching: canFind;
+
         auto cmdLine = "command = " ~ targetRawCommand(target);
         if(!before.empty) cmdLine ~= " $before";
         cmdLine ~= shellCommand.canFind(" " ~ first) ? " " ~ first : first;
         if(!between.empty) cmdLine ~= " $between";
         cmdLine ~= shellCommand.canFind(" " ~ last) ? " " ~ last : last;
         if(!after.empty) cmdLine ~= " $after";
+
         return cmdLine;
     }
 
@@ -326,6 +348,11 @@ private:
     //The subsequent times, if any, we append a number to the command to create
     //a new rule
     string getRuleName(in string cmd, in string ruleCmdLine, out bool haveToAdd) @safe nothrow {
+        import std.algorithm.searching: canFind, startsWith;
+        import std.algorithm.iteration: filter;
+        import std.array: array, empty, replace;
+        import std.conv: text;
+
         immutable ruleMainLine = "rule " ~ cmd;
         //don't have a rule for this cmd yet, return just the cmd
         if(!ruleEntries.canFind!(a => a.mainLine == ruleMainLine)) {
@@ -339,8 +366,9 @@ private:
         //same cmd: either matches exactly or is cmd_{number}
         auto isSameCmd = (in NinjaEntry entry) {
             bool sameMainLine = entry.mainLine.startsWith(ruleMainLine) &&
-            (entry.mainLine == ruleMainLine || entry.mainLine[ruleMainLine.length] == '_');
+                (entry.mainLine == ruleMainLine || entry.mainLine[ruleMainLine.length] == '_');
             bool sameCmdLine = entry.paramLines == [ruleCmdLine];
+
             return sameMainLine && sameCmdLine;
         };
 
@@ -354,15 +382,19 @@ private:
         //if we got here then it's the first time we see "cmd" with a new
         //ruleCmdLine, so we add it
         haveToAdd = true;
-        import std.conv: to;
-        return cmd ~ "_" ~ (++_counter).to!string;
+
+        return cmd ~ "_" ~ (++_counter).text;
     }
 
     string output(const(NinjaEntry)[] entries) @safe pure const nothrow {
+        import reggae.options: banner;
+        import std.algorithm.iteration: map;
+        import std.array: join;
         return banner ~ entries.map!(a => a.toString).join("\n\n");
     }
 
     string buildLine(Target target) @safe pure const {
+        import std.array: join;
         immutable outputs = target.expandOutputs(_projectPath).join(" ");
         return "build " ~ outputs ~ ": ";
     }
@@ -374,6 +406,9 @@ private:
 
     //@trusted because of splitter
     private string targetRawCommand(Target target) @trusted pure const {
+        import std.algorithm: splitter;
+        import std.array: front;
+
         auto cmd = target.shellCommand(_options);
         if(cmd == "") return "";
         return cmd.splitter(" ").front;
@@ -381,7 +416,7 @@ private:
 
     private string targetDependencies(in Target target) @safe pure const {
         import std.path: stripDrive;
-        import std.algorithm: map;
+        import std.algorithm.iteration: map;
         import std.array: join;
 
         return target.dependenciesInProjectPath(_projectPath).map!stripDrive.join(" ");
@@ -393,7 +428,8 @@ private:
 //ninja doesn't like symbols in rule names
 //@trusted because of replace
 private string sanitizeCmd(in string cmd) @trusted pure nothrow {
-    import std.path;
+    import std.path: baseName;
+    import std.array: replace;
     //only handles c++ compilers so far...
     return cmd.baseName.replace("+", "p");
 }

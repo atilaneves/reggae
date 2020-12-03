@@ -55,13 +55,12 @@ string[] dMainDepSrcs(in string output) @safe {
     string[] dependencies;
     auto importReg = regex(`^import +([^\t]+)[\t\s]+\((.+)\)$`);
     auto stdlibReg = regex(`^(std\.|core\.|etc\.|object$)`);
+
     foreach(line; output.splitLines) {
         auto importMatch = line.matchFirst(importReg);
         if(importMatch) {
             auto stdlibMatch = importMatch.captures[1].matchFirst(stdlibReg);
-            if(!stdlibMatch) {
-                dependencies ~= importMatch.captures[2];
-            }
+            if(!stdlibMatch) dependencies ~= importMatch.captures[2];
         }
     }
 

@@ -10,7 +10,6 @@ module reggae.rules.d;
 import reggae.types;
 import reggae.build;
 import reggae.sorting;
-import reggae.dependencies: dMainDepSrcs;
 import reggae.rules.common;
 import std.algorithm;
 import std.array;
@@ -288,6 +287,7 @@ Target scriptlike(in string projectPath,
     @trusted
 {
 
+    import reggae.dependencies: dMainDepSrcs;
     import std.path;
 
     if(getLanguage(app.srcFileName.value) != Language.D)

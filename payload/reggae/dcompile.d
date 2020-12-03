@@ -1,4 +1,3 @@
-import reggae.dependencies;
 import std.stdio;
 import std.exception;
 import std.process;
@@ -6,6 +5,7 @@ import std.conv;
 import std.algorithm;
 import std.getopt;
 import std.array;
+
 
 int main(string[] args) {
     try {
@@ -23,6 +23,9 @@ int main(string[] args) {
 Only exists in order to get dependencies for each compilation step.
  */
 private void dcompile(string[] args) {
+
+    import reggae.dependencies: dependenciesToFile, dMainDependencies;
+
     string depFile, objFile;
     auto helpInfo = getopt(args,
                            std.getopt.config.passThrough,

@@ -5,7 +5,6 @@ import reggae.build;
 import reggae.range;
 import reggae.options;
 import reggae.file;
-import reggae.dependencies;
 import std.algorithm;
 import std.range;
 import std.file: thisExePath, exists;
@@ -222,6 +221,8 @@ private:
 
     //Checks dependencies listed in the .dep file created by the compiler
     bool checkDeps(Target target, in string depFileName) @trusted {
+        import reggae.dependencies: dependenciesFromFile;
+
         auto file = File(depFileName);
         auto lines = file.byLine.map!(a => a.to!string);
         auto dependencies = dependenciesFromFile(lines);

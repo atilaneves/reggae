@@ -3,6 +3,7 @@ module tests.ut.drules;
 
 import reggae;
 import reggae.options;
+import reggae.backend.ninja;
 import unit_threaded;
 import std.algorithm;
 import std.array;

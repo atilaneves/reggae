@@ -1,8 +1,10 @@
 module tests.ut.ninja;
 
+
 import unit_threaded;
 import reggae;
 import reggae.options;
+import reggae.backend.ninja;
 
 
 void testEmpty() {

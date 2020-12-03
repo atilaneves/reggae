@@ -33,11 +33,11 @@ static this() nothrow {
 
 struct Dub {
     import reggae.dub.interop.configurations: DubConfigurations;
+    import reggae.dub.info: DubInfo;
     import reggae.options: Options;
     import dub.project: Project;
 
     private Project _project;
-    private InfoGenerator _generator;
 
     this(in Options options) @safe {
         import std.exception: enforce;
@@ -58,6 +58,15 @@ struct Dub {
     DubConfigurations getConfigs(in from!"reggae.options".Options options) {
         auto settings = generatorSettings(options.dCompiler.toCompiler);
         return DubConfigurations(_project.configurations, _project.getDefaultConfiguration(settings.platform));
+    }
+
+    DubInfo configToDubInfo
+        (in from!"reggae.options".Options options, in string config)
+        @trusted  // dub
+    {
+        auto generator = new InfoGenerator(_project);
+        generator.generate(generatorSettings(options.dCompiler.toCompiler, config));
+        return DubInfo(generator.dubPackages);
     }
 }
 

@@ -91,21 +91,19 @@ private from!"reggae.dub.info".DubInfo getDubInfo
      in from!"reggae.options".Options options)
 {
     import reggae.dub.interop: gDubInfos;
-    import reggae.dub.interop.exec: callDub;
-    import reggae.dub.interop.dublib: configToDubInfo;
     import reggae.io: log;
     import std.array: empty;
     import std.file: exists;
     import std.path: buildPath;
     import std.conv: text;
+    import std.exception: enforce;
 
     version(unittest) gDubInfos = null;
 
     if("default" !in gDubInfos) {
 
-        if(!buildPath(options.projectPath, "dub.selections.json").exists) {
-            callDub(output, options, ["dub", "upgrade"]);
-        }
+        enforce(buildPath(options.projectPath, "dub.selections.json").exists,
+                "Cannot find dub.selections.json");
 
         const configs = dub.getConfigs(options);
 
@@ -113,12 +111,12 @@ private from!"reggae.dub.info".DubInfo getDubInfo
         Exception dubInfoFailure;
 
         if(configs.configurations.empty) {
-            gDubInfos["default"] = configToDubInfo(output, options, "");
+            gDubInfos["default"] = dub.configToDubInfo(options, "");
             oneConfigOk = true;
         } else {
             foreach(config; configs.configurations) {
                 try {
-                    gDubInfos[config] = configToDubInfo(output, options, config);
+                    gDubInfos[config] = dub.configToDubInfo(options, config);
 
                     // dub adds certain flags to certain configurations automatically but these flags
                     // don't know up in the output to `dub describe`. Special case them here.

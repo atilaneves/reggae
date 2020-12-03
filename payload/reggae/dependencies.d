@@ -1,13 +1,15 @@
 module reggae.dependencies;
 
-import std.regex;
-import std.range;
+
+import std.range.primitives: isInputRange;
 
 
 string[] dependenciesFromFile(R)(R lines) if(isInputRange!R) {
-    if(lines.empty) return [];
     import std.algorithm: map, filter, find;
-    import std.string: strip, split;
+    import std.string: strip;
+    import std.array: empty, join, array, replace, split;
+
+    if(lines.empty) return [];
     return lines
         .map!(a => a.replace(`\`, ``).strip)
         .join(" ")
@@ -18,19 +20,20 @@ string[] dependenciesFromFile(R)(R lines) if(isInputRange!R) {
 }
 
 
-@safe:
-
-
 /**
  * Given the output of compiling a file, return
  * the list of D files to compile to link the executable
  * Includes all dependencies, not just source files to
  * compile.
  */
-string[] dMainDependencies(in string output) {
+string[] dMainDependencies(in string output) @safe {
+    import std.regex: regex, matchFirst;
+    import std.string: splitLines;
+
     string[] dependencies = dMainDepSrcs(output);
     auto fileReg = regex(`^file +([^\t]+)\t+\((.+)\)$`);
-    foreach(line; output.split("\n")) {
+
+    foreach(line; output.splitLines) {
         auto fileMatch = line.matchFirst(fileReg);
         if(fileMatch) dependencies ~= fileMatch.captures[2];
     }
@@ -45,11 +48,14 @@ string[] dMainDependencies(in string output) {
  * the list of D files to compile to link the executable.
  * Only includes source files to compile
  */
-string[] dMainDepSrcs(in string output) {
+string[] dMainDepSrcs(in string output) @safe {
+    import std.regex: regex, matchFirst;
+    import std.string: splitLines;
+
     string[] dependencies;
     auto importReg = regex(`^import +([^\t]+)[\t\s]+\((.+)\)$`);
     auto stdlibReg = regex(`^(std\.|core\.|etc\.|object$)`);
-    foreach(line; output.split("\n")) {
+    foreach(line; output.splitLines) {
         auto importMatch = line.matchFirst(importReg);
         if(importMatch) {
             auto stdlibMatch = importMatch.captures[1].matchFirst(stdlibReg);
@@ -63,9 +69,10 @@ string[] dMainDepSrcs(in string output) {
 }
 
 
-string[] dependenciesToFile(in string objFile, in string[] deps) pure nothrow {
-    import std.array;
-    return [objFile ~ ": \\",
-            deps.join(" "),
-        ];
+string[] dependenciesToFile(in string objFile, in string[] deps) @safe pure nothrow {
+    import std.array: join;
+    return [
+        objFile ~ ": \\",
+        deps.join(" "),
+    ];
 }

@@ -27,18 +27,21 @@ void writeDubConfig(T)(auto ref T output,
         return;
     }
 
-    output.log("Creating dub");
-    auto dub = Dub(options);
-    output.log("Created dub");
+    // must check for dub.selections.json before creating dub instance
+    const dubSelectionsJson = ensureDubSelectionsJson(output, options);
 
-    dubFetch(output, dub, options);
+    output.log("Creating dub instance ");
+    auto dub = Dub(options);
+    output.log("Created dub instance");
+
+    dubFetch(output, dub, options, dubSelectionsJson);
 
     file.writeln("import reggae.dub.info;");
     file.writeln("enum isDubProject = true;");
 
-    output.log("Getting dub build information");
-    auto dubInfo = getDubInfo(output, options);
-    output.log("Got     dub build information");
+    output.log("    Getting dub build information");
+    auto dubInfo = getDubInfo(output, dub, options);
+    output.log("    Got     dub build information");
 
     const targetType = dubInfo.packages.length
         ? dubInfo.packages[0].targetType
@@ -55,13 +58,39 @@ void writeDubConfig(T)(auto ref T output,
 }
 
 
+private string ensureDubSelectionsJson
+    (O)
+    (ref O output, in from!"reggae.options".Options options)
+    @safe
+{
+    import reggae.dub.interop.exec: callDub, dubEnvArgs;
+    import reggae.io: log;
+    import std.path: buildPath;
+    import std.file: exists;
+    import std.exception: enforce;
+
+    const path = buildPath(options.projectPath, "dub.selections.json");
+
+    if(!path.exists) {
+        output.log("Creating dub.selections.json");
+        const cmd = ["dub", "upgrade"] ~ dubEnvArgs;
+        callDub(output, options, cmd);
+    }
+
+    enforce(path.exists, "Could not create dub.selections.json");
+
+    return path;
+}
+
+
+
 private from!"reggae.dub.info".DubInfo getDubInfo
     (T)
     (auto ref T output,
+     ref from!"reggae.dub.interop.dublib".Dub dub,
      in from!"reggae.options".Options options)
 {
     import reggae.dub.interop: gDubInfos;
-    import reggae.dub.interop.configurations: getConfigs;
     import reggae.dub.interop.exec: callDub;
     import reggae.dub.interop.dublib: configToDubInfo;
     import reggae.io: log;
@@ -78,9 +107,7 @@ private from!"reggae.dub.info".DubInfo getDubInfo
             callDub(output, options, ["dub", "upgrade"]);
         }
 
-        output.log("Getting configs");
-        const configs = getConfigs(output, options);
-        output.log("Got configs");
+        const configs = dub.getConfigs(options);
 
         bool oneConfigOk;
         Exception dubInfoFailure;

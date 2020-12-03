@@ -2,6 +2,7 @@ module tests.ut.backend.ninja;
 
 
 import reggae;
+import reggae.backend.ninja;
 import unit_threaded;
 
 

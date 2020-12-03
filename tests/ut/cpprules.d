@@ -3,6 +3,7 @@ module tests.ut.cpprules;
 
 import reggae;
 import reggae.options;
+import reggae.backend.ninja;
 import unit_threaded;
 
 

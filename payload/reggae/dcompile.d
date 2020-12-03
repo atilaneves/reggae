@@ -1,4 +1,5 @@
-import reggae.dependencies;
+module reggae.dcompile;
+
 import std.stdio;
 import std.exception;
 import std.process;
@@ -7,30 +8,36 @@ import std.algorithm;
 import std.getopt;
 import std.array;
 
-int main(string[] args) {
-    try {
-        dcompile(args);
-    } catch(Exception ex) {
-        stderr.writeln(ex.msg);
-        return 1;
+
+version(ReggaeTest) {}
+else {
+    int main(string[] args) {
+        try {
+            dcompile(args);
+            return 0;
+        } catch(Exception ex) {
+            stderr.writeln(ex.msg);
+            return 1;
+        }
     }
-
-    return 0;
 }
-
 
 /**
 Only exists in order to get dependencies for each compilation step.
  */
 private void dcompile(string[] args) {
+
     string depFile, objFile;
-    auto helpInfo = getopt(args,
-                           std.getopt.config.passThrough,
-                           "depFile", "The dependency file to write", &depFile,
-                           "objFile", "The object file to output", &objFile,
-        );
+    auto helpInfo = getopt(
+        args,
+        std.getopt.config.passThrough,
+        "depFile", "The dependency file to write", &depFile,
+        "objFile", "The object file to output", &objFile,
+    );
+
     enforce(args.length >= 2, "Usage: dcompile --objFile <objFile> --depFile <depFile> <compiler> <compiler args>");
     enforce(!depFile.empty && !objFile.empty, "The --depFile and --objFile 'options' are mandatory");
+
     const compArgs = compilerArgs(args, objFile);
     const fewerArgs = compArgs[0..$-1]; //non-verbose
     const compRes = execute(compArgs);
@@ -85,4 +92,36 @@ private string[] mapToLdcOptions(in string[] compArgs) @safe pure {
     }
 
     return compArgs.map!doMap.array;
+}
+
+
+/**
+ * Given the output of compiling a file, return
+ * the list of D files to compile to link the executable
+ * Includes all dependencies, not just source files to
+ * compile.
+ */
+string[] dMainDependencies(in string output) @safe {
+    import reggae.dependencies: dMainDepSrcs;
+    import std.regex: regex, matchFirst;
+    import std.string: splitLines;
+
+    string[] dependencies = dMainDepSrcs(output);
+    auto fileReg = regex(`^file +([^\t]+)\t+\((.+)\)$`);
+
+    foreach(line; output.splitLines) {
+        auto fileMatch = line.matchFirst(fileReg);
+        if(fileMatch) dependencies ~= fileMatch.captures[2];
+    }
+
+    return dependencies;
+}
+
+
+string[] dependenciesToFile(in string objFile, in string[] deps) @safe pure nothrow {
+    import std.array: join;
+    return [
+        objFile ~ ": \\",
+        deps.join(" "),
+    ];
 }

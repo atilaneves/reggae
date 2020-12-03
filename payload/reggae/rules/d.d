@@ -10,7 +10,6 @@ module reggae.rules.d;
 import reggae.types;
 import reggae.build;
 import reggae.sorting;
-import reggae.dependencies: dMainDepSrcs;
 import reggae.rules.common;
 import std.algorithm;
 import std.array;
@@ -280,14 +279,17 @@ Target scriptlike(App app,
 //regular runtime version of scriptlike
 //all paths relative to projectPath
 //@trusted because of .array
-Target scriptlike(in string projectPath,
-                  in App app, in Flags flags,
-                  in ImportPaths importPaths,
-                  in StringImportPaths stringImportPaths,
-                  Target[] linkWith)
+Target scriptlike
+    ()
+    (in string projectPath,
+     in App app, in Flags flags,
+     in ImportPaths importPaths,
+     in StringImportPaths stringImportPaths,
+     Target[] linkWith)
     @trusted
 {
 
+    import reggae.dependencies: dMainDepSrcs;
     import std.path;
 
     if(getLanguage(app.srcFileName.value) != Language.D)

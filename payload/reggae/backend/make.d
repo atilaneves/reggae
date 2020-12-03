@@ -1,17 +1,11 @@
 module reggae.backend.make;
 
-import reggae.build;
-import reggae.range;
-import reggae.rules;
-import reggae.options;
-
-import std.conv;
-import std.array;
-import std.path;
-import std.algorithm;
-
 
 struct Makefile {
+
+    import reggae.build: Build, Target;
+    import reggae.options: Options;
+
     Build build;
     const(Options) options;
     string projectPath;
@@ -27,6 +21,11 @@ struct Makefile {
 
     //only the main targets
     string simpleOutput() @safe {
+
+        import reggae.options: banner;
+        import reggae.build: CommandType;
+        import std.conv: text;
+        import std.array: join;
 
         auto ret = banner;
         ret ~= text("all: ", build.defaultTargetsString(options.projectPath), "\n");
@@ -48,7 +47,7 @@ struct Makefile {
                     target.implicitsInProjectPath(options.projectPath)).join(" ");
 
             ret ~= " " ~ fileName() ~ "\n";
-	    ret ~= "\t@echo [make] Building " ~ output ~ "\n";
+            ret ~= "\t@echo [make] Building " ~ output ~ "\n";
             ret ~= "\t" ~ command(target) ~ "\n";
         }
 
@@ -58,7 +57,7 @@ struct Makefile {
     private static string replaceEnvVars(in string str) @safe {
         import std.regex: regex, matchAll;
         import std.algorithm: _sort = sort, uniq, map;
-        import std.array: array;
+        import std.array: array, replace;
         import std.process: environment;
 
         auto re = regex(`\$(\w+)`);
@@ -74,6 +73,9 @@ struct Makefile {
 
     //includes rerunning reggae
     string output() @safe {
+
+        import std.array: join;
+
         auto ret = simpleOutput;
 
         if(options.export_) {
@@ -89,7 +91,9 @@ struct Makefile {
     }
 
     void writeBuild() @safe {
-        import std.stdio;
+        import std.stdio: File;
+        import std.path: buildPath;
+
         auto output = output();
         auto file = File(buildPath(options.workingDir, fileName), "w");
         file.write(output);
@@ -98,6 +102,8 @@ struct Makefile {
     //the only reason this is needed is to add auto dependency
     //tracking
     string command(Target target) @safe const {
+        import reggae.build: CommandType, replaceConcreteCompilersWithVars;
+
         immutable cmdType = target.getCommandType;
         if(cmdType == CommandType.code)
             throw new Exception("Command type 'code' not supported for make backend");
@@ -112,6 +118,9 @@ struct Makefile {
     }
 
     private void mkDir(Target target) @trusted const {
+        import std.path: dirName;
+        import std.file: exists, mkdirRecurse;
+
         foreach(output; target.expandOutputs(options.projectPath)) {
             import std.file;
             if(!output.dirName.exists) mkdirRecurse(output.dirName);

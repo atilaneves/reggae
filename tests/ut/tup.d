@@ -3,6 +3,7 @@ module tests.ut.tup;
 
 import unit_threaded;
 import reggae;
+import reggae.backend.tup;
 
 
 void testEmpty() {

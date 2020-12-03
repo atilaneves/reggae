@@ -1,7 +1,8 @@
 module tests.ut.dependencies;
 
 import unit_threaded;
-import reggae.dependencies;
+import reggae.dependencies: dMainDepSrcs, dependenciesToFile, dependenciesFromFile;
+import reggae.dcompile: dMainDependencies;
 import std.array;
 
 

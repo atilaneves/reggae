@@ -22,33 +22,10 @@ string[] dependenciesFromFile(R)(R lines) if(isInputRange!R) {
 
 /**
  * Given the output of compiling a file, return
- * the list of D files to compile to link the executable
- * Includes all dependencies, not just source files to
- * compile.
- */
-string[] dMainDependencies(in string output) @safe {
-    import std.regex: regex, matchFirst;
-    import std.string: splitLines;
-
-    string[] dependencies = dMainDepSrcs(output);
-    auto fileReg = regex(`^file +([^\t]+)\t+\((.+)\)$`);
-
-    foreach(line; output.splitLines) {
-        auto fileMatch = line.matchFirst(fileReg);
-        if(fileMatch) dependencies ~= fileMatch.captures[2];
-    }
-
-    return dependencies;
-}
-
-
-
-/**
- * Given the output of compiling a file, return
  * the list of D files to compile to link the executable.
  * Only includes source files to compile
  */
-string[] dMainDepSrcs(in string output) @safe {
+string[] dMainDepSrcs()(in string output) {
     import std.regex: regex, matchFirst;
     import std.string: splitLines;
 

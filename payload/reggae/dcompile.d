@@ -1,3 +1,5 @@
+module reggae.dcompile;
+
 import std.stdio;
 import std.exception;
 import std.process;
@@ -7,24 +9,25 @@ import std.getopt;
 import std.array;
 
 
-int main(string[] args) {
-    try {
-        dcompile(args);
-    } catch(Exception ex) {
-        stderr.writeln(ex.msg);
-        return 1;
+version(ReggaeTest) {}
+else {
+    int main(string[] args) {
+        try {
+            dcompile(args);
+            return 0;
+        } catch(Exception ex) {
+            stderr.writeln(ex.msg);
+            return 1;
+        }
     }
-
-    return 0;
 }
-
 
 /**
 Only exists in order to get dependencies for each compilation step.
  */
 private void dcompile(string[] args) {
 
-    import reggae.dependencies: dependenciesToFile, dMainDependencies;
+    import reggae.dependencies: dependenciesToFile;
 
     string depFile, objFile;
     auto helpInfo = getopt(args,
@@ -88,4 +91,27 @@ private string[] mapToLdcOptions(in string[] compArgs) @safe pure {
     }
 
     return compArgs.map!doMap.array;
+}
+
+
+/**
+ * Given the output of compiling a file, return
+ * the list of D files to compile to link the executable
+ * Includes all dependencies, not just source files to
+ * compile.
+ */
+string[] dMainDependencies(in string output) @safe {
+    import reggae.dependencies: dMainDepSrcs;
+    import std.regex: regex, matchFirst;
+    import std.string: splitLines;
+
+    string[] dependencies = dMainDepSrcs(output);
+    auto fileReg = regex(`^file +([^\t]+)\t+\((.+)\)$`);
+
+    foreach(line; output.splitLines) {
+        auto fileMatch = line.matchFirst(fileReg);
+        if(fileMatch) dependencies ~= fileMatch.captures[2];
+    }
+
+    return dependencies;
 }

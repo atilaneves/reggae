@@ -279,11 +279,13 @@ Target scriptlike(App app,
 //regular runtime version of scriptlike
 //all paths relative to projectPath
 //@trusted because of .array
-Target scriptlike(in string projectPath,
-                  in App app, in Flags flags,
-                  in ImportPaths importPaths,
-                  in StringImportPaths stringImportPaths,
-                  Target[] linkWith)
+Target scriptlike
+    ()
+    (in string projectPath,
+     in App app, in Flags flags,
+     in ImportPaths importPaths,
+     in StringImportPaths stringImportPaths,
+     Target[] linkWith)
     @trusted
 {
 

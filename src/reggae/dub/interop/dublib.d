@@ -127,6 +127,7 @@ enum Compiler {
     dmd,
     ldc,
     gdc,
+    ldmd,
 }
 
 

@@ -82,7 +82,7 @@ private string[] mapToGdcOptions(in string[] compArgs) @safe pure {
 
 //takes a dmd command line and maps arguments to gdc ones
 private string[] mapToLdcOptions(in string[] compArgs) @safe pure {
-    string[string] options = ["-v": "-fd-verbose", "-O": "-O2", "-debug": "-d-debug"];
+    string[string] options = ["-O": "-O2", "-debug": "-d-debug"];
 
     string doMap(string a) {
         foreach(k, v; options) {

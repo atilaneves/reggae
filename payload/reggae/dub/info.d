@@ -281,7 +281,7 @@ struct DubInfo {
 
         return
             packages[0].libs.map!libFlag.array ~
-            packages[0].lflags
+            packages[0].lflags.dup
             ;
     }
 

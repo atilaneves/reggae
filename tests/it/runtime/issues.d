@@ -51,7 +51,6 @@ unittest {
 }
 
 
-@ShouldFail
 @("dubLink")
 @Tags(["dub", "make"])
 unittest {

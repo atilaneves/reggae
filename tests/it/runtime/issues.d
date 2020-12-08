@@ -49,3 +49,28 @@ unittest {
         shouldSucceed("issue62");
     }
 }
+
+
+@("dubLink")
+@Tags(["dub", "make"])
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl", `
+            name "dublink"
+        `);
+        writeFile("source/app.d", q{
+                void main () { }
+            }
+        );
+        writeFile("reggaefile.d",
+                  q{
+                      import reggae;
+                      alias sourceObjs = dlangObjects!(Sources!"source");
+                      alias exe = dubLink!(TargetName("exe"), Configuration("default"), sourceObjs);
+                      mixin build!exe;
+                  });
+        runReggae("-b", "make");
+        make.shouldExecuteOk;
+        shouldSucceed("exe");
+    }
+}

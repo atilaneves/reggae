@@ -394,7 +394,8 @@ private:
     }
 
     string buildLine(Target target) @safe pure const {
-        import std.algorithm: map;
+        import std.algorithm.iteration: map;
+        import std.array: join;
 
         string fix(string path) {
             version(Windows) {

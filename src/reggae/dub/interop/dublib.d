@@ -56,8 +56,24 @@ struct Dub {
     }
 
     DubConfigurations getConfigs(in from!"reggae.options".Options options) {
+
+        import std.algorithm.iteration: filter, map;
+        import std.array: array;
+
         auto settings = generatorSettings(options.dCompiler.toCompiler);
-        return DubConfigurations(_project.configurations, _project.getDefaultConfiguration(settings.platform));
+
+        // A violation of the Law of Demeter caused by a dub bug.
+        // Otherwise _project.configurations would do, but it fails for one
+        // projet and no reduced test case was found.
+        auto configurations = _project
+            .rootPackage
+            .recipe
+            .configurations
+            .filter!(c => c.matchesPlatform(settings.platform))
+            .map!(c => c.name)
+            .array;
+
+        return DubConfigurations(configurations, _project.getDefaultConfiguration(settings.platform));
     }
 
     DubInfo configToDubInfo

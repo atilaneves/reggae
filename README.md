@@ -1,6 +1,6 @@
 Reggae
 =======
-![Test](https://github.com/atilaneves/reggae/workflows/Test/badge.svg)
+[![Actions Status](https://github.com/atilaneves/reggae/workflows/CI/badge.svg)](https://github.com/atilaneves/reggae/actions)
 [![Build Status](https://travis-ci.org/atilaneves/reggae.png?branch=master)](https://travis-ci.org/atilaneves/reggae)
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/atilaneves/reggae?branch=master&svg=true)](https://ci.appveyor.com/project/atilaneves/reggae)
 [![Coverage](https://codecov.io/gh/atilaneves/reggae/branch/master/graph/badge.svg)](https://codecov.io/gh/atilaneves/reggae)

@@ -12,8 +12,14 @@ enum copyFileName = "copy.txt";
 
 
 private Build binaryBuild() {
-    mixin build!(Target(copyFileName, `cp $in $out`, Target(origFileName)),
+    version(Windows)
+        enum cmd = `copy $in $out`;
+    else
+        enum cmd = `cp $in $out`;
+
+    mixin build!(Target(copyFileName, cmd, Target(origFileName)),
                  optional(Target.phony(`opt`, `echo Optional!`)));
+
     return buildFunc();
 }
 
@@ -59,6 +65,7 @@ private struct FakeFile {
     import std.range;
     import std.algorithm: map;
     import std.conv: to;
+    import std.string: splitLines, stripRight;
 
     enum fooSrcName = "foo.txt";
     enum barSrcName = "bar.txt";
@@ -77,15 +84,18 @@ private struct FakeFile {
 
     auto foo = Target("$project/foo", "echo foo >> $out", [], [Target(fooSrcName)]);
     auto bar = Target("$project/bar", "echo bar >> $out", [], [Target(barSrcName)]);
-    auto mids = iota(10).map!(a => Target.phony("$project/" ~a.to!string, "echo " ~ a.to!string, [foo, bar])).array;
+    auto mids = 10.iota
+        .map!(a => Target.phony("$project/" ~a.to!string, "echo " ~ a.to!string, [foo, bar]))
+        .array
+        ;
     auto top = Target.phony("top", "echo top", mids);
 
     auto binary = Binary(Build(top), getOptions(["reggae", "--export", "-b", "binary"]));
     binary.run(["./build"]);
 
     // only one line -> rule only called once
-    readText("foo").chomp.split("\n").shouldEqual(["foo"]);
-    readText("bar").chomp.split("\n").shouldEqual(["bar"]);
+    readText("foo").splitLines.map!stripRight.shouldEqual(["foo"]);
+    readText("bar").splitLines.map!stripRight.shouldEqual(["bar"]);
 }
 
 
@@ -102,7 +112,12 @@ private struct FakeFile {
 @("List of targets with $project in the name") unittest {
     import std.path;
 
-    auto build = Build(optional(Target("$project/../druntime/" ~ copyFileName, `cp $in $out`, Target(origFileName))),
+    version(Windows)
+        enum cmd = `copy $in $out`;
+    else
+        enum cmd = `cp $in $out`;
+
+    auto build = Build(optional(Target(buildPath("$project", "..", "druntime", copyFileName), cmd, Target(origFileName))),
                        Target.phony(`opt`, `echo Optional!`));
     auto file = FakeFile();
     auto binary = Binary(build, getOptions(["reggae", "-b", "binary"]), file);

@@ -5,29 +5,44 @@ public import unit_threaded;
 
 immutable string origPath;
 
-shared static this() {
+shared static this() nothrow {
     import std.file: mkdirRecurse, rmdirRecurse, getcwd, dirEntries, SpanMode, exists, isDir;
     import std.path: buildNormalizedPath, absolutePath;
     import std.algorithm: map, find;
 
-    auto paths = [".", ".."].map!(a => buildNormalizedPath(getcwd, a))
-        .find!(a => buildNormalizedPath(a, "dub.json").exists);
-    assert(!paths.empty, "Error: Cannot find reggae top dir using dub.json");
-    origPath = paths.front.absolutePath;
+    try {
+        auto paths = [".", ".."].map!(a => buildNormalizedPath(getcwd, a))
+            .find!(a => buildNormalizedPath(a, "dub.json").exists);
+        assert(!paths.empty, "Error: Cannot find reggae top dir using dub.json");
+        origPath = paths.front.absolutePath;
 
-    if(testsPath.exists) {
-        writelnUt("[IT] Removing old test path ", testsPath);
-        foreach(entry; dirEntries(testsPath, SpanMode.shallow)) {
-            if(isDir(entry.name)) {
-                rmdirRecurse(entry);
+        if(testsPath.exists) {
+            writelnUt("[IT] Removing old test path ", testsPath);
+            foreach(entry; dirEntries(testsPath, SpanMode.shallow)) {
+                if(isDir(entry.name)) {
+                    rmdirRecurse(entry);
+                }
             }
         }
+
+        writelnUt("[IT] Creating new test path ", testsPath);
+        mkdirRecurse(testsPath);
+
+        buildDCompile();
+    } catch(Exception e) {
+        import std.stdio: stderr;
+        try
+            stderr.writeln("Shared static ctor failed: ", e);
+        catch(Exception e2) {
+            import core.stdc.stdio;
+            printf("Shared static ctor failed\n");
+        }
     }
+}
 
-    writelnUt("[IT] Creating new test path ", testsPath);
-    mkdirRecurse(testsPath);
-
-    buildDCompile();
+private string dcompileName() @safe pure nothrow {
+    import reggae.rules.common: exeExt;
+    return "dcompile" ~ exeExt;
 }
 
 private void buildDCompile() {
@@ -41,16 +56,16 @@ private void buildDCompile() {
     import std.process: execute, Config;
     import std.array: join;
     import reggae.file;
+    import reggae.rules.common: exeExt;
 
     enum fileNames = ["dcompile.d", "dependencies.d"];
 
-    const exeName = buildPath("tmp", "dcompile");
+    const exeName = buildPath("tmp", dcompileName);
     immutable needToRecompile =
         !exeName.exists ||
         fileNames.
-        any!(a => buildPath(origPath, "payload", "reggae", a).
-        newerThan(buildPath(testsPath, a)));
-
+            any!(a => buildPath(origPath, "payload", "reggae", a).
+                          newerThan(buildPath(testsPath, a)));
     if(!needToRecompile)
         return;
 
@@ -104,20 +119,14 @@ string projectPath(in string name) {
     return inOrigPath("tests", "projects", name);
 }
 
-version(Posix)
-    extern(C) char* mkdtemp(char*);
-else
-    char* mkdtemp(char*) {
-        throw new Exception("No mkdtemp function on Windows");
-    }
-
 string newTestDir() {
+    import unit_threaded.integration: mkdtemp;
     import std.conv;
     import std.path;
     import std.algorithm;
 
     char[100] template_;
-    std.algorithm.copy(buildPath(testsPath, "XXXXXX") ~ '\0', template_[]);
+    std.algorithm.copy(buildPath(testsPath, "YYYYYYXXXXXX") ~ '\0', template_[]);
     auto ret = mkdtemp(&template_[0]).to!string;
 
     return ret.absolutePath;
@@ -217,35 +226,39 @@ void doTestBuildFor(string module_ = __MODULE__)(ref Options options, string[] a
 }
 
 void prepareTestBuild(string module_ = __MODULE__)(ref Options options) {
+    import std.file: mkdirRecurse;
+    import std.string;
+    import std.path;
+    import std.algorithm: canFind;
+    import reggae.config;
+
     version(Windows) {
-        assert(false);
-    } else {
-        import std.file: symlink, mkdirRecurse;
-        import std.string;
-        import std.path;
-        import std.algorithm: canFind;
-        import reggae.config;
-
-        mkdirRecurse(buildPath(options.workingDir, ".reggae"));
-        symlink(buildPath(testsPath, "dcompile"), buildPath(options.workingDir, ".reggae", "dcompile"));
-
-        // copy the project files over, that way the tests can modify them
-        immutable projectsPath = buildPath(origPath, "tests", "projects");
-        immutable projectName = module_.split(".")[0];
-        immutable projectPath = buildPath(projectsPath, projectName);
-
-        // change the directory of the project to be where the build dir is
-        options.projectPath = buildPath(origPath, (options.workingDir).relativePath(origPath));
-        auto modulePath = buildPath(projectsPath, module_.split(".").join(dirSeparator));
-
-        // copy all project files over to the build directory
-        if(module_.canFind("reggaefile")) {
-            copyProjectFiles(projectPath, options.workingDir);
-            options.projectPath = options.workingDir;
+        static void symlink(in string org, in string dst) {
+            import std.file: copy;
+            copy(org, dst);
         }
+    } else
+          import std.file: symlink;
 
-        setOptions(options);
+    mkdirRecurse(buildPath(options.workingDir, ".reggae"));
+    symlink(buildPath(testsPath, dcompileName), buildPath(options.workingDir, ".reggae", dcompileName));
+
+    // copy the project files over, that way the tests can modify them
+    immutable projectsPath = buildPath(origPath, "tests", "projects");
+    immutable projectName = module_.split(".")[0];
+    immutable projectPath = buildPath(projectsPath, projectName);
+
+    // change the directory of the project to be where the build dir is
+    options.projectPath = buildPath(origPath, (options.workingDir).relativePath(origPath));
+    auto modulePath = buildPath(projectsPath, module_.split(".").join(dirSeparator));
+
+    // copy all project files over to the build directory
+    if(module_.canFind("reggaefile")) {
+        copyProjectFiles(projectPath, options.workingDir);
+        options.projectPath = options.workingDir;
     }
+
+    setOptions(options);
 }
 
 void justDoTestBuild(string module_ = __MODULE__)(in Options options, string[] args = []) {

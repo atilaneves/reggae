@@ -1,3 +1,4 @@
 name "postbuild"
 targetType "executable"
-postBuildCommands "touch foo.txt"
+postBuildCommands "touch foo.txt" platform="posix"
+postBuildCommands "foo bar baz" platform="windows"  // will fail but touch doesn't exist on Windows anyway

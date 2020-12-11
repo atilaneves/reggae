@@ -12,6 +12,7 @@ import std.path: buildPath;
 unittest {
 
     import std.string: join;
+    import std.algorithm: filter;
 
     with(immutable ReggaeSandbox("dub")) {
         shouldNotExist("reggaefile.d");
@@ -20,11 +21,11 @@ unittest {
         auto output = ninja.shouldExecuteOk;
         output.shouldContain("-debug -g");
 
-        shouldSucceed("atest").shouldEqual(
-            ["Why hello!",
-             "",
-             "I'm immortal!"]
-        );
+        shouldSucceed("atest").filter!(a => a != "").should ==
+            [
+                "Why hello!",
+                "I'm immortal!"
+            ];
 
         // there's only one UT in main.d which always fails
         shouldFail("ut");
@@ -53,7 +54,7 @@ unittest {
 
 
 @("postbuild")
-@Tags(["dub", "ninja"])
+@Tags(["dub", "ninja", "posix"])
 unittest {
     with(immutable ReggaeSandbox("dub_postbuild")) {
         runReggae("-b", "ninja");
@@ -394,8 +395,9 @@ unittest {
 }
 
 
+// See #73 for "posix"
 @("staticLibrary.implicit")
-@Tags(["dub", "ninja"])
+@Tags(["dub", "ninja", "posix"])
 unittest {
 
     with(immutable ReggaeSandbox()) {

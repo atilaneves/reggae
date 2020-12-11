@@ -4,9 +4,6 @@ environment:
   - DC: dmd
     DVersion: 2.089.0
     arch: x64
-  - DC: dmd
-    DVersion: 2.089.0
-    arch: x86
 
 skip_tags: true
 
@@ -47,10 +44,6 @@ install:
             }
         }
   - ps: SetUpDCompiler
-  - powershell -Command Invoke-WebRequest http://code.dlang.org/files/dub-1.0.0-windows-x86.zip -OutFile dub.zip
-  - 7z x dub.zip -odub > nul
-  - set PATH=%CD%\%binpath%;%CD%\dub;%PATH%
-  - dub --version
 
 before_build:
   - ps: if($env:arch -eq "x86"){
@@ -81,4 +74,4 @@ test_script:
  - echo %DC%
  - echo %PATH%
  - '%DC% --version'
- # - dub build  # doesn't work yet
+ # - dub test -- ~@tup ~@make ~@posix tests.it.runtime.dub

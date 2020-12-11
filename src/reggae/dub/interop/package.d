@@ -30,9 +30,7 @@ void writeDubConfig(T)(auto ref T output,
     // must check for dub.selections.json before creating dub instance
     const dubSelectionsJson = ensureDubSelectionsJson(output, options);
 
-    output.log("Creating dub instance ");
     auto dub = Dub(options);
-    output.log("Created dub instance");
 
     dubFetch(output, dub, options, dubSelectionsJson);
 

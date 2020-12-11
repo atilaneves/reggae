@@ -40,9 +40,7 @@ package void dubFetch(O)(
         callDub(output, options, cmd);
     }
 
-    output.log("Reloading project");
     dub.reinit;
-    output.log("Project reloaded");
 }
 
 

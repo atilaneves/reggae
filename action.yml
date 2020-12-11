@@ -1,0 +1,22 @@
+name: Test
+on: [push, pull_request]
+
+jobs:
+    test:
+        name: Dub Test
+        strategy:
+            matrix:
+                os: [ubuntu-latest]
+                dc: [dmd-2.094.2]
+
+        runs-on: ${{ matrix.os }}
+        steps:
+            - uses: actions/checkout@v2
+
+            - name: Install D compiler
+              uses: dlang-community/setup-dlang@v1
+              with:
+                  compiler: ${{ matrix.dc }}
+
+            - name: Run tests
+              run: dub -q test

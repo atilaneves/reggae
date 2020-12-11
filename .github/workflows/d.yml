@@ -11,8 +11,9 @@ jobs:
 
         runs-on: ${{ matrix.os }}
         steps:
+            - uses: seanmiddleditch/gha-setup-ninja@master
+            - run: mkdir build && cd build && cmake -G Ninja .. && cmake --build build
             - uses: actions/checkout@v2
-
             - name: Install D compiler
               uses: dlang-community/setup-dlang@v1
               with:

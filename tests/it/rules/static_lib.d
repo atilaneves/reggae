@@ -1,8 +1,12 @@
 module tests.it.rules.static_lib;
 
+
 import tests.it;
 
-@("template") unittest {
+
+@Tags("travis_oops")
+@("template")
+unittest {
     import reggae.buildgen;
     auto options = _testProjectOptions("binary", "static_lib");
     string[] noFlags;

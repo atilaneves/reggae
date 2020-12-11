@@ -19,4 +19,4 @@ jobs:
           compiler: ${{ matrix.dc }}
 
       - name: Run tests
-        run: dub -q test
+        run: dub -q test -- ~@tup ~@travis_oops

@@ -749,3 +749,35 @@ unittest {
         shouldFail("ut");
     }
 }
+
+
+@("buildtype.release")
+@Tags("dub", "ninja")
+unittest {
+
+    import std.string: splitLines;
+
+    with(immutable ReggaeSandbox()) {
+        writeFile(
+            "dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "executable"`,
+            ],
+        );
+        writeFile(
+            "source/app.d",
+            [
+                q{void main() {}},
+            ],
+        );
+
+        runReggae("-b", "ninja", "--dub-build-type=release");
+        const buildLines = ninja.shouldExecuteOk;
+        const firstLine = buildLines[0];
+        "-release ".should.be in firstLine;
+        "-O ".should.be in firstLine;
+        "-inline ".should.be in firstLine;
+    }
+
+}

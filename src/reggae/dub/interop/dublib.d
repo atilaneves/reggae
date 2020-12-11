@@ -61,11 +61,11 @@ struct Dub {
     }
 
     DubInfo configToDubInfo
-        (in from!"reggae.options".Options options, in string config)
+    (in from!"reggae.options".Options options, in string config)
         @trusted  // dub
     {
         auto generator = new InfoGenerator(_project);
-        generator.generate(generatorSettings(options.dCompiler.toCompiler, config));
+        generator.generate(generatorSettings(options.dCompiler.toCompiler, config, options.dubBuildType));
         return DubInfo(generator.dubPackages);
     }
 
@@ -131,29 +131,6 @@ enum Compiler {
 }
 
 
-package from!"reggae.dub.info".DubInfo configToDubInfo
-    (O)
-    (auto ref O output, in from!"reggae.options".Options options, in string config)
-    @trusted  // dub
-{
-    import reggae.dub.info: DubInfo;
-    import reggae.dub.interop.dublib: project, generatorSettings, InfoGenerator,
-        systemPackagesPath, userPackagesPath, ProjectPath, Compiler;
-    import std.conv: to;
-
-    auto proj = project(
-        ProjectPath(options.projectPath),
-        systemPackagesPath,
-        userPackagesPath,
-    );
-
-    auto generator = new InfoGenerator(proj);
-    generator.generate(generatorSettings(options.dCompiler.toCompiler, config));
-
-    return DubInfo(generator.dubPackages);
-}
-
-
 Compiler toCompiler(in string compiler) @safe pure {
     import std.conv: to;
     if(compiler == "ldc2") return Compiler.ldc;
@@ -213,7 +190,11 @@ struct DubPackages {
 }
 
 
-auto generatorSettings(in Compiler compiler = Compiler.dmd, in string config = "") @safe {
+auto generatorSettings(in Compiler compiler = Compiler.dmd,
+                       in string config = "",
+                       in string buildType = "debug")
+    @safe
+{
     import dub.compilers.compiler: getCompiler;
     import dub.generators.generator: GeneratorSettings;
     import dub.platform: determineBuildPlatform;
@@ -221,7 +202,7 @@ auto generatorSettings(in Compiler compiler = Compiler.dmd, in string config = "
 
     GeneratorSettings ret;
 
-    ret.buildType = "debug";  // FIXME
+    ret.buildType = buildType;
     const compilerName = compiler.text;
     ret.compiler = () @trusted { return getCompiler(compilerName); }();
     ret.platform.compilerBinary = compilerName;  // FIXME? (absolute path?)

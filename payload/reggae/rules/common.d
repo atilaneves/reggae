@@ -321,7 +321,10 @@ Target[] staticLibraryTarget(in string name, Target[] objects) @safe pure {
     return [target];
 }
 
-private enum staticLibraryShellCommand = "ar rcs $out $in";
+version(Windows)
+    private enum staticLibraryShellCommand = "lib.exe /OUT:$out $in";
+else
+    private enum staticLibraryShellCommand = "ar rcs $out $in";
 
 private Target[] srcFilesToObjectTargets(in string[] srcFiles,
                                          in Flags flags,

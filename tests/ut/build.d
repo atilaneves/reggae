@@ -3,9 +3,9 @@ module tests.ut.build;
 import unit_threaded;
 import reggae;
 import reggae.options;
+import reggae.path: buildPath;
 import std.array;
 import std.format;
-import std.path;
 
 
 void testIsLeaf() {
@@ -23,7 +23,7 @@ void testInOut() {
                               "createfoo -o $out $in",
                               [Target("bar.txt"), Target("baz.txt")]);
         target.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
-            "createfoo -o foo /path/to/bar.txt /path/to/baz.txt");
+            "createfoo -o foo " ~ buildPath("/path/to/bar.txt") ~ " " ~ buildPath("/path/to/baz.txt"));
     }
     {
         auto target = Target("tgt",
@@ -41,7 +41,7 @@ void testInOut() {
                               "protocompile $out -i $in",
                               [Target("proto.idl")]);
         target.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
-            "protocompile proto.h proto.c -i /path/to/proto.idl");
+            "protocompile proto.h proto.c -i " ~ buildPath("/path/to/proto.idl"));
     }
 
     {
@@ -51,7 +51,7 @@ void testInOut() {
                                Target("bar.o"),
                                Target("baz.o")]);
         target.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
-            "ar -olib1.a foo1.o foo2.o /path/to/bar.o /path/to/baz.o");
+            "ar -olib1.a foo1.o foo2.o " ~ buildPath("/path/to/bar.o") ~ " " ~ buildPath("/path/to/baz.o"));
     }
 }
 
@@ -61,7 +61,8 @@ void testProject() {
     auto target = Target("foo",
                           "makefoo -i $in -o $out -p $project",
                           [Target("bar"), Target("baz")]);
-    target.shellCommand(gDefaultOptions.withProjectPath("/tmp")).shouldEqual("makefoo -i /tmp/bar /tmp/baz -o foo -p /tmp");
+    target.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
+        "makefoo -i " ~ buildPath("/path/to/bar") ~ " " ~ buildPath("/path/to/baz") ~ " -o foo -p " ~ buildPath("/path/to"));
 }
 
 
@@ -69,7 +70,7 @@ void testMultipleOutputs() {
     import reggae.config: gDefaultOptions;
     auto target = Target(["foo.hpp", "foo.cpp"], "protocomp $in", [Target("foo.proto")]);
     target.rawOutputs.shouldEqual(["foo.hpp", "foo.cpp"]);
-    target.shellCommand(gDefaultOptions.withProjectPath("myproj")).shouldEqual("protocomp myproj/foo.proto");
+    target.shellCommand(gDefaultOptions.withProjectPath("myproj")).shouldEqual("protocomp " ~ buildPath("myproj/foo.proto"));
 
     auto bld = Build(target);
     bld.targets.array[0].rawOutputs.shouldEqual(["foo.hpp", "foo.cpp"]);
@@ -82,7 +83,7 @@ void testInTopLevelObjDir() {
     auto dirName = topLevelDirName(theApp);
     auto fooObj = Target("foo.o", "", [Target("foo.c")]);
     fooObj.inTopLevelObjDirOf(dirName).shouldEqual(
-        Target(".reggae/objs/theapp.objs/foo.o", "", [Target("foo.c")]));
+        Target(buildPath(".reggae/objs/theapp.objs/foo.o"), "", [Target("foo.c")]));
 
     auto barObjInBuildDir = Target("$builddir/bar.o", "", [Target("bar.c")]);
     barObjInBuildDir.inTopLevelObjDirOf(dirName).shouldEqual(
@@ -108,17 +109,17 @@ void testMultipleOutputsImplicits() {
                        [Target(`src/main.d`), protoObj, protoD]);
     auto build = Build(app);
 
-    auto newProtoSrcs = Target([`gen/protocol.c`, `gen/protocol.h`],
+    auto newProtoSrcs = Target([buildPath("gen/protocol.c"), buildPath("gen/protocol.h")],
                                 `./compiler $in`,
                                 [Target(`protocol.proto`)]);
-    auto newProtoD = Target(`gen/protocol.d`,
-                             `echo "extern(C) " > $out; cat gen/protocol.h >> $out`,
+    auto newProtoD = Target(buildPath("gen/protocol.d"),
+                             `echo "extern(C) " > $out; cat ` ~ buildPath("gen/protocol.h") ~ ` >> $out`,
                              [], [newProtoSrcs]);
 
     build.targets.array.shouldEqual(
         [Target("app", "dmd -of$out $in",
                 [Target("src/main.d"),
-                 Target("bin/protocol.o", "gcc -o $out -c gen/protocol.c",
+                 Target(buildPath("bin/protocol.o"), "gcc -o $out -c " ~ buildPath("gen/protocol.c"),
                         [], [newProtoSrcs]),
                  newProtoD])]
         );
@@ -134,12 +135,12 @@ void testRealTargetPath() {
 
     immutable dirName = "/made/up/dir";
 
-    realTargetPath(dirName, symlink1.rawOutputs[0]).shouldEqual("$project/weird/path/thingie1");
-    realTargetPath(dirName, symlink2.rawOutputs[0]).shouldEqual("$project/weird/path/thingie2");
-    realTargetPath(dirName, fooLib.rawOutputs[0]).shouldEqual("$project/foo.so");
+    realTargetPath(dirName, symlink1.rawOutputs[0]).shouldEqual(buildPath("$project/weird/path/thingie1"));
+    realTargetPath(dirName, symlink2.rawOutputs[0]).shouldEqual(buildPath("$project/weird/path/thingie2"));
+    realTargetPath(dirName, fooLib.rawOutputs[0]).shouldEqual(buildPath("$project/foo.so"));
 
 
-    realTargetPath(dirName, symlinkBar.rawOutputs[0]).shouldEqual("weird/path/thingie2");
+    realTargetPath(dirName, symlinkBar.rawOutputs[0]).shouldEqual(buildPath("weird/path/thingie2"));
     realTargetPath(dirName, barLib.rawOutputs[0]).shouldEqual("bar.so");
 
 }
@@ -166,11 +167,11 @@ void testDiamondDeps() {
     auto symlink2 = Target("$project/weird/path/thingie2", "ln -sf $in $out", fooLib);
     auto build = Build(symlink1, symlink2);
 
-    auto newObj1 = Target(".reggae/objs/$project/foo.so.objs/obj1.o", "dmd -of$out -c $in", src1);
-    auto newObj2 = Target(".reggae/objs/$project/foo.so.objs/obj2.o", "dmd -of$out -c $in", src2);
-    auto newFooLib = Target("$project/foo.so", "dmd -of$out $in", [newObj1, newObj2]);
-    auto newSymlink1 = Target("$project/weird/path/thingie1", "ln -sf $in $out", newFooLib);
-    auto newSymlink2 = Target("$project/weird/path/thingie2", "ln -sf $in $out", newFooLib);
+    auto newObj1 = Target(buildPath(".reggae/objs/$project/foo.so.objs/obj1.o"), "dmd -of$out -c $in", src1);
+    auto newObj2 = Target(buildPath(".reggae/objs/$project/foo.so.objs/obj2.o"), "dmd -of$out -c $in", src2);
+    auto newFooLib = Target(buildPath("$project/foo.so"), "dmd -of$out $in", [newObj1, newObj2]);
+    auto newSymlink1 = Target(buildPath("$project/weird/path/thingie1"), "ln -sf $in $out", newFooLib);
+    auto newSymlink2 = Target(buildPath("$project/weird/path/thingie2"), "ln -sf $in $out", newFooLib);
 
     build.range.array.shouldEqual([newObj1, newObj2, newFooLib, newSymlink1, newSymlink2]);
 }
@@ -185,12 +186,12 @@ void testPhobosOptionalBug() {
     mixin build!(foo, optional!(bar));
     auto build = buildFunc();
 
-    auto fooObj1 = Target(".reggae/objs/foo.objs/obj1.o", "dmd -of$out -c $in", Target("src1.d"));
-    auto fooObj2 = Target(".reggae/objs/foo.objs/obj2.o", "dmd -of$out -c $in", Target("src2.d"));
+    auto fooObj1 = Target(buildPath(".reggae/objs/foo.objs/obj1.o"), "dmd -of$out -c $in", Target("src1.d"));
+    auto fooObj2 = Target(buildPath(".reggae/objs/foo.objs/obj2.o"), "dmd -of$out -c $in", Target("src2.d"));
     auto newFoo = Target("foo", "dmd -of$out $in", [fooObj1, fooObj2]);
 
-    auto barObj1 = Target(".reggae/objs/bar.objs/obj1.o", "dmd -of$out -c $in", Target("src1.d"));
-    auto barObj2 = Target(".reggae/objs/bar.objs/obj2.o", "dmd -of$out -c $in", Target("src2.d"));
+    auto barObj1 = Target(buildPath(".reggae/objs/bar.objs/obj1.o"), "dmd -of$out -c $in", Target("src1.d"));
+    auto barObj2 = Target(buildPath(".reggae/objs/bar.objs/obj2.o"), "dmd -of$out -c $in", Target("src2.d"));
     auto newBar = Target("bar", "dmd -of$out $in", [barObj1, barObj2]);
 
     build.range.array.shouldEqual([fooObj1, fooObj2, newFoo, barObj1, barObj2, newBar]);
@@ -199,13 +200,13 @@ void testPhobosOptionalBug() {
 
 void testOutputsInProjectPath() {
     auto mkDir = Target("$project/foodir", "mkdir -p $out", [], []);
-    mkDir.expandOutputs("/path/to/proj").shouldEqual(["/path/to/proj/foodir"]);
+    mkDir.expandOutputs("/path/to/proj").shouldEqual([buildPath("/path/to/proj/foodir")]);
 }
 
 
 void testExpandOutputs() {
     auto foo = Target("$project/foodir", "mkdir -p $out", [], []);
-    foo.expandOutputs("/path/to/proj").array.shouldEqual(["/path/to/proj/foodir"]);
+    foo.expandOutputs("/path/to/proj").array.shouldEqual([buildPath("/path/to/proj/foodir")]);
 
     auto bar = Target("$builddir/foodir", "mkdir -p $out", [], []);
     bar.expandOutputs("/path/to/proj").array.shouldEqual(["foodir"]);
@@ -231,22 +232,24 @@ void testBuilddirInTopLevelTarget() {
 
 void testOutputInBuildDir() {
     auto target = Target("$builddir/foo/bar", "cmd", [Target("foo.d"), Target("bar.d")]);
-    target.expandOutputs("/path/to").shouldEqual(["foo/bar"]);
+    target.expandOutputs("/path/to").shouldEqual([buildPath("foo/bar")]);
 }
 
 void testOutputInProjectDir() {
     auto target = Target("$project/foo/bar", "cmd", [Target("foo.d"), Target("bar.d")]);
-    target.expandOutputs("/path/to").shouldEqual(["/path/to/foo/bar"]);
+    target.expandOutputs("/path/to").shouldEqual([buildPath("/path/to/foo/bar")]);
 }
 
 void testCmdInBuildDir() {
     auto target = Target("output", "cmd -I$builddir/include $in $out", [Target("foo.d"), Target("bar.d")]);
-    target.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual("cmd -Iinclude /path/to/foo.d /path/to/bar.d output");
+    target.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
+        "cmd -Iinclude " ~ buildPath("/path/to/foo.d") ~ " " ~ buildPath("/path/to/bar.d") ~ " output");
 }
 
 void testCmdInProjectDir() {
     auto target = Target("output", "cmd -I$project/include $in $out", [Target("foo.d"), Target("bar.d")]);
-    target.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual("cmd -I/path/to/include /path/to/foo.d /path/to/bar.d output");
+    target.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
+        "cmd -I" ~ buildPath("/path/to") ~ "/include" ~ " " ~ buildPath("/path/to/foo.d") ~ " " ~ buildPath("/path/to/bar.d") ~ " output");
 }
 
 void testDepsInBuildDir() {
@@ -256,7 +259,8 @@ void testDepsInBuildDir() {
 
 void testDepsInProjectDir() {
     auto target = Target("output", "cmd", [Target("$project/foo.d"), Target("$project/bar.d")]);
-    target.dependenciesInProjectPath("/path/to").shouldEqual(["/path/to/foo.d", "/path/to/bar.d"]);
+    target.dependenciesInProjectPath("/path/to").shouldEqual(
+        [buildPath("/path/to/foo.d"), buildPath("/path/to/bar.d")]);
 }
 
 
@@ -294,7 +298,7 @@ unittest {
     build.targets.shouldEqual(
         [Target("output",
                 "cmd -o $out $in",
-                Target(".reggae/objs/output.objs/med",
+                Target(buildPath(".reggae/objs/output.objs/med"),
                        "medcmd -o $out $in",
                        "input"))]);
 }
@@ -305,7 +309,7 @@ unittest {
     Options options;
     options.projectPath = "/proj";
 
-    const srcFile = buildPath("/proj", "foo.d");
+    const srcFile = buildPath("/proj/foo.d");
     const libFile = buildPath("$LIB/liblua.a");
     build.targets[0].shellCommand(options).shouldEqual(
         "dmd -ofapp %s %s".format(srcFile, libFile));

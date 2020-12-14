@@ -254,11 +254,11 @@ struct Binary {
 
 private string compileBinaries(T)(auto ref T output, in Options options) {
 
-    import reggae.rules.common: objExt;
+    import reggae.rules.common: exeExt, objExt;
 
     buildDCompile(output, options);
 
-    immutable buildGenName = getBuildGenName(options);
+    immutable buildGenName = getBuildGenName(options) ~ exeExt;
     if(options.isScriptBuild) return buildGenName;
 
     const buildGenCmd = getCompileBuildGenCmd(options);
@@ -289,16 +289,20 @@ private string compileBinaries(T)(auto ref T output, in Options options) {
 }
 
 void buildDCompile(T)(auto ref T output, in Options options) {
-    if(!thisExePath.newerThan(buildPath(options.workingDir, hiddenDir, "dcompile")))
+    import reggae.rules.common : exeExt;
+
+    enum dcompileExe = "dcompile" ~ exeExt;
+
+    if(!thisExePath.newerThan(buildPath(options.workingDir, hiddenDir, dcompileExe)))
         return;
 
     immutable cmd = [options.dCompiler,
                      "-Isrc",
-                     "-ofdcompile",
+                     "-of" ~ dcompileExe,
                      buildPath(options.workingDir, hiddenDir, reggaeSrcRelDirName, "dcompile.d"),
                      buildPath(options.workingDir, hiddenDir, reggaeSrcRelDirName, "dependencies.d")];
 
-    buildBinary(output, options, Binary("dcompile", cmd));
+    buildBinary(output, options, Binary(dcompileExe, cmd));
 }
 
 private bool isExecutable(in char[] path) @trusted nothrow //TODO: @safe

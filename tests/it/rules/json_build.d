@@ -2,8 +2,8 @@ module tests.it.rules.json_build;
 
 import tests.it;
 import reggae.json_build;
+import reggae.path: buildPath;
 import std.file;
-import std.path;
 import std.stdio: File;
 
 immutable linkJsonStr =

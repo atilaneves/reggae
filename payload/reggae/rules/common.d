@@ -3,9 +3,9 @@ module reggae.rules.common;
 
 import reggae.build;
 import reggae.ctaa;
+import reggae.path: buildPath;
 import reggae.types;
 import std.algorithm;
-import std.path;
 import std.array: array;
 import std.traits;
 import std.typecons;
@@ -207,7 +207,7 @@ auto sourcesToTargets(alias sourcesFunc = Sources!())() {
 string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
     import std.exception: enforce;
     import std.file;
-    import std.path: buildNormalizedPath, buildPath;
+    import std.path: buildNormalizedPath;
     import std.array: array;
     import std.traits: isCallable;
     import reggae.config: options;
@@ -245,7 +245,7 @@ string[] sourcesToFileNames(in string projectPath,
 
     import std.exception: enforce;
     import std.file;
-    import std.path: buildNormalizedPath, buildPath;
+    import std.path: absolutePath, buildNormalizedPath, dirName;
     import std.array: array;
     import std.traits: isCallable;
 
@@ -357,11 +357,12 @@ string libFileName(in string srcFileName) @safe pure {
 
 
 string extFileName(in string srcFileName, in string extension) @safe pure {
-    import reggae.path: deabsolutePath;
+    import reggae.path: buildPath, deabsolutePath;
     import std.path: stripExtension;
     import std.array: replace;
 
     auto tmp = srcFileName
+        .buildPath
         .deabsolutePath
         .stripExtension
         ;
@@ -396,7 +397,7 @@ Command compileCommand(in string srcFileName,
 
     string maybeExpand(string path) {
         return path.startsWith(gBuilddir)
-            ? expandBuildDir(path)
+            ? buildPath(expandBuildDir(path))
             : buildPath(projDir, path);
     }
 
@@ -428,6 +429,8 @@ enum Language {
 }
 
 Language getLanguage(in string srcFileName) @safe pure nothrow {
+    import std.path: extension;
+
     switch(srcFileName.extension) with(Language) {
     case ".d":
         return D;

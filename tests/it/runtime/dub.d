@@ -3,8 +3,7 @@ module tests.it.runtime.dub;
 
 import tests.it.runtime;
 import reggae.reggae;
-import reggae.path: deabsolutePath;
-import std.path: buildPath;
+import reggae.path: buildPath, deabsolutePath;
 
 
 @("noreggaefile.ninja")
@@ -71,7 +70,6 @@ unittest {
 
     import std.file: exists, rmdirRecurse;
     import std.process: environment;
-    import std.path: buildPath;
 
     const cerealedDir = buildPath(environment["HOME"], ".dub/packages/cerealed-0.6.8");
     if(cerealedDir.exists)
@@ -96,7 +94,6 @@ unittest {
 @Tags(["dub", "ninja"])
 unittest {
     import std.file: mkdirRecurse;
-    import std.path: buildPath;
 
     with(immutable ReggaeSandbox()) {
         writeFile("dub.json", `
@@ -127,7 +124,6 @@ unittest {
 unittest {
 
     import std.process: execute;
-    import std.path: buildPath;
 
     with(immutable ReggaeSandbox("dub")) {
         runReggae("-b", "make");
@@ -284,7 +280,6 @@ unittest {
         writelnUt(output);
         ninja.shouldExecuteOk;
 
-        import std.path: buildPath;
         shouldExist(buildPath("objsdir",
                               testPath.deabsolutePath,
                               "foo.objs",
@@ -325,8 +320,7 @@ unittest {
 
         ninja.shouldExecuteOk;
 
-        import std.path: buildPath;
-        const dubNullDir = buildPath(dubPackagesDir, "dubnull-0.0.1", "dubnull").deabsolutePath;
+        const dubNullDir = buildPath(dubPackagesDir, "dubnull-0.0.1/dubnull").deabsolutePath;
         shouldExist(buildPath("objsdir",
                               testPath.deabsolutePath,
                               "foo.objs",
@@ -381,11 +375,9 @@ unittest {
 @Tags(["dub", "ninja"])
 unittest {
 
-    import std.path;
-
     with(immutable ReggaeSandbox("dub_depends_on_prebuild")) {
 
-        copyProject("dub_prebuild", buildPath("..", "dub_prebuild"));
+        copyProject("dub_prebuild", buildPath("../dub_prebuild"));
 
         runReggae("-b", "ninja");
         ninja.shouldExecuteOk;

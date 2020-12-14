@@ -171,8 +171,8 @@ struct Ninja {
     }
 
     void writeBuild() @safe {
-        import std.stdio;
-        import std.path;
+        import std.stdio: File;
+        import reggae.path: buildPath;
 
         auto buildNinja = File(buildPath(_options.workingDir, "build.ninja"), "w");
         buildNinja.writeln(buildOutput);

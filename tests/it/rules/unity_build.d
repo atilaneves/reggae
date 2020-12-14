@@ -1,8 +1,8 @@
 module tests.it.rules.unity_build;
 
 
+import reggae.path: buildPath;
 import tests.it;
-import std.path;
 import std.algorithm;
 import std.typecons: No;
 
@@ -29,7 +29,7 @@ import std.typecons: No;
     // #include "1st.cpp"
     // #include "2nd.cpp"
     // ...
-    readText(buildPath(options.workingDir, ".reggae", "objs", "unity.objs", "unity.cpp")).chomp.split("\n").
+    readText(buildPath(options.workingDir, ".reggae/objs/unity.objs/unity.cpp")).chomp.split("\n").
         shouldBeSameSetAs(
             ["main.cpp", "maths.cpp"].
             map!(a => `#include "` ~ buildPath(options.projectPath, "src", a) ~ `"`));

@@ -24,5 +24,6 @@ void testByPackage() {
 
 
 void testPackagePath() {
-    "src/utils/data/defs.d".packagePath.shouldEqual("src/utils/data");
+    import reggae.path : buildPath;
+    "src/utils/data/defs.d".packagePath.shouldEqual(buildPath("src/utils/data"));
 }

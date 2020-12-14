@@ -2,6 +2,7 @@ module tests.it;
 
 public import reggae;
 public import unit_threaded;
+import reggae.path: buildPath;
 
 immutable string origPath;
 
@@ -52,7 +53,6 @@ private void buildDCompile() {
     import std.stdio: writeln;
     import std.algorithm: any;
     import std.file: exists;
-    import std.path: buildPath;
     import std.process: execute, Config;
     import std.array: join;
     import reggae.file;
@@ -64,7 +64,7 @@ private void buildDCompile() {
     immutable needToRecompile =
         !exeName.exists ||
         fileNames.
-            any!(a => buildPath(origPath, "payload", "reggae", a).
+            any!(a => buildPath(origPath, "payload/reggae", a).
                           newerThan(buildPath(testsPath, a)));
     if(!needToRecompile)
         return;
@@ -87,15 +87,13 @@ private void buildDCompile() {
 
 private void writeFile(string fileName)() {
     import std.stdio;
-    import std.path;
     auto file = File(buildPath(testsPath, fileName), "w");
     file.write(import(fileName));
 }
 
 
 string testsPath() @safe {
-    import std.file;
-    import std.path;
+    import std.path: buildNormalizedPath;
     return buildNormalizedPath(origPath, "tmp");
 }
 
@@ -105,7 +103,7 @@ string inOrigPath(T...)(T parts) {
 }
 
 string inPath(T...)(in string path, T parts) {
-    import std.path;
+    import std.path: absolutePath;
     return buildPath(path, parts).absolutePath;
 }
 
@@ -115,14 +113,13 @@ string inPath(T...)(in Options options, T parts) {
 
 
 string projectPath(in string name) {
-    import std.path;
     return inOrigPath("tests", "projects", name);
 }
 
 string newTestDir() {
     import unit_threaded.integration: mkdtemp;
     import std.conv;
-    import std.path;
+    import std.path: absolutePath;
     import std.algorithm;
 
     char[100] template_;
@@ -163,7 +160,6 @@ Options _testProjectOptions(string module_)(string backend) {
 void overwrite(in Options options, in string fileName, in string newContents) {
     import core.thread;
     import std.stdio;
-    import std.path;
 
     // ninja has problems with timestamp differences that are less than a second apart
     if(options.backend == Backend.ninja) {
@@ -194,7 +190,6 @@ string[] tup(string[] args = []) {
 }
 
 string[] binary(string path, string[] args = []) {
-    import std.path;
     return [buildPath(path, "build"), "--norerun", "--single"] ~ args;
 }
 
@@ -228,7 +223,7 @@ void doTestBuildFor(string module_ = __MODULE__)(ref Options options, string[] a
 void prepareTestBuild(string module_ = __MODULE__)(ref Options options) {
     import std.file: mkdirRecurse;
     import std.string;
-    import std.path;
+    import std.path: dirSeparator, relativePath;
     import std.algorithm: canFind;
     import reggae.config;
 
@@ -244,7 +239,7 @@ void prepareTestBuild(string module_ = __MODULE__)(ref Options options) {
     symlink(buildPath(testsPath, dcompileName), buildPath(options.workingDir, ".reggae", dcompileName));
 
     // copy the project files over, that way the tests can modify them
-    immutable projectsPath = buildPath(origPath, "tests", "projects");
+    immutable projectsPath = buildPath(origPath, "tests/projects");
     immutable projectName = module_.split(".")[0];
     immutable projectPath = buildPath(projectsPath, projectName);
 
@@ -291,7 +286,7 @@ string[] buildCmdShouldRunOk(alias module_ = __MODULE__)(in Options options,
 // copy one of the test projects to a temporary test directory
 void copyProjectFiles(in string projectPath, in string testPath) {
     import std.file;
-    import std.path;
+    import std.path: dirName, relativePath;
     foreach(entry; dirEntries(projectPath, SpanMode.depth)) {
         if(entry.isDir) continue;
         auto tgtName = buildPath(testPath, entry.relativePath(projectPath));

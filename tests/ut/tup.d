@@ -4,6 +4,7 @@ module tests.ut.tup;
 import unit_threaded;
 import reggae;
 import reggae.backend.tup;
+import reggae.path: buildPath;
 
 
 void testEmpty() {
@@ -24,8 +25,8 @@ void testSimpleDBuild() {
     auto tup = Tup(build, "/path/to/project");
 
     tup.lines.shouldEqual(
-        [": /path/to/project/src/main.d |> dmd -I/path/to/project/src -c /path/to/project/src/main.d -of.reggae/objs/myapp.objs/main.o |> .reggae/objs/myapp.objs/main.o",
-         ": /path/to/project/src/maths.d |> dmd -c /path/to/project/src/maths.d -of.reggae/objs/myapp.objs/maths.o |> .reggae/objs/myapp.objs/maths.o",
-         ": .reggae/objs/myapp.objs/main.o .reggae/objs/myapp.objs/maths.o |> dmd -ofmyapp .reggae/objs/myapp.objs/main.o .reggae/objs/myapp.objs/maths.o |> myapp"
+        [": " ~ buildPath("/path/to/project/src/main.d") ~ " |> dmd -I" ~ buildPath("/path/to/project") ~ "/src -c " ~ buildPath("/path/to/project/src/main.d -of.reggae/objs/myapp.objs/main.o |> .reggae/objs/myapp.objs/main.o"),
+         buildPath(": /path/to/project/src/maths.d |> dmd -c /path/to/project/src/maths.d -of.reggae/objs/myapp.objs/maths.o |> .reggae/objs/myapp.objs/maths.o"),
+         buildPath(": .reggae/objs/myapp.objs/main.o .reggae/objs/myapp.objs/maths.o |> dmd -ofmyapp .reggae/objs/myapp.objs/main.o .reggae/objs/myapp.objs/maths.o |> myapp")
                               ]);
 }

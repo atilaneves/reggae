@@ -9,7 +9,6 @@ import std.algorithm;
 import std.range;
 import std.file: thisExePath, exists;
 import std.process: execute, executeShell;
-import std.path: absolutePath;
 import std.typecons: tuple;
 import std.exception;
 import std.stdio;

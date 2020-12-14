@@ -5,12 +5,12 @@ import reggae.rules;
 import reggae.types;
 import reggae.sorting;
 import reggae.options: Options;
+import reggae.path: buildPath;
 
 public import std.typecons: Yes, No;
 import std.typecons: Flag;
 import std.algorithm: map, filter, find, splitter;
 import std.array: array, join;
-import std.path: buildPath;
 import std.range: chain;
 
 
@@ -91,10 +91,9 @@ bool isObjectFile(in string fileName) @safe pure nothrow {
 }
 
 string inDubPackagePath(in string packagePath, in string filePath) @safe pure nothrow {
-    import std.path: buildPath;
     import std.algorithm: startsWith;
     return filePath.startsWith("$project")
-        ? filePath
+        ? buildPath(filePath)
         : buildPath(packagePath, filePath);
 }
 
@@ -203,9 +202,6 @@ struct DubInfo {
         }
 
         auto packageTargets = targetsFunc()(files, flags, importPaths, stringImportPaths, [], projDir);
-
-        // e.g. /foo/bar -> foo/bar
-        const deabsWorkingDir = options.workingDir.deabsolutePath;
 
         // go through dub dependencies and optionally put the object files in dubObjsDir
         if(!isMainPackage && dubObjsDir.globalDir != "") {

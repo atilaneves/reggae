@@ -3,7 +3,6 @@ module tests.it.runtime.regressions;
 
 import tests.it.runtime;
 import reggae.reggae;
-import std.path;
 
 
 @("Issue 14: builddir not expanded")
@@ -72,7 +71,7 @@ unittest {
 @("Issue 10: dubConfigurationTarget doesn't work for unittest builds")
 @Tags(["ninja", "regressions"])
 unittest {
-    import std.path;
+    import reggae.path: buildPath;
     import std.file;
 
     with(immutable ReggaeSandbox()) {
@@ -94,12 +93,12 @@ unittest {
         });
 
         mkdir(buildPath(testPath, "source"));
-        writeFile(buildPath("source", "src.d"), q{
+        writeFile(buildPath("source/src.d"), q{
             unittest { static assert(false, `oopsie`); }
             int add(int i, int j) { return i + j; }
         });
 
-        writeFile(buildPath("source", "main.d"), q{
+        writeFile(buildPath("source/main.d"), q{
             import src;
             void main() {}
         });

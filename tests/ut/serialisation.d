@@ -3,6 +3,7 @@ module tests.ut.serialisation;
 
 import reggae;
 import reggae.options;
+import reggae.path: buildPath;
 import unit_threaded;
 
 @safe:
@@ -39,8 +40,9 @@ void testTarget() {
     import reggae.config: gDefaultOptions;
     auto target = Target("foo.o", "dmd -of$out -c $in", Target("foo.d"));
     auto bytes = target.toBytes(gDefaultOptions.withProjectPath("/path/to"));
+    enum srcPath = buildPath("/path/to/foo.d");
     Target.fromBytes(bytes).shouldEqual(
-        Target("foo.o", "dmd -offoo.o -c /path/to/foo.d", Target("/path/to/foo.d")));
+        Target("foo.o", "dmd -offoo.o -c " ~ srcPath, Target(srcPath)));
 }
 
 void testBuild() @trusted {
@@ -49,7 +51,9 @@ void testBuild() @trusted {
     auto bar = Target("bar.o", "dmd -of$out -c $in", Target("bar.d"));
     auto build = Build(foo, bar);
     auto bytes = build.toBytes(gDefaultOptions.withProjectPath("/path/to"));
+    enum srcFoo = buildPath("/path/to/foo.d");
+    enum srcBar = buildPath("/path/to/bar.d");
     Build.fromBytes(bytes).shouldEqual(
-        Build(Target("foo.o", "dmd -offoo.o -c /path/to/foo.d", Target("/path/to/foo.d")),
-              Target("bar.o", "dmd -ofbar.o -c /path/to/bar.d", Target("/path/to/bar.d"))));
+        Build(Target("foo.o", "dmd -offoo.o -c " ~ srcFoo, Target(srcFoo)),
+              Target("bar.o", "dmd -ofbar.o -c " ~ srcBar, Target(srcBar))));
 }

@@ -9,10 +9,11 @@ module reggae.build;
 import reggae.ctaa;
 import reggae.rules.common: Language, getLanguage;
 import reggae.options;
+import reggae.path: buildPath;
 
 import std.string: replace;
 import std.algorithm;
-import std.path: buildPath, dirSeparator;
+import std.path: dirSeparator;
 import std.typetuple: allSatisfy;
 import std.traits: Unqual, isSomeFunction, ReturnType, arity;
 import std.array: array, join;
@@ -131,7 +132,7 @@ Target inTopLevelObjDirOf(Target target, string dirName, Flag!"topLevel" isTopLe
     }
 
     auto outputs = isTopLevel
-        ? target._outputs.map!(a => expandBuildDir(a)).array
+        ? target._outputs.map!(a => buildPath(expandBuildDir(a))).array
         : target._outputs.map!(a => realTargetPath(dirName, target, a)).array;
 
     return Target(outputs,
@@ -142,14 +143,14 @@ Target inTopLevelObjDirOf(Target target, string dirName, Flag!"topLevel" isTopLe
 
 
 string topLevelDirName(in Target target) @safe pure {
-    import std.path: isAbsolute, buildPath;
+    import std.path: isAbsolute;
     return target._outputs[0].isAbsolute
         ? buildPath(target._outputs[0], targetObjsDir(target))
         : buildPath(".reggae", "objs", targetObjsDir(target));
 }
 
 string targetObjsDir(in Target target) @safe pure {
-    return target._outputs[0].expandBuildDir ~ ".objs";
+    return buildPath(target._outputs[0].expandBuildDir ~ ".objs");
 }
 
 //targets that have outputs with $builddir or $project in them want to be placed
@@ -168,10 +169,10 @@ string realTargetPath(in string dirName, in Target target, in string output) @tr
 string realTargetPath(in string dirName, in string output) @trusted pure {
     import std.algorithm: canFind;
 
-    if(output.startsWith(gProjdir)) return output;
+    if(output.startsWith(gProjdir)) return buildPath(output);
 
     return output.canFind(gBuilddir)
-        ? output.expandBuildDir
+        ? buildPath(output.expandBuildDir)
         : buildPath(dirName, output);
 }
 
@@ -362,7 +363,8 @@ struct Target {
     }
 
     ///Replace special variables and return a list of outputs thus modified
-    auto expandOutputs(in string projectPath) @safe pure const {
+    auto expandOutputs(string projectPath) @safe pure const {
+        projectPath = buildPath(projectPath);
 
         string inProjectPath(in string path) {
 
@@ -375,8 +377,9 @@ struct Target {
                         : buildPath(projectPath, path);
         }
 
-        return _outputs.map!(a => isLeaf ? inProjectPath(a) : a).
-            map!(a => a.replace("$project", projectPath)).
+        return _outputs.map!buildPath.
+            map!(a => isLeaf ? inProjectPath(a) : a).
+            map!(a => a.replace(gProjdir, projectPath)).
             map!(a => expandBuildDir(a)).
             array;
     }
@@ -605,21 +608,28 @@ struct Command {
     ///Replace $in, $out, $project with values
     private static string expandCmd(in string cmd, in string projectPath,
                                     in string[] outputs, in string[] inputs) @safe pure {
-        auto replaceIn = cmd.dup.replace("$in", inputs.join(" "));
-        auto replaceOut = replaceIn.replace("$out", outputs.join(" "));
-        return replaceOut.replace("$project", projectPath).replace(gBuilddir ~ dirSeparator, "");
+        auto outs = outputs.map!buildPath;
+        auto ins = inputs.map!buildPath;
+        auto replaceIn = cmd.dup.replace("$in", ins.join(" "));
+        auto replaceOut = replaceIn.replace("$out", outs.join(" "));
+        auto r = replaceOut.replace(gProjdir, buildPath(projectPath));
+        r = r.replace(gBuilddir ~ dirSeparator, "");
+        version(Windows)
+            r = r.replace(gBuilddir ~ "/", "");
+        return r;
     }
 
     string rawCmdString(in string projectPath) @safe pure const {
         if(getType != CommandType.shell)
             throw new Exception("Command type 'code' not supported for ninja backend");
-        return command.replace("$project", projectPath);
+        return command.replace(gProjdir, buildPath(projectPath));
     }
 
     //@trusted because of replace
-    private string[] getParams(in string projectPath, in string key,
+    private string[] getParams(string projectPath, in string key,
                                bool useIfNotFound, string[] ifNotFound = []) @safe pure const {
-        return params.get(key, ifNotFound).map!(a => a.replace("$project", projectPath)).array;
+        projectPath = buildPath(projectPath);
+        return params.get(key, ifNotFound).map!(a => a.replace(gProjdir, projectPath)).array;
     }
 
     static string builtinTemplate(in CommandType type,
@@ -667,8 +677,8 @@ struct Command {
         final switch(language) with(Language) {
             case D:
                 return deps
-                    ? ".reggae/dcompile --objFile=$out --depFile=$out.dep " ~
-                    options.dCompiler ~ " $flags $includes $stringImports $in"
+                    ? buildPath(".reggae/dcompile") ~ " --objFile=$out --depFile=$out.dep " ~
+                      options.dCompiler ~ " $flags $includes $stringImports $in"
                     : options.dCompiler ~ " $flags $includes $stringImports -of$out $in";
             case Cplusplus:
                 return options.cppCompiler ~ ccParams;

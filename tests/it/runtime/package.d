@@ -2,6 +2,7 @@ module tests.it.runtime;
 
 public import tests.it;
 public import tests.utils;
+import reggae.path: buildPath;
 import reggae.reggae;
 
 // calls reggae.run, which is basically main, but with a
@@ -47,12 +48,11 @@ struct ReggaeSandbox {
 
     void writeHelloWorldApp() const {
         import std.stdio;
-        import std.path;
         import std.file;
         import std.array;
 
         mkdir(buildPath(testPath, "src"));
-        sandbox.writeFile(buildPath("src", "hello.d"), q{
+        sandbox.writeFile(buildPath("src/hello.d"), q{
                 import std.stdio;
                 void main() {
                     writeln("Hello world!");
@@ -64,19 +64,16 @@ struct ReggaeSandbox {
                        in string file = __FILE__,
                        in size_t line = __LINE__ ) const {
         import tests.utils;
-        import std.path: buildPath;
         return [buildPath(testPath, arg)].shouldExecuteOk(WorkDir(testPath), file, line);
     }
 
     auto shouldFail(in string arg, in string file = __FILE__, in size_t line = __LINE__) const {
         import tests.utils;
-        import std.path: buildPath;
         return [buildPath(testPath, arg)].shouldFailToExecute(testPath, file, line);
     }
 
     void copyProject(in string projectName, in string testSubPath = ".") const {
-        import std.path;
-        const fromPath = buildPath(origPath, "tests", "projects", projectName);
+        const fromPath = buildPath(origPath, "tests/projects", projectName);
         const toPath = buildPath(testPath, testSubPath);
         copyProjectFiles(fromPath, toPath);
     }
@@ -85,8 +82,6 @@ struct ReggaeSandbox {
 private:
 
     auto runImpl(string[] args, string project = "") const {
-        import std.file: thisExePath;
-        import std.path: buildPath, dirName, absolutePath;
         if(project == "") project = testPath;
         return testRun(["reggae", "-C", testPath] ~ args ~ project);
     }

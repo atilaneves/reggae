@@ -92,7 +92,7 @@ struct Makefile {
 
     void writeBuild() @safe {
         import std.stdio: File;
-        import std.path: buildPath;
+        import reggae.path: buildPath;
 
         auto output = output();
         auto file = File(buildPath(options.workingDir, fileName), "w");

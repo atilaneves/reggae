@@ -3,9 +3,9 @@ module tests.it.rules.object_files;
 
 
 import reggae;
+import reggae.path: buildPath;
 import unit_threaded;
 import tests.it;
-import std.path;
 import std.file;
 import std.stdio: File;
 
@@ -24,6 +24,8 @@ import std.stdio: File;
 }
 
 @("C++ files with regular objectFiles") unittest {
+    import std.path: absolutePath;
+
     auto testPath = newTestDir.absolutePath;
     mkdir(buildPath(testPath, "proj"));
     foreach(fileName; ["main.cpp", "maths.cpp", "intermediate.hpp", "final.hpp" ]) {

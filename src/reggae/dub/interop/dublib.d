@@ -150,6 +150,7 @@ enum Compiler {
 Compiler toCompiler(in string compiler) @safe pure {
     import std.conv: to;
     if(compiler == "ldc2") return Compiler.ldc;
+    if(compiler == "ldmd2") return Compiler.ldmd;
     return compiler.to!Compiler;
 }
 

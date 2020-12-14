@@ -103,15 +103,20 @@ unittest {
 unittest {
     import std.json;
     import std.file;
-    import std.path;
+    import reggae.path: buildPath;
+
+    version(Windows)
+        enum projectPath = "C:/path/to/my/project";
+    else
+        enum projectPath = "/path/to/my/project";
 
     Options defaultOptions;
-    defaultOptions.args = ["reggae", "-b", "ninja", "/path/to/my/project"];
+    defaultOptions.args = ["reggae", "-b", "ninja", projectPath];
     immutable jsonString = linkJsonString.toVersion1(`["/path/to/foo.py", "/other/path/bar.py"]`);
     auto options = jsonToOptions(defaultOptions, parseJSON(jsonString));
     options.reggaeFileDependencies.shouldEqual(
         [thisExePath,
-         buildPath("/path/to/my/project", "reggaefile.d"),
+         buildPath(projectPath, "reggaefile.d"),
          "/path/to/foo.py",
          "/other/path/bar.py"]);
 }

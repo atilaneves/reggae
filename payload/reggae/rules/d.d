@@ -9,6 +9,7 @@ module reggae.rules.d;
 
 import reggae.types;
 import reggae.build;
+import reggae.path: buildPath;
 import reggae.sorting;
 import reggae.rules.common;
 import std.algorithm;
@@ -290,7 +291,6 @@ Target scriptlike
 {
 
     import reggae.dependencies: dMainDepSrcs;
-    import std.path;
 
     if(getLanguage(app.srcFileName.value) != Language.D)
         throw new Exception("'scriptlike' rule only works with D files");
@@ -317,7 +317,6 @@ private auto runDCompiler(in string projectPath,
     import std.process: execute;
     import std.exception: enforce;
     import std.conv:text;
-    import std.path: buildPath;
 
     immutable compiler = "dmd";
     const compArgs = [compiler] ~ flags.splitter.array ~

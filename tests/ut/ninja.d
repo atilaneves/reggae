@@ -4,6 +4,7 @@ module tests.ut.ninja;
 import unit_threaded;
 import reggae;
 import reggae.options;
+import reggae.path: buildPath;
 import reggae.backend.ninja;
 
 
@@ -32,7 +33,9 @@ void testCppLinkerProjectPath() {
                                      [Target("foo.o"), Target("bar.o")],
                                   )),
                         "/home/user/myproject");
-    ninja.buildEntries.shouldEqual([NinjaEntry("build mybin: cpp /home/user/myproject/foo.o /home/user/myproject/bar.o",
+    enum obj1 = buildPath("/home/user/myproject/foo.o");
+    enum obj2 = buildPath("/home/user/myproject/bar.o");
+    ninja.buildEntries.shouldEqual([NinjaEntry("build mybin: cpp " ~ obj1 ~ " " ~ obj2,
                                                ["between = -o"])
                                        ]);
     ninja.ruleEntries.shouldEqual([NinjaEntry("rule cpp",
@@ -47,7 +50,9 @@ void testCppLinkerProjectPathAndBuild() {
                                      [Target("foo.o"), Target("bar.o")],
                                   )),
                         "/home/user/myproject");
-    ninja.buildEntries.shouldEqual([NinjaEntry("build mybin: cpp /home/user/myproject/foo.o /home/user/myproject/bar.o",
+    enum obj1 = buildPath("/home/user/myproject/foo.o");
+    enum obj2 = buildPath("/home/user/myproject/bar.o");
+    ninja.buildEntries.shouldEqual([NinjaEntry("build mybin: cpp " ~ obj1 ~ " " ~ obj2,
                                                ["between = -o"])
                                        ]);
     ninja.ruleEntries.shouldEqual([NinjaEntry("rule cpp",
@@ -60,7 +65,7 @@ void testIccBuild() {
     auto ninja = Ninja(Build(Target("/path/to/foo.o",
                                      "icc.12.0.022b.i686-linux -pe-file-prefix=/usr/intel/12.0.022b/cc/12.0.022b/include/ @/usr/lib/icc-cc.cfg -I/path/to/headers -gcc-version=345 -fno-strict-aliasing -nostdinc -include /path/to/myheader.h -DTOOL_CHAIN_GCC=gcc-user -D__STUFF__ -imacros /path/to/preinclude_macros.h -I/path/to -Wall -c -MD -MF /path/to/foo.d -o $out $in",
                                      [Target("/path/to/foo.c")])));
-    ninja.buildEntries.shouldEqual([NinjaEntry("build /path/to/foo.o: icc.12.0.022b.i686-linux /path/to/foo.c",
+    ninja.buildEntries.shouldEqual([NinjaEntry("build " ~ buildPath("/path/to/foo.o") ~ ": icc.12.0.022b.i686-linux " ~ buildPath("/path/to/foo.c"),
                                                ["before = -pe-file-prefix=/usr/intel/12.0.022b/cc/12.0.022b/include/ @/usr/lib/icc-cc.cfg -I/path/to/headers -gcc-version=345 -fno-strict-aliasing -nostdinc -include /path/to/myheader.h -DTOOL_CHAIN_GCC=gcc-user -D__STUFF__ -imacros /path/to/preinclude_macros.h -I/path/to -Wall -c -MD -MF /path/to/foo.d -o"])]);
     ninja.ruleEntries.shouldEqual([NinjaEntry("rule icc.12.0.022b.i686-linux",
                                               ["command = icc.12.0.022b.i686-linux $before $out $in"])]);
@@ -90,13 +95,13 @@ void testSimpleDBuild() {
     auto ninja = Ninja(build, "/path/to/project");
 
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build .reggae/objs/myapp.objs/main.o: dmd /path/to/project/src/main.d",
-                    ["before = -I/path/to/project/src -c",
+        [NinjaEntry(buildPath("build .reggae/objs/myapp.objs/main.o: dmd /path/to/project/src/main.d"),
+                    ["before = -I" ~ buildPath("/path/to/project") ~ "/src -c",
                      "between = -of"]),
-         NinjaEntry("build .reggae/objs/myapp.objs/maths.o: dmd /path/to/project/src/maths.d",
+         NinjaEntry(buildPath("build .reggae/objs/myapp.objs/maths.o: dmd /path/to/project/src/maths.d"),
                     ["before = -c",
                      "between = -of"]),
-         NinjaEntry("build myapp: dmd_2 .reggae/objs/myapp.objs/main.o .reggae/objs/myapp.objs/maths.o",
+         NinjaEntry(buildPath("build myapp: dmd_2 .reggae/objs/myapp.objs/main.o .reggae/objs/myapp.objs/maths.o"),
                     ["before = -of"])
             ]);
 
@@ -151,7 +156,7 @@ void testDefaultRules() {
                         "deps = gcc",
                         "depfile = $out.dep"]),
             NinjaEntry("rule _dcompile",
-                       ["command = .reggae/dcompile --objFile=$out --depFile=$out.dep dmd $flags $includes $stringImports $in",
+                       ["command = " ~ buildPath(".reggae/dcompile") ~ " --objFile=$out --depFile=$out.dep dmd $flags $includes $stringImports $in",
                         "deps = gcc",
                         "depfile = $out.dep"]),
             NinjaEntry("rule _clink",
@@ -171,7 +176,7 @@ void testDefaultRules() {
                         "deps = gcc",
                         "depfile = $out.dep"]),
             NinjaEntry("rule _dcompileAndLink",
-                       ["command = .reggae/dcompile --objFile=$out --depFile=$out.dep dmd $flags $includes $stringImports $in",
+                       ["command = " ~ buildPath(".reggae/dcompile") ~ " --objFile=$out --depFile=$out.dep dmd $flags $includes $stringImports $in",
                         "deps = gcc",
                         "depfile = $out.dep"]),
 
@@ -222,12 +227,12 @@ void testImplicitInput() {
     auto ninja = Ninja(Build(app));
 
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build gen/protocol.c gen/protocol.h: compiler protocol.proto"),
-         NinjaEntry("build bin/protocol.o: gcc gen/protocol.c | gen/protocol.c gen/protocol.h",
+        [NinjaEntry(buildPath("build gen/protocol.c gen/protocol.h: compiler protocol.proto")),
+         NinjaEntry(buildPath("build bin/protocol.o: gcc gen/protocol.c | gen/protocol.c gen/protocol.h"),
                     ["before = -o",
                      "between = -c"]),
-         NinjaEntry("build gen/protocol.d: translator gen/protocol.h | gen/protocol.c gen/protocol.h"),
-         NinjaEntry("build app: dmd src/main.d bin/protocol.o gen/protocol.d",
+         NinjaEntry(buildPath("build gen/protocol.d: translator gen/protocol.h | gen/protocol.c gen/protocol.h")),
+         NinjaEntry(buildPath("build app: dmd src/main.d bin/protocol.o gen/protocol.d"),
                     ["before = -of"])
             ]);
 
@@ -248,7 +253,7 @@ void testOutputInProjectPathCustom() {
     auto tgt = Target("$project/foo.o", "gcc -o $out -c $in", Target("foo.c"));
     auto ninja = Ninja(Build(tgt), "/path/to/proj");
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build /path/to/proj/foo.o: gcc /path/to/proj/foo.c",
+        [NinjaEntry(buildPath("build /path/to/proj/foo.o: gcc /path/to/proj/foo.c"),
                     ["before = -o",
                      "between = -c"])]);
 }
@@ -262,11 +267,11 @@ void testOutputAndDepOutputInProjectPath() {
     auto ninja = Ninja(build, "/tmp/proj");
 
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build /tmp/proj/foo.so: dmd /tmp/proj/src1.d /tmp/proj/src2.d",
+        [NinjaEntry(buildPath("build /tmp/proj/foo.so: dmd /tmp/proj/src1.d /tmp/proj/src2.d"),
                     ["before = -of"]),
-         NinjaEntry("build /tmp/proj/weird/path/thingie1: ln /tmp/proj/foo.so",
+         NinjaEntry(buildPath("build /tmp/proj/weird/path/thingie1: ln /tmp/proj/foo.so"),
                     ["before = -sf"]),
-         NinjaEntry("build /tmp/proj/weird/path/thingie2: ln /tmp/proj/foo.so",
+         NinjaEntry(buildPath("build /tmp/proj/weird/path/thingie2: ln /tmp/proj/foo.so"),
                     ["before = -sf"]),
             ]
         );
@@ -279,7 +284,7 @@ void testOutputInProjectPathDefault() {
                        Target("foo.c"));
     auto ninja = Ninja(Build(tgt), "/path/to/proj");
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build /path/to/proj/foo.o: _ccompile /path/to/proj/foo.c",
+        [NinjaEntry(buildPath("build /path/to/proj/foo.o: _ccompile /path/to/proj/foo.c"),
                     ["foo = bar"])]);
 }
 
@@ -291,7 +296,7 @@ void testPhonyRule() {
                        [Target("implicit")]);
     auto ninja = Ninja(Build(tgt), "/path/to/proj");
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build lephony: _phony /path/to/proj/toto /path/to/proj/tata | /path/to/proj/implicit",
+        [NinjaEntry(buildPath("build lephony: _phony /path/to/proj/toto /path/to/proj/tata | /path/to/proj/implicit"),
                     ["cmd = whatever boo bop",
                      "pool = console"])]
         );
@@ -303,10 +308,10 @@ void testImplicitsWithNoIn() {
     auto foo = Target("$project/foodir", "mkdir -p $out", emptyDependencies, [stuff]);
     auto ninja = Ninja(Build(foo), "/path/to/proj"); //to make sure we can
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build .reggae/objs//path/to/proj/foodir.objs/foo.o: dmd /path/to/proj/foo.d",
+        [NinjaEntry(buildPath("build .reggae/objs//path/to/proj/foodir.objs/foo.o: dmd /path/to/proj/foo.d"),
                     ["before = -of",
                      "between = -c"]),
-         NinjaEntry("build /path/to/proj/foodir: mkdir  | .reggae/objs//path/to/proj/foodir.objs/foo.o",
+         NinjaEntry(buildPath("build /path/to/proj/foodir: mkdir  | .reggae/objs//path/to/proj/foodir.objs/foo.o"),
                     ["before = -p"]),
             ]);
     ninja.ruleEntries.shouldEqual(
@@ -324,7 +329,7 @@ void testCustomRuleInvolvingProjectPath() {
     auto ninja = Ninja(Build(app), "/path/to/proj");
     ninja.ruleEntries.shouldEqual(
         [NinjaEntry("rule dmd",
-                    ["command = /path/to/proj/../dmd/src/dmd $before$out $between $in"]),
+                    ["command = " ~ buildPath("/path/to/proj") ~ "/../dmd/src/dmd $before$out $between $in"]),
             ]);
 }
 

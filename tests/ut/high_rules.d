@@ -3,41 +3,45 @@ module tests.ut.high_rules;
 
 import reggae;
 import reggae.options;
+import reggae.path: buildPath;
 import unit_threaded;
 import std.typecons: No;
 
 
 void testCObjectFile() {
     immutable fileName = "foo.c";
+    enum objPath = "foo" ~ objExt;
     auto obj = objectFile(SourceFile(fileName),
                            Flags("-g -O0"),
                            IncludePaths(["myhdrs", "otherhdrs"]));
     auto cmd = Command(CommandType.compile,
-                        assocListT("includes", ["-I$project/myhdrs", "-I$project/otherhdrs"],
+                        assocListT("includes", [buildPath("-I$project/myhdrs"), buildPath("-I$project/otherhdrs")],
                                    "flags", ["-g", "-O0"],
-                                   "DEPFILE", ["foo.o.dep"]));
+                                   "DEPFILE", [objPath ~ ".dep"]));
 
-    obj.shouldEqual(Target("foo.o", cmd, [Target(fileName)]));
+    obj.shouldEqual(Target(objPath, cmd, [Target(fileName)]));
 
     auto options = Options();
     options.cCompiler = "weirdcc";
     options.projectPath = "/project";
     obj.shellCommand(options).shouldEqual(
-        "weirdcc -g -O0 -I/project/myhdrs -I/project/otherhdrs -MMD -MT foo.o -MF foo.o.dep -o foo.o -c /project/foo.c");
+        "weirdcc -g -O0 -I" ~ buildPath("/project/myhdrs") ~ " -I" ~ buildPath("/project/otherhdrs") ~
+        " -MMD -MT " ~ objPath ~ " -MF " ~ objPath ~ ".dep -o " ~ objPath ~ " -c " ~ buildPath("/project/foo.c"));
 }
 
 void testCppObjectFile() {
     foreach(ext; ["cpp", "CPP", "cc", "cxx", "C", "c++"]) {
         immutable fileName = "foo." ~ ext;
+        enum objPath = "foo" ~ objExt;
         auto obj = objectFile(SourceFile(fileName),
                                Flags("-g -O0"),
                                IncludePaths(["myhdrs", "otherhdrs"]));
         auto cmd = Command(CommandType.compile,
-                            assocListT("includes", ["-I$project/myhdrs", "-I$project/otherhdrs"],
+                            assocListT("includes", [buildPath("-I$project/myhdrs"), buildPath("-I$project/otherhdrs")],
                                        "flags", ["-g", "-O0"],
-                                       "DEPFILE", ["foo.o.dep"]));
+                                       "DEPFILE", [objPath ~ ".dep"]));
 
-        obj.shouldEqual(Target("foo.o", cmd, [Target(fileName)]));
+        obj.shouldEqual(Target(objPath, cmd, [Target(fileName)]));
     }
 }
 
@@ -47,13 +51,14 @@ void testDObjectFile() {
                            Flags("-g -debug"),
                            ImportPaths(["myhdrs", "otherhdrs"]),
                            StringImportPaths(["strings", "otherstrings"]));
+    enum objPath = "foo" ~ objExt;
     auto cmd = Command(CommandType.compile,
-                        assocListT("includes", ["-I$project/myhdrs", "-I$project/otherhdrs"],
+                        assocListT("includes", [buildPath("-I$project/myhdrs"), buildPath("-I$project/otherhdrs")],
                                    "flags", ["-g", "-debug"],
-                                   "stringImports", ["-J$project/strings", "-J$project/otherstrings"],
-                                   "DEPFILE", ["foo.o.dep"]));
+                                   "stringImports", [buildPath("-J$project/strings"), buildPath("-J$project/otherstrings")],
+                                   "DEPFILE", [objPath ~ ".dep"]));
 
-    obj.shouldEqual(Target("foo.o", cmd, [Target("foo.d")]));
+    obj.shouldEqual(Target(objPath, cmd, [Target("foo.d")]));
 }
 
 
@@ -64,7 +69,7 @@ void testBuiltinTemplateDeps() {
         "gcc $flags $includes -MMD -MT $out -MF $out.dep -o $out -c $in");
 
     Command.builtinTemplate(CommandType.compile, Language.D, gDefaultOptions).shouldEqual(
-        ".reggae/dcompile --objFile=$out --depFile=$out.dep " ~
+        buildPath(".reggae/dcompile") ~ " --objFile=$out --depFile=$out.dep " ~
          "dmd $flags $includes $stringImports $in");
 
 }

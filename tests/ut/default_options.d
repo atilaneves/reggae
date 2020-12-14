@@ -1,5 +1,6 @@
 module tests.ut.default_options;
 
+import reggae.path: buildPath;
 import unit_threaded;
 
 
@@ -11,10 +12,17 @@ void testDefaultCCompiler() {
     mixin build!(target);
     auto build = buildFunc();
 
-    auto args = ["progname", "-b", "ninja", "/path/to/proj"]; //fake main function args
+    version(Windows)
+        enum projectPath = "C:/path/to/proj";
+    else
+        enum projectPath = "/path/to/proj";
+
+    auto args = ["progname", "-b", "ninja", projectPath]; //fake main function args
     auto options = getOptions(defaultOptions, args);
-    build.targets[0].shellCommand(options).
-        shouldEqual("weirdcc -g -O0 -I/path/to/proj/includey -I/path/to/proj/headers -MMD -MT foo.o -MF foo.o.dep -o foo.o -c /path/to/proj/foo.c");
+    enum objPath = "foo" ~ objExt;
+    build.targets[0].shellCommand(options).shouldEqual(
+        "weirdcc -g -O0 -I" ~ buildPath(projectPath, "includey") ~ " -I" ~ buildPath(projectPath, "headers") ~
+        " -MMD -MT " ~ objPath ~ " -MF " ~ objPath ~ ".dep -o " ~ objPath ~ " -c " ~ buildPath(projectPath, "foo.c"));
 }
 
 

@@ -74,4 +74,5 @@ test_script:
  - echo %DC%
  - echo %PATH%
  - '%DC% --version'
+ - dub test -- tests.ut
  # - dub test -- ~@tup ~@make ~@posix tests.it.runtime.dub

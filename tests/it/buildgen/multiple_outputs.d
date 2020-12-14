@@ -1,7 +1,7 @@
 module tests.it.buildgen.multiple_outputs;
 
 import tests.it.buildgen;
-import std.path: buildPath;
+import reggae.path: buildPath;
 
 enum project = "multiple_outputs";
 

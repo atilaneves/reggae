@@ -2,7 +2,7 @@ module tests.it.buildgen.automatic_dependency;
 
 
 import tests.it.buildgen;
-import std.path: buildPath;
+import reggae.path: buildPath;
 
 
 @("C++ dependencies get automatically computed with objectFile")
@@ -20,7 +20,7 @@ unittest {
     // I don't know what's going on here but the Cucumber test didn't do this either
     if(options.backend == Backend.tup) return;
 
-    overwrite(options, buildPath("src", "maths.hpp"), "const int factor = 10;");
+    overwrite(options, buildPath("src/maths.hpp"), "const int factor = 10;");
     shouldBuild!project;
 
     ["calc", "3"].shouldSucceed.shouldEqual(
@@ -42,7 +42,7 @@ unittest {
     // I don't know what's going on here but the Cucumber test didn't do this either
     if(options.backend == Backend.tup) return;
 
-    overwrite(options, buildPath("src", "constants.d"), "immutable int leconst = 1;");
+    overwrite(options, buildPath("src/constants.d"), "immutable int leconst = 1;");
     shouldBuild!project;
 
     ["calc", "3"].shouldSucceed.shouldEqual(

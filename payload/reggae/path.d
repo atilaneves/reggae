@@ -26,7 +26,7 @@ string dubPackagesDir() @safe {
     import std.process: environment;
 
     version(Windows)
-        return buildPath("C:\\Users", environment["USERNAME"], "AppData", "Roaming", "dub", "packages");
+        return buildPath(environment["LOCALAPPDATA"], "dub", "packages");
     else
         return buildPath(environment["HOME"], ".dub", "packages");
 

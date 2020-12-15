@@ -2,10 +2,10 @@ import std.stdio;
 import std.regex;
 import std.path;
 void main(string[] args) {
-    auto file = File(args[1]);
+    auto file = File(args[1], `r`);
     auto c = File(buildPath(args[1].baseName.stripExtension.defaultExtension(`.c`)), `w`);
     auto h = File(buildPath(args[1].baseName.stripExtension.defaultExtension(`.h`)), `w`);
-    auto reg = regex(`(\{.+?\})$`);
+    auto reg = regex(`\{.*\}$`);
     foreach(line; file.byLine) {
         c.writeln(line);
         auto headerLine = line.replaceAll(reg, `;`);

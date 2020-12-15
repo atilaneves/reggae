@@ -67,8 +67,8 @@ struct Build {
         return _targets.filter!(a => !a.optional).map!(a => a.target);
     }
 
-    string defaultTargetsString(in string projectPath) @trusted pure {
-        return defaultTargets.map!(a => a.expandOutputs(projectPath).join(" ")).join(" ");
+    string[] defaultTargetsOutputs(in string projectPath) @trusted pure {
+        return defaultTargets.map!(a => a.expandOutputs(projectPath)).join();
     }
 
     auto range() @safe pure {
@@ -625,11 +625,20 @@ struct Command {
         return command.replace(gProjdir, buildPath(projectPath));
     }
 
-    //@trusted because of replace
     private string[] getParams(string projectPath, in string key,
                                bool useIfNotFound, string[] ifNotFound = []) @safe pure const {
         projectPath = buildPath(projectPath);
         return params.get(key, ifNotFound).map!(a => a.replace(gProjdir, projectPath)).array;
+    }
+
+    static private string getDefaultDCompilerModelArg(in Options options) @safe pure nothrow {
+        version(Windows) {
+            import std.path: baseName, stripExtension;
+            const isDMD = baseName(stripExtension(options.dCompiler)) == "dmd";
+            return isDMD ? " -m32mscoff" : null;
+        } else {
+            return null;
+        }
     }
 
     static string builtinTemplate(in CommandType type,
@@ -644,16 +653,22 @@ struct Command {
             case shell:
                 assert(0, "builtinTemplate cannot be shell");
 
-            case link:
+            case link: {
+                version(Windows)
+                    immutable cArgs = " /nologo /Fo$out $flags $in";
+                else
+                    immutable cArgs = " -o $out $flags $in";
+
                 final switch(language) with(Language) {
                     case D:
                     case unknown:
-                        return options.dCompiler ~ " -of$out $flags $in";
+                        return options.dCompiler ~ getDefaultDCompilerModelArg(options) ~ " -of$out $flags $in";
                     case Cplusplus:
-                        return options.cppCompiler ~ " -o $out $flags $in";
+                        return options.cppCompiler ~ cArgs;
                     case C:
-                        return options.cCompiler ~ " -o $out $flags $in";
+                        return options.cCompiler ~ cArgs;
                 }
+            }
 
             case code:
                 throw new Exception("Command type 'code' has no built-in template");
@@ -670,16 +685,26 @@ struct Command {
                                           in Language language,
                                           in Options options,
                                           in Flag!"dependencies" deps = Yes.dependencies) @safe pure {
-        immutable ccParams = deps
-            ? " $flags $includes -MMD -MT $out -MF $out.dep -o $out $in"
-            : " $flags $includes -o $out $in";
+        version(Windows)
+        {
+            immutable ccParams =
+                " /nologo $flags $includes" ~ (deps ? " /showIncludes" : null) ~ " /Fo$out $in";
+        }
+        else
+        {
+            immutable ccParams = deps
+                ? " $flags $includes -MMD -MT $out -MF $out.dep -o $out $in"
+                : " $flags $includes -o $out $in";
+        }
 
         final switch(language) with(Language) {
-            case D:
+            case D: {
+                const modelArg = getDefaultDCompilerModelArg(options);
                 return deps
                     ? buildPath(".reggae/dcompile") ~ " --objFile=$out --depFile=$out.dep " ~
-                      options.dCompiler ~ " $flags $includes $stringImports $in"
-                    : options.dCompiler ~ " $flags $includes $stringImports -of$out $in";
+                      options.dCompiler ~ modelArg ~ " $flags $includes $stringImports $in"
+                    : options.dCompiler ~ modelArg ~ " $flags $includes $stringImports -of$out $in";
+            }
             case Cplusplus:
                 return options.cppCompiler ~ ccParams;
             case C:

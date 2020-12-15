@@ -4,6 +4,7 @@ import tests.it;
 import std.file;
 
 @("lorem")
+@AutoTags
 @Values("ninja", "make", "binary")
 unittest {
     enum module_ = "outputs_in_project_path.reggaefile";

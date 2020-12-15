@@ -59,11 +59,16 @@ void testCppCompile() {
                                 Flags("-m64 -fPIC -O3"),
                                 IncludePaths(["headers"]));
 
+    version(Windows) {
+        enum expected = `cl.exe /nologo -m64 -fPIC -O3 -I\path\to\headers /showIncludes ` ~
+                        `/Fosrc\cpp\maths.obj -c \path\to\src\cpp\maths.cpp`;
+    } else {
+        enum expected = "g++ -m64 -fPIC -O3 -I/path/to/headers -MMD -MT src/cpp/maths.o -MF src/cpp/maths.o.dep " ~
+                        "-o src/cpp/maths.o -c /path/to/src/cpp/maths.cpp";
+    }
+
     import reggae.config: gDefaultOptions;
-    enum objPath = buildPath("src/cpp/maths" ~ objExt);
-    mathsObj.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
-        "g++ -m64 -fPIC -O3 -I" ~ buildPath("/path/to/headers") ~ " -MMD -MT " ~ objPath ~ " -MF " ~ objPath ~ ".dep " ~
-        "-o " ~ objPath ~ " -c " ~ buildPath("/path/to/src/cpp/maths.cpp"));
+    mathsObj.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(expected);
 }
 
 void testCCompile() {
@@ -71,10 +76,16 @@ void testCCompile() {
                                 Flags("-m64 -fPIC -O3"),
                                 IncludePaths(["headers"]));
 
+    version(Windows) {
+        enum expected = `cl.exe /nologo -m64 -fPIC -O3 -I\path\to\headers /showIncludes ` ~
+                        `/Fosrc\c\maths.obj -c \path\to\src\c\maths.c`;
+    } else {
+        enum expected = "gcc -m64 -fPIC -O3 -I/path/to/headers -MMD -MT src/c/maths.o -MF src/c/maths.o.dep " ~
+                        "-o src/c/maths.o -c /path/to/src/c/maths.c";
+    }
+
     enum objPath = buildPath("src/c/maths" ~ objExt);
-    mathsObj.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
-        "gcc -m64 -fPIC -O3 -I" ~ buildPath("/path/to/headers") ~ " -MMD -MT " ~ objPath ~ " -MF " ~ objPath ~ ".dep " ~
-        "-o " ~ objPath ~ " -c " ~ buildPath("/path/to/src/c/maths.c"));
+    mathsObj.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(expected);
 }
 
 
@@ -133,9 +144,14 @@ void testUnityTargetCpp() @trusted {
                                 IncludePaths(["headers"]),
                                 dependencies);
     target.rawOutputs.shouldEqual(["leapp"]);
-    target.shellCommand(gDefaultOptions.withProjectPath(projectPath)).shouldEqual(
-        "g++ -g -O0 -I" ~ buildPath("/path/to/proj/headers") ~ " -MMD -MT leapp -MF leapp.dep -o leapp " ~
-        buildPath(".reggae/objs/leapp.objs/unity.cpp") ~ " mylib.a");
+    version(Windows) {
+        enum expected = `cl.exe /nologo -g -O0 -I\path\to\proj\headers /showIncludes ` ~
+                        `/Foleapp .reggae\objs\leapp.objs\unity.cpp mylib.a`;
+    } else {
+        enum expected = "g++ -g -O0 -I/path/to/proj/headers -MMD -MT leapp -MF leapp.dep " ~
+                        "-o leapp .reggae/objs/leapp.objs/unity.cpp mylib.a";
+    }
+    target.shellCommand(gDefaultOptions.withProjectPath(projectPath)).shouldEqual(expected);
     target.dependencyTargets.shouldEqual([Target.phony(buildPath("$builddir/.reggae/objs/leapp.objs/unity.cpp"),
                                                        "",
                                                        [],
@@ -161,14 +177,19 @@ void testUnityTargetC() @trusted {
                                 IncludePaths(["headers"]),
                                 dependencies);
     target.rawOutputs.shouldEqual(["leapp"]);
-    target.shellCommand(gDefaultOptions.withProjectPath(projectPath)).shouldEqual(
-        "gcc -g -O0 -I" ~ buildPath("/path/to/proj/headers") ~ " -MMD -MT leapp -MF leapp.dep -o leapp " ~
-        buildPath(".reggae/objs/leapp.objs/unity.c") ~ " mylib.a");
+    version(Windows) {
+        enum expected = `cl.exe /nologo -g -O0 -I\path\to\proj\headers /showIncludes ` ~
+                        `/Foleapp .reggae\objs\leapp.objs\unity.c mylib.a`;
+    } else {
+        enum expected = "gcc -g -O0 -I/path/to/proj/headers -MMD -MT leapp -MF leapp.dep " ~
+                        "-o leapp .reggae/objs/leapp.objs/unity.c mylib.a";
+    }
+    target.shellCommand(gDefaultOptions.withProjectPath(projectPath)).shouldEqual(expected);
     target.dependencyTargets.shouldEqual([Target.phony(buildPath("$builddir/.reggae/objs/leapp.objs/unity.c"),
                                                        "",
                                                        [],
                                                        [Target("src/foo.c"),
                                                         Target("src/bar.c"),
                                                         Target("src/baz.c")]),
-                                     Target("$builddir/mylib.a")]);
+                                          Target("$builddir/mylib.a")]);
 }

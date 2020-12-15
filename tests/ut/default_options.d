@@ -19,10 +19,14 @@ void testDefaultCCompiler() {
 
     auto args = ["progname", "-b", "ninja", projectPath]; //fake main function args
     auto options = getOptions(defaultOptions, args);
-    enum objPath = "foo" ~ objExt;
-    build.targets[0].shellCommand(options).shouldEqual(
-        "weirdcc -g -O0 -I" ~ buildPath(projectPath, "includey") ~ " -I" ~ buildPath(projectPath, "headers") ~
-        " -MMD -MT " ~ objPath ~ " -MF " ~ objPath ~ ".dep -o " ~ objPath ~ " -c " ~ buildPath(projectPath, "foo.c"));
+    version(Windows) {
+        enum expected = `weirdcc /nologo -g -O0 -IC:\path\to\proj\includey -IC:\path\to\proj\headers /showIncludes ` ~
+                        `/Fofoo.obj -c C:\path\to\proj\foo.c`;
+    } else {
+        enum expected = "weirdcc -g -O0 -I/path/to/proj/includey -I/path/to/proj/headers -MMD -MT foo.o -MF foo.o.dep " ~
+                        "-o foo.o -c /path/to/proj/foo.c";
+    }
+    build.targets[0].shellCommand(options).shouldEqual(expected);
 }
 
 

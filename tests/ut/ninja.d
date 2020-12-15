@@ -8,6 +8,11 @@ import reggae.path: buildPath;
 import reggae.backend.ninja;
 
 
+version(Windows)
+    enum isWindows = true;
+else
+    enum isWindows = false;
+
 void testEmpty() {
     auto ninja = Ninja();
     ninja.buildEntries.shouldEqual([]);
@@ -145,38 +150,60 @@ void testImplicitDependenciesMoreThanOne() {
 
 void testDefaultRules() {
     import reggae.config: gDefaultOptions;
+    version(Windows)
+        enum defaultDCModel = " -m32mscoff";
+    else
+        enum defaultDCModel = null;
     defaultRules(gDefaultOptions).shouldEqual(
         [
             NinjaEntry("rule _ccompile",
-                       ["command = gcc $flags $includes -MMD -MT $out -MF $out.dep -o $out -c $in",
-                        "deps = gcc",
-                        "depfile = $out.dep"]),
+                       isWindows
+                       ? ["command = cl.exe /nologo $flags $includes /showIncludes /Fo$out -c $in",
+                          "deps = msvc"]
+                       : ["command = gcc $flags $includes -MMD -MT $out -MF $out.dep -o $out -c $in",
+                          "deps = gcc",
+                          "depfile = $out.dep"]),
             NinjaEntry("rule _cppcompile",
-                       ["command = g++ $flags $includes -MMD -MT $out -MF $out.dep -o $out -c $in",
-                        "deps = gcc",
-                        "depfile = $out.dep"]),
+                       isWindows
+                       ? ["command = cl.exe /nologo $flags $includes /showIncludes /Fo$out -c $in",
+                          "deps = msvc"]
+                       : ["command = g++ $flags $includes -MMD -MT $out -MF $out.dep -o $out -c $in",
+                          "deps = gcc",
+                          "depfile = $out.dep"]),
             NinjaEntry("rule _dcompile",
-                       ["command = " ~ buildPath(".reggae/dcompile") ~ " --objFile=$out --depFile=$out.dep dmd $flags $includes $stringImports $in",
+                       ["command = " ~ buildPath(".reggae/dcompile") ~ " --objFile=$out --depFile=$out.dep dmd" ~
+                        defaultDCModel ~ " $flags $includes $stringImports $in",
                         "deps = gcc",
                         "depfile = $out.dep"]),
             NinjaEntry("rule _clink",
-                       ["command = gcc -o $out $flags $in"]),
+                       [isWindows
+                        ? "command = cl.exe /nologo /Fo$out $flags $in"
+                        : "command = gcc -o $out $flags $in"]),
             NinjaEntry("rule _cpplink",
-                       ["command = g++ -o $out $flags $in"]),
+                       [isWindows
+                        ? "command = cl.exe /nologo /Fo$out $flags $in"
+                        : "command = g++ -o $out $flags $in"]),
             NinjaEntry("rule _dlink",
-                       ["command = dmd -of$out $flags $in"]),
+                       ["command = dmd" ~ defaultDCModel ~ " -of$out $flags $in"]),
             NinjaEntry("rule _ulink",
-                       ["command = dmd -of$out $flags $in"]),
+                       ["command = dmd" ~ defaultDCModel ~ " -of$out $flags $in"]),
             NinjaEntry("rule _ccompileAndLink",
-                       ["command = gcc $flags $includes -MMD -MT $out -MF $out.dep -o $out $in",
-                        "deps = gcc",
-                        "depfile = $out.dep"]),
+                       isWindows
+                       ? ["command = cl.exe /nologo $flags $includes /showIncludes /Fo$out $in",
+                          "deps = msvc"]
+                       : ["command = gcc $flags $includes -MMD -MT $out -MF $out.dep -o $out $in",
+                          "deps = gcc",
+                          "depfile = $out.dep"]),
             NinjaEntry("rule _cppcompileAndLink",
-                       ["command = g++ $flags $includes -MMD -MT $out -MF $out.dep -o $out $in",
-                        "deps = gcc",
-                        "depfile = $out.dep"]),
+                       isWindows
+                       ? ["command = cl.exe /nologo $flags $includes /showIncludes /Fo$out $in",
+                          "deps = msvc"]
+                       : ["command = g++ $flags $includes -MMD -MT $out -MF $out.dep -o $out $in",
+                          "deps = gcc",
+                          "depfile = $out.dep"]),
             NinjaEntry("rule _dcompileAndLink",
-                       ["command = " ~ buildPath(".reggae/dcompile") ~ " --objFile=$out --depFile=$out.dep dmd $flags $includes $stringImports $in",
+                       ["command = " ~ buildPath(".reggae/dcompile") ~ " --objFile=$out --depFile=$out.dep dmd" ~
+                        defaultDCModel ~ " $flags $includes $stringImports $in",
                         "deps = gcc",
                         "depfile = $out.dep"]),
 
@@ -190,9 +217,12 @@ void testDefaultRulesWeirdCCompiler() {
     options.cCompiler = "weirdcc";
     auto rules = defaultRules(options);
     auto entry = NinjaEntry("rule _ccompile",
-                            ["command = weirdcc $flags $includes -MMD -MT $out -MF $out.dep -o $out -c $in",
-                             "deps = gcc",
-                             "depfile = $out.dep"]);
+                            isWindows
+                            ? ["command = weirdcc /nologo $flags $includes /showIncludes /Fo$out -c $in",
+                              "deps = msvc"]
+                            : ["command = weirdcc $flags $includes -MMD -MT $out -MF $out.dep -o $out -c $in",
+                               "deps = gcc",
+                               "depfile = $out.dep"]);
     entry.shouldBeIn(rules);
 }
 

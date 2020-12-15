@@ -52,11 +52,11 @@ unittest {
     jsonToBuild(testPath, linkJsonStr).shouldEqual(
         Build(Target("myapp",
                      Command(CommandType.link, assocListT("flags", ["-L-M"])),
-                     [Target("src/foo.o",
-                             compileCommand("src/foo.d", "-g", [".", "src"]),
-                             [Target("src/foo.d")]),
-                      Target("src/bar.o",
-                             compileCommand("src/bar.d", "-g", [".", "src"]),
-                             [Target("src/bar.d")])]))
+                     [Target(buildPath("src/foo" ~ objExt),
+                             compileCommand(buildPath("src/foo.d"), "-g", [".", "src"]),
+                             [Target(buildPath("src/foo.d"))]),
+                      Target(buildPath("src/bar" ~ objExt),
+                             compileCommand(buildPath("src/bar.d"), "-g", [".", "src"]),
+                             [Target(buildPath("src/bar.d"))])]))
     );
 }

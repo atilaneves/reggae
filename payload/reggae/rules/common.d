@@ -128,10 +128,7 @@ Target[] staticLibrary(string name,
     ()
 {
 
-    version(Posix)
-        return staticLibraryTarget(name, objectFiles!(sourcesFunc, flags, includes, stringImports)() ~ dependenciesFunc());
-    else
-        throw new Exception("Can only create static libraries on Posix");
+    return staticLibraryTarget(name, objectFiles!(sourcesFunc, flags, includes, stringImports)() ~ dependenciesFunc());
 }
 
 /**
@@ -300,14 +297,10 @@ Target[] staticLibrary(in string projectPath,
                        in string[] includes,
                        in string[] stringImports) @trusted {
 
-
-    version(Posix)
-        return staticLibraryTarget(
-            name,
-            objectFiles(projectPath, srcDirs, excDirs, srcFiles, excFiles, flags, includes, stringImports)
-        );
-    else
-        throw new Exception("Can only create static libraries on Posix");
+    return staticLibraryTarget(
+        name,
+        objectFiles(projectPath, srcDirs, excDirs, srcFiles, excFiles, flags, includes, stringImports)
+    );
 }
 
 Target[] staticLibraryTarget(in string name, Target[] objects) @safe pure {

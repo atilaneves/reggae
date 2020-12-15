@@ -40,8 +40,8 @@ struct Dub {
     private Project _project;
 
     this(in Options options) @safe {
+        import reggae.path: buildPath;
         import std.exception: enforce;
-        import std.path: buildPath;
         import std.file: exists;
 
         const path = buildPath(options.projectPath, "dub.selections.json");
@@ -103,8 +103,9 @@ struct UserPackagesPath {
 
 /// Normally ~/.dub
 UserPackagesPath userPackagesPath() @safe {
+    import reggae.path: buildPath;
     import std.process: environment;
-    import std.path: buildPath, isAbsolute;
+    import std.path: isAbsolute;
     import std.file: getcwd;
 
     version(Windows) {
@@ -126,8 +127,8 @@ struct SystemPackagesPath {
 
 
 SystemPackagesPath systemPackagesPath() @safe {
+    import reggae.path: buildPath;
     import std.process: environment;
-    import std.path: buildPath;
 
     version(Windows)
         const path = buildPath(environment.get("ProgramData"), "dub/");
@@ -189,7 +190,7 @@ struct DubPackages {
     void storeZip(in Path zip, in JSONString metadata) @safe {
         import dub.internal.vibecompat.data.json: parseJson;
         import dub.internal.vibecompat.inet.path: NativePath;
-        import std.path: buildPath;
+        import reggae.path: buildPath;
 
         auto metadataString = metadata.value.idup;
         auto metadataJson = () @trusted { return parseJson(metadataString); }();
@@ -262,11 +263,11 @@ private auto recipe(in ProjectPath projectPath) @safe {
     import dub.recipe.sdl: parseSDL;
     static import dub.internal.vibecompat.data.json;
     import std.file: readText, exists;
-    import std.path: buildPath;
 
     PackageRecipe recipe;
 
     string inProjectPath(in string path) {
+        import reggae.path: buildPath;
         return buildPath(projectPath.value, path);
     }
 

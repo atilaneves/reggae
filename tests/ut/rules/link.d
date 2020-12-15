@@ -9,17 +9,28 @@ import unit_threaded;
 @("shell commands") unittest {
     import reggae.config: gDefaultOptions;
     auto objTarget = link(ExeName("myapp"), [Target("foo.o"), Target("bar.o")], Flags("-L-L"));
+    version(Windows)
+        enum defaultDCModel = " -m32mscoff";
+    else
+        enum defaultDCModel = null;
     objTarget.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
-        "dmd -ofmyapp -L-L " ~ buildPath("/path/to/foo.o") ~ " " ~ buildPath("/path/to/bar.o"));
+        "dmd" ~ defaultDCModel ~ " -ofmyapp -L-L " ~ buildPath("/path/to/foo.o") ~ " " ~ buildPath("/path/to/bar.o"));
 
     auto cppTarget = link(ExeName("cppapp"), [Target("foo.o", "", Target("foo.cpp"))], Flags("--sillyflag"));
     //since foo.o is not a leaf target, the path should not appear (it's created in the build dir)
-    cppTarget.shellCommand(gDefaultOptions.withProjectPath("/foo/bar")).shouldEqual(
-        "g++ -o cppapp --sillyflag foo.o");
+    version(Windows)
+        enum expectedCpp = "cl.exe /nologo /Focppapp --sillyflag foo.o";
+    else
+        enum expectedCpp = "g++ -o cppapp --sillyflag foo.o";
+    cppTarget.shellCommand(gDefaultOptions.withProjectPath("/foo/bar")).shouldEqual(expectedCpp);
 
     auto cTarget = link(ExeName("capp"), [Target("bar.o", "", Target("bar.c"))]);
     //since foo.o is not a leaf target, the path should not appear (it's created in the build dir)
-    cTarget.shellCommand(gDefaultOptions.withProjectPath("/foo/bar")).shouldEqual("gcc -o capp  bar.o");
+    version(Windows)
+        enum expectedC = "cl.exe /nologo /Focapp  bar.o";
+    else
+        enum expectedC = "gcc -o capp  bar.o";
+    cTarget.shellCommand(gDefaultOptions.withProjectPath("/foo/bar")).shouldEqual(expectedC);
 }
 
 
@@ -30,9 +41,14 @@ import unit_threaded;
     auto bld = Build(app);
     import reggae.config: gDefaultOptions;
     enum objPath = buildPath(".reggae/objs/app.objs/src/foo" ~ objExt);
-    bld.targets[0].dependencyTargets[0].shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
-        "gcc -include " ~buildPath("/path/to") ~ "/includes/header.h  -MMD -MT " ~ objPath ~
-        " -MF " ~ objPath ~ ".dep -o " ~ objPath ~ " -c " ~ buildPath("/path/to/src/foo.c"));
+    version(Windows) {
+        enum expected = `cl.exe /nologo -include \path\to/includes/header.h  /showIncludes ` ~
+                        `/Fo` ~ objPath ~ ` -c \path\to\src\foo.c`;
+    } else {
+        enum expected = "gcc -include /path/to/includes/header.h  -MMD -MT " ~ objPath ~ " -MF " ~ objPath ~ ".dep " ~
+                        "-o " ~ objPath ~ " -c /path/to/src/foo.c";
+    }
+    bld.targets[0].dependencyTargets[0].shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(expected);
 }
 
 @("template link") unittest {

@@ -6,7 +6,7 @@ import reggae.reggae;
 
 
 @("Issue 14: builddir not expanded")
-@Tags(["ninja", "regressions"])
+@Tags(["ninja", "regressions", "posix"])
 unittest {
 
     with(immutable ReggaeSandbox()) {
@@ -47,7 +47,7 @@ unittest {
             void main(string[] args) {
                 auto inFileName = args[1];
                 auto outFileName = args[2];
-                auto lines = File(inFileName).byLine.
+                auto lines = File(inFileName, `r`).byLine.
                     map!(a => a.to!string).
                     map!(a => a ~ ` ` ~ a);
                 auto outFile = File(outFileName, `w`);

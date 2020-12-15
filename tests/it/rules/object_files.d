@@ -18,8 +18,8 @@ import std.stdio: File;
     getBuildObject!"template_rules.reggaefile"(options).shouldEqual(
         Build(Target("app",
                      Command(CommandType.link, assocListT("flags", flags)),
-                     [Target("main.o", compileCommand("main.cpp", "-g -O0"), [Target("main.cpp")]),
-                      Target("maths.o", compileCommand("maths.cpp", "-g -O0"), [Target("maths.cpp")])]
+                     [Target("main" ~ objExt, compileCommand("main.cpp", "-g -O0"), [Target("main.cpp")]),
+                      Target("maths" ~ objExt, compileCommand("maths.cpp", "-g -O0"), [Target("maths.cpp")])]
                   )));
 }
 
@@ -35,11 +35,11 @@ import std.stdio: File;
 
     string[] none;
     objectFiles(testPath, ["."], none, none, none, "-g -O0").shouldBeSameSetAs(
-        [Target("proj/main.o",
+        [Target(buildPath("proj/main" ~ objExt),
                 compileCommand("proj/main.cpp", "-g -O0"),
-                [Target("proj/main.cpp")]),
-         Target("proj/maths.o",
+                [Target(buildPath("proj/main.cpp"))]),
+         Target(buildPath("proj/maths" ~ objExt),
                 compileCommand("proj/maths.cpp", "-g -O0"),
-                [Target("proj/maths.cpp")])]
+                [Target(buildPath("proj/maths.cpp"))])]
     );
 }

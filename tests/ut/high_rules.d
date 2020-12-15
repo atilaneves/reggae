@@ -8,6 +8,11 @@ import unit_threaded;
 import std.typecons: No;
 
 
+version(Windows)
+    immutable defaultDCModel = " -m32mscoff";
+else
+    enum defaultDCModel = null;
+
 void testCObjectFile() {
     immutable fileName = "foo.c";
     enum objPath = "foo" ~ objExt;
@@ -24,9 +29,14 @@ void testCObjectFile() {
     auto options = Options();
     options.cCompiler = "weirdcc";
     options.projectPath = "/project";
-    obj.shellCommand(options).shouldEqual(
-        "weirdcc -g -O0 -I" ~ buildPath("/project/myhdrs") ~ " -I" ~ buildPath("/project/otherhdrs") ~
-        " -MMD -MT " ~ objPath ~ " -MF " ~ objPath ~ ".dep -o " ~ objPath ~ " -c " ~ buildPath("/project/foo.c"));
+    version(Windows) {
+        enum expected = `weirdcc /nologo -g -O0 -I\project\myhdrs -I\project\otherhdrs /showIncludes ` ~
+                        `/Fofoo.obj -c \project\foo.c`;
+    } else {
+        enum expected = "weirdcc -g -O0 -I/project/myhdrs -I/project/otherhdrs -MMD -MT foo.o -MF foo.o.dep " ~
+                        "-o foo.o -c /project/foo.c";
+    }
+    obj.shellCommand(options).shouldEqual(expected);
 }
 
 void testCppObjectFile() {
@@ -65,22 +75,28 @@ void testDObjectFile() {
 void testBuiltinTemplateDeps() {
     import reggae.config;
 
-    Command.builtinTemplate(CommandType.compile, Language.C, gDefaultOptions).shouldEqual(
-        "gcc $flags $includes -MMD -MT $out -MF $out.dep -o $out -c $in");
+    version(Windows)
+        enum expectedC = "cl.exe /nologo $flags $includes /showIncludes /Fo$out -c $in";
+    else
+        enum expectedC = "gcc $flags $includes -MMD -MT $out -MF $out.dep -o $out -c $in";
+    Command.builtinTemplate(CommandType.compile, Language.C, gDefaultOptions).shouldEqual(expectedC);
 
     Command.builtinTemplate(CommandType.compile, Language.D, gDefaultOptions).shouldEqual(
         buildPath(".reggae/dcompile") ~ " --objFile=$out --depFile=$out.dep " ~
-         "dmd $flags $includes $stringImports $in");
+         "dmd" ~ defaultDCModel ~ " $flags $includes $stringImports $in");
 
 }
 
 void testBuiltinTemplateNoDeps() {
     import reggae.config;
 
-    Command.builtinTemplate(CommandType.compile, Language.C, gDefaultOptions, No.dependencies).shouldEqual(
-        "gcc $flags $includes -o $out -c $in");
+    version(Windows)
+        enum expectedC = "cl.exe /nologo $flags $includes /Fo$out -c $in";
+    else
+        enum expectedC = "gcc $flags $includes -o $out -c $in";
+    Command.builtinTemplate(CommandType.compile, Language.C, gDefaultOptions, No.dependencies).shouldEqual(expectedC);
 
     Command.builtinTemplate(CommandType.compile, Language.D, gDefaultOptions, No.dependencies).shouldEqual(
-        "dmd $flags $includes $stringImports -of$out -c $in");
+        "dmd" ~ defaultDCModel ~ " $flags $includes $stringImports -of$out -c $in");
 
 }

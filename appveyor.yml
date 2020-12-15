@@ -3,7 +3,7 @@ environment:
  matrix:
   - DC: dmd
     DVersion: 2.089.0
-    arch: x64
+    arch: x86
 
 skip_tags: true
 
@@ -75,4 +75,4 @@ test_script:
  - echo %PATH%
  - '%DC% --version'
  - dub test -- tests.ut
- # - dub test -- ~@tup ~@make ~@posix tests.it.runtime.dub
+ - dub test -- ~@tup ~@make ~@posix ~@javascript ~@lua ~@python ~@ruby tests.it

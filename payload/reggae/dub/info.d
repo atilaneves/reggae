@@ -261,18 +261,8 @@ struct DubInfo {
         static string libFlag(in string lib) {
             version(Posix)
                 return "-L-l" ~ lib;
-            else {
-                import reggae.config: options;
-                import reggae.options: DubArchitecture;
-
-                final switch(options.dubArch) with(DubArchitecture) {
-                    case x86:
-                        return "-L-l" ~ lib;
-                    case x86_64:
-                    case x86_mscoff:
-                        return lib ~ ".lib";
-                }
-            }
+            else
+                return lib ~ ".lib";
         }
 
         return

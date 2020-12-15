@@ -78,7 +78,11 @@ unittest {
     oldOptions.args = ["reggae", "-b", "ninja", "/path/to/my/project"];
     auto newOptions = jsonToOptions(oldOptions, parseJSON(linkJsonString));
     newOptions.cCompiler.shouldEqual("weirdcc");
-    newOptions.cppCompiler.shouldEqual("g++");
+    version(Windows)
+        enum expectedCxx = "cl.exe";
+    else
+        enum expectedCxx = "g++";
+    newOptions.cppCompiler.shouldEqual(expectedCxx);
 }
 
 private string toVersion1(in string jsonString, in string dependencies = `[]`) {
@@ -95,7 +99,11 @@ unittest {
     immutable jsonString = linkJsonString.toVersion1;
     auto newOptions = jsonToOptions(oldOptions, parseJSON(jsonString));
     newOptions.cCompiler.shouldEqual("huh");
-    newOptions.cppCompiler.shouldEqual("g++");
+    version(Windows)
+        enum expectedCxx = "cl.exe";
+    else
+        enum expectedCxx = "g++";
+    newOptions.cppCompiler.shouldEqual(expectedCxx);
     newOptions.oldNinja.shouldBeFalse;
 }
 

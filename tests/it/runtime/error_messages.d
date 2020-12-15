@@ -1,12 +1,18 @@
 module tests.it.runtime.error_messages;
 
+import reggae.path: buildPath;
 import reggae.reggae;
 import unit_threaded;
 import tests.it.runtime;
 
 @("Non-existent directory error message") unittest {
-    ReggaeSandbox().runReggae(["-b", "binary"], "/non/existent").shouldThrowWithMessage(
-        "Could not find /non/existent/reggaefile.d"
+    version(Windows)
+        enum projectPath = "C:/non/existent";
+    else
+        enum projectPath = "/non/existent";
+
+    ReggaeSandbox().runReggae(["-b", "binary"], projectPath).shouldThrowWithMessage(
+        "Could not find " ~ buildPath(projectPath, "reggaefile.d")
     );
 }
 

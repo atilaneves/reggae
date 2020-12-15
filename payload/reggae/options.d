@@ -25,6 +25,14 @@ enum DubArchitecture {
     x86_mscoff,
 }
 
+version(Windows) {
+    enum defaultCC = "cl.exe";
+    enum defaultCXX = "cl.exe";
+} else {
+    enum defaultCC = "gcc";
+    enum defaultCXX = "g++";
+}
+
 struct Options {
     Backend backend;
     string projectPath;
@@ -52,7 +60,7 @@ struct Options {
 
 
     version(Windows)
-        DubArchitecture dubArch = DubArchitecture.x86;
+        DubArchitecture dubArch = DubArchitecture.x86_mscoff;
     else
         DubArchitecture dubArch = DubArchitecture.x86_64;
 
@@ -71,8 +79,8 @@ struct Options {
         this.args = args;
         ranFromPath = thisExePath();
 
-        if(!cCompiler)   cCompiler   = environment.get("CC", "gcc");
-        if(!cppCompiler) cppCompiler = environment.get("CXX", "g++");
+        if(!cCompiler)   cCompiler   = environment.get("CC", defaultCC);
+        if(!cppCompiler) cppCompiler = environment.get("CXX", defaultCXX);
         if(!dCompiler)   dCompiler   = environment.get("DC", "dmd");
 
         isDubProject = _dubProjectFile != "";
@@ -226,8 +234,8 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             "dflags", "D compiler flags.", &options.dflags,
             "d", "User-defined variables (e.g. -d myvar=foo).", &options.userVars,
             "dc", "D compiler to use (default dmd).", &options.dCompiler,
-            "cc", "C compiler to use (default gcc).", &options.cCompiler,
-            "cxx", "C++ compiler to use (default g++).", &options.cppCompiler,
+            "cc", "C compiler to use (default " ~ defaultCC ~ ").", &options.cCompiler,
+            "cxx", "C++ compiler to use (default " ~ defaultCXX ~ ").", &options.cppCompiler,
             "per-module", "Compile D files per module (default is per package)", &options.perModule,
             "all-at-once", "Compile D files all at once (default is per package)", &options.allAtOnce,
             "old-ninja", "Generate a Ninja build compatible with older versions of Ninja", &options.oldNinja,

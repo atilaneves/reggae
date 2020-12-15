@@ -291,15 +291,16 @@ auto packageManager(in ProjectPath projectPath,
     import dub.internal.vibecompat.inet.path: NativePath;
     import dub.packagemanager: PackageManager;
 
+    const packagePath = NativePath(projectPath.value);
     const userPath = NativePath(userPackagesPath.value);
     const systemPath = NativePath(systemPackagesPath.value);
     const refreshPackages = false;
 
-    auto pkgManager = new PackageManager(userPath, systemPath, refreshPackages);
+    auto pkgManager = new PackageManager(packagePath, userPath, systemPath, refreshPackages);
     // In dub proper, this initialisation is done in commandline.d
     // in the function runDubCommandLine. If not not, subpackages
     // won't work.
-    pkgManager.getOrLoadPackage(NativePath(projectPath.value));
+    pkgManager.getOrLoadPackage(packagePath);
 
     return pkgManager;
 }
@@ -338,11 +339,15 @@ class InfoGenerator: ProjectGenerator {
     override void generateTargets(GeneratorSettings settings, in TargetInfo[string] targets) @trusted {
 
         import dub.compilers.buildsettings: BuildSetting;
+        import dub.platform: determineBuildPlatform;
+
+        auto platform = determineBuildPlatform();
 
         DubPackage nameToDubPackage(in string targetName, in bool isFirstPackage = false) {
             const targetInfo = targets[targetName];
             auto newBuildSettings = targetInfo.buildSettings.dup;
             settings.compiler.prepareBuildSettings(newBuildSettings,
+                                                   platform,
                                                    BuildSetting.noOptions /*???*/);
             DubPackage pkg;
 

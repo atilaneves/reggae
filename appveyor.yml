@@ -74,5 +74,4 @@ test_script:
  - echo %DC%
  - echo %PATH%
  - '%DC% --version'
- - dub test -- tests.ut
- - dub test -- ~@tup ~@make ~@posix ~@javascript ~@lua ~@python ~@ruby tests.it
+ - dub test -- ~@tup ~@make ~@posix ~@javascript ~@lua ~@python ~@ruby

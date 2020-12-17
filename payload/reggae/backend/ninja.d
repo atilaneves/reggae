@@ -219,12 +219,14 @@ private:
 
         //no projectPath for phony rules since they don't generate output
         immutable outputs = target.expandOutputs("").map!escapeDriveInPath.join(" ");
-        auto buildLine = "build " ~ outputs ~ ": _phony " ~ targetDependencies(target);
+        immutable cmd = target.shellCommand(_options);
+        auto buildLine = "build " ~ outputs ~ ": " ~ (cmd is null ? "phony" : "_phony") ~ " " ~ targetDependencies(target);
         if(!target.implicitTargets.empty)
             buildLine ~= " | " ~ target.implicitsInProjectPath(_projectPath).map!escapeDriveInPath.join(" ");
         buildEntries ~= NinjaEntry(buildLine,
-                                   ["cmd = " ~ target.shellCommand(_options),
-                                    "pool = console"]);
+                                   cmd is null
+                                   ? ["pool = console"]
+                                   : ["cmd = " ~ cmd, "pool = console"]);
     }
 
     void customRule(Target target) @safe {

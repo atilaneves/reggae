@@ -1,6 +1,7 @@
 module reggae.rules.common;
 
 
+import reggae.from;
 import reggae.build;
 import reggae.ctaa;
 import reggae.types;
@@ -50,11 +51,55 @@ Target objectFile(in SourceFile srcFile,
                   in ImportPaths includePaths = ImportPaths(),
                   in StringImportPaths stringImportPaths = StringImportPaths(),
                   Target[] implicits = [],
-                  in string projDir = "$project") @safe pure {
+                  in string projDir = "$project")
+    @safe pure
+{
+
+    import reggae.options: Options;
 
     auto cmd = compileCommand(srcFile.value, flags.value, includePaths.value, stringImportPaths.value, projDir);
-    return Target(srcFile.value.objFileName, cmd, [Target(srcFile.value)], implicits);
+
+    // try
+    //     implicits ~= Target(compilerPath(Options.init, getLanguage(srcFile.value)));
+    // catch(Exception _) {}
+
+    return Target(
+        srcFile.value.objFileName,
+        cmd,
+        [Target(srcFile.value)],
+        implicits,
+    );
 }
+
+
+// private string compilerPath(in from!"reggae.options".Options options, in Language language) @safe pure {
+//     import std.process: executeShell;
+
+//     version(Windows)
+//         const cmd = "where";
+//     else
+//         const cmd = "which";
+
+//     const result = executeShell(cmd ~ " " ~ compiler(options, language));
+
+//     if(result.status != 0) throw new Exception("Could not determine the path of the compiler");
+
+//     return result.output;
+// }
+
+// private string compiler(in from!"reggae.options".Options options, in Language language) @safe pure {
+//     final switch(language) with(Language) {
+//         case D:
+//             return options.dCompiler;
+//         case Cplusplus:
+//             return options.cppCompiler;
+//         case C:
+//             return options.cCompiler;
+//         case unknown:
+//             throw new Exception("Unsupported language for compiling");
+//     }
+// }
+
 
 /**
  A binary executable. The same as calling objectFiles and link

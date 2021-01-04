@@ -43,8 +43,12 @@ struct Makefile {
                 ret ~= ".PHONY: " ~ output ~ "\n";
             }
             ret ~= output ~  ": ";
-            ret ~= (target.dependenciesInProjectPath(options.projectPath) ~
-                    target.implicitsInProjectPath(options.projectPath)).join(" ");
+
+            const deps =
+                target.dependenciesInProjectPath(options.projectPath)
+                ~ target.implicitsInProjectPath(options.projectPath)
+                ;
+            ret ~= deps.join(" ");
 
             ret ~= " " ~ fileName() ~ "\n";
             ret ~= "\t@echo [make] Building " ~ output ~ "\n";

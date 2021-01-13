@@ -5,9 +5,10 @@ jobs:
   test:
     name: Dub Test
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        dc: [dmd-latest]
+        dc: [dmd-latest, ldc-beta]
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -19,6 +20,22 @@ jobs:
         with:
           compiler: ${{ matrix.dc }}
 
+      # Work around hardcoded `dmd` compiler in integration tests
+      - name: "LDC: Symlink dmd to ldmd2 and set DC to ldmd2"
+        if: matrix.dc == 'ldc-beta'
+        shell: bash
+        run: |
+          set -ex
+          ldcBinDir=$(dirname $(which ldmd2))
+          if [[ '${{ runner.os }}' == 'Windows' ]]; then
+            cp $ldcBinDir/ldmd2.exe $ldcBinDir/dmd.exe
+          else
+            ln -s $ldcBinDir/ldmd2 $ldcBinDir/dmd
+          fi
+          # setup-dlang sets DC to `ldc2`
+          set +x
+          echo "DC=ldmd2" >> $GITHUB_ENV
+
       - name: Run Linux tests
         if: runner.os != 'Windows'
         run: dub -q test -- ~@tup ~@travis_oops
@@ -28,5 +45,11 @@ jobs:
         shell: cmd
         run: |
           set
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=x86
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=x86 || exit /b
           dub -q test -- ~@tup ~@make ~@posix ~@javascript ~@lua ~@python ~@ruby
+          if %ERRORLEVEL% NEQ 0 (
+            echo.
+            echo *** Retrying tests serially ***
+            echo.
+            dub -q test -- -s ~@tup ~@make ~@posix ~@javascript ~@lua ~@python ~@ruby || exit /b
+          )

@@ -21,7 +21,7 @@ jobs:
           compiler: ${{ matrix.dc }}
 
       # Work around hardcoded `dmd` compiler in integration tests
-      - name: "LDC: Symlink dmd to ldmd2 and set DC to ldmd2"
+      - name: "LDC: Symlink dmd to ldmd2"
         if: matrix.dc == 'ldc-beta'
         shell: bash
         run: |
@@ -32,9 +32,6 @@ jobs:
           else
             ln -s $ldcBinDir/ldmd2 $ldcBinDir/dmd
           fi
-          # setup-dlang sets DC to `ldc2`
-          set +x
-          echo "DC=ldmd2" >> $GITHUB_ENV
 
       - name: Run Linux tests
         if: runner.os != 'Windows'

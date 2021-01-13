@@ -802,8 +802,7 @@ unittest {
         const buildLines = ninja.shouldExecuteOk;
         const firstLine = buildLines[0];
         "-release ".should.be in firstLine;
-        "-O ".should.be in firstLine;
-        "-inline ".should.be in firstLine;
+        "-O".should.be in firstLine;
     }
 
 }

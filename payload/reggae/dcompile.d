@@ -54,7 +54,10 @@ private void dcompile(string[] args) {
 private string[] compilerArgs(string[] args, in string objFile) @safe pure {
     auto compArgs = args[1 .. $] ~ ["-of" ~ objFile, "-c", "-v"];
 
-    switch(args[1]) {
+    import std.path: baseName, stripExtension;
+    const compilerBinName = baseName(stripExtension(args[1]));
+
+    switch(compilerBinName) {
         default:
             return compArgs;
         case "gdc":
@@ -80,9 +83,17 @@ private string[] mapToGdcOptions(in string[] compArgs) @safe pure {
 }
 
 
-//takes a dmd command line and maps arguments to gdc ones
+//takes a dmd command line and maps arguments to ldc2 ones
 private string[] mapToLdcOptions(in string[] compArgs) @safe pure {
-    string[string] options = ["-O": "-O2", "-debug": "-d-debug"];
+    string[string] options = [
+        "-m32mscoff": "-m32",
+        "-version": "-d-version",
+        "-debug": "-d-debug",
+        "-fPIC": "-relocation-model=pic",
+        "-gs": "-frame-pointer=all",
+        "-inline": "-enable-inlining",
+        "-profile": "-fdmd-trace-functions",
+    ];
 
     string doMap(string a) {
         foreach(k, v; options) {

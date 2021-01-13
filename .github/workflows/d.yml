@@ -6,17 +6,27 @@ jobs:
     name: Dub Test
     strategy:
       matrix:
-        os: [ubuntu-latest]
-        dc: [dmd-2.094.2]
+        os: [ubuntu-latest, windows-latest]
+        dc: [dmd-latest]
 
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
-      - uses: seanmiddleditch/gha-setup-ninja@master
+      - name: Install ninja
+        uses: seanmiddleditch/gha-setup-ninja@master
       - name: Install D compiler
-        uses: dlang-community/setup-dlang@v1
+        uses: dlang-community/setup-dlang@v1.0.5
         with:
           compiler: ${{ matrix.dc }}
 
-      - name: Run tests
+      - name: Run Linux tests
+        if: runner.os != 'Windows'
         run: dub -q test -- ~@tup ~@travis_oops
+
+      - name: Run Windows tests
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          set
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=x86
+          dub -q test -- ~@tup ~@make ~@posix ~@javascript ~@lua ~@python ~@ruby

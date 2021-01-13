@@ -2,7 +2,10 @@ module multiple_outputs.reggaefile_sep;
 
 version(Windows) {
     enum protoObjCmd = `cl.exe /Fo$out -c $in`;
-    enum appCmd = `dmd -m32mscoff -of$out $in`;
+    version(DigitalMars)
+        enum appCmd = `dmd -m32mscoff -of$out $in`;
+    else
+        enum appCmd = `dmd -of$out $in`;
 } else {
     enum protoObjCmd = `gcc -o $out -c $in`;
     enum appCmd = `dmd -of$out $in`;

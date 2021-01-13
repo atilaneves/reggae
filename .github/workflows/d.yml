@@ -45,7 +45,11 @@ jobs:
         shell: cmd
         run: |
           set
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=x86 || exit /b
+          :: set up MSVC environment - x64 for LDC, x86 for DMD
+          set MSVC_ARCH=x64
+          if "%DC%" == "dmd" set MSVC_ARCH=x86
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=%MSVC_ARCH% || exit /b
+          :: test
           dub -q test -- ~@tup ~@make ~@posix ~@javascript ~@lua ~@python ~@ruby
           if %ERRORLEVEL% NEQ 0 (
             echo.

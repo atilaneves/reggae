@@ -206,6 +206,8 @@ unittest {
     }
 }
 
+version(Windows) version(DigitalMars) version = Windows_DMD;
+
 @("object source files.simple")
 @Tags(["dub", "ninja"])
 unittest {
@@ -238,7 +240,7 @@ unittest {
             extern(C) int lebaz() { return 42; }
         });
 
-        version(Windows)
+        version(Windows_DMD)
             ["dmd", "-m32mscoff", "-c", "baz.d"].shouldExecuteOk;
         else
             ["dmd", "-c", "baz.d"].shouldExecuteOk;
@@ -367,7 +369,7 @@ unittest {
             extern(C) int lebaz() { return 42; }
         });
 
-        version(Windows) {
+        version(Windows_DMD) {
             ["dmd", "-m32mscoff", "-c", "baz.d"].shouldExecuteOk;
         } else {
             ["dmd", "-c", "baz.d"].shouldExecuteOk;

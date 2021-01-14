@@ -9,13 +9,7 @@ else
 fi
 
 #1st parameter is the backend to use (e.g. make, ninja)
-
-if [ "$#" -ne 1 ]; then
-    echo "Error: Must pass in backend (make, ninja)"
-    exit 1
-fi
-
-BACKEND=$1
+BACKEND=${1:-make}
 
 DC="${DC:-dmd}"
 
@@ -26,9 +20,6 @@ dub build --compiler="$DC"
 
 cd bin || exit 1
 
-# See https://github.com/atilaneves/reggae/issues/83
-if [[ "$DC" == "dmd" ]]; then
-    echo "Running boostrapped reggae with backend $BACKEND"
-    ./reggae -b "$BACKEND" --dc="$DC" ..
-    $BACKEND -j"$NUM_PROC"
-fi
+echo "Running bootstrapped reggae with backend $BACKEND"
+./reggae -b "$BACKEND" --dc="$DC" ..
+$BACKEND -j"$NUM_PROC"

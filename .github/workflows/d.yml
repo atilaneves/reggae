@@ -54,3 +54,23 @@ jobs:
             echo.
             dub -q test -- -s ~@tup ~@make ~@posix ~@javascript ~@lua ~@python ~@ruby || exit /b
           )
+
+  bootstrap:
+    name: Bootstrap
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        dc: [dmd-latest, ldc-beta]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install D compiler
+        uses: dlang-community/setup-dlang@v1.0.5
+        with:
+          compiler: ${{ matrix.dc }}
+      - name: Bootstrap with DC=${{ env.DC }}
+        run: ./bootstrap.sh
+      - name: Bootstrap with DC=ldmd2
+        if: matrix.dc == 'ldc-beta'
+        run: DC=ldmd2 ./bootstrap.sh

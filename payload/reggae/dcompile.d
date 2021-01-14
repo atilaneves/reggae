@@ -13,8 +13,7 @@ version(ReggaeTest) {}
 else {
     int main(string[] args) {
         try {
-            dcompile(args);
-            return 0;
+            return dcompile(args);
         } catch(Exception ex) {
             stderr.writeln(ex.msg);
             return 1;
@@ -25,7 +24,7 @@ else {
 /**
 Only exists in order to get dependencies for each compilation step.
  */
-private void dcompile(string[] args) {
+private int dcompile(string[] args) {
 
     string depFile, objFile;
     auto helpInfo = getopt(
@@ -40,14 +39,19 @@ private void dcompile(string[] args) {
 
     const compArgs = compilerArgs(args, objFile);
     const fewerArgs = compArgs[0..$-1]; //non-verbose
-    const compRes = execute(compArgs);
-    enforce(compRes.status == 0,
-            text("Could not compile with args:\n", fewerArgs.join(" "), "\n",
-                 execute(fewerArgs).output));
+
+    // pass through stderr, capture stdout with -v output
+    const compRes = execute(compArgs, /*env=*/null, Config.stderrPassThrough);
+    if (compRes.status != 0) {
+        stderr.writeln("Could not compile with args:\n", fewerArgs.join(" "));
+        return compRes.status;
+    }
 
     auto file = File(depFile, "w");
     file.write(dependenciesToFile(objFile, dMainDependencies(compRes.output)).join("\n"));
     file.writeln;
+
+    return 0;
 }
 
 

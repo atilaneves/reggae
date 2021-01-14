@@ -134,21 +134,20 @@ private string[] mapToGdcOptions(in string[] compArgs) @safe pure {
 
 //takes a dmd command line and maps arguments to ldc2 ones
 private string[] mapToLdcOptions(in string[] compArgs) @safe pure {
-    string[string] options = [
-        "-m32mscoff": "-m32",
-        "-version": "-d-version",
-        "-debug": "-d-debug",
-        "-fPIC": "-relocation-model=pic",
-        "-gs": "-frame-pointer=all",
-        "-inline": "-enable-inlining",
-        "-profile": "-fdmd-trace-functions",
-    ];
-
     string doMap(string a) {
-        foreach(k, v; options) {
-            if(a.startsWith(k)) a = a.replace(k, v);
+        switch (a) {
+            case "-m32mscoff": return "-m32";
+            case "-fPIC":      return "-relocation-model=pic";
+            case "-gs":        return "-frame-pointer=all";
+            case "-inline":    return "-enable-inlining";
+            case "-profile":   return "-fdmd-trace-functions";
+            default:
+                if (a.startsWith("-version="))
+                    return "-d-version=" ~ a[9 .. $];
+                if (a.startsWith("-debug"))
+                    return "-d-debug" ~ a[6 .. $];
+                return a;
         }
-        return a;
     }
 
     return compArgs.map!doMap.array;

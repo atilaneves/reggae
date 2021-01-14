@@ -7,6 +7,7 @@
 module reggae.rules.dub;
 
 import reggae.config;
+import reggae.path: buildPath;
 
 enum CompilationMode {
     module_,  /// compile per module
@@ -175,7 +176,6 @@ static if(isDubProject) {
         import reggae.rules.common: staticLibraryTarget, link;
         import reggae.dub.info: DubObjsDir;
         import std.array: join;
-        import std.path: buildPath;
         import std.file: getcwd;
 
         const isStaticLibrary =
@@ -338,7 +338,6 @@ static if(isDubProject) {
     }
 
     private string realName(in TargetName targetName, in DubInfo dubInfo) {
-        import std.path: buildPath;
         // otherwise the target wouldn't be top-level in the presence of
         // postBuildCommands
         auto ret =  dubInfo.postBuildCommands == ""

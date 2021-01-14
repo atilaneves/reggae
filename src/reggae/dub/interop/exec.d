@@ -11,11 +11,11 @@ package string callDub(T)(
     from!"std.typecons".Flag!"maybeNoDeps" maybeNoDeps = from!"std.typecons".No.maybeNoDeps)
 {
     import reggae.io: log;
+    import reggae.path: buildPath;
     import std.process: execute, Config;
     import std.exception: enforce;
     import std.conv: text;
     import std.string: join, split;
-    import std.path: buildPath;
     import std.file: exists;
 
     const hasSelections = buildPath(options.projectPath, "dub.selections.json").exists;

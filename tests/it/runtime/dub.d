@@ -3,8 +3,7 @@ module tests.it.runtime.dub;
 
 import tests.it.runtime;
 import reggae.reggae;
-import reggae.path: deabsolutePath;
-import std.path: buildPath;
+import reggae.path: buildPath, deabsolutePath, dubPackagesDir;
 
 
 @("noreggaefile.ninja")
@@ -71,9 +70,8 @@ unittest {
 
     import std.file: exists, rmdirRecurse;
     import std.process: environment;
-    import std.path: buildPath;
 
-    const cerealedDir = buildPath(environment["HOME"], ".dub/packages/cerealed-0.6.8");
+    const cerealedDir = buildPath(dubPackagesDir(), "cerealed-0.6.8");
     if(cerealedDir.exists)
         rmdirRecurse(cerealedDir);
 
@@ -96,7 +94,6 @@ unittest {
 @Tags(["dub", "ninja"])
 unittest {
     import std.file: mkdirRecurse;
-    import std.path: buildPath;
 
     with(immutable ReggaeSandbox()) {
         writeFile("dub.json", `
@@ -127,7 +124,6 @@ unittest {
 unittest {
 
     import std.process: execute;
-    import std.path: buildPath;
 
     with(immutable ReggaeSandbox("dub")) {
         runReggae("-b", "make");
@@ -210,6 +206,8 @@ unittest {
     }
 }
 
+version(Windows) version(DigitalMars) version = Windows_DMD;
+
 @("object source files.simple")
 @Tags(["dub", "ninja"])
 unittest {
@@ -230,7 +228,8 @@ unittest {
         });
         writeFile("bar/dub.sdl", `
             name "bar"
-            sourceFiles "../baz.o"
+            sourceFiles "../baz.o" platform="posix"
+            sourceFiles "../baz.obj" platform="windows"
         `);
         writeFile("bar/source/bar.d", q{
             module bar;
@@ -241,7 +240,11 @@ unittest {
             extern(C) int lebaz() { return 42; }
         });
 
-        ["dmd", "-c", "baz.d"].shouldExecuteOk;
+        version(Windows_DMD)
+            ["dmd", "-m32mscoff", "-c", "baz.d"].shouldExecuteOk;
+        else
+            ["dmd", "-c", "baz.d"].shouldExecuteOk;
+
         runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
     }
@@ -284,13 +287,12 @@ unittest {
         writelnUt(output);
         ninja.shouldExecuteOk;
 
-        import std.path: buildPath;
         shouldExist(buildPath("objsdir",
                               testPath.deabsolutePath,
-                              "foo.objs",
+                              "foo" ~ exeExt ~ ".objs",
                               testPath.deabsolutePath,
                               "bar",
-                              "source_bar.o"));
+                              "source_bar" ~ objExt));
     }
 }
 
@@ -325,13 +327,12 @@ unittest {
 
         ninja.shouldExecuteOk;
 
-        import std.path: buildPath;
-        const dubNullDir = buildPath(dubPackagesDir, "dubnull-0.0.1", "dubnull").deabsolutePath;
+        const dubNullDir = buildPath(dubPackagesDir, "dubnull-0.0.1/dubnull").deabsolutePath;
         shouldExist(buildPath("objsdir",
                               testPath.deabsolutePath,
-                              "foo.objs",
+                              "foo" ~ exeExt ~ ".objs",
                               dubNullDir,
-                              "source_dubnull.o"));
+                              "source_dubnull" ~ objExt));
     }
 }
 
@@ -356,7 +357,8 @@ unittest {
         });
         writeFile("bar/dub.sdl", `
             name "bar"
-            sourceFiles "../baz.o"
+            sourceFiles "../baz.o" platform="posix"
+            sourceFiles "../baz.obj" platform="windows"
         `);
         writeFile("bar/source/bar.d", q{
             module bar;
@@ -367,7 +369,11 @@ unittest {
             extern(C) int lebaz() { return 42; }
         });
 
-        ["dmd", "-c", "baz.d"].shouldExecuteOk;
+        version(Windows_DMD) {
+            ["dmd", "-m32mscoff", "-c", "baz.d"].shouldExecuteOk;
+        } else {
+            ["dmd", "-c", "baz.d"].shouldExecuteOk;
+        }
 
         const output = runReggae("-b", "ninja", "--dub-objs-dir=" ~ testPath);
         writelnUt(output);
@@ -381,11 +387,9 @@ unittest {
 @Tags(["dub", "ninja"])
 unittest {
 
-    import std.path;
-
     with(immutable ReggaeSandbox("dub_depends_on_prebuild")) {
 
-        copyProject("dub_prebuild", buildPath("..", "dub_prebuild"));
+        copyProject("dub_prebuild", buildPath("../dub_prebuild"));
 
         runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
@@ -395,9 +399,8 @@ unittest {
 }
 
 
-// See #73 for "posix"
 @("staticLibrary.implicit")
-@Tags(["dub", "ninja", "posix"])
+@Tags(["dub", "ninja"])
 unittest {
 
     with(immutable ReggaeSandbox()) {
@@ -480,7 +483,12 @@ unittest {
     with(immutable ReggaeSandbox("dub_prebuild_oops")) {
         auto thrownInfo = runReggae("-b", "ninja").shouldThrow;
         "Error calling foo bar baz quux:".should.be in thrownInfo.msg;
-        "not found".should.be in thrownInfo.msg;
+        version(Windows) {
+            enum expectedDetail = "'foo' is not recognized as an internal or external command";
+        } else {
+            enum expectedDetail = "not found";
+        }
+        expectedDetail.should.be in thrownInfo.msg;
     }
 }
 
@@ -493,7 +501,8 @@ unittest {
             name "foo"
             targetType "executable"
             libs "utils"
-            lflags "-L$PACKAGE_DIR"
+            lflags "-L$PACKAGE_DIR" platform="posix"
+            lflags "/LIBPATH:$PACKAGE_DIR" platform="windows"
 
             configuration "executable" {
             }
@@ -523,8 +532,13 @@ unittest {
                   });
 
         writeFile("utils.c", "int twice(int i) { return i * 2; }");
-        shouldExecuteOk(["gcc", "-o", inSandboxPath("utils.o"), "-c", inSandboxPath("utils.c")]);
-        shouldExecuteOk(["ar", "rcs", inSandboxPath("libutils.a"), inSandboxPath("utils.o")]);
+        version(Windows) {
+            shouldExecuteOk(["cl.exe", "/Fo" ~ inSandboxPath("utils.obj"), "/c", inSandboxPath("utils.c")]);
+            shouldExecuteOk(["lib.exe", "/OUT:" ~ inSandboxPath("utils.lib"), inSandboxPath("utils.obj")]);
+        } else {
+            shouldExecuteOk(["gcc", "-o", inSandboxPath("utils.o"), "-c", inSandboxPath("utils.c")]);
+            shouldExecuteOk(["ar", "rcs", inSandboxPath("libutils.a"), inSandboxPath("utils.o")]);
+        }
 
         runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
@@ -540,8 +554,9 @@ unittest {
         writeFile("dub.sdl", `
             name "foo"
             targetType "executable"
-            libs "utils" platform="posix"
-            lflags "-L$PACKAGE_DIR"
+            libs "utils"
+            lflags "-L$PACKAGE_DIR" platform="posix"
+            lflags "/LIBPATH:$PACKAGE_DIR" platform="windows"
 
             configuration "executable" {
             }
@@ -571,8 +586,13 @@ unittest {
                   });
 
         writeFile("utils.c", "int twice(int i) { return i * 2; }");
-        shouldExecuteOk(["gcc", "-o", inSandboxPath("utils.o"), "-c", inSandboxPath("utils.c")]);
-        shouldExecuteOk(["ar", "rcs", inSandboxPath("libutils.a"), inSandboxPath("utils.o")]);
+        version(Windows) {
+            shouldExecuteOk(["cl.exe", "/Fo" ~ inSandboxPath("utils.obj"), "/c", inSandboxPath("utils.c")]);
+            shouldExecuteOk(["lib.exe", "/OUT:" ~ inSandboxPath("utils.lib"), inSandboxPath("utils.obj")]);
+        } else {
+            shouldExecuteOk(["gcc", "-o", inSandboxPath("utils.o"), "-c", inSandboxPath("utils.c")]);
+            shouldExecuteOk(["ar", "rcs", inSandboxPath("libutils.a"), inSandboxPath("utils.o")]);
+        }
 
         runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
@@ -609,7 +629,8 @@ unittest {
         writeFile("bar/dub.sdl", `
             name "bar"
             targetType "library"
-            lflags "-L$PACKAGE_DIR"
+            lflags "-L$PACKAGE_DIR" platform="posix"
+            lflags "/LIBPATH:$PACKAGE_DIR" platform="windows"
             libs "utils"
         `);
 
@@ -621,8 +642,13 @@ unittest {
         );
 
         writeFile("bar/utils.c", "int twice(int i) { return i * 2; }");
-        shouldExecuteOk(["gcc", "-o", inSandboxPath("bar/utils.o"), "-c", inSandboxPath("bar/utils.c")]);
-        shouldExecuteOk(["ar", "rcs", inSandboxPath("bar/libutils.a"), inSandboxPath("bar/utils.o")]);
+        version(Windows) {
+            shouldExecuteOk(["cl.exe", "/Fo" ~ inSandboxPath("bar/utils.obj"), "/c", inSandboxPath("bar/utils.c")]);
+            shouldExecuteOk(["lib.exe", "/OUT:" ~ inSandboxPath("bar/utils.lib"), inSandboxPath("bar/utils.obj")]);
+        } else {
+            shouldExecuteOk(["gcc", "-o", inSandboxPath("bar/utils.o"), "-c", inSandboxPath("bar/utils.c")]);
+            shouldExecuteOk(["ar", "rcs", inSandboxPath("bar/libutils.a"), inSandboxPath("bar/utils.o")]);
+        }
 
         runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
@@ -776,8 +802,7 @@ unittest {
         const buildLines = ninja.shouldExecuteOk;
         const firstLine = buildLines[0];
         "-release ".should.be in firstLine;
-        "-O ".should.be in firstLine;
-        "-inline ".should.be in firstLine;
+        "-O".should.be in firstLine;
     }
 
 }

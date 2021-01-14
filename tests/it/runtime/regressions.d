@@ -3,11 +3,10 @@ module tests.it.runtime.regressions;
 
 import tests.it.runtime;
 import reggae.reggae;
-import std.path;
 
 
 @("Issue 14: builddir not expanded")
-@Tags(["ninja", "regressions"])
+@Tags(["ninja", "regressions", "posix"])
 unittest {
 
     with(immutable ReggaeSandbox()) {
@@ -48,7 +47,7 @@ unittest {
             void main(string[] args) {
                 auto inFileName = args[1];
                 auto outFileName = args[2];
-                auto lines = File(inFileName).byLine.
+                auto lines = File(inFileName, `r`).byLine.
                     map!(a => a.to!string).
                     map!(a => a ~ ` ` ~ a);
                 auto outFile = File(outFileName, `w`);
@@ -72,7 +71,7 @@ unittest {
 @("Issue 10: dubConfigurationTarget doesn't work for unittest builds")
 @Tags(["ninja", "regressions"])
 unittest {
-    import std.path;
+    import reggae.path: buildPath;
     import std.file;
 
     with(immutable ReggaeSandbox()) {
@@ -94,12 +93,12 @@ unittest {
         });
 
         mkdir(buildPath(testPath, "source"));
-        writeFile(buildPath("source", "src.d"), q{
+        writeFile(buildPath("source/src.d"), q{
             unittest { static assert(false, `oopsie`); }
             int add(int i, int j) { return i + j; }
         });
 
-        writeFile(buildPath("source", "main.d"), q{
+        writeFile(buildPath("source/main.d"), q{
             import src;
             void main() {}
         });

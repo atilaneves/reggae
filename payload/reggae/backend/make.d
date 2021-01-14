@@ -28,7 +28,7 @@ struct Makefile {
         import std.array: join;
 
         auto ret = banner;
-        ret ~= text("all: ", build.defaultTargetsString(options.projectPath), "\n");
+        ret ~= text("all: ", build.defaultTargetsOutputs(options.projectPath).join(" "), "\n");
         ret ~= ".SUFFIXES:\n"; //disable default rules
         ret ~= options.compilerVariables.join("\n") ~ "\n";
 
@@ -92,7 +92,7 @@ struct Makefile {
 
     void writeBuild() @safe {
         import std.stdio: File;
-        import std.path: buildPath;
+        import reggae.path: buildPath;
 
         auto output = output();
         auto file = File(buildPath(options.workingDir, fileName), "w");

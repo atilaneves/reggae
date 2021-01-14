@@ -63,7 +63,7 @@ private string ensureDubSelectionsJson
 {
     import reggae.dub.interop.exec: callDub, dubEnvArgs;
     import reggae.io: log;
-    import std.path: buildPath;
+    import reggae.path: buildPath;
     import std.file: exists;
     import std.exception: enforce;
 
@@ -90,9 +90,9 @@ private from!"reggae.dub.info".DubInfo getDubInfo
 {
     import reggae.dub.interop: gDubInfos;
     import reggae.io: log;
+    import reggae.path: buildPath;
     import std.array: empty;
     import std.file: exists;
-    import std.path: buildPath;
     import std.conv: text;
     import std.exception: enforce;
 

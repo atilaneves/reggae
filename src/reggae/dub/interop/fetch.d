@@ -67,8 +67,7 @@ private bool needDubFetch(
 // dub fetch can sometimes take >10s (!) despite the package already being
 // on disk
 private bool pkgExistsOnFS(in VersionedPackage pkg) @safe {
-    import reggae.path: dubPackagesDir;
-    import std.path: buildPath;
+    import reggae.path: buildPath, dubPackagesDir;
     import std.file: exists;
     import std.string: replace;
 

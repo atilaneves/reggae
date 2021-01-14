@@ -16,6 +16,7 @@ import reggae.options;
 import reggae.types;
 import reggae.backend;
 import reggae.reflect;
+import reggae.path: buildPath;
 
 import std.stdio;
 import std.file: timeLastModified;
@@ -58,7 +59,6 @@ void doBuildFor(alias module_ = "reggaefile")(in Options options, string[] args 
 // calls the build function or loads it from the cache and returns
 // the Build object
 Build getBuildObject(alias module_)(in Options options) {
-    import std.path;
     import std.file;
 
     immutable cacheFileName = buildPath(".reggae", "cache");
@@ -146,10 +146,12 @@ void writeCompilationDB(Build build, in Options options) {
     import std.conv;
     import std.algorithm;
     import std.string;
-    import std.path;
+    import std.path: dirSeparator;
 
     auto file = File(buildPath(options.workingDir, "compile_commands.json"), "w");
     file.writeln("[");
+
+    enum objPathPrefix = "objs" ~ dirSeparator;
 
     immutable cwd = getcwd;
     string entry(Target target) {
@@ -157,7 +159,7 @@ void writeCompilationDB(Build build, in Options options) {
             .shellCommand(options)
             .replace(`"`, `\"`)
             .split(" ")
-            .map!(a => a.startsWith("objs/") ? buildPath(options.workingDir, a) : a)
+            .map!(a => a.startsWith(objPathPrefix) ? buildPath(options.workingDir, a) : a)
             .join(" ")
         ;
         return

@@ -12,7 +12,7 @@ string[] dMainDepSrcs()(in string output) {
 
     string[] dependencies;
     auto importReg = regex(`^import +([^\t]+)[\t\s]+\((.+)\)$`);
-    auto stdlibReg = regex(`^(std\.|core\.|etc\.|object$)`);
+    auto stdlibReg = regex(`^(std\.|core\.|etc\.|ldc\.|object$)`);
 
     foreach(line; output.splitLines) {
         auto importMatch = line.matchFirst(importReg);

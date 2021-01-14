@@ -3,9 +3,9 @@ module reggae.rules.common;
 
 import reggae.build;
 import reggae.ctaa;
+import reggae.path: buildPath;
 import reggae.types;
 import std.algorithm;
-import std.path;
 import std.array: array;
 import std.traits;
 import std.typecons;
@@ -128,10 +128,7 @@ Target[] staticLibrary(string name,
     ()
 {
 
-    version(Posix)
-        return staticLibraryTarget(name, objectFiles!(sourcesFunc, flags, includes, stringImports)() ~ dependenciesFunc());
-    else
-        throw new Exception("Can only create static libraries on Posix");
+    return staticLibraryTarget(name, objectFiles!(sourcesFunc, flags, includes, stringImports)() ~ dependenciesFunc());
 }
 
 /**
@@ -207,7 +204,7 @@ auto sourcesToTargets(alias sourcesFunc = Sources!())() {
 string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
     import std.exception: enforce;
     import std.file;
-    import std.path: buildNormalizedPath, buildPath;
+    import std.path: buildNormalizedPath;
     import std.array: array;
     import std.traits: isCallable;
     import reggae.config: options;
@@ -245,7 +242,7 @@ string[] sourcesToFileNames(in string projectPath,
 
     import std.exception: enforce;
     import std.file;
-    import std.path: buildNormalizedPath, buildPath;
+    import std.path: absolutePath, buildNormalizedPath, dirName;
     import std.array: array;
     import std.traits: isCallable;
 
@@ -300,14 +297,10 @@ Target[] staticLibrary(in string projectPath,
                        in string[] includes,
                        in string[] stringImports) @trusted {
 
-
-    version(Posix)
-        return staticLibraryTarget(
-            name,
-            objectFiles(projectPath, srcDirs, excDirs, srcFiles, excFiles, flags, includes, stringImports)
-        );
-    else
-        throw new Exception("Can only create static libraries on Posix");
+    return staticLibraryTarget(
+        name,
+        objectFiles(projectPath, srcDirs, excDirs, srcFiles, excFiles, flags, includes, stringImports)
+    );
 }
 
 Target[] staticLibraryTarget(in string name, Target[] objects) @safe pure {
@@ -321,7 +314,10 @@ Target[] staticLibraryTarget(in string name, Target[] objects) @safe pure {
     return [target];
 }
 
-private enum staticLibraryShellCommand = "ar rcs $out $in";
+version(Windows)
+    private enum staticLibraryShellCommand = "lib.exe /OUT:$out $in";
+else
+    private enum staticLibraryShellCommand = "ar rcs $out $in";
 
 private Target[] srcFilesToObjectTargets(in string[] srcFiles,
                                          in Flags flags,
@@ -357,11 +353,12 @@ string libFileName(in string srcFileName) @safe pure {
 
 
 string extFileName(in string srcFileName, in string extension) @safe pure {
-    import reggae.path: deabsolutePath;
+    import reggae.path: buildPath, deabsolutePath;
     import std.path: stripExtension;
     import std.array: replace;
 
     auto tmp = srcFileName
+        .buildPath
         .deabsolutePath
         .stripExtension
         ;
@@ -396,7 +393,7 @@ Command compileCommand(in string srcFileName,
 
     string maybeExpand(string path) {
         return path.startsWith(gBuilddir)
-            ? expandBuildDir(path)
+            ? buildPath(expandBuildDir(path))
             : buildPath(projDir, path);
     }
 
@@ -428,6 +425,8 @@ enum Language {
 }
 
 Language getLanguage(in string srcFileName) @safe pure nothrow {
+    import std.path: extension;
+
     switch(srcFileName.extension) with(Language) {
     case ".d":
         return D;

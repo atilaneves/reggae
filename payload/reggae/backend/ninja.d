@@ -40,34 +40,29 @@ struct NinjaEntry {
     string[] paramLines;
     string toString() @safe pure nothrow const {
 
-        // ninja freaks out if there's a Windows drive in the path
-        // because of the colon
-        string noDrive(string path) {
-            version(Posix)
-                return path;
-            else {
-                import std.string: replace;
-                import std.algorithm: canFind;
-
-                foreach(c; 'A' .. 'Z' + 1) {
-                    const drive = cast(char)c ~ `:\`;
-                    if(path.canFind(drive)) return path.replace(drive, `\`);
-                }
-                return path;
-            }
-        }
-
         import std.array: join;
         import std.range: chain, only;
         import std.algorithm.iteration: map;
 
-        return chain(only(mainLine), paramLines.map!(a => "  " ~ noDrive(a))).join("\n");
+        return chain(only(mainLine), paramLines.map!(a => "  " ~ a)).join("\n");
     }
 }
 
 private string escapeEnvVars(in string line) @safe pure nothrow {
     import std.string: replace;
     return line.replace("$", "$$");
+}
+
+// Windows: C:\foo => C$:\foo
+private string escapeDriveInPath(in string path) @safe pure nothrow {
+    version(Windows)
+    {
+        return (path.length >= 2 && path[1] == ':')
+            ? path[0] ~ "$" ~ path[1..$]
+            : path;
+    }
+    else
+        return path;
 }
 
 
@@ -84,7 +79,17 @@ NinjaEntry[] defaultRules(in Options options) @safe pure {
 
     NinjaEntry createNinjaEntry(in CommandType type, in Language language) @safe pure {
         string[] paramLines = ["command = " ~ Command.builtinTemplate(type, language, options)];
-        if(hasDepFile(type)) paramLines ~= ["deps = gcc", "depfile = $out.dep"];
+        if(hasDepFile(type)) {
+            version(Windows)
+                const isMSVC = language == Language.C || language == Language.Cplusplus;
+            else
+                enum isMSVC = false;
+
+            if (isMSVC)
+                paramLines ~= "deps = msvc";
+            else
+                paramLines ~= ["deps = gcc", "depfile = $out.dep"];
+        }
         return NinjaEntry("rule " ~ cmdTypeToNinjaString(type, language), paramLines);
     }
 
@@ -133,11 +138,10 @@ struct Ninja {
 
     //includes rerunning reggae
     const(NinjaEntry)[] allBuildEntries() @safe {
-        import std.path: stripDrive;
         import std.algorithm.iteration: map;
         import std.array: join;
 
-        immutable files = _options.reggaeFileDependencies.map!stripDrive.join(" ");
+        immutable files = _options.reggaeFileDependencies.map!escapeDriveInPath.join(" ");
         auto paramLines = _options.oldNinja ? [] : ["pool = console"];
 
         const(NinjaEntry)[] rerunEntries() {
@@ -146,7 +150,9 @@ struct Ninja {
                                                        paramLines)];
         }
 
-        return buildEntries ~ rerunEntries ~ NinjaEntry("default " ~ _build.defaultTargetsString(_projectPath));
+        const defaultEntry = NinjaEntry("default " ~ _build.defaultTargetsOutputs(_projectPath).map!escapeDriveInPath.join(" "));
+
+        return buildEntries ~ rerunEntries ~ defaultEntry;
     }
 
     //includes rerunning reggae
@@ -171,8 +177,8 @@ struct Ninja {
     }
 
     void writeBuild() @safe {
-        import std.stdio;
-        import std.path;
+        import std.stdio: File;
+        import reggae.path: buildPath;
 
         auto buildNinja = File(buildPath(_options.workingDir, "build.ninja"), "w");
         buildNinja.writeln(buildOutput);
@@ -208,15 +214,19 @@ private:
     }
 
     void phonyRule(Target target) @safe {
+        import std.algorithm.iteration: map;
         import std.array: join, empty;
 
         //no projectPath for phony rules since they don't generate output
-        immutable outputs = target.expandOutputs("").join(" ");
-        auto buildLine = "build " ~ outputs ~ ": _phony " ~ targetDependencies(target);
-        if(!target.implicitTargets.empty) buildLine ~= " | " ~ target.implicitsInProjectPath(_projectPath).join(" ");
+        immutable outputs = target.expandOutputs("").map!escapeDriveInPath.join(" ");
+        immutable cmd = target.shellCommand(_options);
+        auto buildLine = "build " ~ outputs ~ ": " ~ (cmd is null ? "phony" : "_phony") ~ " " ~ targetDependencies(target);
+        if(!target.implicitTargets.empty)
+            buildLine ~= " | " ~ target.implicitsInProjectPath(_projectPath).map!escapeDriveInPath.join(" ");
         buildEntries ~= NinjaEntry(buildLine,
-                                   ["cmd = " ~ target.shellCommand(_options),
-                                    "pool = console"]);
+                                   cmd is null
+                                   ? ["pool = console"]
+                                   : ["cmd = " ~ cmd, "pool = console"]);
     }
 
     void customRule(Target target) @safe {
@@ -240,6 +250,7 @@ private:
 
     void explicitInOutRule(Target target, in string shellCommand, in string implicitInput = "") @safe {
         import std.regex: regex, match;
+        import std.algorithm.iteration: map;
         import std.array: empty, join;
         import std.string: strip;
         import std.conv: text;
@@ -273,7 +284,8 @@ private:
             : implicitInput;
 
         auto buildLine = buildLine(target) ~ ruleName ~ " " ~ deps;
-        if(!target.implicitTargets.empty) buildLine ~= " | " ~  target.implicitsInProjectPath(_projectPath).join(" ");
+        if(!target.implicitTargets.empty)
+            buildLine ~= " | " ~  target.implicitsInProjectPath(_projectPath).map!escapeDriveInPath.join(" ");
 
         string[] buildParamLines;
         if(!before.empty)  buildParamLines ~= "before = "  ~ before;
@@ -397,19 +409,9 @@ private:
         import std.algorithm.iteration: map;
         import std.array: join;
 
-        string fix(string path) {
-            version(Windows) {
-                import std.path: isRooted;
-                return path.isRooted && path.length >=2 && path[1] == ':'
-                    ? path[0] ~ "$:" ~ path[2..$]  // ninja doesn't like colons in the path
-                    : path;
-            } else
-                  return path;
-        }
-
         const outputs = target
             .expandOutputs(_projectPath)
-            .map!fix
+            .map!escapeDriveInPath
             .join(" ");
 
         return "build " ~ outputs ~ ": ";
@@ -431,11 +433,10 @@ private:
     }
 
     private string targetDependencies(in Target target) @safe pure const {
-        import std.path: stripDrive;
         import std.algorithm.iteration: map;
         import std.array: join;
 
-        return target.dependenciesInProjectPath(_projectPath).map!stripDrive.join(" ");
+        return target.dependenciesInProjectPath(_projectPath).map!escapeDriveInPath.join(" ");
     }
 
 }

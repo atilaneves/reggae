@@ -5,18 +5,52 @@ jobs:
   test:
     name: Dub Test
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        dc: [dmd-2.094.2]
+        os: [ubuntu-latest, windows-latest]
+        dc: [dmd-latest, ldc-beta]
 
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
-      - uses: seanmiddleditch/gha-setup-ninja@master
+      - name: Install ninja
+        uses: seanmiddleditch/gha-setup-ninja@master
       - name: Install D compiler
-        uses: dlang-community/setup-dlang@v1
+        uses: dlang-community/setup-dlang@v1.0.5
         with:
           compiler: ${{ matrix.dc }}
 
-      - name: Run tests
+      # Work around hardcoded `dmd` compiler in integration tests
+      - name: "LDC: Symlink dmd to ldmd2"
+        if: matrix.dc == 'ldc-beta'
+        shell: bash
+        run: |
+          set -ex
+          ldcBinDir=$(dirname $(which ldmd2))
+          if [[ '${{ runner.os }}' == 'Windows' ]]; then
+            cp $ldcBinDir/ldmd2.exe $ldcBinDir/dmd.exe
+          else
+            ln -s $ldcBinDir/ldmd2 $ldcBinDir/dmd
+          fi
+
+      - name: Run Linux tests
+        if: runner.os != 'Windows'
         run: dub -q test -- ~@tup ~@travis_oops
+
+      - name: Run Windows tests
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          set
+          :: set up MSVC environment - x64 for LDC, x86 for DMD
+          set MSVC_ARCH=x64
+          if "%DC%" == "dmd" set MSVC_ARCH=x86
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=%MSVC_ARCH% || exit /b
+          :: test
+          dub -q test -- ~@tup ~@make ~@posix ~@javascript ~@lua ~@python ~@ruby
+          if %ERRORLEVEL% NEQ 0 (
+            echo.
+            echo *** Retrying tests serially ***
+            echo.
+            dub -q test -- -s ~@tup ~@make ~@posix ~@javascript ~@lua ~@python ~@ruby || exit /b
+          )

@@ -22,8 +22,8 @@ private void createReggaefile(T)(auto ref T output,
                                  in from!"reggae.options".Options options)
 {
     import reggae.io: log;
+    import reggae.path: buildPath;
     import std.stdio: File;
-    import std.path: buildPath;
     import std.regex: regex, replaceFirst;
 
     output.log("Creating reggaefile.d from dub information");

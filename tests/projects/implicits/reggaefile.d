@@ -1,7 +1,7 @@
 module implicits.reggaefile;
 
 import reggae;
-enum mainObj = Target(`main.o`,
+enum mainObj = Target(`main` ~ objExt,
                       `dmd -c -J$project -of$out $in`,
                       [Target(`main.d`)],
                       [Target(`string.txt`)]);

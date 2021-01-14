@@ -10,7 +10,7 @@ import tests.it.runtime;
 unittest {
 
     import std.process: execute;
-    import std.path: buildPath;
+    import reggae.path: buildPath;
 
     with(immutable ReggaeSandbox("dub")) {
         runReggae("-b", "make", "--dflags=-g -debug");

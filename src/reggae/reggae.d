@@ -15,7 +15,7 @@ module reggae.reggae;
 import std.stdio;
 import std.process: execute, environment;
 import std.array: array, join, empty, split;
-import std.path: absolutePath, buildPath, relativePath;
+import std.path: absolutePath, relativePath;
 import std.typetuple;
 import std.file;
 import std.conv: text;
@@ -27,6 +27,7 @@ import reggae.options;
 import reggae.ctaa;
 import reggae.types;
 import reggae.file;
+import reggae.path: buildPath;
 
 
 version(minimal) {
@@ -169,14 +170,14 @@ private string[] getJsonOutputArgs(in Options options) @safe {
     case BuildLanguage.Ruby:
         return ["ruby", "-S",
                 "-I" ~ options.projectPath,
-                "-I" ~ buildPath(options.workingDir, hiddenDir, "src", "reggae"),
+                "-I" ~ buildPath(options.workingDir, hiddenDir, "src/reggae"),
                 "reggae_json_build.rb"];
 
     case BuildLanguage.Lua:
-        return ["lua", buildPath(options.workingDir, hiddenDir, "src", "reggae", "reggae_json_build.lua")];
+        return ["lua", buildPath(options.workingDir, hiddenDir, "src/reggae/reggae_json_build.lua")];
 
     case BuildLanguage.JavaScript:
-        return ["node", buildPath(options.workingDir, hiddenDir, "src", "reggae", "reggae_json_build.js")];
+        return ["node", buildPath(options.workingDir, hiddenDir, "src/reggae/reggae_json_build.js")];
     }
 }
 
@@ -254,11 +255,11 @@ struct Binary {
 
 private string compileBinaries(T)(auto ref T output, in Options options) {
 
-    import reggae.rules.common: objExt;
+    import reggae.rules.common: exeExt, objExt;
 
     buildDCompile(output, options);
 
-    immutable buildGenName = getBuildGenName(options);
+    immutable buildGenName = getBuildGenName(options) ~ exeExt;
     if(options.isScriptBuild) return buildGenName;
 
     const buildGenCmd = getCompileBuildGenCmd(options);
@@ -289,16 +290,20 @@ private string compileBinaries(T)(auto ref T output, in Options options) {
 }
 
 void buildDCompile(T)(auto ref T output, in Options options) {
-    if(!thisExePath.newerThan(buildPath(options.workingDir, hiddenDir, "dcompile")))
+    import reggae.rules.common : exeExt;
+
+    enum dcompileExe = "dcompile" ~ exeExt;
+
+    if(!thisExePath.newerThan(buildPath(options.workingDir, hiddenDir, dcompileExe)))
         return;
 
     immutable cmd = [options.dCompiler,
                      "-Isrc",
-                     "-ofdcompile",
+                     "-of" ~ dcompileExe,
                      buildPath(options.workingDir, hiddenDir, reggaeSrcRelDirName, "dcompile.d"),
                      buildPath(options.workingDir, hiddenDir, reggaeSrcRelDirName, "dependencies.d")];
 
-    buildBinary(output, options, Binary("dcompile", cmd));
+    buildBinary(output, options, Binary(dcompileExe, cmd));
 }
 
 private bool isExecutable(in char[] path) @trusted nothrow //TODO: @safe
@@ -351,10 +356,7 @@ private const(string)[] getCompileBuildGenCmd(in Options options) @safe {
     immutable buildBinFlags = options.backend == Backend.binary
         ? ["-O", "-inline"]
         : [];
-    version(Windows)
-        enum dcompile = "dcompile";
-    else
-        enum dcompile = "./dcompile";
+    enum dcompile = buildPath("./dcompile");
     const commonBefore = [dcompile,
                           "--objFile=" ~ "build" ~ objExt,
                           "--depFile=" ~ "reggaefile.dep",
@@ -377,11 +379,11 @@ private string[] importPaths(in Options options) @safe nothrow {
 }
 
 private string getBuildGenName(in Options options) @safe pure nothrow {
-    return options.backend == Backend.binary ? buildPath("..", "build") : "buildgen";
+    return options.backend == Backend.binary ? buildPath("../build") : "buildgen";
 }
 
 
-immutable reggaeSrcRelDirName = buildPath("src", "reggae");
+immutable reggaeSrcRelDirName = buildPath("src/reggae");
 
 string reggaeSrcDirName(in Options options) @safe pure nothrow {
     return buildPath(options.workingDir, hiddenDir, reggaeSrcRelDirName);
@@ -400,7 +402,7 @@ void writeSrcFiles(T)(auto ref T output, in Options options) {
         mkdirRecurse(buildPath(reggaeSrcDirName, "dub"));
         mkdirRecurse(buildPath(reggaeSrcDirName, "rules"));
         mkdirRecurse(buildPath(reggaeSrcDirName, "backend"));
-        mkdirRecurse(buildPath(reggaeSrcDirName, "core", "rules"));
+        mkdirRecurse(buildPath(reggaeSrcDirName, "core/rules"));
     }
 
     //this foreach has to happen at compile time due

@@ -7,6 +7,7 @@ import std.file;
 
 @("optional")
 @Flaky
+@AutoTags
 @Values("ninja", "make", "binary")
 unittest {
 

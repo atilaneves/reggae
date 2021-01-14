@@ -3,6 +3,7 @@ module tests.it.buildgen;
 
 public import tests.it;
 import tests.utils;
+import reggae.path: buildPath;
 
 
 private string projectToModule(in string project) {
@@ -36,7 +37,6 @@ void shouldBuild(string project)(string[] args = [],
 // returns the output
 auto shouldSucceed(string[] args, string file = __FILE__, size_t line = __LINE__) {
     import reggae.config;
-    import std.path;
     return shouldExecuteOk(buildPath(options.workingDir, args[0]) ~ args[1..$],
                            options, file, line);
 }
@@ -57,10 +57,10 @@ void shouldFail(T)(T args, string file = __FILE__, size_t line = __LINE__) {
 void shouldEqualLines(string fileName, string[] lines,
                       string file = __FILE__, size_t line = __LINE__) {
     import reggae.config;
+    import std.ascii: newline;
     import std.file: readText;
     import std.string: chomp, split;
-    import std.path: buildPath;
 
-    readText(buildPath(options.workingDir, fileName)).chomp.split("\n")
+    readText(buildPath(options.workingDir, fileName)).chomp.split(newline)
         .shouldEqual(lines, file, line);
 }

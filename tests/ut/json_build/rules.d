@@ -78,7 +78,11 @@ unittest {
     oldOptions.args = ["reggae", "-b", "ninja", "/path/to/my/project"];
     auto newOptions = jsonToOptions(oldOptions, parseJSON(linkJsonString));
     newOptions.cCompiler.shouldEqual("weirdcc");
-    newOptions.cppCompiler.shouldEqual("g++");
+    version(Windows)
+        enum expectedCxx = "cl.exe";
+    else
+        enum expectedCxx = "g++";
+    newOptions.cppCompiler.shouldEqual(expectedCxx);
 }
 
 private string toVersion1(in string jsonString, in string dependencies = `[]`) {
@@ -95,7 +99,11 @@ unittest {
     immutable jsonString = linkJsonString.toVersion1;
     auto newOptions = jsonToOptions(oldOptions, parseJSON(jsonString));
     newOptions.cCompiler.shouldEqual("huh");
-    newOptions.cppCompiler.shouldEqual("g++");
+    version(Windows)
+        enum expectedCxx = "cl.exe";
+    else
+        enum expectedCxx = "g++";
+    newOptions.cppCompiler.shouldEqual(expectedCxx);
     newOptions.oldNinja.shouldBeFalse;
 }
 
@@ -103,15 +111,20 @@ unittest {
 unittest {
     import std.json;
     import std.file;
-    import std.path;
+    import reggae.path: buildPath;
+
+    version(Windows)
+        enum projectPath = "C:/path/to/my/project";
+    else
+        enum projectPath = "/path/to/my/project";
 
     Options defaultOptions;
-    defaultOptions.args = ["reggae", "-b", "ninja", "/path/to/my/project"];
+    defaultOptions.args = ["reggae", "-b", "ninja", projectPath];
     immutable jsonString = linkJsonString.toVersion1(`["/path/to/foo.py", "/other/path/bar.py"]`);
     auto options = jsonToOptions(defaultOptions, parseJSON(jsonString));
     options.reggaeFileDependencies.shouldEqual(
         [thisExePath,
-         buildPath("/path/to/my/project", "reggaefile.d"),
+         buildPath(projectPath, "reggaefile.d"),
          "/path/to/foo.py",
          "/other/path/bar.py"]);
 }

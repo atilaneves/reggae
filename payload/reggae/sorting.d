@@ -28,7 +28,7 @@ private string filePackage(string path) @safe pure nothrow {
  */
 string packagePath(in string fileName) @safe pure {
     import std.algorithm: reduce;
-    import std.path: buildPath;
+    import reggae.path: buildPath;
     return fileName.packageParts.reduce!((a, b) => buildPath(a, b));
 }
 

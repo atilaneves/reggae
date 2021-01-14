@@ -3,6 +3,7 @@ module tests.ut.drules;
 
 import reggae;
 import reggae.options;
+import reggae.path: buildPath;
 import reggae.backend.ninja;
 import unit_threaded;
 import std.algorithm;
@@ -12,9 +13,10 @@ import std.array;
 void testDCompileNoIncludePathsNinja() {
     auto build = Build(objectFile(SourceFile("path/to/src/foo.d")));
     auto ninja = Ninja(build, "/tmp/myproject");
+    enum objPath = buildPath("path/to/src/foo" ~ objExt);
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build path/to/src/foo.o: _dcompile /tmp/myproject/path/to/src/foo.d",
-                    ["DEPFILE = path/to/src/foo.o.dep"])]);
+        [NinjaEntry("build " ~ objPath ~ ": _dcompile " ~ buildPath("/tmp/myproject/path/to/src/foo.d"),
+                    ["DEPFILE = " ~ objPath ~ ".dep"])]);
 }
 
 
@@ -23,11 +25,12 @@ void testDCompileIncludePathsNinja() {
                                    Flags("-O"),
                                    ImportPaths(["path/to/src", "other/path"])));
     auto ninja = Ninja(build, "/tmp/myproject");
+    enum objPath = buildPath("path/to/src/foo" ~ objExt);
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build path/to/src/foo.o: _dcompile /tmp/myproject/path/to/src/foo.d",
-                    ["includes = -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path",
+        [NinjaEntry("build " ~ objPath ~ ": _dcompile " ~ buildPath("/tmp/myproject/path/to/src/foo.d"),
+                    ["includes = -I" ~ buildPath("/tmp/myproject/path/to/src") ~ " -I" ~ buildPath("/tmp/myproject/other/path"),
                      "flags = -O",
-                     "DEPFILE = path/to/src/foo.o.dep"])]);
+                     "DEPFILE = " ~ objPath ~ ".dep"])]);
 }
 
 void testDCompileIncludePathsMake() {
@@ -36,7 +39,14 @@ void testDCompileIncludePathsMake() {
     auto build = Build(objectFile(SourceFile("path/to/src/foo.d"),
                                    Flags("-O"),
                                    ImportPaths(["path/to/src", "other/path"])));
-    build.targets.array[0].shellCommand(gDefaultOptions.withProjectPath("/tmp/myproject")).shouldEqual(".reggae/dcompile --objFile=path/to/src/foo.o --depFile=path/to/src/foo.o.dep dmd -O -I/tmp/myproject/path/to/src -I/tmp/myproject/other/path  /tmp/myproject/path/to/src/foo.d");
+    version(Windows)
+        enum defaultDCModel = " -m32mscoff";
+    else
+        enum defaultDCModel = null;
+    enum objPath = buildPath("path/to/src/foo" ~ objExt);
+    build.targets.array[0].shellCommand(gDefaultOptions.withProjectPath("/tmp/myproject")).shouldEqual(
+        buildPath(".reggae/dcompile") ~ " --objFile=" ~ objPath ~ " --depFile=" ~ objPath ~ ".dep dmd" ~ defaultDCModel ~ " -O " ~
+        "-I" ~ buildPath("/tmp/myproject/path/to/src") ~ " -I" ~ buildPath("/tmp/myproject/other/path") ~ "  " ~ buildPath("/tmp/myproject/path/to/src/foo.d"));
 }
 
 
@@ -66,13 +76,13 @@ unittest {
                                                   "/project/../../common/source/foo.d",
                                                   "/project/../../common/source/bar.d",
                                                  ]));
-    build.shouldEqual(Build(Target("project/source/main.o",
+    build.shouldEqual(Build(Target(buildPath("project/source/main" ~ objExt),
                                    compileCommand("/project/source/main.d"),
                                    Target("/project/source/main.d")),
-                            Target("project/__/__/common/source/foo.o",
+                            Target(buildPath("project/__/__/common/source/foo" ~ objExt),
                                    compileCommand("/project/../../common/source/foo.d"),
                                    Target("/project/../../common/source/foo.d")),
-                            Target("project/__/__/common/source/bar.o",
+                            Target(buildPath("project/__/__/common/source/bar" ~ objExt),
                                    compileCommand("/project/../../common/source/bar.d"),
                                    Target("/project/../../common/source/bar.d")),
                           ));

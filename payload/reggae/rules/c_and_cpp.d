@@ -1,6 +1,7 @@
 module reggae.rules.c_and_cpp;
 
 import reggae.build;
+import reggae.path: buildPath;
 import reggae.rules.common;
 import reggae.types;
 import std.range;
@@ -17,7 +18,6 @@ Target unityBuild(ExeName exeName,
                   alias dependenciesFunc = emptyTargets,
                   alias implicitsFunc = emptyTargets)() @trusted {
 
-    import std.path;
     import reggae.config: options;
 
     const srcFiles = sourcesToFileNames!(sourcesFunc);
@@ -44,7 +44,7 @@ Target unityBuild(ExeName exeName,
 string unityFileContents(in string projectPath, in string[] files) pure {
     import std.array;
     import std.algorithm;
-    import std.path;
+    import std.path: dirSeparator;
 
     if(files.empty)
         throw new Exception("Cannot perform a unity build with no files");
@@ -55,7 +55,7 @@ string unityFileContents(in string projectPath, in string[] files) pure {
         throw new Exception("Unity build can only be done if all files are C or C++");
 
 
-    return files.map!(a => `#include "` ~ buildPath(projectPath, a) ~ `"`).join("\n");
+    return files.map!(a => `#include "` ~ buildPath(projectPath, a).replace(dirSeparator, "/") ~ `"`).join("\n");
 }
 
 
@@ -85,7 +85,6 @@ Target unityTarget(R1, R2)(in ExeName exeName,
     pure if(isInputRange!R1 && is(ElementType!R1 == Target) && isInputRange!R2 && is(ElementType!R2 == Target)) {
 
     import std.algorithm;
-    import std.path;
 
     auto justFileName = srcFiles.map!getLanguage.front == Language.C ? "unity.c" : "unity.cpp";
     auto unityFileName = buildPath(gBuilddir, topLevelDirName(Target(exeName.value)), justFileName);

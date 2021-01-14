@@ -1,9 +1,10 @@
 module reggae.options;
 
 import reggae.types;
+import reggae.path: buildPath;
 
 import std.file: thisExePath;
-import std.path: absolutePath, buildPath;
+import std.path: absolutePath;
 import std.file: exists;
 
 enum version_ = "0.5.24+";
@@ -22,6 +23,14 @@ enum DubArchitecture {
     x86,
     x86_64,
     x86_mscoff,
+}
+
+version(Windows) {
+    enum defaultCC = "cl.exe";
+    enum defaultCXX = "cl.exe";
+} else {
+    enum defaultCC = "gcc";
+    enum defaultCXX = "g++";
 }
 
 struct Options {
@@ -51,7 +60,7 @@ struct Options {
 
 
     version(Windows)
-        DubArchitecture dubArch = DubArchitecture.x86;
+        DubArchitecture dubArch = DubArchitecture.x86_mscoff;
     else
         DubArchitecture dubArch = DubArchitecture.x86_64;
 
@@ -66,13 +75,12 @@ struct Options {
     //finished setup
     void finalize(string[] args) @safe {
         import std.process;
-        import std.path: buildPath;
 
         this.args = args;
         ranFromPath = thisExePath();
 
-        if(!cCompiler)   cCompiler   = environment.get("CC", "gcc");
-        if(!cppCompiler) cppCompiler = environment.get("CXX", "g++");
+        if(!cCompiler)   cCompiler   = environment.get("CC", defaultCC);
+        if(!cppCompiler) cppCompiler = environment.get("CXX", defaultCXX);
         if(!dCompiler)   dCompiler   = environment.get("DC", "dmd");
 
         isDubProject = _dubProjectFile != "";
@@ -165,7 +173,7 @@ struct Options {
 
     BuildLanguage reggaeFileLanguage(in string fileName) @safe const {
         import std.exception;
-        import std.path;
+        import std.path: extension;
 
         with(BuildLanguage) {
             immutable extToLang = [".d": D, ".py": Python, ".rb": Ruby, ".js": JavaScript, ".lua": Lua];
@@ -196,7 +204,7 @@ struct Options {
 
     string eraseProjectPath(in string str) @safe pure nothrow const {
         import std.string;
-        import std.path;
+        import std.path: dirSeparator;
         return str.replace(projectPath ~ dirSeparator, "");
     }
 }
@@ -210,7 +218,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
     import std.getopt;
     import std.algorithm;
     import std.array;
-    import std.path;
+    import std.path: buildNormalizedPath;
     import std.exception: enforce;
     import std.conv: ConvException;
 
@@ -226,8 +234,8 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             "dflags", "D compiler flags.", &options.dflags,
             "d", "User-defined variables (e.g. -d myvar=foo).", &options.userVars,
             "dc", "D compiler to use (default dmd).", &options.dCompiler,
-            "cc", "C compiler to use (default gcc).", &options.cCompiler,
-            "cxx", "C++ compiler to use (default g++).", &options.cppCompiler,
+            "cc", "C compiler to use (default " ~ defaultCC ~ ").", &options.cCompiler,
+            "cxx", "C++ compiler to use (default " ~ defaultCXX ~ ").", &options.cppCompiler,
             "per-module", "Compile D files per module (default is per package)", &options.perModule,
             "all-at-once", "Compile D files all at once (default is per package)", &options.allAtOnce,
             "old-ninja", "Generate a Ninja build compatible with older versions of Ninja", &options.oldNinja,

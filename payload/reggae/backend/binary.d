@@ -9,7 +9,6 @@ import std.algorithm;
 import std.range;
 import std.file: thisExePath, exists;
 import std.process: execute, executeShell;
-import std.path: absolutePath;
 import std.typecons: tuple;
 import std.exception;
 import std.stdio;
@@ -221,8 +220,8 @@ private:
 
     //Checks dependencies listed in the .dep file created by the compiler
     bool checkDeps(Target target, in string depFileName) @trusted {
-
-        auto file = File(depFileName);
+        // byLine splits at `\n`, so open Windows text files with CRLF line terminators in non-binary mode
+        auto file = File(depFileName, "r");
         auto lines = file.byLine.map!(a => a.to!string);
         auto dependencies = dependenciesFromFile(lines);
 

@@ -56,7 +56,7 @@ struct Tup {
         import std.file;
         import std.string;
         import std.stdio;
-        import std.path;
+        import reggae.path: buildPath;
         import std.process;
 
         if(!".tup".exists) {

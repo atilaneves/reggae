@@ -26,6 +26,25 @@ Only exists in order to get dependencies for each compilation step.
  */
 private int dcompile(string[] args) {
 
+    version(Windows) {
+        // expand any response files in args (`dcompile @file.rsp`)
+        import std.array: appender;
+        import std.file: readText;
+
+        auto expandedArgs = appender!(string[]);
+        expandedArgs.reserve(args.length);
+
+        foreach (arg; args) {
+            if (arg.length > 1 && arg[0] == '@') {
+                expandedArgs ~= parseResponseFile(readText(arg[1 .. $]));
+            } else {
+                expandedArgs ~= arg;
+            }
+        }
+
+        args = expandedArgs[];
+    }
+
     string depFile, objFile;
     auto helpInfo = getopt(
         args,
@@ -139,4 +158,53 @@ string[] dependenciesToFile(in string objFile, in string[] deps) @safe pure noth
         objFile ~ ": \\",
         deps.join(" "),
     ];
+}
+
+
+// Parses the arguments from the specified response file content.
+version(Windows)
+private string[] parseResponseFile(in string data) @safe pure {
+    import std.array: appender;
+    import std.ascii: isWhite;
+
+    auto args = appender!(string[]);
+    auto currentArg = appender!(char[]);
+    void pushArg() {
+        if (currentArg[].length > 0) {
+            args ~= currentArg[].idup;
+            currentArg.clear();
+        }
+    }
+
+    args.reserve(128);
+    currentArg.reserve(512);
+
+    char currentQuoteChar = 0;
+    foreach (char c; data) {
+        if (currentQuoteChar) {
+            // inside quoted arg
+            if (c != currentQuoteChar) {
+                currentArg ~= c;
+            } else {
+                auto a = currentArg[];
+                if (a.length > 0 && a[$-1] == '\\') {
+                    a[$-1] = c; // un-escape: \" => "
+                } else { // closing quote
+                    currentQuoteChar = 0;
+                }
+            }
+        } else if (isWhite(c)) {
+            pushArg();
+        } else if (currentArg[].length == 0 && (c == '"' || c == '\'')) {
+            // beginning of quoted arg
+            currentQuoteChar = c;
+        } else {
+            // inside unquoted arg
+            currentArg ~= c;
+        }
+    }
+
+    pushArg();
+
+    return args[];
 }

@@ -59,8 +59,7 @@ private int dcompile(string[] args) {
     const compArgs = compilerArgs(args, objFile);
     const fewerArgs = compArgs[0..$-1]; //non-verbose
 
-    // pass through stderr, capture stdout with -v output
-    const compRes = execute(compArgs, /*env=*/null, Config.stderrPassThrough);
+    const compRes = invokeCompiler(compArgs, objFile);
     if (compRes.status != 0) {
         stderr.writeln("Could not compile with args:\n", fewerArgs.join(" "));
         return compRes.status;
@@ -126,6 +125,33 @@ private string[] mapToLdcOptions(in string[] compArgs) @safe pure {
     }
 
     return compArgs.map!doMap.array;
+}
+
+
+private auto invokeCompiler(in string[] args, in string objFile) @safe {
+    version(Windows) {
+        static string quoteArgIfNeeded(string a) {
+            return !a.canFind(' ') ? a : `"` ~ a.replace(`"`, `\"`) ~ `"`;
+        }
+
+        const rspFileContent = args[1..$].map!quoteArgIfNeeded.join("\n");
+
+        // max command-line length (incl. args[0]) is ~32,767 on Windows
+        if (rspFileContent.length > 32_000) {
+            import std.file: mkdirRecurse, remove, write;
+            import std.path: dirName;
+
+            const rspFile = objFile ~ ".dcompile.rsp"; // Ninja uses `<objFile>.rsp`, don't collide
+            mkdirRecurse(dirName(rspFile));
+            write(rspFile, rspFileContent);
+            const res = execute([args[0], "@" ~ rspFile], /*env=*/null, Config.stderrPassThrough);
+            remove(rspFile);
+            return res;
+        }
+    }
+
+    // pass through stderr, capture stdout with -v output
+    return execute(args, /*env=*/null, Config.stderrPassThrough);
 }
 
 

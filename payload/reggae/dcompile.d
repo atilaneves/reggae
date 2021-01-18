@@ -37,7 +37,7 @@ private int dcompile(string[] args) {
     enforce(args.length >= 2, "Usage: dcompile --objFile <objFile> --depFile <depFile> <compiler> <compiler args>");
     enforce(!depFile.empty && !objFile.empty, "The --depFile and --objFile 'options' are mandatory");
 
-    const compArgs = compilerArgs(args, objFile);
+    const compArgs = compilerArgs(args[1 .. $], objFile);
     const fewerArgs = compArgs[0..$-1]; //non-verbose
 
     // pass through stderr, capture stdout with -v output
@@ -55,20 +55,69 @@ private int dcompile(string[] args) {
 }
 
 
-private string[] compilerArgs(string[] args, in string objFile) @safe pure {
-    auto compArgs = args[1 .. $] ~ ["-of" ~ objFile, "-c", "-v"];
+private string[] compilerArgs(string[] args, string objFile) @safe pure {
+    import std.path: absolutePath, baseName, dirName, stripExtension;
 
-    import std.path: baseName, stripExtension;
-    const compilerBinName = baseName(stripExtension(args[1]));
+    enum Compiler { dmd, gdc, ldc }
 
-    switch(compilerBinName) {
+    const compilerBinName = baseName(stripExtension(args[0]));
+    Compiler compiler = Compiler.dmd;
+    Compiler cli = Compiler.dmd;
+    switch (compilerBinName) {
         default:
-            return compArgs;
+            break;
+        case "gdmd":
+            compiler = Compiler.gdc;
+            break;
         case "gdc":
-            return mapToGdcOptions(compArgs);
+            compiler = Compiler.gdc;
+            cli = Compiler.gdc;
+            break;
+        case "ldmd":
+        case "ldmd2":
+            compiler = Compiler.ldc;
+            break;
         case "ldc":
         case "ldc2":
-            return mapToLdcOptions(compArgs);
+            compiler = Compiler.ldc;
+            cli = Compiler.ldc;
+            break;
+    }
+
+    if (compiler == Compiler.ldc && args.length > 1 && args[1] == "-lib") {
+        /* Unlike DMD, LDC does not write static libraries directly, but writes
+         * object files and archives them to a static lib.
+         * Make sure the temporary object files don't collide across parallel
+         * compiler invocations in the same working dir by placing the object
+         * files into the library's output directory via -od.
+         */
+        const od = "-od=" ~ dirName(objFile);
+
+        if (cli == Compiler.ldc) { // ldc2
+            // mimic ldmd2 - uniquely-name and remove the object files
+            args.insertInPlace(2, "-oq", "-cleanup-obj", od);
+
+            // dub adds `-od=.dub/obj`, remove it as it defeats our purpose
+            foreach (i; 5 .. args.length) {
+                if (args[i] == "-od=.dub/obj") {
+                    args = args[0 .. i] ~ args[i+1 .. $];
+                    break;
+                }
+            }
+        } else { // ldmd2
+            args.insertInPlace(2, od);
+            // As with dmd, -od may affect the final path of the static library
+            // (relative to -od) - make -of absolute to prevent this.
+            objFile = absolutePath(objFile);
+        }
+    }
+
+    args ~= ["-of" ~ objFile, "-c", "-v"];
+
+    final switch (cli) {
+        case Compiler.dmd: return args;
+        case Compiler.gdc: return mapToGdcOptions(args);
+        case Compiler.ldc: return mapToLdcOptions(args);
     }
 }
 
@@ -89,21 +138,20 @@ private string[] mapToGdcOptions(in string[] compArgs) @safe pure {
 
 //takes a dmd command line and maps arguments to ldc2 ones
 private string[] mapToLdcOptions(in string[] compArgs) @safe pure {
-    string[string] options = [
-        "-m32mscoff": "-m32",
-        "-version": "-d-version",
-        "-debug": "-d-debug",
-        "-fPIC": "-relocation-model=pic",
-        "-gs": "-frame-pointer=all",
-        "-inline": "-enable-inlining",
-        "-profile": "-fdmd-trace-functions",
-    ];
-
     string doMap(string a) {
-        foreach(k, v; options) {
-            if(a.startsWith(k)) a = a.replace(k, v);
+        switch (a) {
+            case "-m32mscoff": return "-m32";
+            case "-fPIC":      return "-relocation-model=pic";
+            case "-gs":        return "-frame-pointer=all";
+            case "-inline":    return "-enable-inlining";
+            case "-profile":   return "-fdmd-trace-functions";
+            default:
+                if (a.startsWith("-version="))
+                    return "-d-version=" ~ a[9 .. $];
+                if (a.startsWith("-debug"))
+                    return "-d-debug" ~ a[6 .. $];
+                return a;
         }
-        return a;
     }
 
     return compArgs.map!doMap.array;

@@ -165,16 +165,20 @@ private string[] mapToLdcOptions(in string[] compArgs) @safe pure {
  * compile.
  */
 string[] dMainDependencies(in string output) @safe {
-    import reggae.dependencies: dMainDepSrcs;
-    import std.regex: regex, matchFirst;
-    import std.string: splitLines;
+    import reggae.dependencies: tryExtractPathFromImportLine;
+    import std.string: indexOf, splitLines;
 
-    string[] dependencies = dMainDepSrcs(output);
-    auto fileReg = regex(`^file +([^\t]+)\t+\((.+)\)$`);
+    string[] dependencies;
 
     foreach(line; output.splitLines) {
-        auto fileMatch = line.matchFirst(fileReg);
-        if(fileMatch) dependencies ~= fileMatch.captures[2];
+        const importPath = tryExtractPathFromImportLine(line);
+        if (importPath !is null) {
+            dependencies ~= importPath;
+        } else if (line.startsWith("file ") && line[$-1] == ')') {
+            const i = line.indexOf('(');
+            if (i > 0)
+                dependencies ~= line[i+1 .. $-1];
+        }
     }
 
     return dependencies;

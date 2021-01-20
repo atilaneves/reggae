@@ -55,12 +55,26 @@ struct Dub {
         return _project.packageManager.getPackage(dubPackage, Version(version_));
     }
 
-    DubConfigurations getConfigs(in from!"reggae.options".Options options) {
+    static auto getGeneratorSettings(in Options options) {
+        import dub.compilers.compiler: getCompiler;
+        import dub.generators.generator: GeneratorSettings;
+        import std.path: baseName, stripExtension;
+
+        const compilerBinName = options.dCompiler.baseName.stripExtension;
+
+        GeneratorSettings ret;
+
+        ret.compiler = () @trusted { return getCompiler(compilerBinName); }();
+        ret.platform = () @trusted { return ret.compiler.determinePlatform(ret.buildSettings, options.dCompiler); }();
+        ret.buildType = options.dubBuildType;
+
+        return ret;
+    }
+
+    DubConfigurations getConfigs(/*in*/ ref from!"dub.platform".BuildPlatform platform) {
 
         import std.algorithm.iteration: filter, map;
         import std.array: array;
-
-        auto settings = generatorSettings(options.dCompiler);
 
         // A violation of the Law of Demeter caused by a dub bug.
         // Otherwise _project.configurations would do, but it fails for one
@@ -69,19 +83,21 @@ struct Dub {
             .rootPackage
             .recipe
             .configurations
-            .filter!(c => c.matchesPlatform(settings.platform))
+            .filter!(c => c.matchesPlatform(platform))
             .map!(c => c.name)
             .array;
 
-        return DubConfigurations(configurations, _project.getDefaultConfiguration(settings.platform));
+        // Project.getDefaultConfiguration() requires a mutable arg (forgotten `in`)
+        return DubConfigurations(configurations, _project.getDefaultConfiguration(platform));
     }
 
     DubInfo configToDubInfo
-    (in from!"reggae.options".Options options, in string config)
+    (from!"dub.generators.generator".GeneratorSettings settings, in string config)
         @trusted  // dub
     {
         auto generator = new InfoGenerator(_project);
-        generator.generate(generatorSettings(options.dCompiler, config, options.dubBuildType));
+        settings.config = config;
+        generator.generate(settings);
         return DubInfo(generator.dubPackages);
     }
 
@@ -190,28 +206,6 @@ struct DubPackages {
             );
         }();
     }
-}
-
-
-auto generatorSettings(in string compiler,
-                       in string config = "",
-                       in string buildType = "debug")
-    @safe
-{
-    import dub.compilers.compiler: getCompiler;
-    import dub.generators.generator: GeneratorSettings;
-    import std.path: baseName, stripExtension;
-
-    const compilerBinName = compiler.baseName.stripExtension;
-
-    GeneratorSettings ret;
-
-    ret.buildType = buildType;
-    ret.compiler = () @trusted { return getCompiler(compilerBinName); }();
-    ret.config = config;
-    ret.platform = () @trusted { return ret.compiler.determinePlatform(ret.buildSettings, compiler); }();
-
-    return ret;
 }
 
 

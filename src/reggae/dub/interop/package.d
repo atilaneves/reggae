@@ -103,18 +103,20 @@ private from!"reggae.dub.info".DubInfo getDubInfo
         enforce(buildPath(options.projectPath, "dub.selections.json").exists,
                 "Cannot find dub.selections.json");
 
-        const configs = dub.getConfigs(options);
+        auto settings = dub.getGeneratorSettings(options);
+
+        const configs = dub.getConfigs(settings.platform);
 
         bool oneConfigOk;
         Exception dubInfoFailure;
 
         if(configs.configurations.empty) {
-            gDubInfos["default"] = dub.configToDubInfo(options, "");
+            gDubInfos["default"] = dub.configToDubInfo(settings, "");
             oneConfigOk = true;
         } else {
             foreach(config; configs.configurations) {
                 try {
-                    gDubInfos[config] = dub.configToDubInfo(options, config);
+                    gDubInfos[config] = dub.configToDubInfo(settings, config);
 
                     // dub adds certain flags to certain configurations automatically but these flags
                     // don't know up in the output to `dub describe`. Special case them here.

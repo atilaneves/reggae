@@ -65,7 +65,10 @@ struct Dub {
         GeneratorSettings ret;
 
         ret.compiler = () @trusted { return getCompiler(compilerBinName); }();
-        ret.platform = () @trusted { return ret.compiler.determinePlatform(ret.buildSettings, options.dCompiler); }();
+        ret.platform = () @trusted {
+            return ret.compiler.determinePlatform(ret.buildSettings,
+                options.dCompiler, options.dubArchOverride);
+        }();
         ret.buildType = options.dubBuildType;
 
         return ret;

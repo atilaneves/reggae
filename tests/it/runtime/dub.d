@@ -209,11 +209,14 @@ unittest {
 version(Windows) version(DigitalMars) version = Windows_DMD;
 
 version(Windows_DMD) {
-    // DMD defaults to -m32, reggae to -m32mscoff (for DMD), and dub to -m64
-    // (if run on a 64-bit Windows host IIRC). ;)
-    // Windows_DMD assumes a 32-bit MSVC environment (cl.exe etc.) for the
-    // tests, so specify the corresponding dub architecture in the reggae
-    // cmdline.
+    /**
+     * On Windows, DMD defaults to -m32, reggae to -m32mscoff (for DMD), and
+     * dub to -m64 (if run on a 64-bit Windows host, otherwise -m32mscoff) for
+     * compilers with DMD CLI (dmd, gdmd, ldmd2). ;)
+     * Windows_DMD assumes a 32-bit MSVC environment (cl.exe etc.) for the
+     * tests, so specify the corresponding dub architecture in the reggae
+     * cmdline.
+     */
     enum dubArch = "--dub-arch=x86_mscoff";
 } else {
     enum string dubArch = null;

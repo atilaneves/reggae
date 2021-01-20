@@ -21,9 +21,9 @@ package string callDub(T)(
     const hasSelections = buildPath(options.projectPath, "dub.selections.json").exists;
     string[] emptyArgs;
     const noDepsArgs = hasSelections && maybeNoDeps ? ["--nodeps", "--skip-registry=all"] : emptyArgs;
-    const archArg = rawArgs[1] == "fetch" || rawArgs[1] == "upgrade"
+    const archArg = !options.dubArchOverride.length || rawArgs[1] == "fetch" || rawArgs[1] == "upgrade"
         ? emptyArgs
-        : ["--arch=" ~ options.dubArch.text];
+        : ["--arch=" ~ options.dubArchOverride];
     const args = rawArgs ~ noDepsArgs ~ dubEnvArgs ~ archArg;
     const string[string] env = null;
     Config config = Config.none;

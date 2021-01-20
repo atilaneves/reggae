@@ -189,7 +189,7 @@ string[] dependenciesToFile(in string objFile, in string[] deps) @safe pure noth
 
 // Parses the arguments from the specified response file content.
 version(Windows)
-private string[] parseResponseFile(in string data) @safe pure {
+string[] parseResponseFile(in string data) @safe pure {
     import std.array: appender;
     import std.ascii: isWhite;
 
@@ -208,12 +208,12 @@ private string[] parseResponseFile(in string data) @safe pure {
     char currentQuoteChar = 0;
     foreach (char c; data) {
         if (currentQuoteChar) {
-            // inside quoted arg
+            // inside quoted arg/fragment
             if (c != currentQuoteChar) {
                 currentArg ~= c;
             } else {
                 auto a = currentArg[];
-                if (a.length > 0 && a[$-1] == '\\') {
+                if (currentQuoteChar == '"' && a.length > 0 && a[$-1] == '\\') {
                     a[$-1] = c; // un-escape: \" => "
                 } else { // closing quote
                     currentQuoteChar = 0;
@@ -221,11 +221,11 @@ private string[] parseResponseFile(in string data) @safe pure {
             }
         } else if (isWhite(c)) {
             pushArg();
-        } else if (currentArg[].length == 0 && (c == '"' || c == '\'')) {
-            // beginning of quoted arg
+        } else if (c == '"' || c == '\'') {
+            // beginning of quoted arg/fragment
             currentQuoteChar = c;
         } else {
-            // inside unquoted arg
+            // inside unquoted arg/fragment
             currentArg ~= c;
         }
     }

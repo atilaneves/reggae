@@ -60,7 +60,7 @@ struct Dub {
         import std.algorithm.iteration: filter, map;
         import std.array: array;
 
-        auto settings = generatorSettings(options.dCompiler.toCompiler);
+        auto settings = generatorSettings(options.dCompiler);
 
         // A violation of the Law of Demeter caused by a dub bug.
         // Otherwise _project.configurations would do, but it fails for one
@@ -81,7 +81,7 @@ struct Dub {
         @trusted  // dub
     {
         auto generator = new InfoGenerator(_project);
-        generator.generate(generatorSettings(options.dCompiler.toCompiler, config, options.dubBuildType));
+        generator.generate(generatorSettings(options.dCompiler, config, options.dubBuildType));
         return DubInfo(generator.dubPackages);
     }
 
@@ -140,21 +140,6 @@ SystemPackagesPath systemPackagesPath() @safe {
     return SystemPackagesPath(path);
 }
 
-enum Compiler {
-    dmd,
-    ldc,
-    gdc,
-    ldmd,
-}
-
-
-Compiler toCompiler(in string compiler) @safe pure {
-    import std.conv: to;
-    if(compiler == "ldc2") return Compiler.ldc;
-    if(compiler == "ldmd2") return Compiler.ldmd;
-    return compiler.to!Compiler;
-}
-
 
 struct Path {
     string value;
@@ -208,24 +193,23 @@ struct DubPackages {
 }
 
 
-auto generatorSettings(in Compiler compiler = Compiler.dmd,
+auto generatorSettings(in string compiler,
                        in string config = "",
                        in string buildType = "debug")
     @safe
 {
     import dub.compilers.compiler: getCompiler;
     import dub.generators.generator: GeneratorSettings;
-    import dub.platform: determineBuildPlatform;
-    import std.conv: text;
+    import std.path: baseName, stripExtension;
+
+    const compilerBinName = compiler.baseName.stripExtension;
 
     GeneratorSettings ret;
 
     ret.buildType = buildType;
-    const compilerName = compiler.text;
-    ret.compiler = () @trusted { return getCompiler(compilerName); }();
-    ret.platform.compilerBinary = compilerName;  // FIXME? (absolute path?)
+    ret.compiler = () @trusted { return getCompiler(compilerBinName); }();
     ret.config = config;
-    ret.platform = () @trusted { return determineBuildPlatform; }();
+    ret.platform = () @trusted { return ret.compiler.determinePlatform(ret.buildSettings, compiler); }();
 
     return ret;
 }
@@ -341,15 +325,12 @@ class InfoGenerator: ProjectGenerator {
     override void generateTargets(GeneratorSettings settings, in TargetInfo[string] targets) @trusted {
 
         import dub.compilers.buildsettings: BuildSetting;
-        import dub.platform: determineBuildPlatform;
-
-        auto platform = determineBuildPlatform();
 
         DubPackage nameToDubPackage(in string targetName, in bool isFirstPackage = false) {
             const targetInfo = targets[targetName];
             auto newBuildSettings = targetInfo.buildSettings.dup;
             settings.compiler.prepareBuildSettings(newBuildSettings,
-                                                   platform,
+                                                   settings.platform,
                                                    BuildSetting.noOptions /*???*/);
             DubPackage pkg;
 

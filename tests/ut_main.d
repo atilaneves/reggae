@@ -20,6 +20,7 @@ mixin runTestsMain!(
     "tests.ut.high_rules",
     "tests.ut.code_command",
     "tests.ut.build",
+    "tests.ut.dcompile",
     "tests.ut.dependencies",
     "tests.ut.default_rules",
     "tests.ut.rules.link",

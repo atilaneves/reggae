@@ -70,6 +70,30 @@ private bool hasDepFile(in CommandType type) @safe pure nothrow {
     return type == CommandType.compile || type == CommandType.compileAndLink;
 }
 
+private string[] initializeRuleParamLines(in Language language, in string command) @safe pure {
+    version(Windows) {
+        import std.algorithm: among;
+        import std.string: indexOf;
+
+        // On Windows, the max command line length is ~32K.
+        // Make ninja use a response file for all D/C[++] rules.
+        if (language.among(Language.D, Language.C, Language.Cplusplus)) {
+            const firstSpaceIndex = command.indexOf(' ');
+            if (firstSpaceIndex > 0) {
+                const program = command[0 .. firstSpaceIndex];
+                const args = command[firstSpaceIndex+1 .. $];
+                return [
+                    "command = " ~ program ~ " @$out.rsp",
+                    "rspfile = $out.rsp",
+                    "rspfile_content = " ~ args,
+                ];
+            }
+        }
+    }
+
+    return ["command = " ~ command];
+}
+
 /**
  * Pre-built rules
  */
@@ -78,7 +102,10 @@ NinjaEntry[] defaultRules(in Options options) @safe pure {
     import reggae.build: Command;
 
     NinjaEntry createNinjaEntry(in CommandType type, in Language language) @safe pure {
-        string[] paramLines = ["command = " ~ Command.builtinTemplate(type, language, options)];
+        const string command = Command.builtinTemplate(type, language, options);
+
+        string[] paramLines = initializeRuleParamLines(language, command);
+
         if(hasDepFile(type)) {
             version(Windows)
                 const isMSVC = language == Language.C || language == Language.Cplusplus;
@@ -90,6 +117,7 @@ NinjaEntry[] defaultRules(in Options options) @safe pure {
             else
                 paramLines ~= ["deps = gcc", "depfile = $out.dep"];
         }
+
         return NinjaEntry("rule " ~ cmdTypeToNinjaString(type, language), paramLines);
     }
 

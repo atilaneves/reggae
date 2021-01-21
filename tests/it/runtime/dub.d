@@ -18,7 +18,12 @@ unittest {
         writelnUt("\n\nReggae output:\n\n", runReggae("-b", "ninja").lines.join("\n"), "-----\n");
         shouldExist("reggaefile.d");
         auto output = ninja.shouldExecuteOk;
-        output.shouldContain("-debug -g");
+
+        version(Windows) {
+            // args in response file
+        } else {
+            output.shouldContain("-debug -g");
+        }
 
         shouldSucceed("atest").filter!(a => a != "").should ==
             [
@@ -800,9 +805,14 @@ unittest {
 
         runReggae("-b", "ninja", "--dub-build-type=release");
         const buildLines = ninja.shouldExecuteOk;
-        const firstLine = buildLines[0];
-        "-release ".should.be in firstLine;
-        "-O".should.be in firstLine;
+
+        version(Windows) {
+            // args in response file
+        } else {
+            const firstLine = buildLines[0];
+            "-release ".should.be in firstLine;
+            "-O".should.be in firstLine;
+        }
     }
 
 }

@@ -77,13 +77,13 @@ Target executable(in string projectPath,
                   in string[] excDirs,
                   in string[] srcFiles,
                   in string[] excFiles,
-                  in string compilerFlags,
-                  in string linkerFlags,
+                  in string[] compilerFlags,
+                  in string[] linkerFlags,
                   in string[] includes,
                   in string[] stringImports)
 {
     auto objs = objectFiles(projectPath, srcDirs, excDirs, srcFiles, excFiles, compilerFlags, includes, stringImports);
-    return link(ExeName(name), objs, Flags(linkerFlags));
+    return link(ExeName(name), objs, const Flags(linkerFlags));
 }
 
 
@@ -111,7 +111,7 @@ Target link(ExeName exeName, alias dependenciesFunc, Flags flags = Flags())() {
  */
 Target link(in ExeName exeName, Target[] dependencies, in Flags flags = Flags()) @safe pure {
     auto command = Command(CommandType.link,
-                           assocList([assocEntry("flags", flags.value.splitter.array)]));
+                           assocList([assocEntry("flags", flags.value.dup)]));
     return Target(exeName.value, command, dependencies);
 }
 
@@ -276,12 +276,12 @@ Target[] objectFiles(in string projectPath,
                      in string[] excDirs,
                      in string[] srcFiles,
                      in string[] excFiles,
-                     in string flags = "",
+                     in string[] flags = [],
                      in string[] includes = [],
                      in string[] stringImports = []) @trusted {
 
     return srcFilesToObjectTargets(sourcesToFileNames(projectPath, srcDirs, excDirs, srcFiles, excFiles),
-                                   Flags(flags),
+                                   const Flags(flags),
                                    const ImportPaths(includes),
                                    const StringImportPaths(stringImports));
 }
@@ -293,7 +293,7 @@ Target[] staticLibrary(in string projectPath,
                        in string[] excDirs,
                        in string[] srcFiles,
                        in string[] excFiles,
-                       in string flags,
+                       in string[] flags,
                        in string[] includes,
                        in string[] stringImports) @trusted {
 
@@ -383,7 +383,7 @@ string removeProjectPath(in string projectPath, in string path) @safe pure {
 
 
 Command compileCommand(in string srcFileName,
-                       in string flags = "",
+                       in string[] flags = [],
                        in string[] includePaths = [],
                        in string[] stringImportPaths = [],
                        in string projDir = "$project",
@@ -398,12 +398,11 @@ Command compileCommand(in string srcFileName,
     }
 
     auto includeParams = includePaths.map!(a => "-I" ~ maybeExpand(a)). array;
-    auto flagParams = flags.splitter.array;
     immutable language = getLanguage(srcFileName);
 
     auto params = [
         assocEntry("includes", includeParams),
-        assocEntry("flags", flagParams)
+        assocEntry("flags", flags.dup),
     ];
 
     if(language == Language.D)

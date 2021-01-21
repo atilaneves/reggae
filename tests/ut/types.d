@@ -7,7 +7,8 @@ import unit_threaded;
 
 @("CompilerFlags")
 @safe pure unittest {
-    CompilerFlags("-g -debug").value.should == "-g -debug";
-    CompilerFlags(["-g", "-debug"]).value.should == "-g -debug";
-    CompilerFlags("-g", "-debug").value.should == "-g -debug";
+    static immutable expected = ["-g", "-debug"];
+    CompilerFlags("-g -debug").value.should == expected;
+    CompilerFlags(["-g", "-debug"]).value.should == expected;
+    CompilerFlags("-g", "-debug").value.should == expected;
 }

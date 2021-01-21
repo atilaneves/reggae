@@ -92,6 +92,14 @@ private def dependify(arg, klass)
   klass.new(arg)
 end
 
+private def toFlagsArray(arrayOrFlatString)
+  if arrayOrFlatString.is_a? Array
+    return arrayOrFlatString
+  end
+
+  arrayOrFlatString.split
+end
+
 private def target_concat(targets)
   DynamicDependencies.new('targetConcat', dependencies: targets.map { |x| x.jsonify })
 end
@@ -99,7 +107,7 @@ end
 # Equivalent to link in the D version
 class LinkCommand
   def initialize(flags)
-    @flags = flags
+    @flags = toFlagsArray(flags)
   end
 
   def jsonify
@@ -120,7 +128,7 @@ def object_files(src_dirs: [], exclude_dirs: [],
                             exclude_dirs: exclude_dirs,
                             src_files: src_files,
                             exclude_files: exclude_files,
-                            flags: flags,
+                            flags: toFlagsArray(flags),
                             includes: includes,
                             string_imports: string_imports })
 end
@@ -154,7 +162,7 @@ def static_library(name,
                               exclude_dirs: exclude_dirs,
                               src_files: src_files,
                               exclude_files: exclude_files,
-                              flags: flags,
+                              flags: toFlagsArray(flags),
                               includes: includes,
                               string_imports: string_imports })
 end
@@ -169,7 +177,7 @@ def scriptlike(src_name:,
   Dynamic.new('scriptlike',
               { src_name: src_name,
                 exe_name: exe_name,
-                flags: flags,
+                flags: toFlagsArray(flags),
                 includes: includes,
                 string_imports: string_imports,
                 link_with: dependify(link_with, FixedDependencies) })

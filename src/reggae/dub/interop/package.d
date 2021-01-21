@@ -130,7 +130,7 @@ private from!"reggae.dub.info".DubInfo getDubInfo
                         if(gDubInfos[config].packages.length == 0)
                             throw new Exception(
                                 text("No main package in `", config, "` configuration"));
-                        gDubInfos[config].packages[0].dflags ~= " -unittest";
+                        gDubInfos[config].packages[0].dflags ~= "-unittest";
                     }
 
                     try

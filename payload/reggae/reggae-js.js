@@ -55,6 +55,11 @@ function jsonifiable(arg, klass) {
     return arg.jsonify ? arg : new klass(arg)
 }
 
+function toFlagsArray(arrayOrFlatString) {
+    if(!arrayOrFlatString) return []
+    return arrayOrFlatString.constructor === Array ? arrayOrFlatString : arrayOrFlatString.split(/\s+/)
+}
+
 
 function Build() {
 
@@ -87,7 +92,7 @@ exports.link = function (options) {
 
 
 function LinkCommand(flags) {
-    this.flags = flags
+    this.flags = toFlagsArray(flags)
 
     this.jsonify = function () {
         return {type: "link", flags: this.flags}
@@ -100,7 +105,7 @@ exports.objectFiles = function (options) {
     options.exclude_dirs = options.exclude_dirs || []
     options.src_files = options.src_files || []
     options.exclude_files = options.exclude_files || []
-    options.flags = options.flags || ""
+    options.flags = toFlagsArray(options.flags)
     options.includes = options.includes || []
     options.string_imports = options.string_imports || []
 
@@ -127,7 +132,7 @@ exports.staticLibrary = function(name, options) {
     options.exclude_dirs = options.exclude_dirs || []
     options.src_files = options.src_files || []
     options.exclude_files = options.exclude_files || []
-    options.flags = options.flags || ""
+    options.flags = toFlagsArray(options.flags)
     options.includes = options.includes || []
     options.string_imports = options.string_imports || []
 
@@ -137,7 +142,7 @@ exports.staticLibrary = function(name, options) {
 
 exports.scriptlike = function(options) {
 
-    options.flags = options.flags || ""
+    options.flags = toFlagsArray(options.flags)
     options.includes = options.includes || []
     options.string_imports = options.string_imports || []
     options.link_with = options.link_with || new FixedDependencies([])

@@ -81,7 +81,7 @@ Target[] dlangObjectsPerModule(
    Depending on command-line options compiles all files together, per package, or per module.
 */
 Target[] dlangObjectFiles(in string[] srcFiles,
-                          in string flags = "",
+                          in string[] flags = [],
                           in string[] importPaths = [],
                           in string[] stringImportPaths = [],
                           Target[] implicits = [],
@@ -102,7 +102,7 @@ Target[] dlangObjectFiles(in string[] srcFiles,
 
 /// Generate object files for D sources, compiling the whole package together.
 Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
-                                    in string flags = "",
+                                    in string[] flags = [],
                                     in string[] importPaths = [],
                                     in string[] stringImportPaths = [],
                                     Target[] implicits = [],
@@ -138,7 +138,7 @@ Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
 
 /// Generate object files for D sources, compiling each module separately
 Target[] dlangObjectFilesPerModule(in string[] srcFiles,
-                                   in string flags = "",
+                                   in string[] flags = [],
                                    in string[] importPaths = [],
                                    in string[] stringImportPaths = [],
                                    Target[] implicits = [],
@@ -157,7 +157,7 @@ Target[] dlangObjectFilesPerModule(in string[] srcFiles,
 
 /// Generate object files for D sources, compiling all of them together
 Target[] dlangObjectFilesTogether(in string[] srcFiles,
-                                  in string flags = "",
+                                  in string[] flags = [],
                                   in string[] importPaths = [],
                                   in string[] stringImportPaths = [],
                                   Target[] implicits = [],
@@ -183,7 +183,7 @@ Target[] dlangObjectFilesTogether(in string[] srcFiles,
    source into object files then using `ar` to create the .a.
 */
 Target[] dlangStaticLibraryTogether(in string[] srcFiles,
-                                    in string flags = "",
+                                    in string[] flags = [],
                                     in string[] importPaths = [],
                                     in string[] stringImportPaths = [],
                                     Target[] implicits = [],
@@ -194,7 +194,7 @@ Target[] dlangStaticLibraryTogether(in string[] srcFiles,
     return dlangTargetTogether(
         &libFileName,
         srcFiles,
-        "-lib " ~ flags,
+        "-lib" ~ flags,
         importPaths,
         stringImportPaths,
         implicits,
@@ -206,7 +206,7 @@ Target[] dlangStaticLibraryTogether(in string[] srcFiles,
 private Target[] dlangTargetTogether(
     string function(in string) @safe pure toFileName,
     in string[] srcFiles,
-    in string flags = "",
+    in string[] flags = [],
     in string[] importPaths = [],
     in string[] stringImportPaths = [],
     Target[] implicits = [],
@@ -310,7 +310,7 @@ Target scriptlike
 //@trusted because of splitter
 private auto runDCompiler(in string projectPath,
                           in string srcFileName,
-                          in string flags,
+                          in string[] flags,
                           in string[] importPaths,
                           in string[] stringImportPaths) @trusted {
 
@@ -319,7 +319,7 @@ private auto runDCompiler(in string projectPath,
     import std.conv:text;
 
     immutable compiler = "dmd";
-    const compArgs = [compiler] ~ flags.splitter.array ~
+    const compArgs = [compiler] ~ flags ~
         importPaths.map!(a => "-I" ~ buildPath(projectPath, a)).array ~
         stringImportPaths.map!(a => "-J" ~ buildPath(projectPath, a)).array ~
         ["-o-", "-v", "-c", srcFileName];

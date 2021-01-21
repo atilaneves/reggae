@@ -21,12 +21,12 @@ unittest {
         Build(Target("app",
                      Command(CommandType.link, assocListT("flags", noFlags)),
                      [Target("src/main" ~ objExt,
-                             compileCommand("src/main.d", "", ["libsrc"]),
+                             compileCommand("src/main.d", [], ["libsrc"]),
                              [Target("src/main.d")]),
                       Target("$builddir/maths" ~ libExt,
                              archiveCmd,
                              [Target("libsrc_adder" ~ objExt,
-                                     compileCommand("libsrc.d", "", ["."]),
+                                     compileCommand("libsrc.d", [], ["."]),
                                      [Target(buildPath("libsrc/muler.d")), Target(buildPath("libsrc/adder.d"))]
                                      )]),
                          ])));

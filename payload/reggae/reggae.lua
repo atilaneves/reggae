@@ -138,6 +138,22 @@ function isArray(arg)
    return true
 end
 
+function toFlagsArray(arrayOrFlatString)
+   if arrayOrFlatString == nil then
+      return {}
+   end
+
+   if isArray(arrayOrFlatString) then
+      return arrayOrFlatString
+   end
+
+   flags = {}
+   for flag in arrayOrFlatString:gmatch("%S+") do
+      table.insert(flags, flag)
+   end
+   return flags
+end
+
 function ShellCommand.new(cmd)
    local self = setmetatable({}, ShellCommand)
    self.cmd = (cmd == '') and {} or {type='shell', cmd=cmd}
@@ -178,7 +194,7 @@ end
 
 function LinkCommand.new(flags)
    local self = setmetatable({}, LinkCommand)
-   self.flags = flags
+   self.flags = toFlagsArray(flags)
    return self
 end
 
@@ -192,7 +208,7 @@ function object_files(options)
    options.exclude_dirs = options.exclude_dirs or {}
    options.src_files = options.src_files or {}
    options.exclude_files = options.exclude_files or {}
-   options.flags = options.flags or ""
+   options.flags = toFlagsArray(options.flags)
    options.includes = options.includes or {}
    options.string_imports = options.string_imports or {}
 
@@ -229,7 +245,7 @@ function static_library(name, options)
    options.exclude_dirs = options.exclude_dirs or {}
    options.src_files = options.src_files or {}
    options.exclude_files = options.exclude_files or {}
-   options.flags = options.flags or ""
+   options.flags = toFlagsArray(options.flags)
    options.includes = options.includes or {}
    options.string_imports = options.string_imports or {}
 
@@ -238,7 +254,7 @@ end
 
 function scriptlike(options)
 
-    options.flags = options.flags or ""
+    options.flags = toFlagsArray(options.flags)
     options.includes = options.includes or {}
     options.string_imports = options.string_imports or {}
     options.link_with = options.link_with or FixedDependencies.new({})

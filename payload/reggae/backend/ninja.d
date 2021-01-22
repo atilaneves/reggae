@@ -228,6 +228,8 @@ private:
         string[] paramLines;
 
         foreach(immutable param; target.commandParamNames) {
+            // skip the DEPFILE parameter, it's already specified in the rule
+            if (param == "DEPFILE") continue;
             immutable value = target.getCommandParams(_projectPath, param, []).join(" ");
             if(value == "") continue;
             paramLines ~= param ~ " = " ~ value.escapeEnvVars;

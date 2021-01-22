@@ -14,7 +14,7 @@ void testNoIncludePaths() {
     enum objPath = buildPath("path/to/src/foo" ~ objExt);
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build " ~ objPath ~ ": _cppcompile " ~ buildPath("/tmp/myproject/path/to/src/foo.cpp"),
-                    ["DEPFILE = " ~ objPath ~ ".dep"]),
+                    []),
             ]);
 }
 
@@ -26,8 +26,7 @@ void testIncludePaths() {
     enum objPath = buildPath("path/to/src/foo" ~ objExt);
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build " ~ objPath ~ ": _cppcompile " ~ buildPath("/tmp/myproject/path/to/src/foo.cpp"),
-                    ["includes = -I" ~buildPath("/tmp/myproject/path/to/src") ~ " -I" ~ buildPath("/tmp/myproject/other/path"),
-                     "DEPFILE = " ~ objPath ~ ".dep"]),
+                    ["includes = -I" ~buildPath("/tmp/myproject/path/to/src") ~ " -I" ~ buildPath("/tmp/myproject/other/path")]),
             ]);
 }
 
@@ -38,8 +37,7 @@ void testFlagsCompileC() {
     enum objPath = buildPath("path/to/src/foo" ~ objExt);
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build " ~ objPath ~ ": _ccompile " ~ buildPath("/tmp/myproject/path/to/src/foo.c"),
-                    ["flags = -m64 -fPIC -O3",
-                     "DEPFILE = " ~ objPath ~ ".dep"]),
+                    ["flags = -m64 -fPIC -O3"]),
             ]);
 }
 
@@ -49,8 +47,7 @@ void testFlagsCompileCpp() {
     enum objPath = buildPath("path/to/src/foo" ~ objExt);
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build " ~ objPath ~ ": _cppcompile " ~ buildPath("/tmp/myproject/path/to/src/foo.cpp"),
-                    ["flags = -m64 -fPIC -O3",
-                     "DEPFILE = " ~ objPath ~ ".dep"]),
+                    ["flags = -m64 -fPIC -O3"]),
             ]);
 }
 

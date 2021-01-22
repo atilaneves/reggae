@@ -55,12 +55,29 @@ struct Dub {
         return _project.packageManager.getPackage(dubPackage, Version(version_));
     }
 
-    DubConfigurations getConfigs(in from!"reggae.options".Options options) {
+    static auto getGeneratorSettings(in Options options) {
+        import dub.compilers.compiler: getCompiler;
+        import dub.generators.generator: GeneratorSettings;
+        import std.path: baseName, stripExtension;
+
+        const compilerBinName = options.dCompiler.baseName.stripExtension;
+
+        GeneratorSettings ret;
+
+        ret.compiler = () @trusted { return getCompiler(compilerBinName); }();
+        ret.platform = () @trusted {
+            return ret.compiler.determinePlatform(ret.buildSettings,
+                options.dCompiler, options.dubArchOverride);
+        }();
+        ret.buildType = options.dubBuildType;
+
+        return ret;
+    }
+
+    DubConfigurations getConfigs(/*in*/ ref from!"dub.platform".BuildPlatform platform) {
 
         import std.algorithm.iteration: filter, map;
         import std.array: array;
-
-        auto settings = generatorSettings(options.dCompiler.toCompiler);
 
         // A violation of the Law of Demeter caused by a dub bug.
         // Otherwise _project.configurations would do, but it fails for one
@@ -69,19 +86,21 @@ struct Dub {
             .rootPackage
             .recipe
             .configurations
-            .filter!(c => c.matchesPlatform(settings.platform))
+            .filter!(c => c.matchesPlatform(platform))
             .map!(c => c.name)
             .array;
 
-        return DubConfigurations(configurations, _project.getDefaultConfiguration(settings.platform));
+        // Project.getDefaultConfiguration() requires a mutable arg (forgotten `in`)
+        return DubConfigurations(configurations, _project.getDefaultConfiguration(platform));
     }
 
     DubInfo configToDubInfo
-    (in from!"reggae.options".Options options, in string config)
+    (from!"dub.generators.generator".GeneratorSettings settings, in string config)
         @trusted  // dub
     {
         auto generator = new InfoGenerator(_project);
-        generator.generate(generatorSettings(options.dCompiler.toCompiler, config, options.dubBuildType));
+        settings.config = config;
+        generator.generate(settings);
         return DubInfo(generator.dubPackages);
     }
 
@@ -140,21 +159,6 @@ SystemPackagesPath systemPackagesPath() @safe {
     return SystemPackagesPath(path);
 }
 
-enum Compiler {
-    dmd,
-    ldc,
-    gdc,
-    ldmd,
-}
-
-
-Compiler toCompiler(in string compiler) @safe pure {
-    import std.conv: to;
-    if(compiler == "ldc2") return Compiler.ldc;
-    if(compiler == "ldmd2") return Compiler.ldmd;
-    return compiler.to!Compiler;
-}
-
 
 struct Path {
     string value;
@@ -205,29 +209,6 @@ struct DubPackages {
             );
         }();
     }
-}
-
-
-auto generatorSettings(in Compiler compiler = Compiler.dmd,
-                       in string config = "",
-                       in string buildType = "debug")
-    @safe
-{
-    import dub.compilers.compiler: getCompiler;
-    import dub.generators.generator: GeneratorSettings;
-    import dub.platform: determineBuildPlatform;
-    import std.conv: text;
-
-    GeneratorSettings ret;
-
-    ret.buildType = buildType;
-    const compilerName = compiler.text;
-    ret.compiler = () @trusted { return getCompiler(compilerName); }();
-    ret.platform.compilerBinary = compilerName;  // FIXME? (absolute path?)
-    ret.config = config;
-    ret.platform = () @trusted { return determineBuildPlatform; }();
-
-    return ret;
 }
 
 
@@ -341,15 +322,12 @@ class InfoGenerator: ProjectGenerator {
     override void generateTargets(GeneratorSettings settings, in TargetInfo[string] targets) @trusted {
 
         import dub.compilers.buildsettings: BuildSetting;
-        import dub.platform: determineBuildPlatform;
-
-        auto platform = determineBuildPlatform();
 
         DubPackage nameToDubPackage(in string targetName, in bool isFirstPackage = false) {
             const targetInfo = targets[targetName];
             auto newBuildSettings = targetInfo.buildSettings.dup;
             settings.compiler.prepareBuildSettings(newBuildSettings,
-                                                   platform,
+                                                   settings.platform,
                                                    BuildSetting.noOptions /*???*/);
             DubPackage pkg;
 
@@ -407,7 +385,9 @@ class InfoGenerator: ProjectGenerator {
         if(settings.platform.platform.canFind("linux"))
             pkg.lflags = "-L--no-as-needed" ~ pkg.lflags;
 
-        static bool isLinkerDFlag(in string arg) {
+        // TODO: these can probably be used from dub's {DMD,LDC}Compiler class
+        //       when bumping the dub dependency to v1.25 (dlang/dub#2082)
+        static bool isLinkerDFlag_DMD(string arg) {
             switch (arg) {
             default:
                 if (arg.startsWith("-defaultlib=")) return true;
@@ -416,7 +396,35 @@ class InfoGenerator: ProjectGenerator {
                 return true;
             }
         }
+        static bool isLinkerDFlag_LDC(string arg) {
+            // extra addition for ldmd2
+            if (arg == "-m32mscoff")
+                return true;
 
-        pkg.lflags ~= buildSettings.dflags.filter!isLinkerDFlag.array;
+            if (arg.length > 2 && arg.startsWith("--"))
+                arg = arg[1 .. $]; // normalize to 1 leading hyphen
+
+            switch (arg) {
+                case "-g", "-gc", "-m32", "-m64", "-shared", "-lib",
+                     "-betterC", "-disable-linker-strip-dead", "-static":
+                    return true;
+                default:
+                    return arg.startsWith("-L")
+                        || arg.startsWith("-Xcc=")
+                        || arg.startsWith("-defaultlib=")
+                        || arg.startsWith("-platformlib=")
+                        || arg.startsWith("-flto")
+                        || arg.startsWith("-fsanitize=")
+                        || arg.startsWith("-link-")
+                        || arg.startsWith("-linker=")
+                        || arg.startsWith("-march=")
+                        || arg.startsWith("-mscrtlib=")
+                        || arg.startsWith("-mtriple=");
+            }
+        }
+
+        pkg.lflags ~= settings.platform.compiler == "ldc"
+            ? buildSettings.dflags.filter!isLinkerDFlag_LDC.array // ldc2 / ldmd2
+            : buildSettings.dflags.filter!isLinkerDFlag_DMD.array;
     }
 }

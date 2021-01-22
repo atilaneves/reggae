@@ -213,6 +213,20 @@ unittest {
 
 version(Windows) version(DigitalMars) version = Windows_DMD;
 
+version(Windows_DMD) {
+    /**
+     * On Windows, DMD defaults to -m32, reggae to -m32mscoff (for DMD), and
+     * dub to -m64 (if run on a 64-bit Windows host, otherwise -m32mscoff) for
+     * compilers with DMD CLI (dmd, gdmd, ldmd2). ;)
+     * Windows_DMD assumes a 32-bit MSVC environment (cl.exe etc.) for the
+     * tests, so specify the corresponding dub architecture in the reggae
+     * cmdline.
+     */
+    enum dubArch = "--dub-arch=x86_mscoff";
+} else {
+    enum string dubArch = null;
+}
+
 @("object source files.simple")
 @Tags(["dub", "ninja"])
 unittest {
@@ -250,7 +264,7 @@ unittest {
         else
             ["dmd", "-c", "baz.d"].shouldExecuteOk;
 
-        runReggae("-b", "ninja");
+        runReggae("-b", "ninja", dubArch);
         ninja.shouldExecuteOk;
     }
 }
@@ -380,7 +394,7 @@ unittest {
             ["dmd", "-c", "baz.d"].shouldExecuteOk;
         }
 
-        const output = runReggae("-b", "ninja", "--dub-objs-dir=" ~ testPath);
+        const output = runReggae("-b", "ninja", "--dub-objs-dir=" ~ testPath, dubArch);
         writelnUt(output);
 
         ninja.shouldExecuteOk;
@@ -545,7 +559,7 @@ unittest {
             shouldExecuteOk(["ar", "rcs", inSandboxPath("libutils.a"), inSandboxPath("utils.o")]);
         }
 
-        runReggae("-b", "ninja");
+        runReggae("-b", "ninja", dubArch);
         ninja.shouldExecuteOk;
         shouldSucceed("foo");
     }
@@ -599,7 +613,7 @@ unittest {
             shouldExecuteOk(["ar", "rcs", inSandboxPath("libutils.a"), inSandboxPath("utils.o")]);
         }
 
-        runReggae("-b", "ninja");
+        runReggae("-b", "ninja", dubArch);
         ninja.shouldExecuteOk;
         shouldSucceed("foo");
     }
@@ -655,7 +669,7 @@ unittest {
             shouldExecuteOk(["ar", "rcs", inSandboxPath("bar/libutils.a"), inSandboxPath("bar/utils.o")]);
         }
 
-        runReggae("-b", "ninja");
+        runReggae("-b", "ninja", dubArch);
         ninja.shouldExecuteOk;
         shouldSucceed("foo");
     }

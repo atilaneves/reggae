@@ -39,7 +39,9 @@ struct ReggaeSandbox {
     }
 
     auto runReggae(string[] args...) const {
-        return runImpl(args);
+        import std.algorithm: filter;
+        import std.array: array;
+        return runImpl(args.filter!(a => a !is null).array);
     }
 
     auto runReggae(string[] args, string project) const {

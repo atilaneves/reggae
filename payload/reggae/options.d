@@ -57,12 +57,7 @@ struct Options {
     string dubObjsDir;
     bool dubDepObjsInsteadOfStaticLib;
     string dubBuildType = "debug";
-
-
-    version(Windows)
-        DubArchitecture dubArch = DubArchitecture.x86_mscoff;
-    else
-        DubArchitecture dubArch = DubArchitecture.x86_64;
+    string dubArchOverride;
 
     string[string] userVars; //must always be the last member variable
 
@@ -246,7 +241,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             "export", "Export build system - removes dependencies on reggae itself", &options.export_,
             "verbose", "Verbose output", &options.verbose,
             "dub-objs-dir", "Directory to place object files for dub dependencies", &options.dubObjsDir,
-            "dub-arch", "Architecture (x86, x86_64, x86_mscoff)", &options.dubArch,
+            "dub-arch", "Architecture (x86, x86_64, x86_mscoff)", &options.dubArchOverride,
             "dub-deps-objs", "Use object files instead of static library for dub dependencies", &options.dubDepObjsInsteadOfStaticLib,
             "dub-build-type", "Dub build type (debug, release, ...)", &options.dubBuildType,
         );

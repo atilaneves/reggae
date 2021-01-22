@@ -32,6 +32,18 @@ void testDCompileIncludePathsNinja() {
                      "flags = -O"])]);
 }
 
+void testDCompileWithSpacesNinja() {
+    auto build = Build(objectFile(SourceFile("my src/foo.d"),
+                                   Flags(["-O", "-L/LIBPATH:my libs"]),
+                                   ImportPaths(["my src", "other/path"])));
+    auto ninja = Ninja(build, "/tmp/myproject");
+    enum objPath = buildPath("my src/foo" ~ objExt);
+    ninja.buildEntries.shouldEqual(
+        [NinjaEntry(`build ` ~ buildPath("my$ src/foo") ~ objExt ~ `: _dcompile ` ~ buildPath("/tmp/myproject/my$ src/foo.d"),
+                    [`includes = "-I` ~ buildPath("/tmp/myproject/my src") ~ `" -I` ~ buildPath("/tmp/myproject/other/path"),
+                     `flags = -O "-L/LIBPATH:my libs"`])]);
+}
+
 void testDCompileIncludePathsMake() {
     import reggae.config: gDefaultOptions;
 

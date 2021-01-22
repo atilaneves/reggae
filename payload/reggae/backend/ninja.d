@@ -48,23 +48,6 @@ struct NinjaEntry {
     }
 }
 
-private string escapeEnvVars(in string line) @safe pure nothrow {
-    import std.string: replace;
-    return line.replace("$", "$$");
-}
-
-// Windows: C:\foo => C$:\foo
-private string escapeDriveInPath(in string path) @safe pure nothrow {
-    version(Windows)
-    {
-        return (path.length >= 2 && path[1] == ':')
-            ? path[0] ~ "$" ~ path[1..$]
-            : path;
-    }
-    else
-        return path;
-}
-
 
 private bool hasDepFile(in CommandType type) @safe pure nothrow {
     return type == CommandType.compile || type == CommandType.compileAndLink;
@@ -166,10 +149,7 @@ struct Ninja {
 
     //includes rerunning reggae
     const(NinjaEntry)[] allBuildEntries() @safe {
-        import std.algorithm.iteration: map;
-        import std.array: join;
-
-        immutable files = _options.reggaeFileDependencies.map!escapeDriveInPath.join(" ");
+        immutable files = flattenEntriesInBuildLine(_options.reggaeFileDependencies);
         auto paramLines = _options.oldNinja ? [] : ["pool = console"];
 
         const(NinjaEntry)[] rerunEntries() {
@@ -178,7 +158,8 @@ struct Ninja {
                                                        paramLines)];
         }
 
-        const defaultEntry = NinjaEntry("default " ~ _build.defaultTargetsOutputs(_projectPath).map!escapeDriveInPath.join(" "));
+        const defaultOutputs = _build.defaultTargetsOutputs(_projectPath);
+        const defaultEntry = NinjaEntry("default " ~ flattenEntriesInBuildLine(defaultOutputs));
 
         return buildEntries ~ rerunEntries ~ defaultEntry;
     }
@@ -221,42 +202,48 @@ private:
     const(Options) _options;
     int _counter = 1;
 
-    //@trusted because of join
-    void defaultRule(Target target) @trusted {
-        import std.array: join;
+    void defaultRule(Target target) @safe {
+        import std.algorithm: canFind, map;
+        import std.array: join, replace;
+
+        static string flattenShellArgs(in string[] args) {
+            static string quoteArgIfNeeded(string a) {
+                return !a.canFind(' ') ? a : `"` ~ a.replace(`"`, `\"`) ~ `"`;
+            }
+            return args.map!quoteArgIfNeeded.join(" ");
+        }
 
         string[] paramLines;
-
         foreach(immutable param; target.commandParamNames) {
             // skip the DEPFILE parameter, it's already specified in the rule
             if (param == "DEPFILE") continue;
-            immutable value = target.getCommandParams(_projectPath, param, []).join(" ");
-            if(value == "") continue;
-            paramLines ~= param ~ " = " ~ value.escapeEnvVars;
+            const values = target.getCommandParams(_projectPath, param, []);
+            const flat = flattenShellArgs(values);
+            if(!flat.length) continue;
+            // the flat value still needs to be escaped for Ninja ($ => $$, e.g. for env vars)
+            paramLines ~= param ~ " = " ~ flat.replace("$", "$$");
         }
 
-        immutable language = target.getLanguage;
+        const ruleName = cmdTypeToNinjaString(target.getCommandType, target.getLanguage);
+        const buildLine = buildLine(target, ruleName, /*includeImplicitInputs=*/false);
 
-        buildEntries ~= NinjaEntry(buildLine(target) ~
-                                   cmdTypeToNinjaString(target.getCommandType, language) ~
-                                   " " ~ targetDependencies(target),
-                                   paramLines);
+        buildEntries ~= NinjaEntry(buildLine, paramLines);
     }
 
     void phonyRule(Target target) @safe {
-        import std.algorithm.iteration: map;
-        import std.array: join, empty;
+        const cmd = target.shellCommand(_options);
 
         //no projectPath for phony rules since they don't generate output
-        immutable outputs = target.expandOutputs("").map!escapeDriveInPath.join(" ");
-        immutable cmd = target.shellCommand(_options);
-        auto buildLine = "build " ~ outputs ~ ": " ~ (cmd is null ? "phony" : "_phony") ~ " " ~ targetDependencies(target);
-        if(!target.implicitTargets.empty)
-            buildLine ~= " | " ~ target.implicitsInProjectPath(_projectPath).map!escapeDriveInPath.join(" ");
-        buildEntries ~= NinjaEntry(buildLine,
-                                   cmd is null
-                                   ? ["pool = console"]
-                                   : ["cmd = " ~ cmd, "pool = console"]);
+        const outputs = target.expandOutputs("");
+        const inputs = targetDependencies(target);
+        const implicitInputs = target.implicitTargets.length
+            ? target.implicitsInProjectPath(_projectPath)
+            : null;
+        const buildLine = buildLine(outputs, cmd is null ? "phony" : "_phony", inputs, implicitInputs);
+
+        buildEntries ~= NinjaEntry(buildLine, cmd is null
+                                              ? ["pool = console"]
+                                              : ["cmd = " ~ cmd, "pool = console"]);
     }
 
     void customRule(Target target) @safe {
@@ -309,13 +296,8 @@ private:
         bool haveToAddRule;
         immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAddRule);
 
-        immutable deps = implicitInput.empty
-            ? targetDependencies(target)
-            : implicitInput;
-
-        auto buildLine = buildLine(target) ~ ruleName ~ " " ~ deps;
-        if(!target.implicitTargets.empty)
-            buildLine ~= " | " ~  target.implicitsInProjectPath(_projectPath).map!escapeDriveInPath.join(" ");
+        const inputOverride = implicitInput.length ? [implicitInput] : null;
+        const buildLine = buildLine(target, ruleName, /*includeImplicitInputs=*/true, inputOverride);
 
         string[] buildParamLines;
         if(!before.empty)  buildParamLines ~= "before = "  ~ before;
@@ -334,8 +316,7 @@ private:
         immutable ruleCmdLine = getRuleCommandLine(target, shellCommand, "" /*before*/, "$in");
         immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAdd);
 
-        immutable buildLine = buildLine(target) ~ ruleName ~
-            " " ~ targetDependencies(target);
+        immutable buildLine = buildLine(target, ruleName, /*includeImplicitInputs=*/false);
         buildEntries ~= NinjaEntry(buildLine);
 
         if(haveToAdd) {
@@ -435,16 +416,34 @@ private:
         return banner ~ entries.map!(a => a.toString).join("\n\n");
     }
 
-    string buildLine(Target target) @safe pure const {
-        import std.algorithm.iteration: map;
-        import std.array: join;
+    string buildLine(Target target, in string rule, in bool includeImplicitInputs,
+                     in string[] inputsOverride = null) @safe pure const {
+        const outputs = target.expandOutputs(_projectPath);
+        const inputs = inputsOverride !is null ? inputsOverride : targetDependencies(target);
+        const implicitInputs = includeImplicitInputs && target.implicitTargets.length
+            ? target.implicitsInProjectPath(_projectPath)
+            : null;
+        return buildLine(outputs, rule, inputs, implicitInputs);
+    }
 
-        const outputs = target
-            .expandOutputs(_projectPath)
-            .map!escapeDriveInPath
+    // Creates a Ninja build statement line:
+    // `build <outputs>: <rule> <inputs> | <implicitInputs>`
+    static string buildLine(in string[] outputs, in string rule, in string[] inputs,
+                     in string[] implicitInputs) @safe pure {
+        auto ret = "build " ~ flattenEntriesInBuildLine(outputs) ~ ": " ~ rule ~ " " ~ flattenEntriesInBuildLine(inputs);
+        if (implicitInputs.length)
+            ret ~= " | " ~ flattenEntriesInBuildLine(implicitInputs);
+        return ret;
+    }
+
+    // Inputs and outputs in build lines need extra escaping of some chars
+    // like colon and space.
+    static string flattenEntriesInBuildLine(in string[] entries) @safe pure {
+        import std.algorithm: map;
+        import std.array: join, replace;
+        return entries
+            .map!(e => e.replace(":", "$:").replace(" ", "$ "))
             .join(" ");
-
-        return "build " ~ outputs ~ ": ";
     }
 
     //@trusted because of splitter
@@ -462,11 +461,8 @@ private:
         return cmd.splitter(" ").front;
     }
 
-    private string targetDependencies(in Target target) @safe pure const {
-        import std.algorithm.iteration: map;
-        import std.array: join;
-
-        return target.dependenciesInProjectPath(_projectPath).map!escapeDriveInPath.join(" ");
+    private string[] targetDependencies(in Target target) @safe pure const {
+        return target.dependenciesInProjectPath(_projectPath);
     }
 
 }

@@ -33,11 +33,11 @@ jobs:
             ln -s $ldcBinDir/ldmd2 $ldcBinDir/dmd
           fi
 
-      - name: Run Linux tests
+      - name: "Posix: Run tests"
         if: runner.os != 'Windows'
         run: dub -q test -- ~@tup ~@travis_oops
 
-      - name: Run Windows tests
+      - name: "Windows: Run tests"
         if: runner.os == 'Windows'
         shell: cmd
         run: |
@@ -60,17 +60,32 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         dc: [dmd-latest, ldc-beta]
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v2
+      - name: "Windows: Install ninja"
+        if: runner.os == 'Windows'
+        uses: seanmiddleditch/gha-setup-ninja@master
       - name: Install D compiler
         uses: dlang-community/setup-dlang@v1.0.5
         with:
           compiler: ${{ matrix.dc }}
+      - name: Set OS-specific SCRIPT_CMD environment variable
+        run: |
+          if [[ '${{ runner.os }}' == 'Windows' ]]; then
+            echo "SCRIPT_CMD=./bootstrap.bat" >> $GITHUB_ENV
+          else
+            echo "SCRIPT_CMD=./bootstrap.sh" >> $GITHUB_ENV
+          fi
+
       - name: Bootstrap with DC=${{ env.DC }}
-        run: ./bootstrap.sh
-      - name: Bootstrap with DC=ldmd2
+        run: ${{ env.SCRIPT_CMD }}
+
+      - name: "LDC: Bootstrap with DC=ldmd2"
         if: matrix.dc == 'ldc-beta'
-        run: DC=ldmd2 ./bootstrap.sh
+        run: DC=ldmd2 ${{ env.SCRIPT_CMD }}

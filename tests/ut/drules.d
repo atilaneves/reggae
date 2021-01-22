@@ -16,7 +16,7 @@ void testDCompileNoIncludePathsNinja() {
     enum objPath = buildPath("path/to/src/foo" ~ objExt);
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build " ~ objPath ~ ": _dcompile " ~ buildPath("/tmp/myproject/path/to/src/foo.d"),
-                    ["DEPFILE = " ~ objPath ~ ".dep"])]);
+                    [])]);
 }
 
 
@@ -29,8 +29,7 @@ void testDCompileIncludePathsNinja() {
     ninja.buildEntries.shouldEqual(
         [NinjaEntry("build " ~ objPath ~ ": _dcompile " ~ buildPath("/tmp/myproject/path/to/src/foo.d"),
                     ["includes = -I" ~ buildPath("/tmp/myproject/path/to/src") ~ " -I" ~ buildPath("/tmp/myproject/other/path"),
-                     "flags = -O",
-                     "DEPFILE = " ~ objPath ~ ".dep"])]);
+                     "flags = -O"])]);
 }
 
 void testDCompileIncludePathsMake() {

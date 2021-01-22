@@ -37,12 +37,10 @@ static if(isDubProject) {
                             CompilationMode compilationMode = CompilationMode.options)
         ()
     {
-        import std.string: split;
-
         enum config = "default";
         enum dubInfo = configToDubInfo[config];
         enum targetName = dubInfo.targetName;
-        enum linkerFlags = dubInfo.mainLinkerFlags ~ linkerFlags.value.split(" ");
+        enum linkerFlags = dubInfo.mainLinkerFlags ~ linkerFlags.value;
         return dubTarget(
             targetName,
             dubInfo,
@@ -84,19 +82,18 @@ static if(isDubProject) {
                          ()
     {
         import reggae.dub.info: TargetType, targetName;
-        import std.string: split;
         import std.exception : enforce;
         import std.conv: text;
 
         const config = "unittest" in configToDubInfo ? "unittest" : "default";
         auto actualCompilerFlags = compilerFlags.value;
-        if("unittest" !in configToDubInfo) actualCompilerFlags ~= " -unittest";
+        if("unittest" !in configToDubInfo) actualCompilerFlags ~= "-unittest";
         const dubInfo = configToDubInfo[config];
         enforce(dubInfo.packages.length, text("No dub packages found for config '", config, "'"));
         const hasMain = dubInfo.packages[0].mainSourceFile != "";
         const string[] emptyStrings;
         const extraLinkerFlags = hasMain ? emptyStrings : ["-main"];
-        const actualLinkerFlags = extraLinkerFlags ~ linkerFlags.value.split(" ");
+        const actualLinkerFlags = extraLinkerFlags ~ linkerFlags.value;
         const defaultTargetHasName = configToDubInfo["default"].packages.length > 0;
         const sameNameAsDefaultTarget =
             defaultTargetHasName
@@ -126,13 +123,11 @@ static if(isDubProject) {
                                   )
         () if(isCallable!objsFunction)
     {
-        import std.string: split;
-
         const dubInfo = configToDubInfo[config.value];
         return dubTarget(dubInfo.targetName,
                          dubInfo,
                          compilerFlags.value,
-                         linkerFlags.value.split(" "),
+                         linkerFlags.value,
                          includeMain,
                          compilationMode,
                          objsFunction());
@@ -149,11 +144,10 @@ static if(isDubProject) {
      )
         ()
     {
-        import std.array: split;
         return dubTarget(targetName,
                          configToDubInfo[config.value],
                          compilerFlags.value,
-                         linkerFlags.value.split(" "),
+                         linkerFlags.value,
                          includeMain,
                          compilationMode,
                          objsFunction(),
@@ -164,7 +158,7 @@ static if(isDubProject) {
     Target dubTarget(
         in TargetName targetName,
         in DubInfo dubInfo,
-        in string compilerFlags,
+        in string[] compilerFlags,
         in string[] linkerFlags = [],
         in Flag!"main" includeMain = Yes.main,
         in CompilationMode compilationMode = CompilationMode.options,
@@ -182,9 +176,9 @@ static if(isDubProject) {
             dubInfo.targetType == TargetType.library ||
             dubInfo.targetType == TargetType.staticLibrary;
         const sharedFlags = dubInfo.targetType == TargetType.dynamicLibrary
-            ? "-shared"
-            : "";
-        const allLinkerFlags = (linkerFlags ~ dubInfo.linkerFlags ~ sharedFlags).join(" ");
+            ? ["-shared"]
+            : [];
+        const allLinkerFlags = linkerFlags ~ dubInfo.linkerFlags ~ sharedFlags;
 
         auto allObjs = objs(targetName,
                             dubInfo,
@@ -202,7 +196,7 @@ static if(isDubProject) {
                 ? Target.phony(name, "", allObjs)
                 : link(ExeName(name),
                        allObjs,
-                       Flags(allLinkerFlags));
+                       const Flags(allLinkerFlags));
 
         return dubInfo.postBuildCommands == ""
             ? target
@@ -321,7 +315,7 @@ static if(isDubProject) {
     private Target[] objs(in TargetName targetName,
                           in DubInfo dubInfo,
                           in Flag!"main" includeMain,
-                          in string compilerFlags,
+                          in string[] compilerFlags,
                           in CompilationMode compilationMode,
                           Target[] extraObjects = [],
                           in size_t startingIndex = 0)

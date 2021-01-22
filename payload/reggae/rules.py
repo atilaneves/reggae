@@ -15,6 +15,14 @@ def _is_string(val):
     else:
         raise Exception("Unknown major version {}".format(major))
 
+def _toFlagsArray(arrayOrFlatString):
+    if isinstance(arrayOrFlatString, list):
+        return arrayOrFlatString
+    elif _is_string(arrayOrFlatString):
+        return arrayOrFlatString.split()
+    else:
+        raise TypeError("flags must be a flat string or a list")
+
 
 def object_files(src_dirs=[],
                  exclude_dirs=[],
@@ -29,15 +37,12 @@ def object_files(src_dirs=[],
             includes, string_imports)):
         raise TypeError("All arguments except flags must be lists")
 
-    if not _is_string(flags):
-        raise TypeError("flags must be a string")
-
     return DynamicDependencies('objectFiles',
                                src_dirs=src_dirs,
                                exclude_dirs=exclude_dirs,
                                src_files=src_files,
                                exclude_files=exclude_files,
-                               flags=flags,
+                               flags=_toFlagsArray(flags),
                                includes=includes,
                                string_imports=string_imports)
 
@@ -83,7 +88,7 @@ def static_library(name,
                                exclude_dirs=exclude_dirs,
                                src_files=src_files,
                                exclude_files=exclude_files,
-                               flags=flags,
+                               flags=_toFlagsArray(flags),
                                includes=includes,
                                string_imports=string_imports)
 
@@ -100,7 +105,7 @@ def scriptlike(src_name=None,
     return Dynamic('scriptlike',
                    src_name=src_name,
                    exe_name=exe_name,
-                   flags=flags,
+                   flags=_toFlagsArray(flags),
                    includes=includes,
                    string_imports=string_imports,
                    link_with=dependencies(link_with, FixedDependencies))
@@ -134,7 +139,7 @@ class DynamicDependencies(Dynamic, Dependencies):
 
 class LinkCommand(object):
     def __init__(self, flags=''):
-        self.flags = flags
+        self.flags = _toFlagsArray(flags)
 
     def jsonify(self):
         return {'type': 'link', 'flags': self.flags}

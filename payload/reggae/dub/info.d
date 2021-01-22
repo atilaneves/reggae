@@ -115,7 +115,7 @@ struct DubInfo {
     }
 
     Target[] toTargets(in Flag!"main" includeMain = Yes.main,
-                       in string compilerFlags = "",
+                       in string[] compilerFlags = [],
                        in CompilationMode compilationMode = CompilationMode.options,
                        in DubObjsDir dubObjsDir = DubObjsDir(),
                        in size_t startingIndex = 0)
@@ -134,7 +134,7 @@ struct DubInfo {
     private Target[] packageIndexToTargets(
         in size_t dubPackageIndex,
         in Flag!"main" includeMain = Yes.main,
-        in string compilerFlags = "",
+        in string[] compilerFlags = [],
         in CompilationMode compilationMode = CompilationMode.options,
         in DubObjsDir dubObjsDir = DubObjsDir())
         @safe const
@@ -157,19 +157,18 @@ struct DubInfo {
         const sharedFlag = targetType == TargetType.dynamicLibrary ? ["-fPIC"] : [];
 
         // -unittest should only apply to the main package
-        string deUnitTest(T)(in T index, in string flags) {
-            import std.string: replace;
-            return index == 0
+        const(string)[] deUnitTest(in string[] flags) {
+            return isMainPackage
                 ? flags
-                : flags.replace("-unittest", "").replace("-main", "");
+                : flags.filter!(f => f != "-unittest" && f != "-main").array;
         }
 
         const flags = chain(dubPackage.dflags,
                             dubPackage.versions.map!(a => "-version=" ~ a),
-                            only(options.dflags),
+                            options.dflags.splitter, // TODO: doesn't support quoted args with spaces
                             sharedFlag,
-                            only(deUnitTest(dubPackageIndex, compilerFlags)))
-            .join(" ");
+                            deUnitTest(compilerFlags))
+            .array;
 
         const files = dubPackage.files.
             filter!(a => includeMain || a != dubPackage.mainSourceFile).
@@ -219,7 +218,7 @@ struct DubInfo {
     Target[] packageNameToTargets(
         in string name,
         in Flag!"main" includeMain = Yes.main,
-        in string compilerFlags = "",
+        in string[] compilerFlags = [],
         in CompilationMode compilationMode = CompilationMode.options,
         in DubObjsDir dubObjsDir = DubObjsDir())
         @safe const

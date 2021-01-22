@@ -9,7 +9,7 @@ import std.stdio: File;
 immutable linkJsonStr =
 `
         [{"type": "fixed",
-          "command": {"type": "link", "flags": "-L-M"},
+          "command": {"type": "link", "flags": ["-L-M"]},
           "outputs": ["myapp"],
           "dependencies": {
               "type": "dynamic",
@@ -18,7 +18,7 @@ immutable linkJsonStr =
               "exclude_dirs": [],
               "src_files": [],
               "exclude_files": [],
-              "flags": "-g",
+              "flags": ["-g"],
               "includes": ["src"],
               "string_imports": []},
           "implicits": {
@@ -53,10 +53,10 @@ unittest {
         Build(Target("myapp",
                      Command(CommandType.link, assocListT("flags", ["-L-M"])),
                      [Target(buildPath("src/foo" ~ objExt),
-                             compileCommand(buildPath("src/foo.d"), "-g", [".", "src"]),
+                             compileCommand(buildPath("src/foo.d"), ["-g"], [".", "src"]),
                              [Target(buildPath("src/foo.d"))]),
                       Target(buildPath("src/bar" ~ objExt),
-                             compileCommand(buildPath("src/bar.d"), "-g", [".", "src"]),
+                             compileCommand(buildPath("src/bar.d"), ["-g"], [".", "src"]),
                              [Target(buildPath("src/bar.d"))])]))
     );
 }

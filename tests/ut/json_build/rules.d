@@ -9,7 +9,7 @@ import unit_threaded;
 string linkJsonString() @safe pure nothrow {
     return `
         [{"type": "fixed",
-          "command": {"type": "link", "flags": "-L-M"},
+          "command": {"type": "link", "flags": ["-L-M"]},
           "outputs": ["myapp"],
           "dependencies": {
               "type": "fixed",
@@ -133,7 +133,7 @@ unittest {
 string targetConcatFixedJsonStr() @safe pure nothrow {
     return `
       [{"type": "fixed",
-          "command": {"type": "link", "flags": "-L-M"},
+          "command": {"type": "link", "flags": ["-L-M"]},
           "outputs": ["myapp"],
           "dependencies": {
               "type": "dynamic",

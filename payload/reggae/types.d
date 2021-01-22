@@ -36,33 +36,37 @@ struct App {
 
 
 struct Flags {
-    string value;
+    string[] value;
 
-    this(string value) @safe @nogc pure nothrow {
-        this.value = value;
+    this(string value) @trusted pure {
+        import std.array: split;
+        this.value = value.split;
     }
 
-    this(string[] values) @safe pure nothrow {
-        import std.array: join;
-        this.value = values.join(" ");
+    this(inout(string)[] values) inout @safe @nogc pure nothrow {
+        this.value = values;
     }
 }
 
 struct CompilerFlags {
-    string value;
+    string[] value;
 
-    this(string value) @safe @nogc pure nothrow {
-        this.value = value;
+    this(string value) @trusted pure {
+        import std.array: split;
+        this.value = value.split;
     }
 
     this(string[] values...) @safe pure nothrow {
-        import std.string: join;
-        this.value = values.join(" ");
+        this.value = values.dup;
+    }
+
+    this(inout(string)[] values) inout @safe @nogc pure nothrow {
+        this.value = values;
     }
 }
 
 struct LinkerFlags {
-    string value;
+    string[] value;
 }
 
 struct ImportPaths {

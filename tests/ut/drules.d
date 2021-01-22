@@ -55,15 +55,15 @@ unittest {
     auto build = Build(dlangObjectFilesPerPackage(["path/to/src/foo.d",
                                                    "path/to/src/bar.d",
                                                    "other/weird.d"],
-                                                  "-O", ["path/to/src", "other/path"]));
+                                                  ["-O"], ["path/to/src", "other/path"]));
     build.shouldEqual(Build(Target("path/to/src.o",
                                    compileCommand("path/to/src.d",
-                                                  "-O",
+                                                  ["-O"],
                                                   ["path/to/src", "other/path"]),
                                    [Target("path/to/src/foo.d"), Target("path/to/src/bar.d")]),
                             Target("other.o",
                                    compileCommand("other.d",
-                                                  "-O",
+                                                  ["-O"],
                                                   ["path/to/src", "other/path"]),
                                    [Target("other/weird.d")]),
                           ));

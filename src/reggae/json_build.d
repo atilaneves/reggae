@@ -156,7 +156,7 @@ private Command jsonToCommand(in JSONValue json) pure {
             return Command(json.object["cmd"].str);
         case link:
             return Command(CommandType.link,
-                           assocList([assocEntry("flags", json.object["flags"].str.splitter.array)]));
+                           assocList([assocEntry("flags", json.object["flags"].array.map!(a => a.str).array)]));
     }
 }
 
@@ -201,7 +201,7 @@ private Target[] callDepsFunc(in string projectPath, in JSONValue json) {
                            strings(json, "exclude_dirs"),
                            strings(json, "src_files"),
                            strings(json, "exclude_files"),
-                           stringVal(json, "flags"),
+                           strings(json, "flags"),
                            strings(json, "includes"),
                            strings(json, "string_imports"));
     case JsonDepsFuncName.staticLibrary:
@@ -211,7 +211,7 @@ private Target[] callDepsFunc(in string projectPath, in JSONValue json) {
                              strings(json, "exclude_dirs"),
                              strings(json, "src_files"),
                              strings(json, "exclude_files"),
-                             stringVal(json, "flags"),
+                             strings(json, "flags"),
                              strings(json, "includes"),
                              strings(json, "string_imports"));
     case JsonDepsFuncName.executable:
@@ -221,8 +221,8 @@ private Target[] callDepsFunc(in string projectPath, in JSONValue json) {
                           strings(json, "exclude_dirs"),
                           strings(json, "src_files"),
                           strings(json, "exclude_files"),
-                          stringVal(json, "compiler_flags"),
-                          stringVal(json, "linker_flags"),
+                          strings(json, "compiler_flags"),
+                          strings(json, "linker_flags"),
                           strings(json, "includes"),
                           strings(json, "string_imports"))];
     case JsonDepsFuncName.targetConcat:
@@ -255,7 +255,7 @@ private Target callTargetFunc(in string projectPath, in JSONValue json) {
 
 
     return scriptlike(projectPath, app,
-                      Flags(stringVal(json, "flags")),
+                      const Flags(strings(json, "flags")),
                       const ImportPaths(strings(json, "includes")),
                       const StringImportPaths(strings(json, "string_imports")),
                       getDeps(projectPath, json["link_with"]));

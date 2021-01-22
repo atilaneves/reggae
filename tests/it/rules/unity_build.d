@@ -21,7 +21,7 @@ import std.typecons: No;
     getBuildObject!"unity.reggaefile"(options).shouldEqual(
         Build(Target("unity",
                      compileCommand("$builddir/.reggae/objs/unity.objs/unity.cpp",
-                                    "-g", [], [], options.projectPath, No.justCompile),
+                                    ["-g"], [], [], options.projectPath, No.justCompile),
                      [Target.phony("unity.cpp",
                                    "",
                                    [],

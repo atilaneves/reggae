@@ -6,7 +6,7 @@ import std.array;
 
 
 void testDepFirstLeaf() {
-    depthFirst(Target("letarget")).array.shouldEqual([]);
+    depthFirst(Target("letarget")).array.shouldBeEmpty;
 }
 
 void testDepthFirstOneDependencyLevel() {
@@ -47,7 +47,7 @@ void testDepthFirstProtocolExample() {
 
 
 void testByDepthLevelLeaf() {
-    ByDepthLevel(Target("letarget")).array.shouldEqual([]);
+    ByDepthLevel(Target("letarget")).array.shouldBeEmpty;
 }
 
 

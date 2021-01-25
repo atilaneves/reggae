@@ -89,6 +89,6 @@ unittest {
 
 
 void testObjectFilesEmpty() {
-    dlangObjectFilesPerPackage([]).shouldEqual([]);
-    dlangObjectFilesPerModule([]).shouldEqual([]);
+    dlangObjectFilesPerPackage([]).shouldBeEmpty;
+    dlangObjectFilesPerModule([]).shouldBeEmpty;
 }

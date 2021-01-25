@@ -36,7 +36,7 @@ void testBuiltinCommand() {
 }
 
 
-void testTarget() {
+void testTarget() @trusted {
     import reggae.config: gDefaultOptions;
     auto target = Target("foo.o", "dmd -of$out -c $in", Target("foo.d"));
     auto bytes = target.toBytes(gDefaultOptions.withProjectPath("/path/to"));

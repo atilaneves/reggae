@@ -15,8 +15,8 @@ else
 
 void testEmpty() {
     auto ninja = Ninja();
-    ninja.buildEntries.shouldEqual([]);
-    ninja.ruleEntries.shouldEqual([]);
+    ninja.buildEntries.shouldBeEmpty;
+    ninja.ruleEntries.shouldBeEmpty;
 }
 
 void testCppLinker() {

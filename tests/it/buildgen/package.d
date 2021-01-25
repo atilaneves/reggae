@@ -10,9 +10,9 @@ private string projectToModule(in string project) {
     return project ~ ".reggaefile";
 }
 
-void generateBuild(string project)(string[] args = []) {
+void generateBuild(string project)(in string backend, string[] args = []) {
     enum module_ = projectToModule(project);
-    auto options = _testProjectOptions!module_;
+    auto options = _testProjectOptions!module_(backend);
     prepareTestBuild!module_(options);
 
     // binary backend doesn't need to generate anything

@@ -22,39 +22,37 @@ private void doBuild(string module_)(in string reggaefileName, ref Options optio
 }
 
 
-@("separate")
-@AutoTags
-@Values("ninja", "make", "binary")
-@Tags("travis_oops")
-unittest {
-    auto options = _testProjectOptions(project);
+static foreach (backend; ["ninja", "make", "binary"])
+    @("separate (" ~ backend ~ ")")
+    @Tags(backend, "travis_oops")
+    unittest {
+        auto options = _testProjectOptions(backend, project);
 
-    enum module_ = "multiple_outputs.reggaefile_sep";
-    doBuild!module_("reggaefile_sep.d", options);
+        enum module_ = "multiple_outputs.reggaefile_sep";
+        doBuild!module_("reggaefile_sep.d", options);
 
-    ["app", "2"].shouldSucceed.shouldEqual(["I call protoFunc(2) and get 4"]);
+        ["app", "2"].shouldSucceed.shouldEqual(["I call protoFunc(2) and get 4"]);
 
-    overwrite(options, "protocol.proto", "int protoFunc(int n) { return n * 3; }");
-    buildCmdShouldRunOk!module_(options);
+        overwrite(options, "protocol.proto", "int protoFunc(int n) { return n * 3; }");
+        buildCmdShouldRunOk!module_(options);
 
-    ["app", "3"].shouldSucceed.shouldEqual(["I call protoFunc(3) and get 9"]);
-}
+        ["app", "3"].shouldSucceed.shouldEqual(["I call protoFunc(3) and get 9"]);
+    }
 
 
-@("together")
-@AutoTags
-@Values("ninja", "make", "binary")
-@Tags("travis_oops")
-unittest {
-    auto options = _testProjectOptions(project);
+static foreach (backend; ["ninja", "make", "binary"])
+    @("together (" ~ backend ~ ")")
+    @Tags(backend, "travis_oops")
+    unittest {
+        auto options = _testProjectOptions(backend, project);
 
-    enum module_ = "multiple_outputs.reggaefile_tog";
-    doBuild!module_("reggaefile_tog.d", options);
+        enum module_ = "multiple_outputs.reggaefile_tog";
+        doBuild!module_("reggaefile_tog.d", options);
 
-    ["app", "2"].shouldSucceed.shouldEqual(["I call protoFunc(2) and get 4"]);
+        ["app", "2"].shouldSucceed.shouldEqual(["I call protoFunc(2) and get 4"]);
 
-    overwrite(options, "protocol.proto", "int protoFunc(int n) { return n * 3; }");
-    buildCmdShouldRunOk!module_(options);
+        overwrite(options, "protocol.proto", "int protoFunc(int n) { return n * 3; }");
+        buildCmdShouldRunOk!module_(options);
 
-    ["app", "3"].shouldSucceed.shouldEqual(["I call protoFunc(3) and get 9"]);
-}
+        ["app", "3"].shouldSucceed.shouldEqual(["I call protoFunc(3) and get 9"]);
+    }

@@ -57,7 +57,7 @@ void testTopLevelTargets() {
     binary.topLevelTargets(["foo"]).shouldEqual([foo]);
     binary.topLevelTargets(["bar"]).shouldEqual([bar]);
     binary.topLevelTargets([]).shouldEqual([foo, bar]);
-    binary.topLevelTargets(["oops"]).shouldEqual([]);
+    binary.topLevelTargets(["oops"]).shouldBeEmpty;
 }
 
 

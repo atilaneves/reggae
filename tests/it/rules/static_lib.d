@@ -9,7 +9,7 @@ import tests.it;
 @("template")
 unittest {
     import reggae.buildgen;
-    auto options = _testProjectOptions("binary", "static_lib");
+    auto options = testProjectOptions("binary", "static_lib");
     string[] noFlags;
 
     version(Windows)

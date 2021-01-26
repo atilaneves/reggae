@@ -9,7 +9,7 @@ static foreach (backend; ["ninja", "make", "binary"])
     @Tags(backend)
     unittest {
         enum module_ = "outputs_in_project_path.reggaefile";
-        auto options = _testProjectOptions!module_(backend);
+        auto options = testProjectOptions!module_(backend);
 
         doTestBuildFor!module_(options);
         inPath(options, "generated/release/64/linux/copy.txt").exists.shouldBeTrue;

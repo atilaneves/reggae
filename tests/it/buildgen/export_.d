@@ -10,7 +10,7 @@ static foreach (backend; ["ninja", "make", "tup"])
     @("Export build system (" ~ backend ~ ")")
     @Tags(backend)
     unittest {
-        auto options = _testOptions(["--export", projectPath("export_proj")]);
+        auto options = testOptions(["--export", projectPath("export_proj")]);
         enum module_ = "export_proj.reggaefile";
         doTestBuildFor!module_(options);
 

@@ -12,7 +12,7 @@ private string projectToModule(in string project) {
 
 void generateBuild(string project)(in string backend, string[] args = []) {
     enum module_ = projectToModule(project);
-    auto options = _testProjectOptions!module_(backend);
+    auto options = testProjectOptions!module_(backend);
     prepareTestBuild!module_(options);
 
     // binary backend doesn't need to generate anything

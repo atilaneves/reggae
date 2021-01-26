@@ -11,6 +11,6 @@ static foreach (backend; ["ninja", "make", "tup"])
     @Tags(backend)
     unittest {
         writelnUt(backend);
-        doBuildFor!(__MODULE__)(_testOptions(["-b", backend, newTestDir])).
+        doBuildFor!(__MODULE__)(testOptions(["-b", backend, newTestDir])).
             shouldThrowWithMessage("Command type 'code' not supported for " ~ backend ~ " backend");
     }

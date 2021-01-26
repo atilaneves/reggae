@@ -402,6 +402,56 @@ unittest {
 }
 
 
+@("dub with spaces")
+@Tags("dub", "ninja")
+unittest {
+    /* Use Ninja to build a tiny dub project with spaces in:
+     * - source directory
+     * - source filename
+     * - import directory
+     * - compiler flags
+     * - linker flags
+     * - output filename
+     */
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl", `
+            name "dub_with_spaces"
+            targetName "dub with spaces"
+            targetType "executable"
+
+            sourcePaths "my source"
+            importPaths "my source"
+            mainSourceFile "my source/my module.d"
+
+            dflags "-L-Lmy libs" platform="posix"
+            dflags "-L/LIBPATH:my libs" platform="windows"
+
+            lflags "-Lmy other libs" platform="posix"
+            lflags "/LIBPATH:my other libs" platform="windows"
+        `);
+
+        writeFile("my source/my module.d", q{
+            module my_module;
+            import other_module;
+            void main() { foo(); }
+        });
+
+        writeFile("my source/other_module.d", q{
+            void foo() {}
+        });
+
+        // use --per-module to test that Ninja accepts the .dep files
+        // generated for both modules/objects
+        const output = runReggae("-b", "ninja", "--per-module");
+        writelnUt(output);
+
+        ninja.shouldExecuteOk;
+
+        shouldExist("dub with spaces" ~ exeExt);
+    }
+}
+
+
 @("depends on package with prebuild")
 @Tags(["dub", "ninja"])
 unittest {

@@ -7,14 +7,14 @@ import reggae.backend.tup;
 import reggae.path: buildPath;
 
 
-void testEmpty() {
+@("Empty") unittest {
     auto tup = Tup();
     tup.output.shouldEqual(banner ~ "\n");
     tup.fileName.shouldEqual("Tupfile");
 }
 
 
-void testSimpleDBuild() {
+@("Simple D build") unittest {
     auto mainObj  = Target(`main.o`,  `dmd -I$project/src -c $in -of$out`, Target(`src/main.d`));
     auto mathsObj = Target(`maths.o`, `dmd -c $in -of$out`, Target(`src/maths.d`));
     auto app = Target(`myapp`,

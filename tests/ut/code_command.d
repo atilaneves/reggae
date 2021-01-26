@@ -18,7 +18,7 @@ private void reset() {
     gInputs = gOutputs = [];
 }
 
-void testSimpleCommand() {
+@("Simple command") unittest {
     reset;
     auto tgt = Target("no output", &incr, Target("no input"));
     tgt.execute(Options());
@@ -28,7 +28,7 @@ void testSimpleCommand() {
 }
 
 
-void testRemoveBuildDir() {
+@("Remove build dir") unittest {
     reset;
     auto cmd = Command(&incr).expandVariables;
     cmd.execute(Options(), Language.unknown, [], []);

@@ -4,7 +4,7 @@ import reggae.path: buildPath;
 import unit_threaded;
 
 
-void testDefaultCCompiler() {
+@("Default C compiler") unittest {
     import reggae;
     Options defaultOptions;
     defaultOptions.cCompiler = "weirdcc";
@@ -30,7 +30,7 @@ void testDefaultCCompiler() {
 }
 
 
-void testOldNinja() {
+@("Old Ninja") unittest {
     import reggae;
     Options defaultOptions;
     defaultOptions.oldNinja = true;

@@ -7,23 +7,23 @@ import reggae.dcompile: dMainDependencies, dependenciesToFile;
 import std.array;
 
 
-void testEmpty() {
+@("Empty") unittest {
     "".dMainDependencies.shouldBeEmpty;
 }
 
-void testImports() {
+@("Imports") unittest {
     "import     std.stdio\t(/inst/std/stdio.d)\n".dMainDependencies.shouldBeEmpty;
     "import     std.stdio\t(/int/std/stdio.d)\nimport    foo.bar\t(/foo/bar.d)".
         dMainDependencies.shouldEqual(["/foo/bar.d"]);
 }
 
 
-void testFiles() {
+@("Files") unittest {
     "file      foo.d\t(/path/to/foo.d)".dMainDependencies.shouldEqual(["/path/to/foo.d"]);
 }
 
 
-void testSrcs() {
+@("Srcs") unittest {
     "import     std.stdio\t(/inst/std/stdio.d)\n".dMainDepSrcs.shouldBeEmpty;
     "import     std.stdio\t(/int/std/stdio.d)\nimport    foo.bar\t(/foo/bar.d)".
         dMainDepSrcs.shouldEqual(["/foo/bar.d"]);
@@ -31,7 +31,7 @@ void testSrcs() {
 }
 
 
-void testEtcLinux() {
+@("etc.linux") unittest {
 
     ["semantic2 main",
      "semantic3 main",
@@ -41,7 +41,7 @@ void testEtcLinux() {
 }
 
 
-void testToFile() {
+@("dependenciesToFile") unittest {
     auto deps = ["/foo/bar.d", "/foo/baz.d"];
     dependenciesToFile("foo.o", deps).shouldEqual(
         ["foo.o: \\",
@@ -49,7 +49,7 @@ void testToFile() {
 }
 
 
-void testFromFile() {
+@("dependenciesFromFile") unittest {
     immutable depFileLines = [
         "objs/calc.objs/src/cpp/maths.o: \\",
         "/home/aalvesne/coding/d/reggae/tmp/aruba/mixproj/src/cpp/maths.cpp " ~

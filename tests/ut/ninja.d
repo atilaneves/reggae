@@ -13,13 +13,13 @@ version(Windows)
 else
     enum isWindows = false;
 
-void testEmpty() {
+@("Empty") unittest {
     auto ninja = Ninja();
     ninja.buildEntries.shouldBeEmpty;
     ninja.ruleEntries.shouldBeEmpty;
 }
 
-void testCppLinker() {
+@("C++ linker") unittest {
     auto ninja = Ninja(Build(Target("mybin",
                                      "/usr/bin/c++ $in -o $out",
                                      [Target("foo.o"), Target("bar.o")],
@@ -32,7 +32,7 @@ void testCppLinker() {
                                       ]);
 }
 
-void testCppLinkerProjectPath() {
+@("C++ linker project path") unittest {
     auto ninja = Ninja(Build(Target("mybin",
                                      "/usr/bin/c++ $in -o $out",
                                      [Target("foo.o"), Target("bar.o")],
@@ -49,7 +49,7 @@ void testCppLinkerProjectPath() {
 }
 
 
-void testCppLinkerProjectPathAndBuild() {
+@("C++ linker project path and build") unittest {
     auto ninja = Ninja(Build(Target("mybin",
                                      "/usr/bin/c++ $in -o $out",
                                      [Target("foo.o"), Target("bar.o")],
@@ -66,7 +66,7 @@ void testCppLinkerProjectPathAndBuild() {
 }
 
 
-void testIccBuild() {
+@("ICC build") unittest {
     auto ninja = Ninja(Build(Target("/path/to/foo.o",
                                      "icc.12.0.022b.i686-linux -pe-file-prefix=/usr/intel/12.0.022b/cc/12.0.022b/include/ @/usr/lib/icc-cc.cfg -I/path/to/headers -gcc-version=345 -fno-strict-aliasing -nostdinc -include /path/to/myheader.h -DTOOL_CHAIN_GCC=gcc-user -D__STUFF__ -imacros /path/to/preinclude_macros.h -I/path/to -Wall -c -MD -MF /path/to/foo.d -o $out $in",
                                      [Target("/path/to/foo.c")])));
@@ -77,7 +77,7 @@ void testIccBuild() {
 }
 
 
-void testBeforeAndAfter() {
+@("Before and after") unittest {
     auto ninja = Ninja(Build(Target("foo.temp",
                                      "icc @/path/to/icc-ld.cfg -o $out $in -Wl,-rpath-link -Wl,/usr/lib",
                                      [Target("main.o"), Target("extra.o"), Target("sub_foo.o"), Target("sub_bar.o"),
@@ -89,7 +89,7 @@ void testBeforeAndAfter() {
                                               ["command = icc $before $out $in $after"])]);
 }
 
-void testSimpleDBuild() {
+@("Simple D build") unittest {
     auto mainObj  = Target(`main.o`,  `dmd -I$project/src -c $in -of$out`, Target(`src/main.d`));
     auto mathsObj = Target(`maths.o`, `dmd -c $in -of$out`, Target(`src/maths.d`));
     auto app = Target(`myapp`,
@@ -119,7 +119,7 @@ void testSimpleDBuild() {
 }
 
 
-void testImplicitDependencies() {
+@("Implicit dependencies") unittest {
     auto target = Target("foo.o", "gcc -o $out -c $in", [Target("foo.c")], [Target("foo.h")]);
     auto ninja = Ninja(Build(target));
     ninja.buildEntries.shouldEqual(
@@ -133,7 +133,7 @@ void testImplicitDependencies() {
                     ["command = gcc $before $out $between $in"])]);
 }
 
-void testImplicitDependenciesMoreThanOne() {
+@("Implicit dependencies more than one") unittest {
     auto target = Target("foo.o", "gcc -o $out -c $in", [Target("foo.c")], [Target("foo.h"), Target("foo.idl")]);
     auto ninja = Ninja(Build(target));
     ninja.buildEntries.shouldEqual(
@@ -148,7 +148,7 @@ void testImplicitDependenciesMoreThanOne() {
 }
 
 
-void testDefaultRules() {
+@("Default rules") unittest {
     import reggae.config: gDefaultOptions;
     version(Windows)
         enum defaultDCModel = " -m32mscoff";
@@ -242,7 +242,7 @@ void testDefaultRules() {
             ]);
 }
 
-void testDefaultRulesWeirdCCompiler() {
+@("Default rules weird C compiler") unittest {
     auto options = Options();
     options.cCompiler = "weirdcc";
     auto rules = defaultRules(options);
@@ -258,7 +258,7 @@ void testDefaultRulesWeirdCCompiler() {
     entry.shouldBeIn(rules);
 }
 
-void testImplicitOutput() {
+@("Implicit output") unittest {
     auto foo = Target(["foo.h", "foo.c"], "protocomp $in", [Target("foo.proto")]);
     auto bar = Target(["bar.h", "bar.c"], "protocomp $in", [Target("bar.proto")]);
     auto ninja = Ninja(Build(foo, bar));
@@ -273,7 +273,7 @@ void testImplicitOutput() {
 }
 
 
-void testImplicitInput() {
+@("Implicit input") unittest {
     auto protoSrcs = Target([`$builddir/gen/protocol.c`, `$builddir/gen/protocol.h`],
                              `./compiler $in`,
                              [Target(`protocol.proto`)]);
@@ -311,7 +311,7 @@ void testImplicitInput() {
 }
 
 
-void testOutputInProjectPathCustom() {
+@("Output in project path custom") unittest {
     auto tgt = Target("$project/foo.o", "gcc -o $out -c $in", Target("foo.c"));
     auto ninja = Ninja(Build(tgt), "/path/to/proj");
     ninja.buildEntries.shouldEqual(
@@ -321,7 +321,7 @@ void testOutputInProjectPathCustom() {
 }
 
 
-void testOutputAndDepOutputInProjectPath() {
+@("Output and dep output in project path") unittest {
     auto fooLib = Target("$project/foo.so", "dmd -of$out $in", [Target("src1.d"), Target("src2.d")]);
     auto symlink1 = Target("$project/weird/path/thingie1", "ln -sf $in $out", fooLib);
     auto symlink2 = Target("$project/weird/path/thingie2", "ln -sf $in $out", fooLib);
@@ -339,7 +339,7 @@ void testOutputAndDepOutputInProjectPath() {
         );
 }
 
-void testOutputInProjectPathDefault() {
+@("Output in project path default") unittest {
     import reggae.ctaa;
     auto tgt = Target("$project/foo.o",
                        Command(CommandType.compile, assocListT("foo", ["bar"])),
@@ -351,7 +351,7 @@ void testOutputInProjectPathDefault() {
 }
 
 
-void testPhonyRule() {
+@("Phony rule") unittest {
     auto tgt = Target("lephony",
                        Command.phony("whatever boo bop"),
                        [Target("toto"), Target("tata")],
@@ -364,7 +364,7 @@ void testPhonyRule() {
         );
 }
 
-void testImplicitsWithNoIn() {
+@("Implicits with no in") unittest {
     Target[] emptyDependencies;
     auto stuff = Target("foo.o", "dmd -of$out -c $in", Target("foo.d"));
     auto foo = Target("$project/foodir", "mkdir -p $out", emptyDependencies, [stuff]);
@@ -385,7 +385,7 @@ void testImplicitsWithNoIn() {
 }
 
 
-void testCustomRuleInvolvingProjectPath() {
+@("Custom rule involving project path") unittest {
     auto foo = Target("foo.o", "$project/../dmd/src/dmd -of$out -c $in", Target("foo.d"));
     auto app = Target("app", "$project/../dmd/src/dmd -of$out -c $in", Target("foo.d"));
     auto ninja = Ninja(Build(app), "/path/to/proj");
@@ -396,7 +396,7 @@ void testCustomRuleInvolvingProjectPath() {
 }
 
 
-void testTargetWithNoDependencies() {
+@("Target with no dependencies") unittest {
     auto obj = Target("utmain.o", "dmd -of$out -c $in",
                        Target("utmain.d", "/home/atila/coding/d/dtest/bin/dtest -f $out --generate"));
     //before the fix this throws because of no $in and $out in the target

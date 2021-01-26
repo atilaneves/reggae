@@ -6,31 +6,31 @@ import unit_threaded;
 import std.array;
 
 
-void testNoDefaultRule() {
+@("No default rule") unittest {
     Command("doStuff foo=bar").isDefaultCommand.shouldBeFalse;
 }
 
-void testGetRuleD() {
+@("Get rule D") unittest {
     const command = Command(CommandType.compile, assocList([assocEntry("foo", ["bar"])]));
     command.getType.shouldEqual(CommandType.compile);
     command.isDefaultCommand.shouldBeTrue;
 }
 
-void testGetRuleCpp() {
+@("Get rule C++") unittest {
     const command = Command(CommandType.compile, assocList([assocEntry("includes", ["src", "other"])]));
     command.getType.shouldEqual(CommandType.compile);
     command.isDefaultCommand.shouldBeTrue;
 }
 
 
-void testValueWhenKeyNotFound() {
+@("Value when key not found") unittest {
     const command = Command(CommandType.compile, assocList([assocEntry("foo", ["bar"])]));
     command.getParams("", "foo", ["hahaha"]).shouldEqual(["bar"]);
     command.getParams("", "includes", ["hahaha"]).shouldEqual(["hahaha"]);
 }
 
 
-void testObjectFile() {
+@("objectFile") unittest {
     auto obj = objectFile(SourceFile("path/to/src/foo.c"), Flags("-m64 -fPIC -O3"));
     obj.hasDefaultCommand.shouldBeTrue;
 

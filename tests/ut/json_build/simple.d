@@ -24,7 +24,7 @@ immutable fooObjJson = `
   }
 ]`;
 
-void testFooObj() {
+@("Foo object") unittest {
     jsonToBuild("", fooObjJson).shouldEqual(
         Build(Target("foo.o", "dmd -of$out -c $in", Target("foo.d"))));
 }

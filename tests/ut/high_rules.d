@@ -13,7 +13,7 @@ version(Windows)
 else
     enum defaultDCModel = null;
 
-void testCObjectFile() {
+@("C object file") unittest {
     immutable fileName = "foo.c";
     enum objPath = "foo" ~ objExt;
     auto obj = objectFile(SourceFile(fileName),
@@ -39,7 +39,7 @@ void testCObjectFile() {
     obj.shellCommand(options).shouldEqual(expected);
 }
 
-void testCppObjectFile() {
+@("C++ object file") unittest {
     foreach(ext; ["cpp", "CPP", "cc", "cxx", "C", "c++"]) {
         immutable fileName = "foo." ~ ext;
         enum objPath = "foo" ~ objExt;
@@ -56,7 +56,7 @@ void testCppObjectFile() {
 }
 
 
-void testDObjectFile() {
+@("D object file") unittest {
     auto obj = objectFile(SourceFile("foo.d"),
                            Flags("-g -debug"),
                            ImportPaths(["myhdrs", "otherhdrs"]),
@@ -72,7 +72,7 @@ void testDObjectFile() {
 }
 
 
-void testBuiltinTemplateDeps() {
+@("builtinTemplate deps") unittest {
     import reggae.config;
 
     version(Windows)
@@ -87,7 +87,7 @@ void testBuiltinTemplateDeps() {
 
 }
 
-void testBuiltinTemplateNoDeps() {
+@("builtinTemplate no deps") unittest {
     import reggae.config;
 
     version(Windows)

@@ -60,7 +60,7 @@ string linkJsonString() @safe pure nothrow {
 }
 
 
-void testLink() {
+@("Link") unittest {
     auto mainObj = Target("main.o", "dmd -I$project/src -c $in -of$out", Target("src/main.d"));
     auto mathsObj = Target("maths.o", "dmd -c $in -of$out", Target("src/maths.d"));
     auto app = link(ExeName("myapp"), [mainObj, mathsObj], Flags("-L-M"));
@@ -183,7 +183,7 @@ string targetConcatFixedJsonStr() @safe pure nothrow {
 `;
 }
 
-void testJsonTargetConcatFixed() {
+@("JSON target concat fixed") unittest {
     auto mainObj = Target("main.o", "dmd -I$project/src -c $in -of$out", Target("src/main.d"));
     auto mathsObj = Target("maths.o", "dmd -c $in -of$out", Target("src/maths.d"));
     auto app = link(ExeName("myapp"), [mainObj, mathsObj], Flags("-L-M"));

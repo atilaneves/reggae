@@ -6,10 +6,10 @@ import reggae.rules.common: Language;
 import reggae.options: Options;
 
 
-string cmdTypeToNinjaString(CommandType commandType, Language language) @safe pure {
+string cmdTypeToNinjaRuleName(CommandType commandType, Language language) @safe pure {
     final switch(commandType) with(CommandType) {
-        case shell: assert(0, "cmdTypeToNinjaString doesn't work for shell");
-        case phony: assert(0, "cmdTypeToNinjaString doesn't work for phony");
+        case shell: assert(0, "cmdTypeToNinjaRuleName doesn't work for shell");
+        case phony: assert(0, "cmdTypeToNinjaRuleName doesn't work for phony");
         case code: throw new Exception("Command type 'code' not supported for ninja backend");
         case link:
             final switch(language) with(Language) {
@@ -101,7 +101,20 @@ NinjaEntry[] defaultRules(in Options options) @safe pure {
                 paramLines ~= ["deps = gcc", "depfile = $out.dep"];
         }
 
-        return NinjaEntry("rule " ~ cmdTypeToNinjaString(type, language), paramLines);
+        string getDescription() {
+            switch(type) with(CommandType) {
+                case compile:        return "Compiling $out";
+                case link:           return "Linking $out";
+                case compileAndLink: return "Building $out";
+                default:             return null;
+            }
+        }
+
+        const description = getDescription();
+        if (description.length)
+            paramLines ~= "description = " ~ description;
+
+        return NinjaEntry("rule " ~ cmdTypeToNinjaRuleName(type, language), paramLines);
     }
 
     NinjaEntry[] entries;
@@ -224,7 +237,7 @@ private:
             paramLines ~= param ~ " = " ~ flat.replace("$", "$$");
         }
 
-        const ruleName = cmdTypeToNinjaString(target.getCommandType, target.getLanguage);
+        const ruleName = cmdTypeToNinjaRuleName(target.getCommandType, target.getLanguage);
         const buildLine = buildLine(target, ruleName, /*includeImplicitInputs=*/false);
 
         buildEntries ~= NinjaEntry(buildLine, paramLines);

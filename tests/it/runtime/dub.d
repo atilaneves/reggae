@@ -17,7 +17,7 @@ unittest {
         shouldNotExist("reggaefile.d");
         writelnUt("\n\nReggae output:\n\n", runReggae("-b", "ninja").lines.join("\n"), "-----\n");
         shouldExist("reggaefile.d");
-        auto output = ninja.shouldExecuteOk;
+        auto output = ninja(["-v"]).shouldExecuteOk;
 
         version(Windows) {
             // args in response file
@@ -868,7 +868,7 @@ unittest {
         );
 
         runReggae("-b", "ninja", "--dub-build-type=release");
-        const buildLines = ninja.shouldExecuteOk;
+        const buildLines = ninja(["-v"]).shouldExecuteOk;
 
         version(Windows) {
             // args in response file

@@ -10,7 +10,7 @@ import std.algorithm;
 import std.array;
 
 
-void testDCompileNoIncludePathsNinja() {
+@("DCompile no include paths Ninja") unittest {
     auto build = Build(objectFile(SourceFile("path/to/src/foo.d")));
     auto ninja = Ninja(build, "/tmp/myproject");
     enum objPath = buildPath("path/to/src/foo" ~ objExt);
@@ -20,7 +20,7 @@ void testDCompileNoIncludePathsNinja() {
 }
 
 
-void testDCompileIncludePathsNinja() {
+@("DCompile include paths Ninja") unittest {
     auto build = Build(objectFile(SourceFile("path/to/src/foo.d"),
                                    Flags("-O"),
                                    ImportPaths(["path/to/src", "other/path"])));
@@ -32,7 +32,7 @@ void testDCompileIncludePathsNinja() {
                      "flags = -O"])]);
 }
 
-void testDCompileWithSpacesNinja() {
+@("DCompile with spaces Ninja") unittest {
     auto build = Build(objectFile(SourceFile("my src/foo.d"),
                                    Flags(["-O", "-L/LIBPATH:my libs"]),
                                    ImportPaths(["my src", "other/path"])));
@@ -44,7 +44,7 @@ void testDCompileWithSpacesNinja() {
                      `flags = -O "-L/LIBPATH:my libs"`])]);
 }
 
-void testDCompileIncludePathsMake() {
+@("DCompile include paths Make") unittest {
     import reggae.config: gDefaultOptions;
 
     auto build = Build(objectFile(SourceFile("path/to/src/foo.d"),
@@ -100,7 +100,7 @@ unittest {
 }
 
 
-void testObjectFilesEmpty() {
+@("Object files empty") unittest {
     dlangObjectFilesPerPackage([]).shouldBeEmpty;
     dlangObjectFilesPerModule([]).shouldBeEmpty;
 }

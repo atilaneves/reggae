@@ -5,7 +5,7 @@ import reggae.dcompile;
 
 
 version(Windows)
-void testParseResponseFile() {
+@("parseResponseFile") unittest {
     parseResponseFile("abc").shouldEqual(["abc"]);
     parseResponseFile("a b\tc").shouldEqual(["a", "b", "c"]);
     parseResponseFile(" a\n b\tc\r\n").shouldEqual(["a", "b", "c"]);

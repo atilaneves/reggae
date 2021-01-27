@@ -5,7 +5,7 @@ import tests.it;
 
 @("template") unittest {
     import reggae.buildgen;
-    auto options = _testProjectOptions("binary", "scriptlike");
+    auto options = testProjectOptions("binary", "scriptlike");
     string[] noFlags;
 
     getBuildObject!"scriptlike.reggaefile"(options).shouldEqual(

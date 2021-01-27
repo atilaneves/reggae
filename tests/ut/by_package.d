@@ -6,7 +6,7 @@ import reggae.sorting;
 
 
 
-void testByPackage() {
+@("byPackage") unittest {
     auto files = ["/src/utils/data/defs.d",
                   "/src/tests/test1.d",
                   "/src/utils/data/foo.d",
@@ -23,7 +23,7 @@ void testByPackage() {
 }
 
 
-void testPackagePath() {
+@("packagePath") unittest {
     import reggae.path : buildPath;
     "src/utils/data/defs.d".packagePath.shouldEqual(buildPath("src/utils/data"));
 }

@@ -7,7 +7,7 @@ import reggae.reggae;
 
 // calls reggae.run, which is basically main, but with a
 // fake file
-auto _testRun(string[] args) {
+auto testRun(string[] args) {
     auto output = FakeFile();
     run(output, args);
     return output;
@@ -84,7 +84,7 @@ private:
 
     auto runImpl(string[] args, string project = "") const {
         if(project == "") project = testPath;
-        return _testRun(["reggae", "-C", testPath] ~ args ~ project);
+        return testRun(["reggae", "-C", testPath] ~ args ~ project);
     }
 }
 

@@ -4,7 +4,7 @@ import reggae;
 import unit_threaded;
 import tests.utils;
 
-void testTargetSelection() {
+@("Target selection") unittest {
 
     bool fooCalled;
     bool barCalled;
@@ -50,7 +50,7 @@ void testTargetSelection() {
     }
 }
 
-void testTopLevelTargets() {
+@("Top-level targets") unittest {
     auto foo = Target("foo", "", Target("foo.d"));
     auto bar = Target("bar", "", Target("bar.d"));
     auto binary = Binary(Build(foo, bar), Options());

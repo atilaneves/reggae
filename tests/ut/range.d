@@ -5,18 +5,18 @@ import unit_threaded;
 import std.array;
 
 
-void testDepFirstLeaf() {
+@("depthFirst Leaf") unittest {
     depthFirst(Target("letarget")).array.shouldBeEmpty;
 }
 
-void testDepthFirstOneDependencyLevel() {
+@("depthFirst one dependency level") unittest {
     auto target = Target("letarget", "lecmdfoo bar other", [Target("foo"), Target("bar")]);
     auto depth = depthFirst(target);
     depth.array.shouldEqual([target]);
 }
 
 
-void testDepthFirstTwoDependencyLevels() {
+@("depthFirst two dependency levels") unittest {
     auto fooObj = Target("foo.o", "gcc -c -o foo.o foo.c", [Target("foo.c")]);
     auto barObj = Target("bar.o", "gcc -c -o bar.o bar.c", [Target("bar.c")]);
     auto header = Target("hdr.h", "genhdr $in", [Target("hdr.i")]);
@@ -28,7 +28,7 @@ void testDepthFirstTwoDependencyLevels() {
 }
 
 
-void testDepthFirstProtocolExample() {
+@("depthFirst protocol example") unittest {
     auto protoSrcs = Target([`$builddir/gen/protocol.c`, `$builddir/gen/protocol.h`],
                              `./compiler $in`,
                              [Target(`protocol.proto`)]);
@@ -46,18 +46,18 @@ void testDepthFirstProtocolExample() {
 }
 
 
-void testByDepthLevelLeaf() {
+@("ByDepthLevel leaf") unittest {
     ByDepthLevel(Target("letarget")).array.shouldBeEmpty;
 }
 
 
-void testByDepthLevelOneLevel() {
+@("ByDepthLevel one level") unittest {
     auto target = Target("letarget", "lecmdfoo bar other", [Target("foo"), Target("bar")]);
     auto byLevel = ByDepthLevel(target);
     byLevel.array.shouldEqual([[target]]);
 }
 
-void testByDepthLevelTwoDependencyLevels() {
+@("ByDepthLevel two dependency levels") unittest {
     auto fooC = Target("foo.c");
     auto barC = Target("bar.c");
     auto fooObj = Target("foo.o", "gcc -c -o foo.o foo.c", [fooC]);
@@ -83,12 +83,12 @@ void testByDepthLevelTwoDependencyLevels() {
             ]);
 }
 
-void testLeavesEmpty() {
+@("Leaves empty") unittest {
     Leaves(Target("leaf")).array.shouldEqual([Target("leaf")]);
 }
 
 
-void testLeavesTwoLevels() {
+@("Leaves two levels") unittest {
     auto fooC = Target("foo.c");
     auto barC = Target("bar.c");
     auto fooObj = Target("foo.o", "gcc -c -o foo.o foo.c", [fooC]);

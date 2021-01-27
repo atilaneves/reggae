@@ -9,7 +9,7 @@ import unit_threaded;
 @safe:
 
 
-void testShellCommand() {
+@("Shell command") unittest {
     {
         const command = Command("dmd -of$out -c $in");
         ubyte[] bytes = command.toBytes;
@@ -24,7 +24,7 @@ void testShellCommand() {
 }
 
 
-void testBuiltinCommand() {
+@("Builtin command") unittest {
     {
         const command = Command(CommandType.compile, assocListT("foo", ["lefoo", "dasfoo"]));
         Command.fromBytes(command.toBytes).shouldEqual(command);
@@ -36,7 +36,8 @@ void testBuiltinCommand() {
 }
 
 
-void testTarget() @trusted {
+@trusted
+@("Target") unittest {
     import reggae.config: gDefaultOptions;
     auto target = Target("foo.o", "dmd -of$out -c $in", Target("foo.d"));
     auto bytes = target.toBytes(gDefaultOptions.withProjectPath("/path/to"));
@@ -45,7 +46,8 @@ void testTarget() @trusted {
         Target("foo.o", "dmd -offoo.o -c " ~ srcPath, Target(srcPath)));
 }
 
-void testBuild() @trusted {
+@trusted
+@("Build") unittest {
     import reggae.config: gDefaultOptions;
     auto foo = Target("foo.o", "dmd -of$out -c $in", Target("foo.d"));
     auto bar = Target("bar.o", "dmd -of$out -c $in", Target("bar.d"));

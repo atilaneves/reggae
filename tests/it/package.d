@@ -129,20 +129,20 @@ string newTestDir() {
     return ret.absolutePath;
 }
 
-Options _testOptions(string[] args) {
+Options testOptions(string[] args) {
     import reggae.config: setOptions;
     auto options = getOptions(["reggae", "-C", newTestDir] ~ args);
     setOptions(options);
     return options;
 }
 
-Options _testProjectOptions(in string backend, in string projectName) {
-    return _testOptions(["-b", backend, projectPath(projectName)]);
+Options testProjectOptions(in string backend, in string projectName) {
+    return testOptions(["-b", backend, projectPath(projectName)]);
 }
 
-Options _testProjectOptions(string module_)(string backend) {
+Options testProjectOptions(string module_)(string backend) {
     import std.string;
-    return _testProjectOptions(backend, module_.split(".")[0]);
+    return testProjectOptions(backend, module_.split(".")[0]);
 }
 
 

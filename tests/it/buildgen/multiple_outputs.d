@@ -26,7 +26,7 @@ static foreach (backend; ["ninja", "make", "binary"])
     @("separate (" ~ backend ~ ")")
     @Tags(backend, "travis_oops")
     unittest {
-        auto options = _testProjectOptions(backend, project);
+        auto options = testProjectOptions(backend, project);
 
         enum module_ = "multiple_outputs.reggaefile_sep";
         doBuild!module_("reggaefile_sep.d", options);
@@ -44,7 +44,7 @@ static foreach (backend; ["ninja", "make", "binary"])
     @("together (" ~ backend ~ ")")
     @Tags(backend, "travis_oops")
     unittest {
-        auto options = _testProjectOptions(backend, project);
+        auto options = testProjectOptions(backend, project);
 
         enum module_ = "multiple_outputs.reggaefile_tog";
         doBuild!module_("reggaefile_tog.d", options);

@@ -15,7 +15,7 @@ import std.typecons: No;
     import std.file;
     import std.string;
 
-    auto options = _testProjectOptions("binary", "unity");
+    auto options = testProjectOptions("binary", "unity");
     string[] noFlags;
 
     getBuildObject!"unity.reggaefile"(options).shouldEqual(

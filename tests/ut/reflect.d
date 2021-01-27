@@ -4,7 +4,7 @@ import unit_threaded;
 import reggae;
 
 
-void testSimpleBuild() {
+@("Simple build") unittest {
     {
         import tests.ut.simple_foo_reggaefile;
         const build = getBuild!(tests.ut.simple_foo_reggaefile);
@@ -17,7 +17,7 @@ void testSimpleBuild() {
     }
 }
 
-void testRealisticBuild() {
+@("Realistic build") unittest {
     const build = getBuild!"tests.ut.realistic_build";
     build().shouldEqual(Build(Target("leapp",
                                      "dmd -ofleapp foo.o bar.o",

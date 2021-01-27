@@ -8,14 +8,14 @@ import std.array;
 import std.format;
 
 
-void testIsLeaf() {
+@("isLeaf") unittest {
     Target("tgt").isLeaf.shouldBeTrue;
     Target("other", "", [Target("foo"), Target("bar")]).isLeaf.shouldBeFalse;
     Target("implicits", "", [], [Target("foo")]).isLeaf.shouldBeFalse;
 }
 
 
-void testInOut() {
+@("$in and $out") unittest {
     import reggae.config: gDefaultOptions;
     //Tests that specifying $in and $out in the command string gets substituted correctly
     {
@@ -56,7 +56,7 @@ void testInOut() {
 }
 
 
-void testProject() {
+@("Project") unittest {
     import reggae.config: gDefaultOptions;
     auto target = Target("foo",
                           "makefoo -i $in -o $out -p $project",
@@ -66,7 +66,7 @@ void testProject() {
 }
 
 
-void testMultipleOutputs() {
+@("Multiple outputs") unittest {
     import reggae.config: gDefaultOptions;
     auto target = Target(["foo.hpp", "foo.cpp"], "protocomp $in", [Target("foo.proto")]);
     target.rawOutputs.shouldEqual(["foo.hpp", "foo.cpp"]);
@@ -77,7 +77,7 @@ void testMultipleOutputs() {
 }
 
 
-void testInTopLevelObjDir() {
+@("InTopLevelObjDir") unittest {
 
     auto theApp = Target("theapp");
     auto dirName = topLevelDirName(theApp);
@@ -94,7 +94,7 @@ void testInTopLevelObjDir() {
 }
 
 
-void testMultipleOutputsImplicits() {
+@("Multiple outputs, implicits") unittest {
     auto protoSrcs = Target([`$builddir/gen/protocol.c`, `$builddir/gen/protocol.h`],
                              `./compiler $in`,
                              [Target(`protocol.proto`)]);
@@ -126,7 +126,7 @@ void testMultipleOutputsImplicits() {
 }
 
 
-void testRealTargetPath() {
+@("realTargetPath") unittest {
     auto fooLib = Target("$project/foo.so", "dmd -of$out $in", [Target("src1.d"), Target("src2.d")]);
     auto barLib = Target("$builddir/bar.so", "dmd -of$out $in", [Target("src1.d"), Target("src2.d")]);
     auto symlink1 = Target("$project/weird/path/thingie1", "ln -sf $in $out", fooLib);
@@ -146,7 +146,7 @@ void testRealTargetPath() {
 }
 
 
-void testOptional() {
+@("optional") unittest {
     enum foo = Target("foo", "dmd -of$out $in", Target("foo.d"));
     enum bar = Target("bar", "dmd -of$out $in", Target("bar.d"));
 
@@ -157,7 +157,7 @@ void testOptional() {
 }
 
 
-void testDiamondDeps() {
+@("Diamond deps") unittest {
     auto src1 = Target("src1.d");
     auto src2 = Target("src2.d");
     auto obj1 = Target("obj1.o", "dmd -of$out -c $in", src1);
@@ -176,7 +176,7 @@ void testDiamondDeps() {
     build.range.array.shouldEqual([newObj1, newObj2, newFooLib, newSymlink1, newSymlink2]);
 }
 
-void testPhobosOptionalBug() {
+@("Phobos optional bug") unittest {
     enum obj1 = Target("obj1.o", "dmd -of$out -c $in", Target("src1.d"));
     enum obj2 = Target("obj2.o", "dmd -of$out -c $in", Target("src2.d"));
     enum foo = Target("foo", "dmd -of$out $in", [obj1, obj2]);
@@ -198,13 +198,13 @@ void testPhobosOptionalBug() {
 }
 
 
-void testOutputsInProjectPath() {
+@("Outputs in project path") unittest {
     auto mkDir = Target("$project/foodir", "mkdir -p $out", [], []);
     mkDir.expandOutputs("/path/to/proj").shouldEqual([buildPath("/path/to/proj/foodir")]);
 }
 
 
-void testExpandOutputs() {
+@("expandOutputs") unittest {
     auto foo = Target("$project/foodir", "mkdir -p $out", [], []);
     foo.expandOutputs("/path/to/proj").array.shouldEqual([buildPath("/path/to/proj/foodir")]);
 
@@ -213,7 +213,7 @@ void testExpandOutputs() {
 }
 
 
-void testCommandBuilddir() {
+@("Command $builddir") unittest {
     import reggae.config: gDefaultOptions;
     auto cmd = Command("dmd -of$builddir/ut_debug $in");
     cmd.shellCommand(gDefaultOptions.withProjectPath("/path/to/proj"), Language.unknown, ["$builddir/ut_debug"], ["foo.d"]).
@@ -221,7 +221,7 @@ void testCommandBuilddir() {
 }
 
 
-void testBuilddirInTopLevelTarget() {
+@("$builddir in top-level target") unittest {
     auto ao = objectFile(SourceFile("a.c"));
     auto liba = Target("$builddir/liba.a", "ar rcs liba.a a.o", [ao]);
     mixin build!(liba);
@@ -230,41 +230,41 @@ void testBuilddirInTopLevelTarget() {
 }
 
 
-void testOutputInBuildDir() {
+@("Output in $builddir") unittest {
     auto target = Target("$builddir/foo/bar", "cmd", [Target("foo.d"), Target("bar.d")]);
     target.expandOutputs("/path/to").shouldEqual([buildPath("foo/bar")]);
 }
 
-void testOutputInProjectDir() {
+@("Output in $project") unittest {
     auto target = Target("$project/foo/bar", "cmd", [Target("foo.d"), Target("bar.d")]);
     target.expandOutputs("/path/to").shouldEqual([buildPath("/path/to/foo/bar")]);
 }
 
-void testCmdInBuildDir() {
+@("Cmd with $builddir") unittest {
     auto target = Target("output", "cmd -I$builddir/include $in $out", [Target("foo.d"), Target("bar.d")]);
     target.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
         "cmd -Iinclude " ~ buildPath("/path/to/foo.d") ~ " " ~ buildPath("/path/to/bar.d") ~ " output");
 }
 
-void testCmdInProjectDir() {
+@("Cmd with $project") unittest {
     auto target = Target("output", "cmd -I$project/include $in $out", [Target("foo.d"), Target("bar.d")]);
     target.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
         "cmd -I" ~ buildPath("/path/to") ~ "/include" ~ " " ~ buildPath("/path/to/foo.d") ~ " " ~ buildPath("/path/to/bar.d") ~ " output");
 }
 
-void testDepsInBuildDir() {
+@("Deps in $builddir") unittest {
     auto target = Target("output", "cmd", [Target("$builddir/foo.d"), Target("$builddir/bar.d")]);
     target.dependenciesInProjectPath("/path/to").shouldEqual(["foo.d", "bar.d"]);
 }
 
-void testDepsInProjectDir() {
+@("Deps in $project") unittest {
     auto target = Target("output", "cmd", [Target("$project/foo.d"), Target("$project/bar.d")]);
     target.dependenciesInProjectPath("/path/to").shouldEqual(
         [buildPath("/path/to/foo.d"), buildPath("/path/to/bar.d")]);
 }
 
 
-void testBuildWithOneDepInBuildDir() {
+@("Build with one dep in $builddir") unittest {
     auto target = Target("output", "cmd -o $out -c $in", Target("$builddir/input.d"));
     alias top = link!(ExeName("ut"), targetConcat!(target));
     auto build = Build(top);

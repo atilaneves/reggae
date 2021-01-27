@@ -8,7 +8,7 @@ import reggae.backend.ninja;
 import unit_threaded;
 
 
-void testNoIncludePaths() {
+@("No include paths") unittest {
     auto build = Build(objectFile(SourceFile("path/to/src/foo.cpp")));
     auto ninja = Ninja(build, "/tmp/myproject");
     enum objPath = buildPath("path/to/src/foo" ~ objExt);
@@ -19,7 +19,7 @@ void testNoIncludePaths() {
 }
 
 
-void testIncludePaths() {
+@("Include paths") unittest {
     auto build = Build(objectFile(SourceFile("path/to/src/foo.cpp"), Flags(""),
                                    IncludePaths(["path/to/src", "other/path"])));
     auto ninja = Ninja(build, "/tmp/myproject");
@@ -31,7 +31,7 @@ void testIncludePaths() {
 }
 
 
-void testFlagsCompileC() {
+@("Flags compile C") unittest {
     auto build = Build(objectFile(SourceFile("path/to/src/foo.c"), Flags("-m64 -fPIC -O3")));
     auto ninja = Ninja(build, "/tmp/myproject");
     enum objPath = buildPath("path/to/src/foo" ~ objExt);
@@ -41,7 +41,7 @@ void testFlagsCompileC() {
             ]);
 }
 
-void testFlagsCompileCpp() {
+@("Flags compile C++") unittest {
     auto build = Build(objectFile(SourceFile("path/to/src/foo.cpp"), Flags("-m64 -fPIC -O3")));
     auto ninja = Ninja(build, "/tmp/myproject");
     enum objPath = buildPath("path/to/src/foo" ~ objExt);
@@ -51,7 +51,7 @@ void testFlagsCompileCpp() {
             ]);
 }
 
-void testCppCompile() {
+@("C++ compile") unittest {
     auto mathsObj = objectFile(SourceFile("src/cpp/maths.cpp"),
                                 Flags("-m64 -fPIC -O3"),
                                 IncludePaths(["headers"]));
@@ -68,7 +68,7 @@ void testCppCompile() {
     mathsObj.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(expected);
 }
 
-void testCCompile() {
+@("C compile") unittest {
     auto mathsObj = objectFile(SourceFile("src/c/maths.c"),
                                 Flags("-m64 -fPIC -O3"),
                                 IncludePaths(["headers"]));
@@ -86,7 +86,7 @@ void testCCompile() {
 }
 
 
-void testUnityNoFiles() {
+@("Unity no files") unittest {
     string[] files;
     immutable projectPath = "";
     unityFileContents(projectPath, files).shouldThrow;
@@ -99,7 +99,7 @@ private void shouldEqualLines(string actual, string[] expected,
     actual.split("\n").shouldEqual(expected, file, line);
 }
 
-void testUnityCppFiles() {
+@("Unity C++ files") unittest {
     auto files = ["src/foo.cpp", "src/bar.cpp"];
     unityFileContents("/path/to/proj/", files).shouldEqualLines(
         [`#include "/path/to/proj/src/foo.cpp"`,
@@ -107,25 +107,25 @@ void testUnityCppFiles() {
 }
 
 
-void testUnityCFiles() {
+@("Unity C files") unittest {
     auto files = ["src/foo.c", "src/bar.c"];
     unityFileContents("/foo/bar/", files).shouldEqualLines(
         [`#include "/foo/bar/src/foo.c"`,
          `#include "/foo/bar/src/bar.c"`]);
 }
 
-void testUnityMixedLanguages() {
+@("Unity mixed languages") unittest {
     auto files = ["src/foo.cpp", "src/bar.c"];
     unityFileContents("/project", files).shouldThrow;
 }
 
-void testUnityDFiles() {
+@("Unity D files") unittest {
     auto files = ["src/foo.d", "src/bar.d"];
     unityFileContents("/project", files).shouldThrow;
 }
 
 
-void testUnityTargetCpp() @trusted {
+@("Unity target C++") unittest {
     import reggae.config: gDefaultOptions;
 
     enum files = ["src/foo.cpp", "src/bar.cpp", "src/baz.cpp"];
@@ -158,7 +158,7 @@ void testUnityTargetCpp() @trusted {
                                           Target("$builddir/mylib.a")]);
 }
 
-void testUnityTargetC() @trusted {
+@("Unity target C") unittest {
     import reggae.config: gDefaultOptions;
 
     enum files = ["src/foo.c", "src/bar.c", "src/baz.c"];

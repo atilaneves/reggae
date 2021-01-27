@@ -231,10 +231,13 @@ string[] dMainDependencies(in string output) @safe {
 
 
 string[] dependenciesToFile(in string objFile, in string[] deps) @safe pure nothrow {
-    import std.array: join;
+    import std.array: join, replace;
+    static string escape(string arg) {
+        return arg.replace(" ", `\ `); // TODO: there'd be more...
+    }
     return [
-        objFile ~ ": \\",
-        deps.join(" "),
+        escape(objFile) ~ ": \\",
+        deps.map!escape.join(" "),
     ];
 }
 

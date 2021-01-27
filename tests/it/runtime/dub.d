@@ -32,6 +32,7 @@ unittest {
             ];
 
         // there's only one UT in main.d which always fails
+        ninja(["ut"]).shouldExecuteOk;
         shouldFail("ut");
     }
 }
@@ -51,7 +52,7 @@ unittest {
 unittest {
     with(immutable ReggaeSandbox("dub_prebuild")) {
         runReggae("-b", "ninja");
-        ninja.shouldExecuteOk;
+        ninja(["default", "ut"]).shouldExecuteOk;
         shouldSucceed("ut");
     }
 }
@@ -772,7 +773,7 @@ unittest {
             }
         });
         runReggae("-b", "ninja");
-        ninja.shouldExecuteOk;
+        ninja(["default", "ut"]).shouldExecuteOk;
         shouldSucceed("ut");
     }
 }
@@ -793,7 +794,7 @@ unittest {
             unittest { assert(1 == 2); }
         });
         runReggae("-b", "ninja");
-        ninja.shouldExecuteOk;
+        ninja(["default", "ut"]).shouldExecuteOk;
         shouldFail("ut");
     }
 }
@@ -840,7 +841,7 @@ unittest {
         });
 
         runReggae("-b", "ninja");
-        ninja.shouldExecuteOk;
+        ninja(["default", "ut"]).shouldExecuteOk;
         shouldFail("ut");
     }
 }

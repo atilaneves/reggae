@@ -135,11 +135,28 @@ D projects and dub integration
 
 The easiest dub integration is to run reggae with a directory
 containing a dub project as parameter. That will create a build system
-that would do the same as "dub build" but probably faster. In all
-likelihood a user needing reggae will need more than that, and reggae
-provides an API to use dub build information in a `reggaefile.d` build
-description file. A simple example for building production and
-unittest binaries concurrently is this:
+with a default target that would do the same as "dub build" but probably
+faster. An optional `ut` target corresponds to the unittest executable of
+"dub test". For example:
+
+```bash
+# one-time setup (assuming the current working dir is a dub project,
+# i.e., contains a dub.{sdl,json} file):
+mkdir build
+cd build
+reggae -b ninja ..
+
+# equivalent to "dub build":
+ninja
+# equivalent to "dub test -- <args>":
+ninja ut && ./ut <args>
+# build both default and unittest targets in parallel:
+ninja default ut
+```
+
+For advanced use cases, reggae provides an API to use dub build information
+in a `reggaefile.d` build description file. A simple example for building
+production and unittest binaries concurrently is this:
 
 ```d
 import reggae;
@@ -147,8 +164,6 @@ alias main = dubDefaultTarget!(CompilerFlags("-g -debug"));
 alias ut = dubConfigurationTarget!(Configuration("unittest"));
 mixin build!(main, ut);
 ```
-
-This is equivalent to the automatically generated reggaefile if none is present.
 
 Scripting language limitations
 ------------------------------

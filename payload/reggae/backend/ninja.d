@@ -125,7 +125,13 @@ NinjaEntry[] defaultRules(in Options options) @safe pure {
         }
     }
 
-    entries ~= NinjaEntry("rule _phony", ["command = $cmd"]);
+    string[] phonyParamLines;
+    version(Windows) {
+        phonyParamLines = [`command = cmd.exe /c "$cmd"`, "description = $cmd"];
+    } else {
+        phonyParamLines = ["command = $cmd"];
+    }
+    entries ~= NinjaEntry("rule _phony", phonyParamLines);
 
     return entries;
 }

@@ -257,7 +257,10 @@ else
                           "description = Building $out"]),
 
             NinjaEntry("rule _phony",
-                       ["command = $cmd"]),
+                       isWindows
+                       ? [`command = cmd.exe /c "$cmd"`,
+                          "description = $cmd"]
+                       : ["command = $cmd"]),
             ]);
 }
 

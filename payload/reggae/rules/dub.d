@@ -198,9 +198,10 @@ static if(isDubProject) {
                        allObjs,
                        const Flags(allLinkerFlags));
 
-        return dubInfo.postBuildCommands == ""
+        const combinedPostBuildCommands = dubInfo.postBuildCommands;
+        return combinedPostBuildCommands.length == 0
             ? target
-            : Target.phony("postBuild", dubInfo.postBuildCommands, target);
+            : Target.phony(targetName.value ~ "_postBuild", combinedPostBuildCommands, target);
     }
 
     /**

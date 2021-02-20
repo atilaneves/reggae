@@ -74,3 +74,34 @@ unittest {
         shouldSucceed("exe");
     }
 }
+
+
+@ShouldFail
+@("127")
+@Tags("dub", "issues", "ninja")
+unittest {
+
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl",
+            [
+                `name "issue157"`,
+                `targetType "executable"`,
+                `targetPath "daspath"`
+            ]
+        );
+
+        writeFile("source/app.d",
+            [
+                `void main() {}`,
+            ]
+        );
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+
+        version(Windows)
+            shouldExist(`daspath\issue157.exe`);
+        else
+            shouldExist("daspath/issue157");
+    }
+}

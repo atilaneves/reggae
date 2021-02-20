@@ -334,6 +334,7 @@ class InfoGenerator: ProjectGenerator {
             pkg.name = targetInfo.pack.name;
             pkg.path = targetInfo.pack.path.toNativeString;
             pkg.targetFileName = newBuildSettings.targetName;
+            pkg.targetPath = newBuildSettings.targetPath;
             pkg.files = newBuildSettings.sourceFiles.dup;
             pkg.targetType = cast(typeof(pkg.targetType)) newBuildSettings.targetType;
             pkg.dependencies = targetInfo.dependencies.dup;

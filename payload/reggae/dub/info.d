@@ -42,6 +42,7 @@ struct DubPackage {
     string[] libs;
     string[] preBuildCommands;
     string[] postBuildCommands;
+    string targetPath;
 
     string toString() @safe pure const {
         import std.string: join;
@@ -234,6 +235,10 @@ struct DubInfo {
     TargetName targetName() @safe const pure nothrow {
         const fileName = packages[0].targetFileName;
         return .targetName(targetType, fileName);
+    }
+
+    TargetPath targetPath() @safe const pure nothrow {
+        return TargetPath(packages[0].targetPath);
     }
 
     TargetType targetType() @safe const pure nothrow {

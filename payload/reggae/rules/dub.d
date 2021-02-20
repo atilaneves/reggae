@@ -41,8 +41,10 @@ static if(isDubProject) {
         enum dubInfo = configToDubInfo[config];
         enum targetName = dubInfo.targetName;
         enum linkerFlags = dubInfo.mainLinkerFlags ~ linkerFlags.value;
+
         return dubTarget(
             targetName,
+            dubInfo.targetPath,
             dubInfo,
             compilerFlags.value,
             linkerFlags,
@@ -166,9 +168,33 @@ static if(isDubProject) {
         in size_t startingIndex = 0,
         )
     {
+        return dubTarget(
+            targetName,
+            TargetPath(),
+            dubInfo,
+            compilerFlags,
+            linkerFlags,
+            includeMain,
+            compilationMode,
+            extraObjects,
+            startingIndex,
+        );
+    }
+
+    Target dubTarget(
+        in TargetName targetName,
+        in TargetPath targetPath,
+        in DubInfo dubInfo,
+        in string[] compilerFlags,
+        in string[] linkerFlags = [],
+        in Flag!"main" includeMain = Yes.main,
+        in CompilationMode compilationMode = CompilationMode.options,
+        Target[] extraObjects = [],
+        in size_t startingIndex = 0,
+        )
+    {
 
         import reggae.rules.common: staticLibraryTarget, link;
-        import reggae.dub.info: DubObjsDir;
         import std.array: join;
         import std.file: getcwd;
 
@@ -181,6 +207,7 @@ static if(isDubProject) {
         const allLinkerFlags = linkerFlags ~ dubInfo.linkerFlags ~ sharedFlags;
 
         auto allObjs = objs(targetName,
+                            targetPath,
                             dubInfo,
                             includeMain,
                             compilerFlags,
@@ -188,7 +215,7 @@ static if(isDubProject) {
                             extraObjects,
                             startingIndex);
 
-        const name = realName(targetName, dubInfo);
+        const name = realName(targetName, targetPath, dubInfo);
 
         auto target = isStaticLibrary
             ? staticLibraryTarget(name, allObjs)[0]
@@ -321,30 +348,56 @@ static if(isDubProject) {
                           Target[] extraObjects = [],
                           in size_t startingIndex = 0)
     {
+        return objs(
+            targetName,
+            TargetPath(),
+            dubInfo,
+            includeMain,
+            compilerFlags,
+            compilationMode,
+            extraObjects,
+            startingIndex,
+        );
+    }
+
+    private Target[] objs(in TargetName targetName,
+                          in TargetPath targetPath,
+                          in DubInfo dubInfo,
+                          in Flag!"main" includeMain,
+                          in string[] compilerFlags,
+                          in CompilationMode compilationMode,
+                          Target[] extraObjects = [],
+                          in size_t startingIndex = 0)
+    {
+
 
         auto dubObjs = dubInfo.toTargets(includeMain,
                                          compilerFlags,
                                          compilationMode,
-                                         dubObjsDir(targetName, dubInfo),
+                                         dubObjsDir(targetName, targetPath, dubInfo),
                                          startingIndex);
         auto allObjs = dubObjs ~ extraObjects;
 
         return allObjs;
     }
 
-    private string realName(in TargetName targetName, in DubInfo dubInfo) {
+    private string realName(in TargetName targetName, in TargetPath targetPath, in DubInfo dubInfo) {
+
+        import std.path: buildPath;
+
+        const path = buildPath(targetPath.value, targetName.value);
+
         // otherwise the target wouldn't be top-level in the presence of
         // postBuildCommands
         auto ret =  dubInfo.postBuildCommands == ""
-            ? targetName.value
-            : buildPath("$project", targetName.value);
-        if(ret == "") ret = "placeholder";
-        return ret;
+            ? path
+            : buildPath("$project", path);
+        return ret == "" ? "placeholder" : ret;
     }
 
-    private auto dubObjsDir(in TargetName targetName, in DubInfo dubInfo) {
+    private auto dubObjsDir(in TargetName targetName, in TargetPath targetPath, in DubInfo dubInfo) {
         import reggae.config: options;
         import reggae.dub.info: DubObjsDir;
-        return DubObjsDir(options.dubObjsDir, realName(targetName, dubInfo) ~ ".objs");
+        return DubObjsDir(options.dubObjsDir, realName(targetName, targetPath, dubInfo) ~ ".objs");
     }
 }

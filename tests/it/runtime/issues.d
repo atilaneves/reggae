@@ -76,7 +76,6 @@ unittest {
 }
 
 
-@ShouldFail
 @("127")
 @Tags("dub", "issues", "ninja")
 unittest {

@@ -144,6 +144,10 @@ struct TargetName {
     string value;
 }
 
+struct TargetPath {
+    string value;
+}
+
 struct Configuration {
     string value = "default";
 }

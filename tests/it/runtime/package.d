@@ -86,8 +86,15 @@ struct ReggaeSandbox {
 private:
 
     auto runImpl(string[] args, string project = "") const {
+
+        import std.algorithm: canFind;
+
         if(project == "") project = testPath;
-        return testRun(["reggae", "-C", testPath] ~ args ~ project);
+
+        string[] fromWhereArgs;
+        if(!args.canFind("-C")) fromWhereArgs = ["-C", testPath];
+
+        return testRun(["reggae"] ~ fromWhereArgs ~ args ~ project);
     }
 }
 

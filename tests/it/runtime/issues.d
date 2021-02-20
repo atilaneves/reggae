@@ -76,7 +76,7 @@ unittest {
 }
 
 
-@("127")
+@("127.0")
 @Tags("dub", "issues", "ninja")
 unittest {
 
@@ -102,5 +102,39 @@ unittest {
             shouldExist(`daspath\issue157.exe`);
         else
             shouldExist("daspath/issue157");
+    }
+}
+
+
+@("127.1")
+@Tags("dub", "issues", "ninja")
+unittest {
+
+    import std.file: mkdir;
+
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl",
+            [
+                `name "issue157"`,
+                `targetType "executable"`,
+                `targetPath "daspath"`
+            ]
+        );
+
+        writeFile("source/app.d",
+            [
+                `void main() {}`,
+            ]
+        );
+
+        const bin = inSandboxPath("bin");
+        mkdir(bin);
+        runReggae("-C", bin, "-b", "ninja", testPath);
+        ninja(["-C", bin]).shouldExecuteOk;
+
+        version(Windows)
+            shouldExist(`bin\issue157.exe`);
+        else
+            shouldExist("bin/issue157");
     }
 }

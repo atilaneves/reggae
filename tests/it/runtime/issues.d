@@ -76,6 +76,7 @@ unittest {
 }
 
 
+@ShouldFail
 @("127.0")
 @Tags("dub", "issues", "ninja")
 unittest {
@@ -96,12 +97,15 @@ unittest {
         );
 
         runReggae("-b", "ninja");
-        ninja.shouldExecuteOk;
+        ninja(["default", "ut"]).shouldExecuteOk;
 
-        version(Windows)
+        version(Windows) {
             shouldExist(`daspath\issue157.exe`);
-        else
+            shouldExist(`daspath\ut.exe`);
+        } else {
             shouldExist("daspath/issue157");
+            shouldExist("daspath/ut");
+        }
     }
 }
 

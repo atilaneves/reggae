@@ -237,8 +237,8 @@ struct DubInfo {
         return .targetName(targetType, fileName);
     }
 
-    TargetPath targetPath() @safe const pure nothrow {
-        return TargetPath(packages[0].targetPath);
+    string targetPath() @safe const pure nothrow {
+        return packages[0].targetPath;
     }
 
     TargetType targetType() @safe const pure nothrow {

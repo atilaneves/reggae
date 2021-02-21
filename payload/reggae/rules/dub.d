@@ -190,7 +190,7 @@ static if(isDubProject) {
                             startingIndex);
 
         const targetPath = options.workingDir == options.projectPath
-            ? dubInfo.targetPath.value.relativePath(options.projectPath)
+            ? dubInfo.targetPath.relativePath(options.projectPath)
             : "";
 
         const name = realName(TargetName(buildPath(targetPath, targetName.value)), dubInfo);

@@ -70,9 +70,10 @@ struct Options {
     //finished setup
     void finalize(string[] args) @safe {
         import std.process;
+        import std.file: thisExePath;
 
         this.args = args;
-        ranFromPath = thisExePath();
+        ranFromPath = thisExePath;
 
         if(!cCompiler)   cCompiler   = environment.get("CC", defaultCC);
         if(!cppCompiler) cppCompiler = environment.get("CXX", defaultCXX);

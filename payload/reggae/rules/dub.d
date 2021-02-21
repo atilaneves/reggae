@@ -6,8 +6,10 @@
 
 module reggae.rules.dub;
 
+
 import reggae.config;
 import reggae.path: buildPath;
+
 
 enum CompilationMode {
     module_,  /// compile per module
@@ -37,14 +39,20 @@ static if(isDubProject) {
                             CompilationMode compilationMode = CompilationMode.options)
         ()
     {
+        import reggae.config: options;
+        import reggae.types: TargetPath;
+
         enum config = "default";
         enum dubInfo = configToDubInfo[config];
         enum targetName = dubInfo.targetName;
         enum linkerFlags = dubInfo.mainLinkerFlags ~ linkerFlags.value;
+        const targetPath = options.workingDir == options.projectPath
+            ? dubInfo.targetPath
+            : TargetPath(options.workingDir);
 
         return dubTarget(
             targetName,
-            dubInfo.targetPath,
+            targetPath,
             dubInfo,
             compilerFlags.value,
             linkerFlags,
@@ -374,7 +382,7 @@ static if(isDubProject) {
         auto dubObjs = dubInfo.toTargets(includeMain,
                                          compilerFlags,
                                          compilationMode,
-                                         dubObjsDir(targetName, targetPath, dubInfo),
+                                         dubObjsDir(targetName, dubInfo),
                                          startingIndex);
         auto allObjs = dubObjs ~ extraObjects;
 
@@ -395,9 +403,13 @@ static if(isDubProject) {
         return ret == "" ? "placeholder" : ret;
     }
 
-    private auto dubObjsDir(in TargetName targetName, in TargetPath targetPath, in DubInfo dubInfo) {
+    private auto dubObjsDir(in TargetName targetName, in DubInfo dubInfo) {
         import reggae.config: options;
         import reggae.dub.info: DubObjsDir;
-        return DubObjsDir(options.dubObjsDir, realName(targetName, targetPath, dubInfo) ~ ".objs");
+
+        return DubObjsDir(
+            options.dubObjsDir,
+            realName(targetName, TargetPath(), dubInfo) ~ ".objs"
+        );
     }
 }

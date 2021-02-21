@@ -95,8 +95,13 @@ unittest {
             ]
         );
 
+        version(Windows)
+            enum ut = `daspath\ut.exe`;
+        else
+            enum ut = "daspath/ut";
+
         runReggae("-b", "ninja");
-        ninja(["default", "daspath/ut"]).shouldExecuteOk;
+        ninja(["default", ut]).shouldExecuteOk;
 
         version(Windows) {
             shouldExist(`daspath\issue157.exe`);

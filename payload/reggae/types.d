@@ -144,6 +144,7 @@ struct TargetName {
     string value;
 }
 
+
 struct Configuration {
     string value = "default";
 }

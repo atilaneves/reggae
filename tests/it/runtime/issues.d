@@ -74,3 +74,78 @@ unittest {
         shouldSucceed("exe");
     }
 }
+
+
+@("127.0")
+@Tags("dub", "issues", "ninja")
+unittest {
+
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl",
+            [
+                `name "issue157"`,
+                `targetType "executable"`,
+                `targetPath "daspath"`
+            ]
+        );
+
+        writeFile("source/app.d",
+            [
+                `void main() {}`,
+            ]
+        );
+
+        version(Windows)
+            enum ut = `daspath\ut.exe`;
+        else
+            enum ut = "daspath/ut";
+
+        runReggae("-b", "ninja");
+        ninja(["default", ut]).shouldExecuteOk;
+
+        version(Windows) {
+            shouldExist(`daspath\issue157.exe`);
+            shouldExist(`daspath\ut.exe`);
+        } else {
+            shouldExist("daspath/issue157");
+            shouldExist("daspath/ut");
+        }
+    }
+}
+
+
+@("127.1")
+@Tags("dub", "issues", "ninja")
+unittest {
+
+    import std.file: mkdir;
+
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl",
+            [
+                `name "issue157"`,
+                `targetType "executable"`,
+                `targetPath "daspath"`
+            ]
+        );
+
+        writeFile("source/app.d",
+            [
+                `void main() {}`,
+            ]
+        );
+
+        const bin = inSandboxPath("bin");
+        mkdir(bin);
+        runReggae("-C", bin, "-b", "ninja", testPath);
+        ninja(["-C", bin, "default", "ut"]).shouldExecuteOk;
+
+        version(Windows) {
+            shouldExist(`bin\issue157.exe`);
+            shouldExist(`bin\ut.exe`);
+        } else {
+            shouldExist("bin/issue157");
+            shouldExist("bin/ut");
+        }
+    }
+}

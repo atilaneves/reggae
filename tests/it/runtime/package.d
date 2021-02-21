@@ -8,8 +8,11 @@ import reggae.reggae;
 // calls reggae.run, which is basically main, but with a
 // fake file
 auto testRun(string[] args) {
+    import reggae.reggae: run;
+
     auto output = FakeFile();
     run(output, args);
+
     return output;
 }
 
@@ -83,8 +86,15 @@ struct ReggaeSandbox {
 private:
 
     auto runImpl(string[] args, string project = "") const {
+
+        import std.algorithm: canFind;
+
         if(project == "") project = testPath;
-        return testRun(["reggae", "-C", testPath] ~ args ~ project);
+
+        string[] fromWhereArgs;
+        if(!args.canFind("-C")) fromWhereArgs = ["-C", testPath];
+
+        return testRun(["reggae"] ~ fromWhereArgs ~ args ~ project);
     }
 }
 

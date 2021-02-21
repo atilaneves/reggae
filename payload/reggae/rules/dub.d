@@ -39,20 +39,13 @@ static if(isDubProject) {
                             CompilationMode compilationMode = CompilationMode.options)
         ()
     {
-        import reggae.config: options;
-        import reggae.types: TargetPath;
-
         enum config = "default";
         enum dubInfo = configToDubInfo[config];
         enum targetName = dubInfo.targetName;
         enum linkerFlags = dubInfo.mainLinkerFlags ~ linkerFlags.value;
-        const targetPath = options.workingDir == options.projectPath
-            ? dubInfo.targetPath
-            : TargetPath(options.workingDir);
 
         return dubTarget(
             targetName,
-            targetPath,
             dubInfo,
             compilerFlags.value,
             linkerFlags,
@@ -176,35 +169,10 @@ static if(isDubProject) {
         in size_t startingIndex = 0,
         )
     {
-        return dubTarget(
-            targetName,
-            TargetPath(),
-            dubInfo,
-            compilerFlags,
-            linkerFlags,
-            includeMain,
-            compilationMode,
-            extraObjects,
-            startingIndex,
-        );
-    }
-
-    Target dubTarget(
-        in TargetName targetName,
-        in TargetPath targetPath,
-        in DubInfo dubInfo,
-        in string[] compilerFlags,
-        in string[] linkerFlags = [],
-        in Flag!"main" includeMain = Yes.main,
-        in CompilationMode compilationMode = CompilationMode.options,
-        Target[] extraObjects = [],
-        in size_t startingIndex = 0,
-        )
-    {
-
+        import reggae.config: options;
         import reggae.rules.common: staticLibraryTarget, link;
-        import std.array: join;
-        import std.file: getcwd;
+        import reggae.types: TargetName;
+        import std.path: relativePath, buildPath;
 
         const isStaticLibrary =
             dubInfo.targetType == TargetType.library ||
@@ -213,9 +181,7 @@ static if(isDubProject) {
             ? ["-shared"]
             : [];
         const allLinkerFlags = linkerFlags ~ dubInfo.linkerFlags ~ sharedFlags;
-
         auto allObjs = objs(targetName,
-                            targetPath,
                             dubInfo,
                             includeMain,
                             compilerFlags,
@@ -223,7 +189,11 @@ static if(isDubProject) {
                             extraObjects,
                             startingIndex);
 
-        const name = realName(targetName, targetPath, dubInfo);
+        const targetPath = options.workingDir == options.projectPath
+            ? dubInfo.targetPath.value.relativePath(options.projectPath)
+            : "";
+
+        const name = realName(TargetName(buildPath(targetPath, targetName.value)), dubInfo);
 
         auto target = isStaticLibrary
             ? staticLibraryTarget(name, allObjs)[0]
@@ -348,28 +318,8 @@ static if(isDubProject) {
         );
     }
 
-    private Target[] objs(in TargetName targetName,
-                          in DubInfo dubInfo,
-                          in Flag!"main" includeMain,
-                          in string[] compilerFlags,
-                          in CompilationMode compilationMode,
-                          Target[] extraObjects = [],
-                          in size_t startingIndex = 0)
-    {
-        return objs(
-            targetName,
-            TargetPath(),
-            dubInfo,
-            includeMain,
-            compilerFlags,
-            compilationMode,
-            extraObjects,
-            startingIndex,
-        );
-    }
 
     private Target[] objs(in TargetName targetName,
-                          in TargetPath targetPath,
                           in DubInfo dubInfo,
                           in Flag!"main" includeMain,
                           in string[] compilerFlags,
@@ -389,17 +339,18 @@ static if(isDubProject) {
         return allObjs;
     }
 
-    private string realName(in TargetName targetName, in TargetPath targetPath, in DubInfo dubInfo) {
+    private string realName(in TargetName targetName, in DubInfo dubInfo) {
 
         import std.path: buildPath;
 
-        const path = buildPath(targetPath.value, targetName.value);
+        const path = targetName.value;
 
         // otherwise the target wouldn't be top-level in the presence of
         // postBuildCommands
         auto ret =  dubInfo.postBuildCommands == ""
             ? path
             : buildPath("$project", path);
+
         return ret == "" ? "placeholder" : ret;
     }
 
@@ -409,7 +360,7 @@ static if(isDubProject) {
 
         return DubObjsDir(
             options.dubObjsDir,
-            realName(targetName, TargetPath(), dubInfo) ~ ".objs"
+            realName(targetName, dubInfo) ~ ".objs"
         );
     }
 }

@@ -76,7 +76,6 @@ unittest {
 }
 
 
-@ShouldFail
 @("127.0")
 @Tags("dub", "issues", "ninja")
 unittest {
@@ -97,7 +96,7 @@ unittest {
         );
 
         runReggae("-b", "ninja");
-        ninja(["default", "ut"]).shouldExecuteOk;
+        ninja(["default", "daspath/ut"]).shouldExecuteOk;
 
         version(Windows) {
             shouldExist(`daspath\issue157.exe`);
@@ -134,11 +133,14 @@ unittest {
         const bin = inSandboxPath("bin");
         mkdir(bin);
         runReggae("-C", bin, "-b", "ninja", testPath);
-        ninja(["-C", bin]).shouldExecuteOk;
+        ninja(["-C", bin, "default", "ut"]).shouldExecuteOk;
 
-        version(Windows)
+        version(Windows) {
             shouldExist(`bin\issue157.exe`);
-        else
+            shouldExist(`bin\ut.exe`);
+        } else {
             shouldExist("bin/issue157");
+            shouldExist("bin/ut");
+        }
     }
 }

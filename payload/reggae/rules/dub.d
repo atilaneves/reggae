@@ -294,11 +294,10 @@ static if(isDubProject) {
         )
         ()
     {
-        import std.array: join;
         return link!(
             ExeName(targetName.value),
             objsFunction,
-            Flags((linkerFlags.value ~ configToDubInfo[config.value].linkerFlags).join(" "))
+            Flags(linkerFlags.value ~ configToDubInfo[config.value].linkerFlags)
         );
     }
 

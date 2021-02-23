@@ -6,9 +6,6 @@ import reggae.types;
 import reggae.sorting;
 import reggae.options: Options;
 import reggae.path: buildPath;
-
-public import std.typecons: Yes, No;
-import std.typecons: Flag;
 import std.algorithm: map, filter, find, splitter;
 import std.array: array, join;
 import std.range: chain;

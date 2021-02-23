@@ -33,8 +33,6 @@ version(minimal) {
 } else {
     //fully featured build
 
-    import std.typecons: Yes;
-
     //the actual reggae binary
     //could also be dubConfigurationTarget(ExeName("reggae"), Configuration("executable"), Flags(...))
     //or use the `scriptlike` rule to figure out dependencies itself

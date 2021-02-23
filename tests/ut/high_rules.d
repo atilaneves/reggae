@@ -5,7 +5,6 @@ import reggae;
 import reggae.options;
 import reggae.path: buildPath;
 import unit_threaded;
-import std.typecons: No;
 
 
 version(Windows)
@@ -89,6 +88,7 @@ else
 
 @("builtinTemplate no deps") unittest {
     import reggae.config;
+    import std.typecons: No;
 
     version(Windows)
         enum expectedC = "cl.exe /nologo $flags $includes /Fo$out -c $in";

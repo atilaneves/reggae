@@ -49,7 +49,6 @@ static if(isDubProject) {
             dubInfo,
             compilerFlags.value,
             linkerFlags,
-            Yes.main,
             compilationMode,
         );
     }
@@ -110,7 +109,6 @@ static if(isDubProject) {
                          dubInfo,
                          actualCompilerFlags,
                          actualLinkerFlags,
-                         Yes.main,
                          compilationMode);
     }
 
@@ -120,7 +118,6 @@ static if(isDubProject) {
     Target dubConfigurationTarget(Configuration config = Configuration("default"),
                                   CompilerFlags compilerFlags = CompilerFlags(),
                                   LinkerFlags linkerFlags = LinkerFlags(),
-                                  Flag!"main" includeMain = Yes.main,
                                   CompilationMode compilationMode = CompilationMode.options,
                                   alias objsFunction = () { Target[] t; return t; },
                                   )
@@ -131,7 +128,6 @@ static if(isDubProject) {
                          dubInfo,
                          compilerFlags.value,
                          linkerFlags.value,
-                         includeMain,
                          compilationMode,
                          objsFunction());
     }
@@ -141,7 +137,6 @@ static if(isDubProject) {
         Configuration config,
         CompilerFlags compilerFlags = CompilerFlags(),
         LinkerFlags linkerFlags = LinkerFlags(),
-        Flag!"main" includeMain = Yes.main,
         CompilationMode compilationMode = CompilationMode.options,
         alias objsFunction = () { Target[] t; return t; },
      )
@@ -151,7 +146,6 @@ static if(isDubProject) {
                          configToDubInfo[config.value],
                          compilerFlags.value,
                          linkerFlags.value,
-                         includeMain,
                          compilationMode,
                          objsFunction(),
             );
@@ -163,7 +157,6 @@ static if(isDubProject) {
         in DubInfo dubInfo,
         in string[] compilerFlags,
         in string[] linkerFlags = [],
-        in Flag!"main" includeMain = Yes.main,
         in CompilationMode compilationMode = CompilationMode.options,
         Target[] extraObjects = [],
         in size_t startingIndex = 0,
@@ -183,7 +176,6 @@ static if(isDubProject) {
         const allLinkerFlags = linkerFlags ~ dubInfo.linkerFlags ~ sharedFlags;
         auto allObjs = objs(targetName,
                             dubInfo,
-                            includeMain,
                             compilerFlags,
                             compilationMode,
                             extraObjects,
@@ -227,13 +219,15 @@ static if(isDubProject) {
     {
         const dubInfo = configToDubInfo[config.value];
         const startingIndex = 1;
-        return objs(dubInfo.targetName,
-                    dubInfo,
-                    No.main,
-                    compilerFlags.value,
-                    CompilationMode.options,
-                    [], // extra objects
-                    startingIndex);
+
+        return objs(
+            dubInfo.targetName,
+            dubInfo,
+            compilerFlags.value,
+            CompilationMode.options,
+            [], // extra objects
+            startingIndex
+        );
     }
 
 
@@ -243,14 +237,12 @@ static if(isDubProject) {
      */
     Target[] dubObjects(Configuration config,
                         CompilerFlags compilerFlags = CompilerFlags(),
-                        Flag!"main" includeMain = No.main,
                         CompilationMode compilationMode = CompilationMode.options)
         ()
     {
         const dubInfo = configToDubInfo[config.value];
         return objs(dubInfo.targetName,
                     dubInfo,
-                    includeMain,
                     compilerFlags.value,
                     compilationMode);
     }
@@ -262,7 +254,6 @@ static if(isDubProject) {
         DubPackageName dubPackageName,
         CompilerFlags compilerFlags = CompilerFlags(),
         CompilationMode compilationMode = CompilationMode.all,
-        Flag!"main" includeMain = No.main,
         )
         ()
     {
@@ -271,7 +262,6 @@ static if(isDubProject) {
             Configuration("default"),
             compilerFlags,
             compilationMode,
-            includeMain
         );
     }
 
@@ -283,13 +273,11 @@ static if(isDubProject) {
         Configuration config = Configuration("default"),
         CompilerFlags compilerFlags = CompilerFlags(),
         CompilationMode compilationMode = CompilationMode.all,
-        Flag!"main" includeMain = No.main,
         )
         ()
     {
         return configToDubInfo[config.value].packageNameToTargets(
             dubPackageName.value,
-            includeMain,
             compilerFlags.value,
             compilationMode,
         );
@@ -321,7 +309,6 @@ static if(isDubProject) {
 
     private Target[] objs(in TargetName targetName,
                           in DubInfo dubInfo,
-                          in Flag!"main" includeMain,
                           in string[] compilerFlags,
                           in CompilationMode compilationMode,
                           Target[] extraObjects = [],
@@ -329,11 +316,12 @@ static if(isDubProject) {
     {
 
 
-        auto dubObjs = dubInfo.toTargets(includeMain,
-                                         compilerFlags,
-                                         compilationMode,
-                                         dubObjsDir(targetName, dubInfo),
-                                         startingIndex);
+        auto dubObjs = dubInfo.toTargets(
+            compilerFlags,
+            compilationMode,
+            dubObjsDir(targetName, dubInfo),
+            startingIndex
+        );
         auto allObjs = dubObjs ~ extraObjects;
 
         return allObjs;

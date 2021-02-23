@@ -262,7 +262,6 @@ A configuration target of dub's, for instance 'unittest'.
 Target dubConfigurationTarget(Configuration config = Configuration("default"),
                               CompilerFlags compilerFlags = CompilerFlags(),
                               LinkerFlags linkerFlags = LinkerFlags(),
-                              Flag!"main" includeMain = Yes.main,
                               Flag!"allTogether" allTogether = No.allTogether,
                               alias objsFunction = () { Target[] t; return t; },
                              )
@@ -272,6 +271,5 @@ Target dubConfigurationTarget(Configuration config = Configuration("default"),
 * `config`: The dub configuration to use.
 * `compilerFlags`: Self-explanatory.
 * `LinkerFlags`: Self-explanatory.
-* `includeMain`: Whether or not to include the file containing the `main` function.
 * `allTogether`: to be done.
 * `objsFunction`: Dependencies to link to.

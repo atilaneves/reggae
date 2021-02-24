@@ -6,9 +6,6 @@ import reggae.types;
 import reggae.sorting;
 import reggae.options: Options;
 import reggae.path: buildPath;
-
-public import std.typecons: Yes, No;
-import std.typecons: Flag;
 import std.algorithm: map, filter, find, splitter;
 import std.array: array, join;
 import std.range: chain;
@@ -115,8 +112,7 @@ struct DubInfo {
         return DubInfo(packages.map!(a => a.dup).array);
     }
 
-    Target[] toTargets(in Flag!"main" includeMain = Yes.main,
-                       in string[] compilerFlags = [],
+    Target[] toTargets(in string[] compilerFlags = [],
                        in CompilationMode compilationMode = CompilationMode.options,
                        in DubObjsDir dubObjsDir = DubObjsDir(),
                        in size_t startingIndex = 0)
@@ -125,7 +121,7 @@ struct DubInfo {
         Target[] targets;
 
         foreach(i; startingIndex .. packages.length) {
-            targets ~= packageIndexToTargets(i, includeMain, compilerFlags, compilationMode, dubObjsDir);
+            targets ~= packageIndexToTargets(i, compilerFlags, compilationMode, dubObjsDir);
         }
 
         return targets ~ allObjectFileSources ~ allStaticLibrarySources;
@@ -134,7 +130,6 @@ struct DubInfo {
     // dubPackage[i] -> Target[]
     private Target[] packageIndexToTargets(
         in size_t dubPackageIndex,
-        in Flag!"main" includeMain = Yes.main,
         in string[] compilerFlags = [],
         in CompilationMode compilationMode = CompilationMode.options,
         in DubObjsDir dubObjsDir = DubObjsDir())
@@ -171,11 +166,10 @@ struct DubInfo {
                             deUnitTest(compilerFlags))
             .array;
 
-        const files = dubPackage.files.
-            filter!(a => includeMain || a != dubPackage.mainSourceFile).
-            filter!(not!isStaticLibrary).
-            filter!(not!isObjectFile).
-            map!(a => buildPath(dubPackage.path, a))
+        const files = dubPackage.files
+            .filter!(not!isStaticLibrary)
+            .filter!(not!isObjectFile)
+            .map!(a => buildPath(dubPackage.path, a))
             .array;
 
         auto compileFunc() {
@@ -218,7 +212,6 @@ struct DubInfo {
 
     Target[] packageNameToTargets(
         in string name,
-        in Flag!"main" includeMain = Yes.main,
         in string[] compilerFlags = [],
         in CompilationMode compilationMode = CompilationMode.options,
         in DubObjsDir dubObjsDir = DubObjsDir())
@@ -226,7 +219,7 @@ struct DubInfo {
     {
         foreach(const index, const dubPackage; packages) {
             if(dubPackage.name == name)
-                return packageIndexToTargets(index, includeMain, compilerFlags, compilationMode, dubObjsDir);
+                return packageIndexToTargets(index, compilerFlags, compilationMode, dubObjsDir);
         }
 
         throw new Exception("Couldn't find package '" ~ name ~ "'");

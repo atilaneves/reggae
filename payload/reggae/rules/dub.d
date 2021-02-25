@@ -330,9 +330,9 @@ static if(isDubProject) {
 
         // otherwise the target wouldn't be top-level in the presence of
         // postBuildCommands
-        auto ret =  dubInfo.postBuildCommands == ""
+        auto ret = dubInfo.postBuildCommands == ""
             ? path
-            : buildPath("$project", path);
+            : buildPath("$builddir", path);
 
         return ret == "" ? "placeholder" : ret;
     }

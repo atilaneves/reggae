@@ -139,8 +139,10 @@ struct DubInfo {
         import reggae.config: options;
         import std.range: chain, only;
         import std.algorithm: filter;
-        import std.array: array;
+        import std.array: array, replace;
         import std.functional: not;
+        import std.path: baseName, dirSeparator;
+        import std.string: stripRight;
 
         const dubPackage = packages[dubPackageIndex];
         const importPaths = allImportPaths();
@@ -197,13 +199,21 @@ struct DubInfo {
 
         auto packageTargets = targetsFunc()(files, flags, importPaths, stringImportPaths, [], projDir);
 
-        // go through dub dependencies and optionally put the object files in dubObjsDir
-        if(!isMainPackage && dubObjsDir.globalDir != "") {
-            foreach(ref target; packageTargets) {
-                target.rawOutputs[0] = buildPath(dubObjsDir.globalDir,
-                                                 options.projectPath.deabsolutePath,
-                                                 dubObjsDir.targetDir,
-                                                 target.rawOutputs[0]);
+        // go through dub dependencies and adjust object file output paths
+        if(!isMainPackage) {
+            // optionally put the object files in dubObjsDir
+            if(dubObjsDir.globalDir != "") {
+                foreach(ref target; packageTargets) {
+                    target.rawOutputs[0] = buildPath(dubObjsDir.globalDir,
+                                                    options.projectPath.deabsolutePath,
+                                                    dubObjsDir.targetDir,
+                                                    target.rawOutputs[0]);
+                }
+            } else {
+                const dubPkgRoot = buildPath(dubPackage.path).deabsolutePath.stripRight(dirSeparator);
+                const shortenedRoot = buildPath("__dub__", baseName(dubPackage.path));
+                foreach(ref target; packageTargets)
+                    target.rawOutputs[0] = buildPath(target.rawOutputs[0]).replace(dubPkgRoot, shortenedRoot);
             }
         }
 

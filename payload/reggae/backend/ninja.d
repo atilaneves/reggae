@@ -357,6 +357,12 @@ private:
                 if(line.canFind(dep)) {
                     line = line.replace(dep, "$in");
                     input = dep;
+                } else version(Windows) {
+                    const dep_fwd = dep.replace(`\`, "/");
+                    if(line.canFind(dep_fwd)) {
+                        line = line.replace(dep_fwd, "$in");
+                        input = dep;
+                    }
                 }
             }
             return line;

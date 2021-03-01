@@ -15,7 +15,6 @@ module reggae.reggae;
 import std.stdio;
 import std.process: execute, environment;
 import std.array: array, join, empty, split;
-import std.path: absolutePath, relativePath;
 import std.typetuple;
 import std.file;
 import std.conv: text;

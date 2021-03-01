@@ -392,9 +392,7 @@ Command compileCommand(in string srcFileName,
 {
 
     string maybeExpand(string path) {
-        return path.startsWith(gBuilddir)
-            ? buildPath(expandBuildDir(path))
-            : buildPath(projDir, path);
+        return expandOutput(path, projDir, projDir);
     }
 
     auto includeParams = includePaths.map!(a => "-I" ~ maybeExpand(a)). array;

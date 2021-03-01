@@ -51,12 +51,18 @@ import tests.utils;
 }
 
 @("Top-level targets") unittest {
+    import reggae.path: buildPath;
+
     auto foo = Target("foo", "", Target("foo.d"));
     auto bar = Target("bar", "", Target("bar.d"));
     auto binary = Binary(Build(foo, bar), Options());
-    binary.topLevelTargets(["foo"]).shouldEqual([foo]);
-    binary.topLevelTargets(["bar"]).shouldEqual([bar]);
-    binary.topLevelTargets([]).shouldEqual([foo, bar]);
+
+    auto newFoo = Target("foo", "", Target(buildPath("$project/foo.d")));
+    auto newBar = Target("bar", "", Target(buildPath("$project/bar.d")));
+
+    binary.topLevelTargets(["foo"]).shouldEqual([newFoo]);
+    binary.topLevelTargets(["bar"]).shouldEqual([newBar]);
+    binary.topLevelTargets([]).shouldEqual([newFoo, newBar]);
     binary.topLevelTargets(["oops"]).shouldBeEmpty;
 }
 

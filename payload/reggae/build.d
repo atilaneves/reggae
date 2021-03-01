@@ -9,7 +9,7 @@ module reggae.build;
 import reggae.ctaa;
 import reggae.rules.common: Language, getLanguage;
 import reggae.options;
-import reggae.path: buildPath;
+import reggae.path: buildPath, deabsolutePath;
 
 import std.string: replace;
 import std.algorithm;
@@ -110,93 +110,54 @@ Build.TopLevelTarget optional(Target target) {
 }
 
 Build.TopLevelTarget createTopLevelTarget(Target target, bool optional = false) {
-    return Build.TopLevelTarget(target.inTopLevelObjDirOf(topLevelDirName(target), Yes.topLevel),
-                                optional);
+    return Build.TopLevelTarget(target.inTopLevelObjDirOf(objDirOf(target), Yes.topLevel), optional);
 }
 
 
 immutable gBuilddir = "$builddir";
 immutable gProjdir  = "$project";
 
-//a directory for each top-level target no avoid name clashes
+//a directory for each top-level target to avoid name clashes
 //@trusted because of map -> buildPath -> array
-Target inTopLevelObjDirOf(Target target, string dirName, Flag!"topLevel" isTopLevel = No.topLevel) @trusted {
-    //leaf targets only get the $builddir expansion, nothing else
-    //this is because leaf targets are by definition in the project path
+Target inTopLevelObjDirOf(Target target, string objDir, Flag!"topLevel" isTopLevel = No.topLevel) @trusted {
+    if (target._outputs.any!(a => a.startsWith(gBuilddir) || a.startsWith(gProjdir)))
+        objDir = objDirOf(target);
 
-    //every other non-top-level target gets its outputs placed in a directory
-    //specific to its top-level parent
+    // base dir for relative outputs:
+    const baseDir = isTopLevel ? null :        // don't touch top-level target outputs
+                    target.isLeaf ? gProjdir : // leaf targets are src files in the project dir
+                    objDir;                    // obj directory specific to top-level target
 
-    if(target._outputs.any!(a => a.startsWith(gBuilddir) || a.startsWith(gProjdir))) {
-         dirName = topLevelDirName(target);
-    }
-
-    auto outputs = isTopLevel
-        ? target._outputs.map!(a => buildPath(expandBuildDir(a))).array
-        : target._outputs.map!(a => realTargetPath(dirName, target, a)).array;
+    auto outputs = target._outputs.map!(a => expandOutput(a, gProjdir, baseDir)).array;
 
     return Target(outputs,
                   target._command.expandVariables,
-                  target._dependencies.map!(a => a.inTopLevelObjDirOf(dirName)).array,
-                  target._implicits.map!(a => a.inTopLevelObjDirOf(dirName)).array);
+                  target._dependencies.map!(a => a.inTopLevelObjDirOf(objDir)).array,
+                  target._implicits.map!(a => a.inTopLevelObjDirOf(objDir)).array);
 }
 
 
-string topLevelDirName(in Target target) @safe pure {
-    import std.path: isAbsolute;
-    return target._outputs[0].isAbsolute
-        ? buildPath(target._outputs[0], targetObjsDir(target))
-        : buildPath(".reggae", "objs", targetObjsDir(target));
+string objDirOf(in Target target) @safe pure nothrow {
+    // remove $builddir and shorten $project to __project__
+    const output = expandOutput(target._outputs[0], "__project__");
+    return buildPath(".reggae", "objs", output.deabsolutePath ~ ".objs");
 }
 
-string targetObjsDir(in Target target) @safe pure {
-    return buildPath(target._outputs[0].expandBuildDir ~ ".objs");
+string expandOutput(string path, in string projectPath, in string basePath = null) @safe pure nothrow {
+    path = buildPath(path); // normalize to native slashes
+    // $builddir/foo => foo
+    if (path.startsWith(gBuilddir ~ dirSeparator)) return path[gBuilddir.length+1 .. $];
+    // $project/foo => <projectPath>/foo
+    if (path.startsWith(gProjdir ~ dirSeparator)) return buildPath(projectPath, path[gProjdir.length+1 .. $]);
+    // don't touch paths starting with env variables
+    if (path.startsWith("$")) return path;
+    // /foo => /foo
+    // bar => <basePath>/bar
+    return buildPath(basePath, path);
 }
 
-//targets that have outputs with $builddir or $project in them want to be placed
-//in a specific place. Those don't get touched. Other targets get
-//placed in their top-level parent's object directory
-string realTargetPath(in string dirName, in Target target, in string output) @trusted pure {
-    return target.isLeaf
-        ? output
-        : realTargetPath(dirName, output);
-}
 
-
-//targets that have outputs with $builddir or $project in them want to be placed
-//in a specific place. Those don't get touched. Other targets get
-//placed in their top-level parent's object directory
-string realTargetPath(in string dirName, in string output) @trusted pure {
-    import std.algorithm: canFind;
-
-    if(output.startsWith(gProjdir)) return buildPath(output);
-
-    return output.canFind(gBuilddir)
-        ? buildPath(output.expandBuildDir)
-        : buildPath(dirName, output);
-}
-
-//replace $builddir with the current directory
-string expandBuildDir(in string output) @trusted pure {
-    import std.path: buildNormalizedPath;
-    import std.algorithm: map, splitter;
-    import std.string: join, replace;
-
-    string fix(string path) {
-        version(Windows)
-            return path.replace(`\C:`, `\C`);
-        else
-            return path;
-    }
-
-    return output
-        .splitter
-        .map!(a => a.canFind(gBuilddir) ? a.replace(gBuilddir, ".").buildNormalizedPath : a)
-        .map!fix
-        .join(" ");
-}
-
- enum isTarget(alias T) =
+enum isTarget(alias T) =
      is(Unqual!(typeof(T)) == Target) ||
      is(Unqual!(typeof(T)) == Build.TopLevelTarget) ||
      isSomeFunction!T && is(ReturnType!T == Target) ||
@@ -363,25 +324,8 @@ struct Target {
     }
 
     ///Replace special variables and return a list of outputs thus modified
-    auto expandOutputs(string projectPath) @safe pure const {
-        projectPath = buildPath(projectPath);
-
-        string inProjectPath(in string path) {
-
-            return path.startsWith(gProjdir)
-                ? path
-                : path.startsWith(gBuilddir)
-                    ? path.replace(gBuilddir ~ dirSeparator, "")
-                    : path[0] == '$'
-                        ? path
-                        : buildPath(projectPath, path);
-        }
-
-        return _outputs.map!buildPath.
-            map!(a => isLeaf ? inProjectPath(a) : a).
-            map!(a => a.replace(gProjdir, projectPath)).
-            map!(a => expandBuildDir(a)).
-            array;
+    string[] expandOutputs(in string projectPath) @safe pure const {
+        return _outputs.map!(o => expandOutput(o, projectPath)).array;
     }
 
     //@trusted because of replace
@@ -439,7 +383,7 @@ struct Target {
         ubyte[] bytes;
         bytes ~= setUshort(cast(ushort)_outputs.length);
         foreach(output; _outputs) {
-            bytes ~= arrayToBytes(isLeaf ? inProjectPath(options.projectPath, output) : output);
+            bytes ~= arrayToBytes(expandOutput(output, options.projectPath, isLeaf ? options.projectPath : null));
         }
 
         bytes ~= arrayToBytes(shellCommand(options));
@@ -503,17 +447,11 @@ private:
                 //leaf objects are references to source files in the project path,
                 //those need their path built. Any other dependencies are in the
                 //build path, so they don't need the same treatment
-                inputs ~= dep.isLeaf ? inProjectPath(projectPath, output) : output;
+                inputs ~= expandOutput(output, projectPath, dep.isLeaf ? projectPath : null);
             }
         }
         return inputs;
     }
-}
-
-string inProjectPath(in string projectPath, in string name) @safe pure nothrow {
-    if(name.startsWith(gBuilddir)) return name;
-    if(name[0] == '$') return name;
-    return buildPath(projectPath, name);
 }
 
 
@@ -597,7 +535,11 @@ struct Command {
         switch(type) with(CommandType) {
             case shell:
             case phony:
-                auto cmd = Command(expandBuildDir(command));
+                string expCommand = command.replace(gBuilddir ~ dirSeparator, "");
+                version(Windows)
+                    expCommand = expCommand.replace(gBuilddir ~ "/", "");
+                expCommand = expCommand.replace(gBuilddir, ".");
+                auto cmd = Command(expCommand);
                 cmd.type = this.type;
                 return cmd;
             default:
@@ -605,7 +547,7 @@ struct Command {
         }
     }
 
-    ///Replace $in, $out, $project with values
+    ///Replace $in, $out, $project with values and remove $builddir
     private static string expandCmd(in string cmd, in string projectPath,
                                     in string[] outputs, in string[] inputs) @safe pure {
         auto outs = outputs.map!buildPath;
@@ -616,6 +558,7 @@ struct Command {
         r = r.replace(gBuilddir ~ dirSeparator, "");
         version(Windows)
             r = r.replace(gBuilddir ~ "/", "");
+        r = r.replace(gBuilddir, ".");
         return r;
     }
 

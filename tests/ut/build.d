@@ -80,17 +80,17 @@ import std.format;
 @("InTopLevelObjDir") unittest {
 
     auto theApp = Target("theapp");
-    auto dirName = topLevelDirName(theApp);
+    auto dirName = objDirOf(theApp);
     auto fooObj = Target("foo.o", "", [Target("foo.c")]);
     fooObj.inTopLevelObjDirOf(dirName).shouldEqual(
-        Target(buildPath(".reggae/objs/theapp.objs/foo.o"), "", [Target("foo.c")]));
+        Target(buildPath(".reggae/objs/theapp.objs/foo.o"), "", [Target(buildPath("$project/foo.c"))]));
 
-    auto barObjInBuildDir = Target("$builddir/bar.o", "", [Target("bar.c")]);
+    auto barObjInBuildDir = Target("$builddir/bar.o", "", [Target(buildPath("$project/bar.c"))]);
     barObjInBuildDir.inTopLevelObjDirOf(dirName).shouldEqual(
-        Target("bar.o", "", [Target("bar.c")]));
+        Target("bar.o", "", [Target(buildPath("$project/bar.c"))]));
 
     auto leafTarget = Target("foo.c");
-    leafTarget.inTopLevelObjDirOf(dirName).shouldEqual(leafTarget);
+    leafTarget.inTopLevelObjDirOf(dirName).shouldEqual(Target(buildPath("$project/foo.c")));
 }
 
 
@@ -111,49 +111,30 @@ import std.format;
 
     auto newProtoSrcs = Target([buildPath("gen/protocol.c"), buildPath("gen/protocol.h")],
                                 `./compiler $in`,
-                                [Target(`protocol.proto`)]);
+                                [Target(buildPath("$project/protocol.proto"))]);
     auto newProtoD = Target(buildPath("gen/protocol.d"),
-                             `echo "extern(C) " > $out; cat ` ~ buildPath("gen/protocol.h") ~ ` >> $out`,
+                             `echo "extern(C) " > $out; cat gen/protocol.h >> $out`,
                              [], [newProtoSrcs]);
 
     build.targets.array.shouldEqual(
         [Target("app", "dmd -of$out $in",
-                [Target("src/main.d"),
-                 Target(buildPath("bin/protocol.o"), "gcc -o $out -c " ~ buildPath("gen/protocol.c"),
+                [Target(buildPath("$project/src/main.d")),
+                 Target(buildPath("bin/protocol.o"), "gcc -o $out -c gen/protocol.c",
                         [], [newProtoSrcs]),
                  newProtoD])]
         );
 }
 
 
-@("realTargetPath") unittest {
-    auto fooLib = Target("$project/foo.so", "dmd -of$out $in", [Target("src1.d"), Target("src2.d")]);
-    auto barLib = Target("$builddir/bar.so", "dmd -of$out $in", [Target("src1.d"), Target("src2.d")]);
-    auto symlink1 = Target("$project/weird/path/thingie1", "ln -sf $in $out", fooLib);
-    auto symlink2 = Target("$project/weird/path/thingie2", "ln -sf $in $out", fooLib);
-    auto symlinkBar = Target("$builddir/weird/path/thingie2", "ln -sf $in $out", fooLib);
-
-    immutable dirName = "/made/up/dir";
-
-    realTargetPath(dirName, symlink1.rawOutputs[0]).shouldEqual(buildPath("$project/weird/path/thingie1"));
-    realTargetPath(dirName, symlink2.rawOutputs[0]).shouldEqual(buildPath("$project/weird/path/thingie2"));
-    realTargetPath(dirName, fooLib.rawOutputs[0]).shouldEqual(buildPath("$project/foo.so"));
-
-
-    realTargetPath(dirName, symlinkBar.rawOutputs[0]).shouldEqual(buildPath("weird/path/thingie2"));
-    realTargetPath(dirName, barLib.rawOutputs[0]).shouldEqual("bar.so");
-
-}
-
-
 @("optional") unittest {
     enum foo = Target("foo", "dmd -of$out $in", Target("foo.d"));
     enum bar = Target("bar", "dmd -of$out $in", Target("bar.d"));
+    enum newBar = Target("bar", "dmd -of$out $in", Target(buildPath("$project/bar.d")));
 
-    optional(bar).target.shouldEqual(bar);
+    optional(bar).target.shouldEqual(newBar);
     mixin build!(foo, optional(bar));
     auto build = buildFunc();
-    build.targets.array[1].shouldEqual(bar);
+    build.targets.array[1].shouldEqual(newBar);
 }
 
 
@@ -167,8 +148,10 @@ import std.format;
     auto symlink2 = Target("$project/weird/path/thingie2", "ln -sf $in $out", fooLib);
     auto build = Build(symlink1, symlink2);
 
-    auto newObj1 = Target(buildPath(".reggae/objs/$project/foo.so.objs/obj1.o"), "dmd -of$out -c $in", src1);
-    auto newObj2 = Target(buildPath(".reggae/objs/$project/foo.so.objs/obj2.o"), "dmd -of$out -c $in", src2);
+    auto newSrc1 = Target(buildPath("$project/src1.d"));
+    auto newSrc2 = Target(buildPath("$project/src2.d"));
+    auto newObj1 = Target(buildPath(".reggae/objs/__project__/foo.so.objs/obj1.o"), "dmd -of$out -c $in", newSrc1);
+    auto newObj2 = Target(buildPath(".reggae/objs/__project__/foo.so.objs/obj2.o"), "dmd -of$out -c $in", newSrc2);
     auto newFooLib = Target(buildPath("$project/foo.so"), "dmd -of$out $in", [newObj1, newObj2]);
     auto newSymlink1 = Target(buildPath("$project/weird/path/thingie1"), "ln -sf $in $out", newFooLib);
     auto newSymlink2 = Target(buildPath("$project/weird/path/thingie2"), "ln -sf $in $out", newFooLib);
@@ -186,12 +169,12 @@ import std.format;
     mixin build!(foo, optional!(bar));
     auto build = buildFunc();
 
-    auto fooObj1 = Target(buildPath(".reggae/objs/foo.objs/obj1.o"), "dmd -of$out -c $in", Target("src1.d"));
-    auto fooObj2 = Target(buildPath(".reggae/objs/foo.objs/obj2.o"), "dmd -of$out -c $in", Target("src2.d"));
+    auto fooObj1 = Target(buildPath(".reggae/objs/foo.objs/obj1.o"), "dmd -of$out -c $in", Target(buildPath("$project/src1.d")));
+    auto fooObj2 = Target(buildPath(".reggae/objs/foo.objs/obj2.o"), "dmd -of$out -c $in", Target(buildPath("$project/src2.d")));
     auto newFoo = Target("foo", "dmd -of$out $in", [fooObj1, fooObj2]);
 
-    auto barObj1 = Target(buildPath(".reggae/objs/bar.objs/obj1.o"), "dmd -of$out -c $in", Target("src1.d"));
-    auto barObj2 = Target(buildPath(".reggae/objs/bar.objs/obj2.o"), "dmd -of$out -c $in", Target("src2.d"));
+    auto barObj1 = Target(buildPath(".reggae/objs/bar.objs/obj1.o"), "dmd -of$out -c $in", Target(buildPath("$project/src1.d")));
+    auto barObj2 = Target(buildPath(".reggae/objs/bar.objs/obj2.o"), "dmd -of$out -c $in", Target(buildPath("$project/src2.d")));
     auto newBar = Target("bar", "dmd -of$out $in", [barObj1, barObj2]);
 
     build.range.array.shouldEqual([fooObj1, fooObj2, newFoo, barObj1, barObj2, newBar]);
@@ -300,7 +283,7 @@ unittest {
                 "cmd -o $out $in",
                 Target(buildPath(".reggae/objs/output.objs/med"),
                        "medcmd -o $out $in",
-                       "input"))]);
+                       buildPath("$project/input")))]);
 }
 
 @("input path with environment variable")

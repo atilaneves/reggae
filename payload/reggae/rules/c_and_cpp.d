@@ -22,7 +22,7 @@ Target unityBuild(ExeName exeName,
 
     const srcFiles = sourcesToFileNames!(sourcesFunc);
 
-    immutable dirName = buildPath(options.workingDir, topLevelDirName(Target(exeName.value)));
+    immutable dirName = buildPath(options.workingDir, objDirOf(Target(exeName.value)));
     dirName.exists || mkdirRecurse(dirName);
 
     immutable fileName = buildPath(dirName, "unity.cpp");
@@ -87,7 +87,7 @@ Target unityTarget(R1, R2)(in ExeName exeName,
     import std.algorithm;
 
     auto justFileName = srcFiles.map!getLanguage.front == Language.C ? "unity.c" : "unity.cpp";
-    auto unityFileName = buildPath(gBuilddir, topLevelDirName(Target(exeName.value)), justFileName);
+    auto unityFileName = buildPath(gBuilddir, objDirOf(Target(exeName.value)), justFileName);
     auto command = compileCommand(unityFileName,
                                    flags.value,
                                    includes.value,

@@ -394,10 +394,10 @@ else
     auto foo = Target("$project/foodir", "mkdir -p $out", emptyDependencies, [stuff]);
     auto ninja = Ninja(Build(foo), "/path/to/proj"); //to make sure we can
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry(buildPath("build .reggae/objs//path/to/proj/foodir.objs/foo.o: dmd /path/to/proj/foo.d"),
+        [NinjaEntry(buildPath("build .reggae/objs/__project__/foodir.objs/foo.o: dmd /path/to/proj/foo.d"),
                     ["before = -of",
                      "between = -c"]),
-         NinjaEntry(buildPath("build /path/to/proj/foodir: mkdir  | .reggae/objs//path/to/proj/foodir.objs/foo.o"),
+         NinjaEntry(buildPath("build /path/to/proj/foodir: mkdir  | .reggae/objs/__project__/foodir.objs/foo.o"),
                     ["before = -p"]),
             ]);
     ninja.ruleEntries.shouldEqual(

@@ -1,5 +1,7 @@
 module tests.it.rules.scriptlike;
 
+version(DigitalMars):
+
 import reggae.path: buildPath;
 import tests.it;
 

@@ -57,6 +57,7 @@ private void buildDCompile() {
     import std.array: join;
     import reggae.file;
     import reggae.rules.common: exeExt;
+    import reggae.config: options;
 
     enum fileNames = ["dcompile.d", "dependencies.d"];
 
@@ -75,7 +76,7 @@ private void buildDCompile() {
         writeFile!fileName;
     }
 
-    enum args = ["dmd", "-ofdcompile"] ~ fileNames;
+    const args = [options.dCompiler, "-ofdcompile"] ~ fileNames;
     const string[string] env = null;
     Config config = Config.none;
     size_t maxOutput = size_t.max;

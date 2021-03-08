@@ -148,120 +148,122 @@ else
 }
 
 
-@("Default rules") unittest {
-    import reggae.config: gDefaultOptions;
-    version(Windows)
-        enum defaultDCModel = " -m32mscoff";
-    else
-        enum defaultDCModel = null;
-    defaultRules(gDefaultOptions).shouldEqual(
-        [
-            NinjaEntry("rule _ccompile",
-                       isWindows
-                       ? ["command = cl.exe @$out.rsp",
-                          "rspfile = $out.rsp",
-                          "rspfile_content = /nologo $flags $includes /showIncludes /Fo$out -c $in",
-                          "deps = msvc",
-                          "description = Compiling $out"]
-                       : ["command = gcc $flags $includes -MMD -MT $out -MF $out.dep -o $out -c $in",
-                          "deps = gcc",
-                          "depfile = $out.dep",
-                          "description = Compiling $out"]),
-            NinjaEntry("rule _cppcompile",
-                       isWindows
-                       ? ["command = cl.exe @$out.rsp",
-                          "rspfile = $out.rsp",
-                          "rspfile_content = /nologo $flags $includes /showIncludes /Fo$out -c $in",
-                          "deps = msvc",
-                          "description = Compiling $out"]
-                       : ["command = g++ $flags $includes -MMD -MT $out -MF $out.dep -o $out -c $in",
-                          "deps = gcc",
-                          "depfile = $out.dep",
-                          "description = Compiling $out"]),
-            NinjaEntry("rule _dcompile",
-                       isWindows
-                       ? ["command = " ~ buildPath(".reggae/dcompile") ~ " @$out.rsp",
-                          "rspfile = $out.rsp",
-                          "rspfile_content = --objFile=$out --depFile=$out.dep dmd" ~
-                              defaultDCModel ~ " $flags $includes $stringImports $in",
-                          "deps = gcc",
-                          "depfile = $out.dep",
-                          "description = Compiling $out"]
-                       : ["command = " ~ buildPath(".reggae/dcompile") ~ " --objFile=$out --depFile=$out.dep dmd" ~
-                              defaultDCModel ~ " $flags $includes $stringImports $in",
-                          "deps = gcc",
-                          "depfile = $out.dep",
-                          "description = Compiling $out"]),
-            NinjaEntry("rule _clink",
-                       isWindows
-                       ? ["command = cl.exe @$out.rsp",
-                          "rspfile = $out.rsp",
-                          "rspfile_content = /nologo /Fo$out $flags $in",
-                          "description = Linking $out"]
-                       : ["command = gcc -o $out $flags $in",
-                          "description = Linking $out"]),
-            NinjaEntry("rule _cpplink",
-                       isWindows
-                       ? ["command = cl.exe @$out.rsp",
-                          "rspfile = $out.rsp",
-                          "rspfile_content = /nologo /Fo$out $flags $in",
-                          "description = Linking $out"]
-                       : ["command = g++ -o $out $flags $in",
-                          "description = Linking $out"]),
-            NinjaEntry("rule _dlink",
-                       isWindows
-                       ? ["command = dmd @$out.rsp",
-                          "rspfile = $out.rsp",
-                          "rspfile_content =" ~ defaultDCModel ~ " -of$out $flags $in",
-                          "description = Linking $out"]
-                       : ["command = dmd" ~ defaultDCModel ~ " -of$out $flags $in",
-                          "description = Linking $out"]),
-            NinjaEntry("rule _ulink",
-                       ["command = dmd" ~ defaultDCModel ~ " -of$out $flags $in",
-                        "description = Linking $out"]),
-            NinjaEntry("rule _ccompileAndLink",
-                       isWindows
-                       ? ["command = cl.exe @$out.rsp",
-                          "rspfile = $out.rsp",
-                          "rspfile_content = /nologo $flags $includes /showIncludes /Fo$out $in",
-                          "deps = msvc",
-                          "description = Building $out"]
-                       : ["command = gcc $flags $includes -MMD -MT $out -MF $out.dep -o $out $in",
-                          "deps = gcc",
-                          "depfile = $out.dep",
-                          "description = Building $out"]),
-            NinjaEntry("rule _cppcompileAndLink",
-                       isWindows
-                       ? ["command = cl.exe @$out.rsp",
-                          "rspfile = $out.rsp",
-                          "rspfile_content = /nologo $flags $includes /showIncludes /Fo$out $in",
-                          "deps = msvc",
-                          "description = Building $out"]
-                       : ["command = g++ $flags $includes -MMD -MT $out -MF $out.dep -o $out $in",
-                          "deps = gcc",
-                          "depfile = $out.dep",
-                          "description = Building $out"]),
-            NinjaEntry("rule _dcompileAndLink",
-                       isWindows
-                       ? ["command = " ~ buildPath(".reggae/dcompile") ~ " @$out.rsp",
-                          "rspfile = $out.rsp",
-                          "rspfile_content = --objFile=$out --depFile=$out.dep dmd" ~
-                              defaultDCModel ~ " $flags $includes $stringImports $in",
-                          "deps = gcc",
-                          "depfile = $out.dep",
-                          "description = Building $out"]
-                       : ["command = " ~ buildPath(".reggae/dcompile") ~ " --objFile=$out --depFile=$out.dep dmd" ~
-                              defaultDCModel ~ " $flags $includes $stringImports $in",
-                          "deps = gcc",
-                          "depfile = $out.dep",
-                          "description = Building $out"]),
+version(DigitalMars) {
+    @("Default rules") unittest {
+        import reggae.config: gDefaultOptions;
+        version(Windows)
+            enum defaultDCModel = " -m32mscoff";
+        else
+            enum defaultDCModel = null;
+        defaultRules(gDefaultOptions).shouldEqual(
+            [
+                NinjaEntry("rule _ccompile",
+                           isWindows
+                           ? ["command = cl.exe @$out.rsp",
+                              "rspfile = $out.rsp",
+                              "rspfile_content = /nologo $flags $includes /showIncludes /Fo$out -c $in",
+                              "deps = msvc",
+                              "description = Compiling $out"]
+                           : ["command = gcc $flags $includes -MMD -MT $out -MF $out.dep -o $out -c $in",
+                              "deps = gcc",
+                              "depfile = $out.dep",
+                              "description = Compiling $out"]),
+                NinjaEntry("rule _cppcompile",
+                           isWindows
+                           ? ["command = cl.exe @$out.rsp",
+                              "rspfile = $out.rsp",
+                              "rspfile_content = /nologo $flags $includes /showIncludes /Fo$out -c $in",
+                              "deps = msvc",
+                              "description = Compiling $out"]
+                           : ["command = g++ $flags $includes -MMD -MT $out -MF $out.dep -o $out -c $in",
+                              "deps = gcc",
+                              "depfile = $out.dep",
+                              "description = Compiling $out"]),
+                NinjaEntry("rule _dcompile",
+                           isWindows
+                           ? ["command = " ~ buildPath(".reggae/dcompile") ~ " @$out.rsp",
+                              "rspfile = $out.rsp",
+                              "rspfile_content = --objFile=$out --depFile=$out.dep dmd" ~
+                                  defaultDCModel ~ " $flags $includes $stringImports $in",
+                              "deps = gcc",
+                              "depfile = $out.dep",
+                              "description = Compiling $out"]
+                           : ["command = " ~ buildPath(".reggae/dcompile") ~ " --objFile=$out --depFile=$out.dep dmd" ~
+                                  defaultDCModel ~ " $flags $includes $stringImports $in",
+                              "deps = gcc",
+                              "depfile = $out.dep",
+                              "description = Compiling $out"]),
+                NinjaEntry("rule _clink",
+                           isWindows
+                           ? ["command = cl.exe @$out.rsp",
+                              "rspfile = $out.rsp",
+                              "rspfile_content = /nologo /Fo$out $flags $in",
+                              "description = Linking $out"]
+                           : ["command = gcc -o $out $flags $in",
+                              "description = Linking $out"]),
+                NinjaEntry("rule _cpplink",
+                           isWindows
+                           ? ["command = cl.exe @$out.rsp",
+                              "rspfile = $out.rsp",
+                              "rspfile_content = /nologo /Fo$out $flags $in",
+                              "description = Linking $out"]
+                           : ["command = g++ -o $out $flags $in",
+                              "description = Linking $out"]),
+                NinjaEntry("rule _dlink",
+                           isWindows
+                           ? ["command = dmd @$out.rsp",
+                              "rspfile = $out.rsp",
+                              "rspfile_content =" ~ defaultDCModel ~ " -of$out $flags $in",
+                              "description = Linking $out"]
+                           : ["command = dmd" ~ defaultDCModel ~ " -of$out $flags $in",
+                              "description = Linking $out"]),
+                NinjaEntry("rule _ulink",
+                           ["command = dmd" ~ defaultDCModel ~ " -of$out $flags $in",
+                            "description = Linking $out"]),
+                NinjaEntry("rule _ccompileAndLink",
+                           isWindows
+                           ? ["command = cl.exe @$out.rsp",
+                              "rspfile = $out.rsp",
+                              "rspfile_content = /nologo $flags $includes /showIncludes /Fo$out $in",
+                              "deps = msvc",
+                              "description = Building $out"]
+                           : ["command = gcc $flags $includes -MMD -MT $out -MF $out.dep -o $out $in",
+                              "deps = gcc",
+                              "depfile = $out.dep",
+                              "description = Building $out"]),
+                NinjaEntry("rule _cppcompileAndLink",
+                           isWindows
+                           ? ["command = cl.exe @$out.rsp",
+                              "rspfile = $out.rsp",
+                              "rspfile_content = /nologo $flags $includes /showIncludes /Fo$out $in",
+                              "deps = msvc",
+                              "description = Building $out"]
+                           : ["command = g++ $flags $includes -MMD -MT $out -MF $out.dep -o $out $in",
+                              "deps = gcc",
+                              "depfile = $out.dep",
+                              "description = Building $out"]),
+                NinjaEntry("rule _dcompileAndLink",
+                           isWindows
+                           ? ["command = " ~ buildPath(".reggae/dcompile") ~ " @$out.rsp",
+                              "rspfile = $out.rsp",
+                              "rspfile_content = --objFile=$out --depFile=$out.dep dmd" ~
+                                  defaultDCModel ~ " $flags $includes $stringImports $in",
+                              "deps = gcc",
+                              "depfile = $out.dep",
+                              "description = Building $out"]
+                           : ["command = " ~ buildPath(".reggae/dcompile") ~ " --objFile=$out --depFile=$out.dep dmd" ~
+                                  defaultDCModel ~ " $flags $includes $stringImports $in",
+                              "deps = gcc",
+                              "depfile = $out.dep",
+                              "description = Building $out"]),
 
-            NinjaEntry("rule _phony",
-                       isWindows
-                       ? [`command = cmd.exe /c "$cmd"`,
-                          "description = $cmd"]
-                       : ["command = $cmd"]),
-            ]);
+                NinjaEntry("rule _phony",
+                           isWindows
+                           ? [`command = cmd.exe /c "$cmd"`,
+                              "description = $cmd"]
+                           : ["command = $cmd"]),
+                ]);
+    }
 }
 
 @("Default rules weird C compiler") unittest {

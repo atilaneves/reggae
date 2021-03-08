@@ -5,6 +5,8 @@ import tests.it.buildgen;
 import reggae.path: buildPath;
 
 
+version(DigitalMars):
+
 static foreach (backend; ["ninja", "make", "tup", "binary"])
     @("C++ dependencies get automatically computed with objectFile (" ~ backend ~ ")")
     @Tags(backend)

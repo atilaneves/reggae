@@ -1,5 +1,9 @@
 module tests.it.buildgen.arbitrary;
 
+
+version(DigitalMars):
+
+
 import tests.it.buildgen;
 
 

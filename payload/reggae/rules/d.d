@@ -55,6 +55,7 @@ Target[] dlangObjectsPerPackage(
     );
 }
 
+
 Target[] dlangObjectsPerModule(
     alias sourcesFunc = Sources!(),
     CompilerFlags compilerFlags = CompilerFlags(),
@@ -125,6 +126,45 @@ Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
         import std.path: baseName;
         const path = packagePath(pkgFiles[0]) ~ "_" ~ pkgFiles[0].baseName(".d");
         return objFileName(path);
+    }
+
+    return srcFiles
+        .byPackage
+        .map!(a => Target(outputFileName(a),
+                          command(a),
+                          a.map!(a => Target(a)).array,
+                          implicits))
+        .array;
+}
+
+/// Generate object files for D sources, compiling the whole package together.
+Target[] dlangStaticLibFilesPerPackage(
+    in string[] srcFiles,
+    in string[] flags = [],
+    in string[] importPaths = [],
+    in string[] stringImportPaths = [],
+    Target[] implicits = [],
+    in string projDir = "$project",
+)
+    @trusted pure
+{
+    import reggae.rules.common: libFileName;
+
+    if(srcFiles.empty) return [];
+
+    auto command(in string[] files) {
+        return compileCommand(files[0].packagePath ~ ".d",
+                              "-lib" ~ flags,
+                              importPaths,
+                              stringImportPaths,
+                              projDir);
+    }
+
+    // the object file for a D package containing pkgFiles
+    static string outputFileName(in string[] pkgFiles) {
+        import std.path: baseName;
+        const path = packagePath(pkgFiles[0]) ~ "_" ~ pkgFiles[0].baseName(".d");
+        return libFileName(path);
     }
 
     return srcFiles

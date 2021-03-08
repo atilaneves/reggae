@@ -193,7 +193,7 @@ struct DubInfo {
                 !options.dubDepObjsInsteadOfStaticLib;
 
             return isStaticLibDep
-                ? &dlangStaticLibraryTogether
+                ? &dlangStaticLibFilesPerPackage
                 : compileFunc;
         }
 

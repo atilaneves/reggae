@@ -76,7 +76,7 @@ private void buildDCompile() {
         writeFile!fileName;
     }
 
-    const args = [options.dCompiler, "-ofdcompile"] ~ fileNames;
+    const args = [options.dCompiler, "-ofdcompile" ~ exeExt] ~ fileNames;
     const string[string] env = null;
     Config config = Config.none;
     size_t maxOutput = size_t.max;

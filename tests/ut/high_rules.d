@@ -7,9 +7,12 @@ import reggae.path: buildPath;
 import unit_threaded;
 
 
-version(Windows)
-    immutable defaultDCModel = " -m32mscoff";
-else
+version(Windows) {
+    version(DigitalMars)
+        immutable defaultDCModel = " -m32mscoff";
+    else
+        immutable defaultDCModel = "";
+} else
     enum defaultDCModel = null;
 
 @("C object file") unittest {

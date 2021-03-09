@@ -9,9 +9,12 @@ import unit_threaded;
 @("shell commands") unittest {
     import reggae.config: gDefaultOptions, dCompiler;
 
-    version(Windows)
-        enum defaultDCModel = " -m32mscoff";
-    else
+    version(Windows) {
+        version(DigitalMars)
+            enum defaultDCModel = " -m32mscoff";
+        else
+            enum defaultDCModel = null;
+    } else
         enum defaultDCModel = null;
 
     auto objTarget = link(ExeName("myapp"), [Target("foo.o"), Target("bar.o")], Flags("-L-L"));

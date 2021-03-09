@@ -15,13 +15,24 @@ version(minimal) {
     enum isDubProject = true;
 }
 
+
+version(DigitalMars)
+    enum dCompiler = "dmd";
+else version(LDC)
+    enum dCompiler = "ldc2";
+else version(GNU)
+    enum dCompiler = "gdc";
+else
+    static assert(false, "Unknown D compiler");
+
+
 immutable Options gDefaultOptions = Options(Backend.ninja,
             "",
             "",
             "",
             defaultCC,
             defaultCXX,
-            "dmd",
+            dCompiler,
             false,
             false,
             true, //perModule only for UTs, false in real world

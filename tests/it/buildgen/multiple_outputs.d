@@ -1,5 +1,9 @@
 module tests.it.buildgen.multiple_outputs;
 
+
+version(DigitalMars):
+
+
 import tests.it.buildgen;
 import reggae.path: buildPath;
 

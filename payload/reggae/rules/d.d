@@ -313,12 +313,12 @@ private auto runDCompiler(in string projectPath,
                           in string[] flags,
                           in string[] importPaths,
                           in string[] stringImportPaths) @trusted {
-
+    import reggae.config: options;
     import std.process: execute;
     import std.exception: enforce;
     import std.conv:text;
 
-    immutable compiler = "dmd";
+    immutable compiler = options.dCompiler;
     const compArgs = [compiler] ~ flags ~
         importPaths.map!(a => "-I" ~ buildPath(projectPath, a)).array ~
         stringImportPaths.map!(a => "-J" ~ buildPath(projectPath, a)).array ~

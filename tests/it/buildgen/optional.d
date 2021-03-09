@@ -1,5 +1,6 @@
 module tests.it.buildgen.optional;
 
+version(DigitalMars):
 
 import tests.it.buildgen;
 import std.file;

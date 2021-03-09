@@ -228,45 +228,47 @@ version(Windows_DMD) {
     enum string dubArch = null;
 }
 
-@("object source files.simple")
-@Tags(["dub", "ninja"])
-unittest {
-    with(immutable ReggaeSandbox()) {
-        writeFile("dub.sdl", `
-            name "foo"
-            targetType "executable"
-            dependency "bar" path="bar"
-        `);
-        writeFile("source/app.d", q{
-            extern(C) int lebaz();
-            void main() {
-                import bar;
-                import std.stdio;
-                writeln(lebar);
-                writeln(lebaz);
-            }
-        });
-        writeFile("bar/dub.sdl", `
-            name "bar"
-            sourceFiles "../baz.o" platform="posix"
-            sourceFiles "../baz.obj" platform="windows"
-        `);
-        writeFile("bar/source/bar.d", q{
-            module bar;
-            int lebar() { return 3; }
-        });
-        writeFile("baz.d", q{
-            module baz;
-            extern(C) int lebaz() { return 42; }
-        });
+version(DigitalMars) {
+    @("object source files.simple")
+    @Tags(["dub", "ninja"])
+    unittest {
+        with(immutable ReggaeSandbox()) {
+            writeFile("dub.sdl", `
+                name "foo"
+                targetType "executable"
+                dependency "bar" path="bar"
+            `);
+            writeFile("source/app.d", q{
+                extern(C) int lebaz();
+                void main() {
+                    import bar;
+                    import std.stdio;
+                    writeln(lebar);
+                    writeln(lebaz);
+                }
+            });
+            writeFile("bar/dub.sdl", `
+                name "bar"
+                sourceFiles "../baz.o" platform="posix"
+                sourceFiles "../baz.obj" platform="windows"
+            `);
+            writeFile("bar/source/bar.d", q{
+                module bar;
+                int lebar() { return 3; }
+            });
+            writeFile("baz.d", q{
+                module baz;
+                extern(C) int lebaz() { return 42; }
+            });
 
-        version(Windows_DMD)
-            ["dmd", "-m32mscoff", "-c", "baz.d"].shouldExecuteOk;
-        else
-            ["dmd", "-c", "baz.d"].shouldExecuteOk;
+            version(Windows_DMD)
+                ["dmd", "-m32mscoff", "-c", "baz.d"].shouldExecuteOk;
+            else
+                ["dmd", "-c", "baz.d"].shouldExecuteOk;
 
-        runReggae("-b", "ninja", dubArch);
-        ninja.shouldExecuteOk;
+            runReggae("-b", "ninja", dubArch);
+            ninja.shouldExecuteOk;
+        }
     }
 }
 
@@ -356,49 +358,50 @@ unittest {
     }
 }
 
+version(DigitalMars) {
+    @("object source files.with dub objs option")
+    @Tags("dub", "ninja", "dubObjsDir")
+    unittest {
+        with(immutable ReggaeSandbox()) {
+            writeFile("dub.sdl", `
+                name "foo"
+                targetType "executable"
+                dependency "bar" path="bar"
+            `);
+            writeFile("source/app.d", q{
+                extern(C) int lebaz();
+                void main() {
+                    import bar;
+                    import std.stdio;
+                    writeln(lebar);
+                    writeln(lebaz);
+                }
+            });
+            writeFile("bar/dub.sdl", `
+                name "bar"
+                sourceFiles "../baz.o" platform="posix"
+                sourceFiles "../baz.obj" platform="windows"
+            `);
+            writeFile("bar/source/bar.d", q{
+                module bar;
+                int lebar() { return 3; }
+            });
+            writeFile("baz.d", q{
+                module baz;
+                extern(C) int lebaz() { return 42; }
+            });
 
-@("object source files.with dub objs option")
-@Tags("dub", "ninja", "dubObjsDir")
-unittest {
-    with(immutable ReggaeSandbox()) {
-        writeFile("dub.sdl", `
-            name "foo"
-            targetType "executable"
-            dependency "bar" path="bar"
-        `);
-        writeFile("source/app.d", q{
-            extern(C) int lebaz();
-            void main() {
-                import bar;
-                import std.stdio;
-                writeln(lebar);
-                writeln(lebaz);
+            version(Windows_DMD) {
+                ["dmd", "-m32mscoff", "-c", "baz.d"].shouldExecuteOk;
+            } else {
+                ["dmd", "-c", "baz.d"].shouldExecuteOk;
             }
-        });
-        writeFile("bar/dub.sdl", `
-            name "bar"
-            sourceFiles "../baz.o" platform="posix"
-            sourceFiles "../baz.obj" platform="windows"
-        `);
-        writeFile("bar/source/bar.d", q{
-            module bar;
-            int lebar() { return 3; }
-        });
-        writeFile("baz.d", q{
-            module baz;
-            extern(C) int lebaz() { return 42; }
-        });
 
-        version(Windows_DMD) {
-            ["dmd", "-m32mscoff", "-c", "baz.d"].shouldExecuteOk;
-        } else {
-            ["dmd", "-c", "baz.d"].shouldExecuteOk;
+            const output = runReggae("-b", "ninja", "--dub-objs-dir=" ~ testPath, dubArch);
+            writelnUt(output);
+
+            ninja.shouldExecuteOk;
         }
-
-        const output = runReggae("-b", "ninja", "--dub-objs-dir=" ~ testPath, dubArch);
-        writelnUt(output);
-
-        ninja.shouldExecuteOk;
     }
 }
 

@@ -1,5 +1,6 @@
 module tests.it.buildgen.implicits;
 
+version(DigitalMars):
 
 import tests.it.buildgen;
 import reggae.path: buildPath;

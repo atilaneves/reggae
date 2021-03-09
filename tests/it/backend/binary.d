@@ -59,45 +59,47 @@ private struct FakeFile {
 }
 
 
-@("Targets should only be built once") unittest {
-    import std.process;
-    import std.stdio: File;
-    import std.range;
-    import std.algorithm: map;
-    import std.conv: to;
-    import std.string: splitLines, stripRight;
+version(Windows) {}
+else {
+    @("Targets should only be built once") unittest {
+        import std.process;
+        import std.stdio: File;
+        import std.range;
+        import std.algorithm: map;
+        import std.conv: to;
+        import std.string: splitLines, stripRight;
 
-    enum fooSrcName = "foo.txt";
-    enum barSrcName = "bar.txt";
+        enum fooSrcName = "foo.txt";
+        enum barSrcName = "bar.txt";
 
-    scope(exit) {
-        foreach(name; [fooSrcName, barSrcName, "foo", "bar"])
-            remove(name);
-        executeShell("rm -rf objs");
+        scope(exit) {
+            foreach(name; [fooSrcName, barSrcName, "foo", "bar"])
+                remove(name);
+            executeShell("rm -rf objs");
+        }
+
+        {
+            // create the src files so the rule fires
+            auto fooSrc = File(fooSrcName, "w");
+            auto barSrc = File(barSrcName, "w");
+        }
+
+        auto foo = Target("$project/foo", "echo foo >> $out", [], [Target(fooSrcName)]);
+        auto bar = Target("$project/bar", "echo bar >> $out", [], [Target(barSrcName)]);
+        auto mids = 10.iota
+            .map!(a => Target.phony("$project/" ~a.to!string, "echo " ~ a.to!string, [foo, bar]))
+            .array
+            ;
+        auto top = Target.phony("top", "echo top", mids);
+
+        auto binary = Binary(Build(top), getOptions(["reggae", "--export", "-b", "binary"]));
+        binary.run(["./build"]);
+
+        // only one line -> rule only called once
+        readText("foo").splitLines.map!stripRight.shouldEqual(["foo"]);
+        readText("bar").splitLines.map!stripRight.shouldEqual(["bar"]);
     }
-
-    {
-        // create the src files so the rule fires
-        auto fooSrc = File(fooSrcName, "w");
-        auto barSrc = File(barSrcName, "w");
-    }
-
-    auto foo = Target("$project/foo", "echo foo >> $out", [], [Target(fooSrcName)]);
-    auto bar = Target("$project/bar", "echo bar >> $out", [], [Target(barSrcName)]);
-    auto mids = 10.iota
-        .map!(a => Target.phony("$project/" ~a.to!string, "echo " ~ a.to!string, [foo, bar]))
-        .array
-        ;
-    auto top = Target.phony("top", "echo top", mids);
-
-    auto binary = Binary(Build(top), getOptions(["reggae", "--export", "-b", "binary"]));
-    binary.run(["./build"]);
-
-    // only one line -> rule only called once
-    readText("foo").splitLines.map!stripRight.shouldEqual(["foo"]);
-    readText("bar").splitLines.map!stripRight.shouldEqual(["bar"]);
 }
-
 
 @("List of targets") unittest {
     auto file = FakeFile();

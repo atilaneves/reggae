@@ -33,7 +33,7 @@ unittest {
             import reggae;
             alias app = scriptlike!(App(SourceFileName("main.d"),
                                         BinaryFileName("$builddir/myapp")),
-                                        Flags("-g -debug"),
+                                        Flags(),
                                         ImportPaths(["/path/to/imports"])
                     );
             alias code_gen = target!("out.c", "./myapp $in $out", target!"in.txt", app);

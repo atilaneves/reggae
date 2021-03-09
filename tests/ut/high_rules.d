@@ -7,9 +7,12 @@ import reggae.path: buildPath;
 import unit_threaded;
 
 
-version(Windows)
-    immutable defaultDCModel = " -m32mscoff";
-else
+version(Windows) {
+    version(DigitalMars)
+        immutable defaultDCModel = " -m32mscoff";
+    else
+        immutable defaultDCModel = "";
+} else
     enum defaultDCModel = null;
 
 @("C object file") unittest {
@@ -82,7 +85,7 @@ else
 
     Command.builtinTemplate(CommandType.compile, Language.D, gDefaultOptions).shouldEqual(
         buildPath(".reggae/dcompile") ~ " --objFile=$out --depFile=$out.dep " ~
-         "dmd" ~ defaultDCModel ~ " $flags $includes $stringImports $in");
+         dCompiler ~ defaultDCModel ~ " $flags $includes $stringImports $in");
 
 }
 
@@ -97,6 +100,6 @@ else
     Command.builtinTemplate(CommandType.compile, Language.C, gDefaultOptions, No.dependencies).shouldEqual(expectedC);
 
     Command.builtinTemplate(CommandType.compile, Language.D, gDefaultOptions, No.dependencies).shouldEqual(
-        "dmd" ~ defaultDCModel ~ " $flags $includes $stringImports -of$out -c $in");
+        dCompiler ~ defaultDCModel ~ " $flags $includes $stringImports -of$out -c $in");
 
 }

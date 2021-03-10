@@ -67,6 +67,19 @@ struct CompilerFlags {
 
 struct LinkerFlags {
     string[] value;
+
+    this(string value) @trusted pure {
+        import std.array: split;
+        this.value = value.split;
+    }
+
+    this(string[] values...) @safe pure nothrow {
+        this.value = values.dup;
+    }
+
+    this(inout(string)[] values) inout @safe @nogc pure nothrow {
+        this.value = values;
+    }
 }
 
 struct ImportPaths {

@@ -169,49 +169,6 @@ struct JSONString {
 }
 
 
-struct DubPackages {
-
-    import dub.packagemanager: PackageManager;
-
-    private PackageManager _packageManager;
-    private string _userPackagesPath;
-
-    this(in ProjectPath projectPath,
-         in SystemPackagesPath systemPackagesPath,
-         in UserPackagesPath userPackagesPath)
-        @safe
-    {
-        _packageManager = packageManager(projectPath, systemPackagesPath, userPackagesPath);
-        _userPackagesPath = userPackagesPath.value;
-    }
-
-    /**
-       Takes a path to a zipped dub package and stores it in the appropriate
-       user packages path.
-       The metadata is usually taken from the dub registry via an HTTP
-       API call.
-     */
-    void storeZip(in Path zip, in JSONString metadata) @safe {
-        import dub.internal.vibecompat.data.json: parseJson;
-        import dub.internal.vibecompat.inet.path: NativePath;
-        import reggae.path: buildPath;
-
-        auto metadataString = metadata.value.idup;
-        auto metadataJson = () @trusted { return parseJson(metadataString); }();
-        const name = () @trusted { return cast(string) metadataJson["name"]; }();
-        const version_ = () @trusted { return cast(string) metadataJson["version"]; }();
-
-        () @trusted {
-            _packageManager.storeFetchedPackage(
-                NativePath(zip.value),
-                metadataJson,
-                NativePath(buildPath(_userPackagesPath, "packages", name ~ "-" ~ version_, name)),
-            );
-        }();
-    }
-}
-
-
 auto project(in ProjectPath projectPath) @safe {
     return project(projectPath, systemPackagesPath, userPackagesPath);
 }

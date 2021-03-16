@@ -15,6 +15,9 @@
     "dependencies": {
         "dub": "~>1.23.0"
     },
+    "subConfigurations": {
+        "dub": "library"
+    },
     "configurations": [
         { "name": "executable" },
         { "name": "unittest",

@@ -11,11 +11,13 @@ package void dubFetch(O)(
     in string dubSelectionsJson)
     @trusted
 {
-    import reggae.dub.interop.exec: callDub, dubEnvArgs;
     import reggae.io: log;
+    import dub.dub: Dub, FetchOptions;
+    import dub.dependency: Dependency;
+    import dub.project: PlacementLocation;
     import std.array: replace;
     import std.json: parseJSON, JSONType;
-    import std.file: readText;
+    import std.file: readText, getcwd;
     import std.parallelism: parallel;
 
     const(VersionedPackage)[] pkgsToFetch;
@@ -27,18 +29,26 @@ package void dubFetch(O)(
         // skip the ones with a defined path
         if(versionJson.type != JSONType.string) continue;
 
-        // versions are usually `==1.2.3`, so strip the equals sign
         const version_ = versionJson.str.replace("==", "");
         const pkg = VersionedPackage(dubPackageName, version_);
 
         if(needDubFetch(dub, pkg)) pkgsToFetch ~= pkg;
     }
 
+    output.log("Creating dub object");
+    auto dubObj = new Dub(getcwd());
+
+
     output.log("Fetching dub packages");
     foreach(pkg; pkgsToFetch.parallel) {
-        const cmd = ["dub", "fetch", pkg.name, "--version=" ~ pkg.version_] ~ dubEnvArgs;
-        callDub(output, options, cmd);
+        dubObj.fetch(
+            pkg.name,
+            Dependency("==" ~ pkg.version_),
+            PlacementLocation.user,
+            FetchOptions.none,
+        );
     }
+    output.log("Fetched dub packages");
 
     dub.reinit;
 }

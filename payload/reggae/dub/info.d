@@ -240,8 +240,12 @@ struct DubInfo {
         return .targetName(targetType, fileName);
     }
 
-    string targetPath() @safe const pure nothrow {
-        return packages[0].targetPath;
+    string targetPath(in Options options) @safe const pure {
+        import std.path: relativePath;
+
+        return options.workingDir == options.projectPath
+            ? packages[0].targetPath.relativePath(options.projectPath)
+            : "";
     }
 
     TargetType targetType() @safe const pure nothrow {

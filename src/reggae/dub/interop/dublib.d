@@ -276,11 +276,17 @@ class InfoGenerator: ProjectGenerator {
             targets = A map from package name to TargetInfo that contains all
                 binary targets to be built.
     */
-    override void generateTargets(GeneratorSettings settings, in TargetInfo[string] targets) @trusted {
+    override void generateTargets(GeneratorSettings settings,
+                                  in TargetInfo[string] targets)
+        @trusted
+    {
 
         import dub.compilers.buildsettings: BuildSetting;
+        import std.file: exists, mkdirRecurse;
 
-        DubPackage nameToDubPackage(in string targetName, in bool isFirstPackage = false) {
+        DubPackage nameToDubPackage(in string targetName,
+                                    in bool isFirstPackage = false)
+        {
             const targetInfo = targets[targetName];
             auto newBuildSettings = targetInfo.buildSettings.dup;
             settings.compiler.prepareBuildSettings(newBuildSettings,
@@ -292,6 +298,12 @@ class InfoGenerator: ProjectGenerator {
             pkg.path = targetInfo.pack.path.toNativeString;
             pkg.targetFileName = newBuildSettings.targetName;
             pkg.targetPath = newBuildSettings.targetPath;
+
+            // this needs to be done here so as to happen before
+            // dub.generators.generator.finalizeGeneration so that copyFiles
+            // can work
+            if(!pkg.targetPath.exists) mkdirRecurse(pkg.targetPath);
+
             pkg.files = newBuildSettings.sourceFiles.dup;
             pkg.targetType = cast(typeof(pkg.targetType)) newBuildSettings.targetType;
             pkg.dependencies = targetInfo.dependencies.dup;

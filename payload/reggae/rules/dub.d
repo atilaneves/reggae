@@ -177,10 +177,7 @@ static if(isDubProject) {
                             extraObjects,
                             startingIndex);
 
-        const targetPath = options.workingDir == options.projectPath
-            ? dubInfo.targetPath.relativePath(options.projectPath)
-            : "";
-
+        const targetPath = dubInfo.targetPath(options);
         const name = realName(TargetName(buildPath(targetPath, targetName.value)), dubInfo);
 
         auto target = isStaticLibrary

@@ -95,21 +95,19 @@ unittest {
             ]
         );
 
-        version(Windows)
+        version(Windows) {
             enum ut = `daspath\ut.exe`;
-        else
+            enum bin = `daspath\issue157.exe`;
+        } else {
             enum ut = "daspath/ut";
+            enum bin = "daspath/issue157";
+        }
 
         runReggae("-b", "ninja");
         ninja(["default", ut]).shouldExecuteOk;
 
-        version(Windows) {
-            shouldExist(`daspath\issue157.exe`);
-            shouldExist(`daspath\ut.exe`);
-        } else {
-            shouldExist("daspath/issue157");
-            shouldExist("daspath/ut");
-        }
+        shouldExist(bin);
+        shouldExist(ut);
     }
 }
 
@@ -147,5 +145,50 @@ unittest {
             shouldExist("bin/issue157");
             shouldExist("bin/ut");
         }
+    }
+}
+
+
+@("140")
+@Tags("dub", "issues", "ninja")
+unittest {
+
+    import std.path: buildPath;
+
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl",
+            [
+                `name "issue157"`,
+                `targetType "executable"`,
+                `targetPath "daspath"`,
+                `dependency "bar" path="bar"`
+            ]
+        );
+
+        writeFile("source/app.d",
+            [
+                `void main() {}`,
+            ]
+        );
+
+        writeFile(
+            "bar/dub.sdl",
+            [
+                `name "bar"`,
+                `copyFiles "$PACKAGE_DIR/txts/text.txt"`
+            ]
+        );
+        writeFile("bar/source/bar.d",
+            [
+                `module bar;`,
+                `int twice(int i) { return i * 2; }`,
+            ]
+        );
+
+        writeFile("bar/txts/text.txt", "das text");
+
+        runReggae("-b", "ninja");
+        ninja(["default"]).shouldExecuteOk;
+        shouldExist(buildPath("daspath", "text.txt"));
     }
 }

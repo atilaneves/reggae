@@ -149,7 +149,6 @@ unittest {
 }
 
 
-@ShouldFail
 @("140")
 @Tags("dub", "issues", "ninja")
 unittest {
@@ -176,7 +175,7 @@ unittest {
             "bar/dub.sdl",
             [
                 `name "bar"`,
-                `copyFiles "txts/text.txt"`
+                `copyFiles "$PACKAGE_DIR/txts/text.txt"`
             ]
         );
         writeFile("bar/source/bar.d",

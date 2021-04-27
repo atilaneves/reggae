@@ -158,7 +158,7 @@ unittest {
     with(immutable ReggaeSandbox()) {
         writeFile("dub.sdl",
             [
-                `name "issue157"`,
+                `name "issue140"`,
                 `targetType "executable"`,
                 `targetPath "daspath"`,
                 `dependency "bar" path="bar"`
@@ -190,5 +190,63 @@ unittest {
         runReggae("-b", "ninja");
         ninja(["default"]).shouldExecuteOk;
         shouldExist(buildPath("daspath", "text.txt"));
+    }
+}
+
+
+@ShouldFail
+@("144")
+@Tags("dub", "issues", "ninja")
+unittest {
+
+    import std.path: buildPath;
+
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl",
+            [
+                `name "issue144"`,
+                `targetType "executable"`,
+                `configuration "default" {`,
+                `}`,
+                `configuration "daslib" {`,
+                `    targetType "library"`,
+                `    excludedSourceFiles "source/main.d"`,
+                `}`,
+            ]
+        );
+
+        writeFile("source/main.d",
+            [
+                `void main() {}`,
+            ]
+        );
+
+        writeFile("source/lib.d",
+            [
+                `int twice(int i) { return i * 2; }`,
+            ]
+        );
+
+        writeFile("reggaefile.d",
+                  q{
+                      import reggae;
+                      alias def = dubDefaultTarget!();
+                      alias lib = dubConfigurationTarget!(Configuration("library"));
+                      mixin build!(def, optional!lib);
+                  }
+        );
+
+        runReggae("-b", "ninja", "--dub-configs=daslib");
+
+        version(Windows) {
+            enum exe = "issue144.exe";
+            enum lib = "issue144.lib";
+        } else {
+            enum exe = "issue144";
+            enum lib = "issue144.a";
+        }
+
+        ninja([lib]).shouldExecuteOk;
+        ninja([exe]).shouldFailToExecute;
     }
 }

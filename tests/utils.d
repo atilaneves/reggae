@@ -1,15 +1,18 @@
 module tests.utils;
 
+
 import reggae;
 import unit_threaded;
 import std.file;
+import tests.it.runtime: ReggaeSandbox;
+
 
 struct WorkDir {
     string value;
 }
 
 auto shouldExecuteOk(in string[] args, in string file = __FILE__, in size_t line = __LINE__) {
-    import tests.it.runtime: ReggaeSandbox;
+
     return shouldExecuteOk(args, WorkDir(ReggaeSandbox.currentTestPath), file, line);
 }
 
@@ -50,12 +53,12 @@ auto shouldExecuteOk(string arg, string file = __FILE__, size_t line = __LINE__)
     return shouldExecuteOk([arg], WorkDir(getcwd()), file, line);
 }
 
-auto shouldFailToExecute(string arg, string workDir = getcwd(),
+auto shouldFailToExecute(string arg, string workDir = ReggaeSandbox.currentTestPath,
                          string file = __FILE__, size_t line = __LINE__) {
     return shouldFailToExecute([arg], workDir, file, line);
 }
 
-auto shouldFailToExecute(string[] args, string workDir = getcwd(),
+auto shouldFailToExecute(string[] args, string workDir = ReggaeSandbox.currentTestPath,
                          string file = __FILE__, size_t line = __LINE__) {
 
     import std.process;
@@ -72,7 +75,9 @@ auto shouldFailToExecute(string[] args, string workDir = getcwd(),
             throw new UnitTestException([args.join(" ") ~
                                          " executed ok but was expected to fail"], file, line);
         return res.output.chomp.splitLines;
-    } catch(ProcessException) {}
+    } catch(ProcessException e) {
+    }
+
     return "".chomp.splitLines;
 }
 

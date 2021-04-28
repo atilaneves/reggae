@@ -104,57 +104,67 @@ private from!"reggae.dub.info".DubInfo getDubInfo
                 "Cannot find dub.selections.json");
 
         auto settings = dub.getGeneratorSettings(options);
-
-        const configs = dub.getConfigs(settings.platform);
-
         bool oneConfigOk;
         Exception dubInfoFailure;
 
-        if(configs.configurations.empty) {
-            gDubInfos["default"] = dub.configToDubInfo(settings, "");
+        if(options.dubConfig != "") {
+
+            gDubInfos["default"] = dub.configToDubInfo(settings, options.dubConfig);
             oneConfigOk = true;
+
+
         } else {
-            foreach(config; configs.configurations) {
-                try {
-                    gDubInfos[config] = dub.configToDubInfo(settings, config);
+            const configs = dub.getConfigs(settings.platform);
 
-                    // dub adds certain flags to certain configurations automatically but these flags
-                    // don't know up in the output to `dub describe`. Special case them here.
+            if(configs.configurations.empty) {
+                gDubInfos["default"] = dub.configToDubInfo(settings, "");
+                oneConfigOk = true;
+            } else {
 
-                    // unittest should only apply to the main package, hence [0].
-                    // This doesn't show up in `dub describe`, it's secret info that dub knows
-                    // so we have to add it manually here.
-                    if(config == "unittest") {
-                        if(config !in gDubInfos)
-                            throw new Exception(
-                                text("Configuration `", config, "` not found in ",
-                                     () @trusted { return gDubInfos.keys; }()));
-                        if(gDubInfos[config].packages.length == 0)
-                            throw new Exception(
-                                text("No main package in `", config, "` configuration"));
-                        gDubInfos[config].packages[0].dflags ~= "-unittest";
+                foreach(config; configs.configurations) {
+                    try {
+                        output.log("Querying dub configuration '", config, "'");
+                        gDubInfos[config] = dub.configToDubInfo(settings, config);
+
+                        // dub adds certain flags to certain configurations automatically but these flags
+                        // don't know up in the output to `dub describe`. Special case them here.
+
+                        // unittest should only apply to the main package, hence [0].
+                        // This doesn't show up in `dub describe`, it's secret info that dub knows
+                        // so we have to add it manually here.
+                        if(config == "unittest") {
+                            if(config !in gDubInfos)
+                                throw new Exception(
+                                    text("Configuration `", config, "` not found in ",
+                                         () @trusted { return gDubInfos.keys; }()));
+                            if(gDubInfos[config].packages.length == 0)
+                                throw new Exception(
+                                    text("No main package in `", config, "` configuration"));
+                            gDubInfos[config].packages[0].dflags ~= "-unittest";
+                        }
+
+                        try
+                            callPreBuildCommands(output, options, gDubInfos[config]);
+                        catch(Exception e) {
+                            output.log("Error calling prebuild commands: ", e.msg);
+                            throw e;
+                        }
+
+                        oneConfigOk = true;
+
+                    } catch(Exception ex) {
+                        output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);
+                        if(dubInfoFailure is null) dubInfoFailure = ex;
                     }
-
-                    try
-                        callPreBuildCommands(output, options, gDubInfos[config]);
-                    catch(Exception e) {
-                        output.log("Error calling prebuild commands: ", e.msg);
-                        throw e;
-                    }
-
-                    oneConfigOk = true;
-
-                } catch(Exception ex) {
-                    output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);
-                    if(dubInfoFailure is null) dubInfoFailure = ex;
                 }
+
+                if(configs.default_ !in gDubInfos)
+                    throw new Exception("Non-existent config info for " ~ configs.default_);
+
+                gDubInfos["default"] = gDubInfos[configs.default_];
             }
 
-            if(configs.default_ !in gDubInfos)
-                throw new Exception("Non-existent config info for " ~ configs.default_);
-
-            gDubInfos["default"] = gDubInfos[configs.default_];
-       }
+        }
 
         if(!oneConfigOk) {
             assert(dubInfoFailure !is null,

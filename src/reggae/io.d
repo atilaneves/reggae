@@ -15,6 +15,7 @@ shared static this() {
 void log(O, T...)(auto ref O output, auto ref T args) {
     import std.functional: forward;
     output.writeln("[Reggae]  ", secondsSinceStartString, "s  ", forward!args);
+    output.flush;
 }
 
 

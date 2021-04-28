@@ -194,7 +194,6 @@ unittest {
 }
 
 
-@ShouldFail
 @("144")
 @Tags("dub", "issues", "ninja")
 unittest {
@@ -211,6 +210,10 @@ unittest {
                 `configuration "daslib" {`,
                 `    targetType "library"`,
                 `    excludedSourceFiles "source/main.d"`,
+                `}`,
+                `configuration "weird" {`,
+                `    targetName "weird"`,
+                `    versions "weird"`,
                 `}`,
             ]
         );
@@ -231,12 +234,9 @@ unittest {
                   q{
                       import reggae;
                       alias def = dubDefaultTarget!();
-                      alias lib = dubConfigurationTarget!(Configuration("library"));
-                      mixin build!(def, optional!lib);
+                      mixin build!def;
                   }
         );
-
-        runReggae("-b", "ninja", "--dub-configs=daslib");
 
         version(Windows) {
             enum exe = "issue144.exe";
@@ -246,7 +246,10 @@ unittest {
             enum lib = "issue144.a";
         }
 
+        runReggae("-b", "ninja", "--dub-config=daslib");
+
         ninja([lib]).shouldExecuteOk;
-        ninja([exe]).shouldFailToExecute;
+        ninja([exe]).shouldFailToExecute.should ==
+            ["ninja: error: unknown target 'issue144', did you mean 'issue144.a'?"];
     }
 }

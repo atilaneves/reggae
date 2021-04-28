@@ -108,4 +108,6 @@ struct FakeFile {
             soFar ~ "\n" ~
             "--------------------\n";
     }
+
+    void flush() @safe @nogc pure nothrow const {}
 }

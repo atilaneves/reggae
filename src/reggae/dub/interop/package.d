@@ -103,15 +103,11 @@ private from!"reggae.dub.info".DubInfo getDubInfo
                 "Cannot find dub.selections.json");
 
         auto settings = dub.getGeneratorSettings(options);
-        bool oneConfigOk;
-        Exception dubInfoFailure;
 
         if(options.dubConfig != "") {
 
             output.log("Querying dub configuration '", options.dubConfig, "'");
             gDubInfos["default"] = dub.configToDubInfo(settings, options.dubConfig);
-            oneConfigOk = true;
-
 
         } else {
 
@@ -120,32 +116,31 @@ private from!"reggae.dub.info".DubInfo getDubInfo
             output.log("Number of dub configurations: ", configs.configurations.length);
 
             if(configs.configurations.empty) {
+                // this happens when, e.g. the targetType is "none"
                 gDubInfos["default"] = dub.configToDubInfo(settings, "");
-                oneConfigOk = true;
             } else {
+
+                bool atLeastOneConfigOk;
+                Exception dubInfoFailure;
 
                 foreach(config; configs.configurations) {
                     try {
                         handleDubConfig(output, dub, options, settings, config);
-                        oneConfigOk = true;
+                        atLeastOneConfigOk = true;
                     } catch(Exception ex) {
                         output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);
                         if(dubInfoFailure is null) dubInfoFailure = ex;
                     }
                 }
 
-                if(configs.default_ !in gDubInfos)
-                    throw new Exception("Non-existent config info for " ~ configs.default_);
-
                 gDubInfos["default"] = gDubInfos[configs.default_];
+
+                if(!atLeastOneConfigOk) {
+                    assert(dubInfoFailure !is null,
+                           "Internal error: no configurations worked and no exception to throw");
+                    throw dubInfoFailure;
+                }
             }
-
-        }
-
-        if(!oneConfigOk) {
-            assert(dubInfoFailure !is null,
-                   "Internal error: no configurations worked and no exception to throw");
-            throw dubInfoFailure;
         }
     }
 

@@ -91,7 +91,6 @@ private from!"reggae.dub.info".DubInfo getDubInfo
     import reggae.dub.interop: gDubInfos;
     import reggae.io: log;
     import reggae.path: buildPath;
-    import std.array: empty;
     import std.file: exists;
     import std.exception: enforce;
 

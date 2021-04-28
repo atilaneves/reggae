@@ -244,10 +244,9 @@ unittest {
 
         ninja([lib]).shouldExecuteOk;
         ninja([exe]).shouldFailToExecute.should ==
-            ["ninja: error: unknown target 'issue144', did you mean 'issue144.a'?"];
+            ["ninja: error: unknown target '" ~ exe ~ "', did you mean '" ~ lib ~ "'?"];
         // No unittest target when --dub-config is used
         ninja([ut]).shouldFailToExecute.should ==
-            ["ninja: error: unknown target 'ut'"];
-
+            ["ninja: error: unknown target '" ~ ut ~ "'"];
     }
 }

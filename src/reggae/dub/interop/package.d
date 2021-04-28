@@ -103,48 +103,57 @@ private from!"reggae.dub.info".DubInfo getDubInfo
                 "Cannot find dub.selections.json");
 
         auto settings = dub.getGeneratorSettings(options);
+        const configs = dubConfigurations(output, dub, options, settings);
+        bool atLeastOneConfigOk;
+        Exception dubInfoFailure;
 
-        if(options.dubConfig != "") {
-
-            output.log("Querying dub configuration '", options.dubConfig, "'");
-            gDubInfos["default"] = dub.configToDubInfo(settings, options.dubConfig);
-
-        } else {
-
-            output.log("Getting dub configurations");
-            const configs = dub.getConfigs(settings.platform);
-            output.log("Number of dub configurations: ", configs.configurations.length);
-
-            if(configs.configurations.empty) {
-                // this happens when, e.g. the targetType is "none"
-                gDubInfos["default"] = dub.configToDubInfo(settings, "");
-            } else {
-
-                bool atLeastOneConfigOk;
-                Exception dubInfoFailure;
-
-                foreach(config; configs.configurations) {
-                    try {
-                        handleDubConfig(output, dub, options, settings, config);
-                        atLeastOneConfigOk = true;
-                    } catch(Exception ex) {
-                        output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);
-                        if(dubInfoFailure is null) dubInfoFailure = ex;
-                    }
-                }
-
-                gDubInfos["default"] = gDubInfos[configs.default_];
-
-                if(!atLeastOneConfigOk) {
-                    assert(dubInfoFailure !is null,
-                           "Internal error: no configurations worked and no exception to throw");
-                    throw dubInfoFailure;
-                }
+        foreach(config; configs.configurations) {
+            try {
+                handleDubConfig(output, dub, options, settings, config);
+                atLeastOneConfigOk = true;
+            } catch(Exception ex) {
+                output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);
+                if(dubInfoFailure is null) dubInfoFailure = ex;
             }
+        }
+
+        gDubInfos["default"] = gDubInfos[configs.default_];
+
+        if(!atLeastOneConfigOk) {
+            assert(dubInfoFailure !is null,
+                   "Internal error: no configurations worked and no exception to throw");
+            throw dubInfoFailure;
         }
     }
 
     return gDubInfos["default"];
+}
+
+private from!"reggae.dub.interop.configurations".DubConfigurations
+dubConfigurations
+    (O)
+    (ref O output,
+     ref from!"reggae.dub.interop.dublib".Dub dub,
+     in from!"reggae.options".Options options,
+     from!"dub.generators.generator".GeneratorSettings settings)
+{
+    import reggae.dub.interop.configurations: DubConfigurations;
+    import reggae.io: log;
+
+    if(options.dubConfig == "") {
+
+        output.log("Getting dub configurations");
+        auto ret = dub.getConfigs(settings.platform);
+        output.log("Number of dub configurations: ", ret.configurations.length);
+
+        // this happens e.g. the targetType is "none"
+        if(ret.configurations.length == 0)
+            return DubConfigurations([""], "");
+
+        return ret;
+    } else {
+        return DubConfigurations([options.dubConfig], options.dubConfig);
+    }
 }
 
 private void handleDubConfig

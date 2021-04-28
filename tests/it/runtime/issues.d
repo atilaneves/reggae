@@ -230,20 +230,14 @@ unittest {
             ]
         );
 
-        writeFile("reggaefile.d",
-                  q{
-                      import reggae;
-                      alias def = dubDefaultTarget!();
-                      mixin build!def;
-                  }
-        );
-
         version(Windows) {
             enum exe = "issue144.exe";
             enum lib = "issue144.lib";
+            enum ut  = "ut.exe";
         } else {
             enum exe = "issue144";
             enum lib = "issue144.a";
+            enum ut  = "ut";
         }
 
         runReggae("-b", "ninja", "--dub-config=daslib");
@@ -251,5 +245,9 @@ unittest {
         ninja([lib]).shouldExecuteOk;
         ninja([exe]).shouldFailToExecute.should ==
             ["ninja: error: unknown target 'issue144', did you mean 'issue144.a'?"];
+        // No unittest target when --dub-config is used
+        ninja([ut]).shouldFailToExecute.should ==
+            ["ninja: error: unknown target 'ut'"];
+
     }
 }

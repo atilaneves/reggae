@@ -93,7 +93,6 @@ private from!"reggae.dub.info".DubInfo getDubInfo
     import reggae.path: buildPath;
     import std.array: empty;
     import std.file: exists;
-    import std.conv: text;
     import std.exception: enforce;
 
     version(unittest) gDubInfos = null;
@@ -109,12 +108,16 @@ private from!"reggae.dub.info".DubInfo getDubInfo
 
         if(options.dubConfig != "") {
 
+            output.log("Querying dub configuration '", options.dubConfig, "'");
             gDubInfos["default"] = dub.configToDubInfo(settings, options.dubConfig);
             oneConfigOk = true;
 
 
         } else {
+
+            output.log("Getting dub configurations");
             const configs = dub.getConfigs(settings.platform);
+            output.log("Number of dub configurations: ", configs.configurations.length);
 
             if(configs.configurations.empty) {
                 gDubInfos["default"] = dub.configToDubInfo(settings, "");
@@ -123,35 +126,8 @@ private from!"reggae.dub.info".DubInfo getDubInfo
 
                 foreach(config; configs.configurations) {
                     try {
-                        output.log("Querying dub configuration '", config, "'");
-                        gDubInfos[config] = dub.configToDubInfo(settings, config);
-
-                        // dub adds certain flags to certain configurations automatically but these flags
-                        // don't know up in the output to `dub describe`. Special case them here.
-
-                        // unittest should only apply to the main package, hence [0].
-                        // This doesn't show up in `dub describe`, it's secret info that dub knows
-                        // so we have to add it manually here.
-                        if(config == "unittest") {
-                            if(config !in gDubInfos)
-                                throw new Exception(
-                                    text("Configuration `", config, "` not found in ",
-                                         () @trusted { return gDubInfos.keys; }()));
-                            if(gDubInfos[config].packages.length == 0)
-                                throw new Exception(
-                                    text("No main package in `", config, "` configuration"));
-                            gDubInfos[config].packages[0].dflags ~= "-unittest";
-                        }
-
-                        try
-                            callPreBuildCommands(output, options, gDubInfos[config]);
-                        catch(Exception e) {
-                            output.log("Error calling prebuild commands: ", e.msg);
-                            throw e;
-                        }
-
+                        handleDubConfig(output, dub, options, settings, config);
                         oneConfigOk = true;
-
                     } catch(Exception ex) {
                         output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);
                         if(dubInfoFailure is null) dubInfoFailure = ex;
@@ -174,6 +150,45 @@ private from!"reggae.dub.info".DubInfo getDubInfo
     }
 
     return gDubInfos["default"];
+}
+
+private void handleDubConfig
+    (O)
+    (ref O output,
+     ref from!"reggae.dub.interop.dublib".Dub dub,
+     in from!"reggae.options".Options options,
+     from!"dub.generators.generator".GeneratorSettings settings,
+     in string config)
+{
+    import reggae.io: log;
+    import std.conv: text;
+
+    output.log("Querying dub configuration '", config, "'");
+    gDubInfos[config] = dub.configToDubInfo(settings, config);
+
+    // dub adds certain flags to certain configurations automatically but these flags
+    // don't know up in the output to `dub describe`. Special case them here.
+
+    // unittest should only apply to the main package, hence [0].
+    // This doesn't show up in `dub describe`, it's secret info that dub knows
+    // so we have to add it manually here.
+    if(config == "unittest") {
+        if(config !in gDubInfos)
+            throw new Exception(
+                text("Configuration `", config, "` not found in ",
+                     () @trusted { return gDubInfos.keys; }()));
+        if(gDubInfos[config].packages.length == 0)
+            throw new Exception(
+                text("No main package in `", config, "` configuration"));
+        gDubInfos[config].packages[0].dflags ~= "-unittest";
+    }
+
+    try
+        callPreBuildCommands(output, options, gDubInfos[config]);
+    catch(Exception e) {
+        output.log("Error calling prebuild commands: ", e.msg);
+        throw e;
+    }
 }
 
 

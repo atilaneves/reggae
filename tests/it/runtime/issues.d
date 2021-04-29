@@ -158,7 +158,7 @@ unittest {
     with(immutable ReggaeSandbox()) {
         writeFile("dub.sdl",
             [
-                `name "issue157"`,
+                `name "issue140"`,
                 `targetType "executable"`,
                 `targetPath "daspath"`,
                 `dependency "bar" path="bar"`
@@ -190,5 +190,63 @@ unittest {
         runReggae("-b", "ninja");
         ninja(["default"]).shouldExecuteOk;
         shouldExist(buildPath("daspath", "text.txt"));
+    }
+}
+
+
+@("144")
+@Tags("dub", "issues", "ninja")
+unittest {
+
+    import std.path: buildPath;
+
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl",
+            [
+                `name "issue144"`,
+                `targetType "executable"`,
+                `configuration "default" {`,
+                `}`,
+                `configuration "daslib" {`,
+                `    targetType "library"`,
+                `    excludedSourceFiles "source/main.d"`,
+                `}`,
+                `configuration "weird" {`,
+                `    targetName "weird"`,
+                `    versions "weird"`,
+                `}`,
+            ]
+        );
+
+        writeFile("source/main.d",
+            [
+                `void main() {}`,
+            ]
+        );
+
+        writeFile("source/lib.d",
+            [
+                `int twice(int i) { return i * 2; }`,
+            ]
+        );
+
+        version(Windows) {
+            enum exe = "issue144.exe";
+            enum lib = "issue144.lib";
+            enum ut  = "ut.exe";
+        } else {
+            enum exe = "issue144";
+            enum lib = "issue144.a";
+            enum ut  = "ut";
+        }
+
+        runReggae("-b", "ninja", "--dub-config=daslib");
+
+        ninja([lib]).shouldExecuteOk;
+        ninja([exe]).shouldFailToExecute.should ==
+            ["ninja: error: unknown target '" ~ exe ~ "', did you mean '" ~ lib ~ "'?"];
+        // No unittest target when --dub-config is used
+        ninja([ut]).shouldFailToExecute.should ==
+            ["ninja: error: unknown target '" ~ ut ~ "'"];
     }
 }

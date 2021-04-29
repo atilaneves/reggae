@@ -58,6 +58,7 @@ struct Options {
     bool dubDepObjsInsteadOfStaticLib;
     string dubBuildType = "debug";
     string dubArchOverride;
+    string dubConfig;
 
     string[string] userVars; //must always be the last member variable
 
@@ -245,6 +246,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             "dub-arch", "Architecture (x86, x86_64, x86_mscoff)", &options.dubArchOverride,
             "dub-deps-objs", "Use object files instead of static library for dub dependencies", &options.dubDepObjsInsteadOfStaticLib,
             "dub-build-type", "Dub build type (debug, release, ...)", &options.dubBuildType,
+            "dub-config", "Only use this dub configuration", &options.dubConfig,
         );
 
         if(helpInfo.helpWanted) {

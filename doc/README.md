@@ -2,3 +2,4 @@
 * [Rules](rules.md)
 * [Run-time configuration](configuration.md)
 * [Exporting builds - removing reggae as a dependency](export.md)
+* [Linking non-system library](custom_external_lib.md)

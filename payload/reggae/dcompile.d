@@ -57,11 +57,10 @@ private int dcompile(string[] args) {
     enforce(!depFile.empty && !objFile.empty, "The --depFile and --objFile 'options' are mandatory");
 
     const compArgs = compilerArgs(args[1 .. $], objFile);
-    const fewerArgs = compArgs[0..$-1]; //non-verbose
-
     const compRes = invokeCompiler(compArgs, objFile);
+
     if (compRes.status != 0) {
-        stderr.writeln("Could not compile with args:\n", fewerArgs.join(" "));
+        stderr.writeln("Error compiling!");
         return compRes.status;
     }
 
@@ -130,7 +129,7 @@ private string[] compilerArgs(string[] args, string objFile) @safe pure {
         }
     }
 
-    args ~= ["-of" ~ objFile, "-c", "-v"];
+    args ~= ["-color=on", "-of" ~ objFile, "-c", "-v"];
 
     final switch (cli) {
         case Compiler.dmd: return args;
@@ -141,7 +140,13 @@ private string[] compilerArgs(string[] args, string objFile) @safe pure {
 
 //takes a dmd command line and maps arguments to gdc ones
 private string[] mapToGdcOptions(in string[] compArgs) @safe pure {
-    string[string] options = ["-v": "-fd-verbose", "-O": "-O2", "-debug": "-fdebug", "-of": "-o"];
+    string[string] options = [
+        "-v": "-fd-verbose",
+        "-O": "-O2",
+        "-debug": "-fdebug",
+        "-of": "-o",
+        "-color=on": "-fdiagnostics-color=always",
+    ];
 
     string doMap(string a) {
         foreach(k, v; options) {
@@ -163,6 +168,7 @@ private string[] mapToLdcOptions(in string[] compArgs) @safe pure {
             case "-gs":        return "-frame-pointer=all";
             case "-inline":    return "-enable-inlining";
             case "-profile":   return "-fdmd-trace-functions";
+            case "-color=on": return "-enable-color";
             default:
                 if (a.startsWith("-version="))
                     return "-d-version=" ~ a[9 .. $];

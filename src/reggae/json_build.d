@@ -205,7 +205,7 @@ private Target[] callDepsFunc(in string projectPath, in JSONValue json) {
                            strings(json, "includes"),
                            strings(json, "string_imports"));
     case JsonDepsFuncName.staticLibrary:
-        return staticLibrary(projectPath,
+        return [staticLibrary(projectPath,
                              stringVal(json, "name"),
                              strings(json, "src_dirs"),
                              strings(json, "exclude_dirs"),
@@ -213,7 +213,7 @@ private Target[] callDepsFunc(in string projectPath, in JSONValue json) {
                              strings(json, "exclude_files"),
                              strings(json, "flags"),
                              strings(json, "includes"),
-                             strings(json, "string_imports"));
+                             strings(json, "string_imports"))];
     case JsonDepsFuncName.executable:
         return [executable(projectPath,
                           stringVal(json, "name"),

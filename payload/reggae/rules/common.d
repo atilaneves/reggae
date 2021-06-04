@@ -119,16 +119,19 @@ Target link(in ExeName exeName, Target[] dependencies, in Flags flags = Flags())
 /**
  Convenience rule for creating static libraries
  */
-Target[] staticLibrary(string name,
-                       alias sourcesFunc = Sources!(),
-                       Flags flags = Flags(),
-                       ImportPaths includes = ImportPaths(),
-                       StringImportPaths stringImports = StringImportPaths(),
-                       alias dependenciesFunc = () { Target[] ts; return ts; })
+Target staticLibrary(string name,
+                     alias sourcesFunc = Sources!(),
+                     Flags compilerFlags = Flags(),
+                     ImportPaths includes = ImportPaths(),
+                     StringImportPaths stringImports = StringImportPaths(),
+                     alias dependenciesFunc = () { Target[] ts; return ts; })
     ()
 {
 
-    return staticLibraryTarget(name, objectFiles!(sourcesFunc, flags, includes, stringImports)() ~ dependenciesFunc());
+    return staticLibraryTarget(
+        name,
+        objectFiles!(sourcesFunc, compilerFlags, includes, stringImports)() ~ dependenciesFunc()
+    );
 }
 
 /**
@@ -287,7 +290,7 @@ Target[] objectFiles(in string projectPath,
 }
 
 //run-time version
-Target[] staticLibrary(in string projectPath,
+Target staticLibrary(in string projectPath,
                        in string name,
                        in string[] srcDirs,
                        in string[] excDirs,
@@ -303,7 +306,7 @@ Target[] staticLibrary(in string projectPath,
     );
 }
 
-Target[] staticLibraryTarget(in string name, Target[] objects) @safe pure {
+Target staticLibraryTarget(in string name, Target[] objects) @safe pure {
     import std.path: extension;
     const realName = name.extension == libExt ? name : name ~ libExt;
     auto target = Target(
@@ -311,7 +314,7 @@ Target[] staticLibraryTarget(in string name, Target[] objects) @safe pure {
         staticLibraryShellCommand,
         objects,
     );
-    return [target];
+    return target;
 }
 
 version(Windows)

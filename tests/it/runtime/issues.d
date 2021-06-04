@@ -51,6 +51,34 @@ unittest {
 }
 
 
+@("73")
+@Tags("issues", "ninja")
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile("include/lib.h", `int twice(int i);`);
+        writeFile("src/lib.c", `
+            #include "lib.h"
+            int twice(int i) { return i * 2; }
+        `);
+        writeFile("reggaefile.d",
+                  q{
+                      import reggae;
+                      alias mylib = staticLibrary!(
+                          "mylib",
+                          Sources!("src"),
+                          Flags(),
+                          ImportPaths(["include"]),
+                      );
+                      mixin build!mylib;
+                  }
+        );
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+    }
+}
+
+
+
 @("dubLink")
 @Tags(["dub", "make"])
 unittest {

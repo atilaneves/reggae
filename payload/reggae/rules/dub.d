@@ -181,7 +181,7 @@ static if(isDubProject) {
         const name = realName(TargetName(buildPath(targetPath, targetName.value)), dubInfo);
 
         auto target = isStaticLibrary
-            ? staticLibraryTarget(name, allObjs)[0]
+            ? staticLibraryTarget(name, allObjs)
             : dubInfo.targetType == TargetType.none
                 ? Target.phony(name, "", allObjs)
                 : link(ExeName(name),

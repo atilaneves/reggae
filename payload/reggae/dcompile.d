@@ -129,7 +129,7 @@ private string[] compilerArgs(string[] args, string objFile) @safe pure {
         }
     }
 
-    args ~= ["-color=on", "-of" ~ objFile, "-c", "-v"];
+    args ~= ["-of" ~ objFile, "-c", "-v"];
 
     final switch (cli) {
         case Compiler.dmd: return args;
@@ -168,7 +168,7 @@ private string[] mapToLdcOptions(in string[] compArgs) @safe pure {
             case "-gs":        return "-frame-pointer=all";
             case "-inline":    return "-enable-inlining";
             case "-profile":   return "-fdmd-trace-functions";
-            case "-color=on": return "-enable-color";
+            case "-color=on":  return "-enable-color";
             default:
                 if (a.startsWith("-version="))
                     return "-d-version=" ~ a[9 .. $];

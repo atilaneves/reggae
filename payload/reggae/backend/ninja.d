@@ -85,7 +85,12 @@ NinjaEntry[] defaultRules(in Options options) @safe pure {
     import reggae.build: Command;
 
     NinjaEntry createNinjaEntry(in CommandType type, in Language language) @safe pure {
-        const string command = Command.builtinTemplate(type, language, options);
+        // See https://github.com/atilaneves/reggae/issues/149
+        const compilingD =
+            language == Language.D &&
+            (type == CommandType.compile || CommandType.compileAndLink);
+        const colourCommand = compilingD ? " -color=on" : "";
+        const string command = Command.builtinTemplate(type, language, options) ~ colourCommand;
 
         string[] paramLines = initializeRuleParamLines(language, command);
 

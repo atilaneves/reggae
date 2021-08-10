@@ -850,6 +850,47 @@ unittest {
 }
 
 
+@("configurations_where_default_is_source_lib")
+@Tags(["dub", "ninja"])
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile("dub.sdl", `
+            name "dub_default_config_is_source_library"
+            description "Test for issue 151"
+
+            configuration "library" {
+                targetType  "sourceLibrary"
+                targetName  "Library"
+                sourceFiles "source/library.d"
+            }
+
+            configuration "demo" {
+                targetType "executable"
+                targetName "demo"
+                sourceFiles "source/demo.d"
+            }
+        `);
+        writeFile("library.d", q{
+            module library;
+        });
+        writeFile("source/demo.d", q{
+            import std.stdio;
+
+            version(unittest) {}
+            else
+            void main()
+            {
+                writeln("Test for issue 151.");
+            }
+        });
+
+        runReggae("-b", "ninja");
+        ninja(["default", "ut"]).shouldExecuteOk;
+        shouldFail("ut");
+    }
+}
+
+
 @("buildtype.release")
 @Tags("dub", "ninja")
 unittest {

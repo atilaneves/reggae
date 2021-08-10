@@ -860,13 +860,11 @@ unittest {
 
             configuration "library" {
                 targetType  "sourceLibrary"
-                targetName  "Library"
                 sourceFiles "source/library.d"
             }
 
             configuration "demo" {
                 targetType "executable"
-                targetName "demo"
                 sourceFiles "source/demo.d"
             }
         `);
@@ -886,7 +884,7 @@ unittest {
 
         runReggae("-b", "ninja");
         ninja(["default", "ut"]).shouldExecuteOk;
-        shouldFail("ut");
+        shouldSucceed("ut");
     }
 }
 

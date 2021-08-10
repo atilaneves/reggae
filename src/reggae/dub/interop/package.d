@@ -104,19 +104,22 @@ private from!"reggae.dub.info".DubInfo getDubInfo
         auto settings = dub.getGeneratorSettings(options);
         const configs = dubConfigurations(output, dub, options, settings);
         bool atLeastOneConfigOk;
+        string someValidConfig;
         Exception dubInfoFailure;
 
         foreach(config; configs.configurations) {
             try {
                 handleDubConfig(output, dub, options, settings, config);
                 atLeastOneConfigOk = true;
+                someValidConfig = config;
             } catch(Exception ex) {
                 output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);
                 if(dubInfoFailure is null) dubInfoFailure = ex;
             }
         }
 
-        gDubInfos["default"] = gDubInfos[configs.default_];
+        const cfg = (configs.default_ in gDubInfos) ? configs.default_ : someValidConfig;
+        gDubInfos["default"] = gDubInfos[cfg];
 
         if(!atLeastOneConfigOk) {
             assert(dubInfoFailure !is null,

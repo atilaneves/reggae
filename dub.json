@@ -13,7 +13,7 @@
     "excludedSourceFiles": ["payload/reggae/buildgen_main.d", "payload/reggae/dcompile.d"],
     "mainSourceFile": "src/reggae/reggae_main.d",
     "dependencies": {
-        "dub": "~>1.23.0"
+        "dub": "~>1.27.0"
     },
     "subConfigurations": {
         "dub": "library"
@@ -27,6 +27,7 @@
           "sourcePaths": ["tests", "payload"],
           "mainSourceFile": "tests/ut_main.d",
           "versions": ["ReggaeTest"],
+          "dflags": ["-allinst"],
           "excludedSourceFiles": ["payload/reggae/buildgen_main.d",
                                   "src/reggae/reggae_main.d",
                                   "tests/projects/project1/src/main.d",

@@ -772,7 +772,7 @@ struct Command {
 
                 string[] values;
                 foreach(j; 0..numValues) {
-                    values ~= bytesToArray!char(bytes);
+                    values ~= bytesToArray!(immutable char)(bytes);
                 }
                 params[key] = values;
             }
@@ -811,9 +811,10 @@ private ubyte[] arrayToBytes(T)(in T[] arr) {
 
 
 private T[] bytesToArray(T)(ref ubyte[] bytes) {
-    T[] arr;
+    import std.traits: Unqual;
+    Unqual!T[] arr;
     arr.length = getUshort(bytes);
-    foreach(i, b; bytes[0 .. arr.length]) arr[i] = cast(T)b;
+    foreach(i, b; bytes[0 .. arr.length]) arr[i] = cast(T) b;
     bytes = bytes[arr.length .. $];
     return arr;
 }

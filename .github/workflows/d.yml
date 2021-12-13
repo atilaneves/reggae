@@ -8,6 +8,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-20.04, windows-2019]
+        # Remember to change the compiler versions further below as well as here
         dc: [dmd-2.098.0, ldc-1.28.0]
 
     runs-on: ${{ matrix.os }}
@@ -16,6 +17,7 @@ jobs:
       - name: Install ninja
         uses: seanmiddleditch/gha-setup-ninja@master
       - name: Install D compiler
+        # Remember to change the version further below as well as here
         uses: dlang-community/setup-dlang@v1.1.1
         with:
           compiler: ${{ matrix.dc }}

@@ -49,7 +49,7 @@ string unityFileContents(in string projectPath, in string[] files) pure {
     if(files.empty)
         throw new Exception("Cannot perform a unity build with no files");
 
-    immutable languages = files.map!getLanguage.array;
+    const languages = files.map!getLanguage.array;
 
     if(!languages.all!(a => a == Language.C) && !languages.all!(a => a == Language.Cplusplus))
         throw new Exception("Unity build can only be done if all files are C or C++");

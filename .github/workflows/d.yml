@@ -8,7 +8,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-20.04, windows-2019]
-        dc: [dmd-2.095.1, ldc-1.25.1]
+        # Remember to change the compiler versions further below as well as here
+        dc: [dmd-2.098.0, ldc-1.28.0]
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -16,7 +17,8 @@ jobs:
       - name: Install ninja
         uses: seanmiddleditch/gha-setup-ninja@master
       - name: Install D compiler
-        uses: dlang-community/setup-dlang@v1.0.5
+        # Remember to change the version further below as well as here
+        uses: dlang-community/setup-dlang@v1.1.1
         with:
           compiler: ${{ matrix.dc }}
 
@@ -61,7 +63,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-20.04, macos-10.15, windows-2019]
-        dc: [dmd-2.095.1, ldc-1.25.1]
+        dc: [dmd-2.098.0, ldc-1.28.0]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -72,7 +74,7 @@ jobs:
         if: runner.os == 'Windows'
         uses: seanmiddleditch/gha-setup-ninja@master
       - name: Install D compiler
-        uses: dlang-community/setup-dlang@v1.0.5
+        uses: dlang-community/setup-dlang@v1.1.1
         with:
           compiler: ${{ matrix.dc }}
       - name: Set OS-specific SCRIPT_CMD environment variable

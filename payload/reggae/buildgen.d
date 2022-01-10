@@ -99,15 +99,15 @@ private void doOneBuild(Build build, in Options options, string[] args = []) {
         } else {
 
             case make:
-                writeBuild!Makefile(build, options);
+                Makefile(build, options).writeBuild;
                 break;
 
             case ninja:
-                writeBuild!Ninja(build, options);
+                Ninja(build, options).writeBuild;
                 break;
 
             case tup:
-                writeBuild!Tup(build, options);
+                Tup(build, options).writeBuild;
                 break;
         }
 
@@ -129,15 +129,8 @@ private void exportBuild(Build build, in Options options) {
     version(minimal)
         throw new Exception("export not supported in minimal version");
     else
-        foreach(backend; AliasSeq!(Makefile, Ninja, Tup))
-            writeBuild!backend(build, options);
-}
-
-private void writeBuild(T)(Build build, in Options options) {
-    version(minimal)
-        throw new Exception(T.stringof ~ " backend support not compiled in");
-    else
-        T(build, options).writeBuild;
+        foreach(B; AliasSeq!(Makefile, Ninja, Tup))
+            B(build, options).writeBuild;
 }
 
 

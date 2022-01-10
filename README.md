@@ -4,9 +4,7 @@ Reggae
 [![Coverage](https://codecov.io/gh/atilaneves/reggae/branch/master/graph/badge.svg)](https://codecov.io/gh/atilaneves/reggae)
 
 A (meta) build system with multiple front (D, Python, Ruby,
-Javascript, Lua) and backends (make, ninja, tup, custom).  This is
-alpha software, only tested on Linux and likely to have breaking
-changes made.
+Javascript, Lua) and backends (make, ninja, tup, custom).
 
 Detailed API documentation can be found [here](doc/README.md).
 

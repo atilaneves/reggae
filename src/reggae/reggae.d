@@ -180,7 +180,7 @@ private string[] getJsonOutputArgs(in Options options) @safe {
     }
 }
 
-enum coreFiles = [
+private enum coreFiles = [
     "options.d",
     "buildgen_main.d", "buildgen.d",
     "build.d",
@@ -194,16 +194,16 @@ enum coreFiles = [
     "rules/c_and_cpp.d",
     "core/package.d", "core/rules/package.d",
     ];
-enum otherFiles = [
+private enum otherFiles = [
     "backend/ninja.d", "backend/make.d", "backend/tup.d",
     "dub/info.d", "rules/dub.d",
     "path.d",
     ];
 
 version(minimal) {
-    enum string[] foreignFiles = [];
+    private enum string[] foreignFiles = [];
 } else {
-    enum foreignFiles = [
+    private enum foreignFiles = [
         "__init__.py", "build.py", "reflect.py", "rules.py", "reggae_json_build.py",
         "reggae.rb", "reggae_json_build.rb",
         "reggae-js.js", "reggae_json_build.js",

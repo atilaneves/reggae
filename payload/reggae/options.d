@@ -237,7 +237,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             "all-at-once", "Compile D files all at once (default is per package)", &options.allAtOnce,
             "old-ninja", "Generate a Ninja build compatible with older versions of Ninja", &options.oldNinja,
             "no-comp-db", "Don't generate a JSON compilation database", &options.noCompilationDB,
-            "cache-build-info", "Cache the build information for the binary backend", &options.cacheBuildInfo,
+            "cache-build-info", "Cache the build information", &options.cacheBuildInfo,
             "C", "Change directory to run in (similar to make -C and ninja -C)", &options.workingDir,
             "version", "Prints version information", &options.version_,
             "export", "Export build system - removes dependencies on reggae itself", &options.export_,

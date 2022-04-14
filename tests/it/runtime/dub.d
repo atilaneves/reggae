@@ -884,3 +884,34 @@ unittest {
     }
 
 }
+
+
+@("dynamicLibrary")
+@Tags("dub", "ninja")
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile(
+            "dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "dynamicLibrary"`,
+            ],
+        );
+        writeFile(
+            "source/mod.d",
+            [
+                q{
+                    version (Windows) version (DigitalMars) {
+                        import core.sys.windows.dll;
+                        mixin SimpleDllMain;
+                    }
+
+                    void foo() {}
+                },
+            ],
+        );
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+    }
+}

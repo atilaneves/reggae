@@ -152,8 +152,6 @@ struct DubInfo {
         //package
         const projDir = isMainPackage ? "" : dubPackage.path;
 
-        const sharedFlag = targetType == TargetType.dynamicLibrary ? ["-fPIC"] : [];
-
         // -unittest should only apply to the main package
         const(string)[] deUnitTest(in string[] flags) {
             return isMainPackage
@@ -164,7 +162,6 @@ struct DubInfo {
         const flags = chain(dubPackage.dflags,
                             dubPackage.versions.map!(a => "-version=" ~ a),
                             options.dflags.splitter, // TODO: doesn't support quoted args with spaces
-                            sharedFlag,
                             deUnitTest(compilerFlags))
             .array;
 

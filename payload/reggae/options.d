@@ -80,6 +80,9 @@ struct Options {
         if(!cppCompiler) cppCompiler = environment.get("CXX", defaultCXX);
         if(!dCompiler)   dCompiler   = environment.get("DC", "dmd");
 
+        if(backend == Backend.none && !export_)
+            backend = Backend.ninja;
+
         isDubProject = _dubProjectFile != "";
 
         // if there's a dub package file, add it to the list of dependencies so the project
@@ -227,7 +230,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
     try {
         auto helpInfo = getopt(
             args,
-            "backend|b", "Backend to use (ninja|make|binary|tup). Mandatory.", &options.backend,
+            "backend|b", "Backend to use (ninja|make|binary|tup, default is ninja).", &options.backend,
             "dflags", "D compiler flags.", &options.dflags,
             "d", "User-defined variables (e.g. -d myvar=foo).", &options.userVars,
             "dc", "D compiler to use (default dmd).", &options.dCompiler,
@@ -250,7 +253,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
         );
 
         if(helpInfo.helpWanted) {
-            defaultGetoptPrinter("Usage: reggae -b <ninja|make|binary|tup> </path/to/project>",
+            defaultGetoptPrinter("Usage: reggae [-b <ninja|make|binary|tup>] </path/to/project>",
                                  helpInfo.options);
             options.help = true;
         }
@@ -265,9 +268,6 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             assert(0);
     }
 
-    enforce(!options.perModule || !options.allAtOnce, "Cannot specify both --per-module and --all-at-once");
-    enforce(options.backend != Backend.none || options.export_, "A backend must be specified with -b/--backend");
-
     if(options.version_) {
         import std.stdio;
         writeln("reggae v", version_);
@@ -276,6 +276,9 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
     immutable argsPath = args.length > 1 ? args[1] : ".";
     options.projectPath = argsPath.absolutePath.buildNormalizedPath;
     options.finalize(origArgs);
+
+    enforce(!options.perModule || !options.allAtOnce, "Cannot specify both --per-module and --all-at-once");
+    enforce(options.backend != Backend.none || options.export_, "A backend must be specified with -b/--backend");
 
     if(options.workingDir == "") {
         import std.file;

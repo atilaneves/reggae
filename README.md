@@ -78,7 +78,7 @@ In D, a function with return type `Build` must exist with any name.
 Normally this function isn't written by hand but by using the
 [build template mixin](payload/reggae/build.d).
 
-From the the build directory, run `reggae -b <ninja|make|tup|binary>
+From the the build directory, run `reggae [-b <ninja|make|tup|binary>]
 /path/to/your/project`. You can now build your project using the
 appropriate command (ninja, make, tup, or ./build respectively).
 
@@ -140,7 +140,7 @@ faster. An optional `ut` target corresponds to the unittest executable of
 # i.e., contains a dub.{sdl,json} file):
 mkdir build
 cd build
-reggae -b ninja ..
+reggae ..
 
 # equivalent to "dub build":
 ninja

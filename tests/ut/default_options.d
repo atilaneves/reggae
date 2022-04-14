@@ -4,6 +4,13 @@ import reggae.path: buildPath;
 import unit_threaded;
 
 
+@("Default backend") unittest {
+    import reggae;
+    auto args = ["progname", "/path/to/proj"]; //fake main function args
+    auto options = getOptions(args);
+    options.backend.shouldEqual(Backend.ninja);
+}
+
 @("Default C compiler") unittest {
     import reggae;
     Options defaultOptions;

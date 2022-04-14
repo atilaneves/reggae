@@ -340,6 +340,8 @@ class InfoGenerator: ProjectGenerator {
                                      in GeneratorSettings settings,
                                      in BuildSettings buildSettings)
     {
+        import dub.compilers.dmd: DMDCompiler;
+        import dub.compilers.ldc: LDCCompiler;
         import std.algorithm.searching: canFind, startsWith;
         import std.algorithm.iteration: filter, map;
         import std.array: array;
@@ -355,46 +357,8 @@ class InfoGenerator: ProjectGenerator {
         if(settings.platform.platform.canFind("linux"))
             pkg.lflags = "-L--no-as-needed" ~ pkg.lflags;
 
-        // TODO: these can probably be used from dub's {DMD,LDC}Compiler class
-        //       when bumping the dub dependency to v1.25 (dlang/dub#2082)
-        static bool isLinkerDFlag_DMD(string arg) {
-            switch (arg) {
-            default:
-                if (arg.startsWith("-defaultlib=")) return true;
-                return false;
-            case "-g", "-gc", "-m32", "-m64", "-shared", "-lib", "-m32mscoff":
-                return true;
-            }
-        }
-        static bool isLinkerDFlag_LDC(string arg) {
-            // extra addition for ldmd2
-            if (arg == "-m32mscoff")
-                return true;
-
-            if (arg.length > 2 && arg.startsWith("--"))
-                arg = arg[1 .. $]; // normalize to 1 leading hyphen
-
-            switch (arg) {
-                case "-g", "-gc", "-m32", "-m64", "-shared", "-lib",
-                     "-betterC", "-disable-linker-strip-dead", "-static":
-                    return true;
-                default:
-                    return arg.startsWith("-L")
-                        || arg.startsWith("-Xcc=")
-                        || arg.startsWith("-defaultlib=")
-                        || arg.startsWith("-platformlib=")
-                        || arg.startsWith("-flto")
-                        || arg.startsWith("-fsanitize=")
-                        || arg.startsWith("-link-")
-                        || arg.startsWith("-linker=")
-                        || arg.startsWith("-march=")
-                        || arg.startsWith("-mscrtlib=")
-                        || arg.startsWith("-mtriple=");
-            }
-        }
-
         pkg.lflags ~= settings.platform.compiler == "ldc"
-            ? buildSettings.dflags.filter!isLinkerDFlag_LDC.array // ldc2 / ldmd2
-            : buildSettings.dflags.filter!isLinkerDFlag_DMD.array;
+            ? buildSettings.dflags.filter!(LDCCompiler.isLinkerDFlag).array // ldc2 / ldmd2
+            : buildSettings.dflags.filter!(DMDCompiler.isLinkerDFlag).array;
     }
 }

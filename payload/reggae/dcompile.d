@@ -114,10 +114,10 @@ private string[] compilerArgs(string[] args, string objFile) @safe pure {
             // mimic ldmd2 - uniquely-name and remove the object files
             args.insertInPlace(2, "-oq", "-cleanup-obj", od);
 
-            // dub adds `-od=.dub/obj`, remove it as it defeats our purpose
-            foreach (i; 5 .. args.length) {
-                if (args[i] == "-od=.dub/obj") {
-                    args = args[0 .. i] ~ args[i+1 .. $];
+            // dub adds `--oq -od=…/obj`, remove it as it defeats our purpose
+            foreach (i; 5 .. args.length - 1) {
+                if (args[i] == "--oq" && args[i+1].startsWith("-od=")) {
+                    args = args[0 .. i] ~ args[i+2 .. $];
                     break;
                 }
             }

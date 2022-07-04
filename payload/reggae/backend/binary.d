@@ -119,8 +119,10 @@ struct BinaryT(T) {
 
         const defaultTargets = topLevelTargets(binaryOptions.args);
         auto optionalTargets = build.targets.filter!(a => !defaultTargets.canFind(a));
-        return chain(defaultTargets.map!targetOutputsString,
-                     optionalTargets.map!targetOutputsString.map!(a => a ~ " (optional)")).array;
+        auto rng = chain(
+            defaultTargets.map!targetOutputsString,
+            optionalTargets.map!targetOutputsString.map!(a => a ~ " (optional)"));
+        return () @trusted { return rng.array; }();
     }
 
 

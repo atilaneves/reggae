@@ -152,7 +152,7 @@ private:
 auto noSortUniq(R)(R range) if(isInputRange!R) {
     ElementType!R[] ret;
     foreach(elt; range) {
-        if(!ret.canFind(elt)) ret ~= elt;
+        () @trusted { if(!ret.canFind(elt)) ret ~= elt; }();
     }
     return ret;
 }

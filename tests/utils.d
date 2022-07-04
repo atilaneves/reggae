@@ -111,3 +111,16 @@ struct FakeFile {
 
     void flush() @safe @nogc pure nothrow const {}
 }
+
+// stupid template emission
+int dummy() {
+    static import dub.dependency;
+    static import dub.dependencyresolver;
+    static import std.typecons;
+
+    alias Tup = std.typecons.Tuple!(
+        dub.dependencyresolver.DependencyResolver!(dub.dependency.Dependency, dub.dependency.Dependency).TreeNode,
+        dub.dependencyresolver.DependencyResolver!(dub.dependency.Dependency, dub.dependency.Dependency).TreeNodes);
+    Tup t0, t1;
+    return t0.opCmp(t1);
+}

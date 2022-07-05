@@ -36,7 +36,8 @@ version(Windows) {
 struct Options {
     Backend backend;
     string projectPath;
-    string dflags;
+    private string _legacyDflags;
+    package string[] _dflags;
     string ranFromPath;
     string cCompiler;
     string cppCompiler;
@@ -64,8 +65,13 @@ struct Options {
 
     Options dup() @safe pure const nothrow {
         return Options(backend,
-                       projectPath, dflags, ranFromPath, cCompiler, cppCompiler, dCompiler,
+                       projectPath, _legacyDflags, _dflags.dup, ranFromPath, cCompiler, cppCompiler, dCompiler,
                        help, perModule, isDubProject, oldNinja, noCompilationDB, cacheBuildInfo);
+    }
+
+    const(string)[] dflags() @property @trusted pure const {
+        import std.range: split;
+        return _legacyDflags.length == 0 ? _dflags : _legacyDflags.split ~ _dflags;
     }
 
     //finished setup
@@ -231,7 +237,8 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
         auto helpInfo = getopt(
             args,
             "backend|b", "Backend to use (ninja|make|binary|tup, default is ninja).", &options.backend,
-            "dflags", "D compiler flags.", &options.dflags,
+            "dflags", "Space-separated D compiler flags (overrides previous --dflags).", &options._legacyDflags,
+            "dflag", "Extra D compiler flag to be appended.", &options._dflags,
             "d", "User-defined variables (e.g. -d myvar=foo).", &options.userVars,
             "dc", "D compiler to use (default dmd).", &options.dCompiler,
             "cc", "C compiler to use (default " ~ defaultCC ~ ").", &options.cCompiler,

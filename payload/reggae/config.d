@@ -29,6 +29,7 @@ else
 immutable Options gDefaultOptions = Options(Backend.ninja,
             "",
             "",
+            null,
             "",
             defaultCC,
             defaultCXX,

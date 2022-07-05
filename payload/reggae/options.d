@@ -36,8 +36,7 @@ version(Windows) {
 struct Options {
     Backend backend;
     string projectPath;
-    private string _legacyDflags;
-    package string[] _dflags;
+    const(string)[] dflags;
     string ranFromPath;
     string cCompiler;
     string cppCompiler;
@@ -65,13 +64,8 @@ struct Options {
 
     Options dup() @safe pure const nothrow {
         return Options(backend,
-                       projectPath, _legacyDflags, _dflags.dup, ranFromPath, cCompiler, cppCompiler, dCompiler,
+                       projectPath, dflags, ranFromPath, cCompiler, cppCompiler, dCompiler,
                        help, perModule, isDubProject, oldNinja, noCompilationDB, cacheBuildInfo);
-    }
-
-    const(string)[] dflags() @property @trusted pure const {
-        import std.range: split;
-        return _legacyDflags.length == 0 ? _dflags : _legacyDflags.split ~ _dflags;
     }
 
     //finished setup
@@ -233,12 +227,13 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
     //escape spaces so that if we try using these arguments again the shell won't complain
     auto origArgs = args.map!(a => a.canFind(" ") ? `"` ~ a ~ `"` : a).array;
 
+    string legacyDflags;
     try {
         auto helpInfo = getopt(
             args,
             "backend|b", "Backend to use (ninja|make|binary|tup, default is ninja).", &options.backend,
-            "dflags", "Space-separated D compiler flags (overrides previous --dflags).", &options._legacyDflags,
-            "dflag", "Extra D compiler flag to be appended.", &options._dflags,
+            "dflags", "Space-separated D compiler flags (overrides previous --dflags).", &legacyDflags,
+            "dflag", "Extra D compiler flag to be appended.", &options.dflags,
             "d", "User-defined variables (e.g. -d myvar=foo).", &options.userVars,
             "dc", "D compiler to use (default dmd).", &options.dCompiler,
             "cc", "C compiler to use (default " ~ defaultCC ~ ").", &options.cCompiler,
@@ -273,6 +268,11 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             throw new Exception("Unsupported architecture, --dub-arch must be one of: x86|x86_64|x86_mscoff");
         else
             assert(0);
+    }
+
+    if (legacyDflags.length) {
+        import std.range: split;
+        options.dflags = legacyDflags.split ~ options.dflags;
     }
 
     if(options.version_) {

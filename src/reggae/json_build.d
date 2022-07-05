@@ -308,7 +308,7 @@ private const(Options) jsonToOptionsImpl(in Options options,
                             mixin("defaultOptions." ~ member ~ ` = false;`);
                     }
                     else static if(member == "dflags") {
-                        defaultOptions._dflags = defaultOptionsObj.object["dflags"].str.split;
+                        defaultOptions.dflags = defaultOptionsObj.object["dflags"].str.split;
                     }
                     else
                         mixin("defaultOptions." ~ member ~ ` = defaultOptionsObj.object["` ~ member ~ `"].str.to!T;`);

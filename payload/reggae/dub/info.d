@@ -161,7 +161,7 @@ struct DubInfo {
 
         const flags = chain(dubPackage.dflags,
                             dubPackage.versions.map!(a => "-version=" ~ a),
-                            options.dflags.splitter, // TODO: doesn't support quoted args with spaces
+                            options.dflags,
                             deUnitTest(compilerFlags))
             .array;
 

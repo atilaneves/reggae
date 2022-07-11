@@ -311,11 +311,21 @@ class InfoGenerator: ProjectGenerator {
             enum sameNameProperties = [
                 "mainSourceFile", "dflags", "lflags", "importPaths",
                 "stringImportPaths", "versions", "libs",
-                "preBuildCommands", "postBuildCommands",
             ];
             static foreach(prop; sameNameProperties) {
                 mixin(`pkg.`, prop, ` = newBuildSettings.`, prop, `;`);
             }
+
+            // {pre,post}BuildCommands: need to manually replace variables since dub v1.29
+            static foreach (xBuild; ["preBuild", "postBuild"]) {{
+                const rawCmds = mixin("newBuildSettings."~xBuild~"Commands");
+                if (rawCmds.length) {
+                    import dub.generators.generator: makeCommandEnvironmentVariables, CommandType;
+                    import dub.project: processVars;
+                    const env = makeCommandEnvironmentVariables(mixin("CommandType."~xBuild), targetInfo.pack, m_project, settings, newBuildSettings);
+                    mixin("pkg."~xBuild~"Commands") = processVars(m_project, targetInfo.pack, settings, rawCmds, false, env);
+                }
+            }}
 
             if(isFirstPackage)  // unfortunately due to dub's `invokeLinker`
                 adjustMainPackage(pkg, settings, newBuildSettings);

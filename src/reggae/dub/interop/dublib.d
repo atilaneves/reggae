@@ -37,7 +37,7 @@ struct Dub {
     import reggae.options: Options;
     import dub.project: Project;
 
-    private Project _project;
+    package Project _project;
 
     this(in Options options) @safe {
         import reggae.path: buildPath;

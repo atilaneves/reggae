@@ -138,6 +138,7 @@ dubConfigurations
 {
     import reggae.dub.interop.configurations: DubConfigurations;
     import reggae.io: log;
+    import std.exception: enforce;
 
     if(options.dubConfig == "") {
 
@@ -151,7 +152,14 @@ dubConfigurations
 
         return ret;
     } else {
-        return DubConfigurations([options.dubConfig], options.dubConfig);
+        string dubConfig = options.dubConfig;
+        if(dubConfig == "unittest") {
+            // mimic `dub build --config=unittest` for the special `dub test` configuration
+            // (which doesn't require an existing `unittest` configuration)
+            dubConfig = dub._project.addTestRunnerConfiguration(settings);
+            enforce(dubConfig.length, "No usable dub test configuration");
+        }
+        return DubConfigurations([dubConfig], dubConfig);
     }
 }
 

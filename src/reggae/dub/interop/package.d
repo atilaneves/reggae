@@ -108,8 +108,9 @@ private from!"reggae.dub.info".DubInfo getDubInfo
         Exception dubInfoFailure;
 
         foreach(config; configs.configurations) {
+            const isTestConfig = haveTestConfig && config == configs.test;
             try {
-                handleDubConfig(output, dub, options, settings, config, haveTestConfig && config == configs.test);
+                gDubInfos[config] = handleDubConfig(output, dub, options, settings, config, isTestConfig);
                 atLeastOneConfigOk = true;
             } catch(Exception ex) {
                 output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);
@@ -117,18 +118,18 @@ private from!"reggae.dub.info".DubInfo getDubInfo
             }
         }
 
-        gDubInfos["default"] = gDubInfos[configs.default_];
-
-        // (additionally) expose the special `dub test` config as `unittest` config in the DSL (`configToDubInfo`)
-        // (`dubTestTarget!()`, `dubConfigurationTarget!(Configuration("unittest"))` etc.)
-        if(haveTestConfig && configs.test != "unittest")
-            gDubInfos["unittest"] = gDubInfos[configs.test];
-
         if(!atLeastOneConfigOk) {
             assert(dubInfoFailure !is null,
                    "Internal error: no configurations worked and no exception to throw");
             throw dubInfoFailure;
         }
+
+        gDubInfos["default"] = gDubInfos[configs.default_];
+
+        // (additionally) expose the special `dub test` config as `unittest` config in the DSL (`configToDubInfo`)
+        // (`dubTestTarget!()`, `dubConfigurationTarget!(Configuration("unittest"))` etc.)
+        if(haveTestConfig && configs.test != "unittest" && configs.test in gDubInfos)
+            gDubInfos["unittest"] = gDubInfos[configs.test];
     }
 
     return gDubInfos["default"];
@@ -171,7 +172,7 @@ dubConfigurations
     }
 }
 
-private void handleDubConfig
+private from!"reggae.dub.info".DubInfo handleDubConfig
     (O)
     (ref O output,
      ref from!"reggae.dub.interop.dublib".Dub dub,
@@ -184,31 +185,35 @@ private void handleDubConfig
     import std.conv: text;
 
     output.log("Querying dub configuration '", config, "'");
-    gDubInfos[config] = dub.configToDubInfo(settings, config);
 
-    // dub adds certain flags to certain configurations automatically but these flags
-    // don't know up in the output to `dub describe`. Special case them here.
+    auto dubInfo = dub.configToDubInfo(settings, config);
 
-    // unittest should only apply to the main package, hence [0].
-    // This doesn't show up in `dub describe`, it's secret info that dub knows
-    // so we have to add it manually here.
+    /**
+     For the `dub test` config, add `-unittest` (only for the main package, hence [0]).
+     [Similarly, `dub test` implies `--build=unittest`, with the unittest build type
+     being the debug one + `-unittest`.]
+
+     This enables (assuming no custom reggaefile.d):
+     * `reggae && ninja default ut`
+       => default `debug` build type for default config, extra `-unittest` for test config
+     * `reggae --dub-config=unittest && ninja`
+       => no need for extra `--dub-build-type=unittest`
+     */
     if(isTestConfig) {
-        if(config !in gDubInfos)
-            throw new Exception(
-                text("Configuration `", config, "` not found in ",
-                     () @trusted { return gDubInfos.keys; }()));
-        if(gDubInfos[config].packages.length == 0)
+        if(dubInfo.packages.length == 0)
             throw new Exception(
                 text("No main package in `", config, "` configuration"));
-        gDubInfos[config].packages[0].dflags ~= "-unittest";
+        dubInfo.packages[0].dflags ~= "-unittest";
     }
 
     try
-        callPreBuildCommands(output, options, gDubInfos[config]);
+        callPreBuildCommands(output, options, dubInfo);
     catch(Exception e) {
         output.log("Error calling prebuild commands: ", e.msg);
         throw e;
     }
+
+    return dubInfo;
 }
 
 

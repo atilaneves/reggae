@@ -118,7 +118,9 @@ private from!"reggae.dub.info".DubInfo getDubInfo
         }
 
         gDubInfos["default"] = gDubInfos[configs.default_];
-        // add/replace the special `dub test` config as `unittest` config
+
+        // (additionally) expose the special `dub test` config as `unittest` config in the DSL (`configToDubInfo`)
+        // (`dubTestTarget!()`, `dubConfigurationTarget!(Configuration("unittest"))` etc.)
         if(haveTestConfig && configs.test != "unittest")
             gDubInfos["unittest"] = gDubInfos[configs.test];
 

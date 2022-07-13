@@ -33,7 +33,7 @@ unittest {
 
         // there's only one UT in main.d which always fails
         ninja(["ut"]).shouldExecuteOk;
-        shouldFail("ut");
+        shouldFail("atest-test-application");
     }
 }
 
@@ -120,7 +120,7 @@ unittest {
         runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
 
-        shouldFail("ut");
+        shouldFail("depends_on_cerealed-test-application");
     }
 }
 
@@ -777,7 +777,7 @@ unittest {
         });
         runReggae("-b", "ninja");
         ninja(["default", "ut"]).shouldExecuteOk;
-        shouldSucceed("ut");
+        shouldSucceed("foo-test-application");
     }
 }
 
@@ -791,14 +791,14 @@ unittest {
             targetType "executable"
         `);
         writeFile("source/app.d", q{
-            void main() {
-            }
-
+            void main() {}
+        });
+        writeFile("source/test.d", q{
             unittest { assert(1 == 2); }
         });
         runReggae("-b", "ninja");
         ninja(["default", "ut"]).shouldExecuteOk;
-        shouldFail("ut");
+        shouldFail("foo-test-application");
     }
 }
 

@@ -1,6 +1,6 @@
 {
     "name": "atest",
     "targetType": "executable",
-    "importPaths": ["imps"],
+    "importPaths": ["source", "imps"],
     "stringImportPaths": ["stringies"],
 }

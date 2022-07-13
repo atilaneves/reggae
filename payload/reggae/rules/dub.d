@@ -85,7 +85,7 @@ static if(isDubProject) {
 
         const config = "unittest" in configToDubInfo ? "unittest" : "default";
         auto actualCompilerFlags = compilerFlags.value;
-        if("unittest" !in configToDubInfo) actualCompilerFlags ~= "-unittest";
+        if(config != "unittest") actualCompilerFlags ~= "-unittest";
         const dubInfo = configToDubInfo[config];
         enforce(dubInfo.packages.length, text("No dub packages found for config '", config, "'"));
         const hasMain = dubInfo.packages[0].mainSourceFile != "";

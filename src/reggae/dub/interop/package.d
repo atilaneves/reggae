@@ -103,12 +103,13 @@ private from!"reggae.dub.info".DubInfo getDubInfo
 
         auto settings = dub.getGeneratorSettings(options);
         const configs = dubConfigurations(output, dub, options, settings);
+        const haveTestConfig = configs.test.length != 0;
         bool atLeastOneConfigOk;
         Exception dubInfoFailure;
 
         foreach(config; configs.configurations) {
             try {
-                handleDubConfig(output, dub, options, settings, config);
+                handleDubConfig(output, dub, options, settings, config, haveTestConfig && config == configs.test);
                 atLeastOneConfigOk = true;
             } catch(Exception ex) {
                 output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);
@@ -117,6 +118,9 @@ private from!"reggae.dub.info".DubInfo getDubInfo
         }
 
         gDubInfos["default"] = gDubInfos[configs.default_];
+        // add/replace the special `dub test` config as `unittest` config
+        if(haveTestConfig && configs.test != "unittest")
+            gDubInfos["unittest"] = gDubInfos[configs.test];
 
         if(!atLeastOneConfigOk) {
             assert(dubInfoFailure !is null,
@@ -143,23 +147,25 @@ dubConfigurations
     if(options.dubConfig == "") {
 
         output.log("Getting dub configurations");
-        auto ret = dub.getConfigs(settings.platform);
+        auto ret = dub.getConfigs(settings);
         output.log("Number of dub configurations: ", ret.configurations.length);
 
         // this happens e.g. the targetType is "none"
         if(ret.configurations.length == 0)
-            return DubConfigurations([""], "");
+            return DubConfigurations([""], "", null);
 
         return ret;
     } else {
         string dubConfig = options.dubConfig;
+        string testConfig = null;
         if(dubConfig == "unittest") {
             // mimic `dub build --config=unittest` for the special `dub test` configuration
             // (which doesn't require an existing `unittest` configuration)
-            dubConfig = dub._project.addTestRunnerConfiguration(settings);
-            enforce(dubConfig.length, "No usable dub test configuration");
+            testConfig = dub._project.addTestRunnerConfiguration(settings);
+            enforce(testConfig.length, "No usable dub test configuration");
+            dubConfig = testConfig;
         }
-        return DubConfigurations([dubConfig], dubConfig);
+        return DubConfigurations([dubConfig], dubConfig, testConfig);
     }
 }
 
@@ -169,7 +175,8 @@ private void handleDubConfig
      ref from!"reggae.dub.interop.dublib".Dub dub,
      in from!"reggae.options".Options options,
      from!"dub.generators.generator".GeneratorSettings settings,
-     in string config)
+     in string config,
+     in bool isTestConfig)
 {
     import reggae.io: log;
     import std.conv: text;
@@ -183,7 +190,7 @@ private void handleDubConfig
     // unittest should only apply to the main package, hence [0].
     // This doesn't show up in `dub describe`, it's secret info that dub knows
     // so we have to add it manually here.
-    if(config == "unittest") {
+    if(isTestConfig) {
         if(config !in gDubInfos)
             throw new Exception(
                 text("Configuration `", config, "` not found in ",

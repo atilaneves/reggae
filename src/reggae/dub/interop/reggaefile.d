@@ -46,26 +46,32 @@ private enum standardDubReggaefile = q{
     import reggae;
 
     alias buildTarget = dubDefaultTarget!(); // dub build
-    alias testTarget = dubTestTarget!();     // dub test (=> ut[.exe])
+    alias testTarget = dubTestTarget!();     // dub test
 
     Target aliasTarget(string aliasName, alias target)() {
-        import std.algorithm: map;
+        import std.algorithm: canFind, map;
+        const rawOutputs = target.rawOutputs;
+
+        // If the aliased target has an output with the same name, return a dummy target which
+        // won't make it to the Ninja/make build scripts.
+        // E.g., no conflicting `ut` alias target if the test target already produces a `ut` executable.
+        version (Windows) { /* all outputs feature some file extension */ }
+        else if (rawOutputs.canFind(aliasName) || rawOutputs.canFind("./" ~ aliasName))
+            return Target(null);
+
         // Using a leaf target with `$builddir/<raw output>` outputs as dependency
         // yields the expected relative target names for Ninja/make.
-        return Target.phony(aliasName, "", Target(target.rawOutputs.map!(o => "$builddir/" ~ o), ""));
+        return Target.phony(aliasName, "", Target(rawOutputs.map!(o => "$builddir/" ~ o), ""));
     }
 
     // Add a `default` convenience alias for the `dub build` target.
     // Especially useful for Ninja (`ninja default ut` to build default & test targets in parallel).
     alias defaultTarget = aliasTarget!("default", buildTarget);
 
-    version (Windows) {
-        // Windows: extra `ut` convenience alias for `ut.exe`
-        alias utTarget = aliasTarget!("ut", testTarget);
-        mixin build!(buildTarget, optional!testTarget, optional!defaultTarget, optional!utTarget);
-    } else {
-        mixin build!(buildTarget, optional!testTarget, optional!defaultTarget);
-    }
+    // And a `ut` convenience alias for the `dub test` target.
+    alias utTarget = aliasTarget!("ut", testTarget);
+
+    mixin build!(buildTarget, optional!testTarget, optional!defaultTarget, optional!utTarget);
 };
 
 

@@ -85,7 +85,7 @@ struct Dub {
         // add the special `dub test` configuration (which doesn't require an existing `unittest` config)
         const testConfig = (allConfigs || singleConfig == "unittest")
             ? _project.addTestRunnerConfiguration(settings)
-            : null;
+            : null; // skip when requesting a single non-unittest config
         const haveSpecialTestConfig = testConfig.length && testConfig != "unittest";
 
         if (!allConfigs) {

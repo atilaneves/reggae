@@ -103,7 +103,7 @@ private from!"reggae.dub.info".DubInfo getDubInfo
 
         auto settings = dub.getGeneratorSettings(options);
         const configs = dubConfigurations(output, dub, options, settings);
-        const haveTestConfig = configs.test.length != 0;
+        const haveTestConfig = configs.test != "";
         bool atLeastOneConfigOk;
         Exception dubInfoFailure;
 
@@ -127,7 +127,7 @@ private from!"reggae.dub.info".DubInfo getDubInfo
         gDubInfos["default"] = gDubInfos[configs.default_];
 
         // (additionally) expose the special `dub test` config as `unittest` config in the DSL (`configToDubInfo`)
-        // (`dubTestTarget!()`, `dubConfigurationTarget!(Configuration("unittest"))` etc.)
+        // (for `dubTestTarget!()`, `dubConfigurationTarget!(Configuration("unittest"))` etc.)
         if(haveTestConfig && configs.test != "unittest" && configs.test in gDubInfos)
             gDubInfos["unittest"] = gDubInfos[configs.test];
     }
@@ -145,7 +145,6 @@ dubConfigurations
 {
     import reggae.dub.interop.configurations: DubConfigurations;
     import reggae.io: log;
-    import std.exception: enforce;
 
     const allConfigs = options.dubConfig == "";
 

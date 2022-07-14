@@ -147,29 +147,23 @@ dubConfigurations
     import reggae.io: log;
     import std.exception: enforce;
 
-    if(options.dubConfig == "") {
+    const allConfigs = options.dubConfig == "";
 
-        output.log("Getting dub configurations");
-        auto ret = dub.getConfigs(settings);
-        output.log("Number of dub configurations: ", ret.configurations.length);
+    if(allConfigs) output.log("Getting dub configurations");
+    auto ret = dub.getConfigs(settings, options.dubConfig);
+    if(allConfigs) output.log("Number of dub configurations: ", ret.configurations.length);
 
-        // this happens e.g. the targetType is "none"
-        if(ret.configurations.length == 0)
-            return DubConfigurations([""], "", null);
-
-        return ret;
-    } else {
-        string dubConfig = options.dubConfig;
-        string testConfig = null;
-        if(dubConfig == "unittest") {
-            // mimic `dub build --config=unittest` for the special `dub test` configuration
-            // (which doesn't require an existing `unittest` configuration)
-            testConfig = dub._project.addTestRunnerConfiguration(settings);
-            enforce(testConfig.length, "No usable dub test configuration");
-            dubConfig = testConfig;
-        }
-        return DubConfigurations([dubConfig], dubConfig, testConfig);
+    // error out if the test config is explicitly requested but not available
+    if(options.dubConfig == "unittest" && ret.test == "") {
+        output.log("ERROR: No dub test configuration available (target type 'none'?)");
+        throw new Exception("No dub test configuration");
     }
+
+    // this happens e.g. the targetType is "none"
+    if(ret.configurations.length == 0)
+        return DubConfigurations([""], "", null);
+
+    return ret;
 }
 
 private from!"reggae.dub.info".DubInfo handleDubConfig

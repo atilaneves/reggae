@@ -37,7 +37,7 @@ struct Dub {
     import reggae.options: Options;
     import dub.project: Project;
 
-    package Project _project;
+    private Project _project;
 
     this(in Options options) @safe {
         import reggae.path: buildPath;
@@ -74,14 +74,25 @@ struct Dub {
         return ret;
     }
 
-    DubConfigurations getConfigs(/*in*/ ref from!"dub.generators.generator".GeneratorSettings settings) {
-
+    DubConfigurations getConfigs
+    (/*in*/ from!"dub.generators.generator".GeneratorSettings settings, in string singleConfig = null)
+    {
         import std.algorithm.iteration: filter, map;
         import std.array: array;
 
-        // add the special `dub test` configuration
-        const testConfig = _project.addTestRunnerConfiguration(settings);
+        const allConfigs = singleConfig == "";
+
+        // add the special `dub test` configuration (which doesn't require an existing `unittest` config)
+        const testConfig = (allConfigs || singleConfig == "unittest")
+            ? _project.addTestRunnerConfiguration(settings)
+            : null;
         const haveSpecialTestConfig = testConfig.length && testConfig != "unittest";
+
+        if (!allConfigs) {
+            // translate `unittest` to the actual test configuration
+            const config = haveSpecialTestConfig ? testConfig : singleConfig;
+            return DubConfigurations([config], config, testConfig);
+        }
 
         // A violation of the Law of Demeter caused by a dub bug.
         // Otherwise _project.configurations would do, but it fails for one

@@ -11,7 +11,7 @@ public import reggae.dub.interop.reggaefile;
 from!"reggae.dub.info".DubInfo[string] gDubInfos;
 
 
-void writeDubConfig(T)(auto ref T output,
+void writeDubConfig(O)(ref O output,
                        in from!"reggae.options".Options options,
                        from!"std.stdio".File file) {
     import reggae.io: log;
@@ -83,8 +83,8 @@ private string ensureDubSelectionsJson
 
 
 private from!"reggae.dub.info".DubInfo getDubInfo
-    (T)
-    (auto ref T output,
+    (O)
+    (ref O output,
      ref from!"reggae.dub.interop.dublib".Dub dub,
      in from!"reggae.options".Options options)
 {
@@ -141,7 +141,7 @@ dubConfigurations
     (ref O output,
      ref from!"reggae.dub.interop.dublib".Dub dub,
      in from!"reggae.options".Options options,
-     from!"dub.generators.generator".GeneratorSettings settings)
+     in from!"dub.generators.generator".GeneratorSettings settings)
 {
     import reggae.dub.interop.configurations: DubConfigurations;
     import reggae.io: log;
@@ -210,7 +210,7 @@ private from!"reggae.dub.info".DubInfo handleDubConfig
 }
 
 
-private void callPreBuildCommands(T)(auto ref T output,
+private void callPreBuildCommands(O)(ref O output,
                                      in from!"reggae.options".Options options,
                                      in from!"reggae.dub.info".DubInfo dubInfo)
     @safe

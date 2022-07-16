@@ -75,7 +75,7 @@ struct Dub {
     }
 
     DubConfigurations getConfigs
-    (/*in*/ from!"dub.generators.generator".GeneratorSettings settings, in string singleConfig = null)
+    (in from!"dub.generators.generator".GeneratorSettings settings, in string singleConfig = null)
     {
         import std.algorithm.iteration: filter, map;
         import std.array: array;
@@ -107,7 +107,6 @@ struct Dub {
             .filter!(n => !haveSpecialTestConfig || n != "unittest")
             .array;
 
-        // Project.getDefaultConfiguration() requires a mutable arg (forgotten `in`)
         const defaultConfig = _project.getDefaultConfiguration(settings.platform);
         return DubConfigurations(configurations, defaultConfig, testConfig);
     }

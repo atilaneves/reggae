@@ -113,14 +113,6 @@ struct FakeFile {
 }
 
 // stupid template emission
-int dummy() {
-    static import dub.dependency;
-    static import dub.dependencyresolver;
-    static import std.typecons;
-
-    alias Tup = std.typecons.Tuple!(
-        dub.dependencyresolver.DependencyResolver!(dub.dependency.Dependency, dub.dependency.Dependency).TreeNode,
-        dub.dependencyresolver.DependencyResolver!(dub.dependency.Dependency, dub.dependency.Dependency).TreeNodes);
-    Tup t0, t1;
-    return t0.opCmp(t1);
-}
+version (DigitalMars)
+pragma(mangle, "_D3std7sumtype__T7SumTypeTS3dub10dependency12VersionRangeTSQBg8internal10vibecompat4inet4path10NativePathTSQDcQDb10RepositoryZQEf11__invariantMxFNaNbNiNfZv")
+void dummySumtypeInvariant(void*) {}

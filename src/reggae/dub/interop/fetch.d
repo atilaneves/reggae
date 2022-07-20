@@ -41,12 +41,20 @@ package void dubFetch(O)(
 
     output.log("Fetching dub packages");
     foreach(pkg; pkgsToFetch.parallel) {
-        dubObj.fetch(
-            pkg.name,
-            Dependency("==" ~ pkg.version_),
-            PlacementLocation.user,
-            FetchOptions.none,
-        );
+        try
+            dubObj.fetch(
+                pkg.name,
+                Dependency("==" ~ pkg.version_),
+                PlacementLocation.user,
+                FetchOptions.none,
+            );
+        catch (Exception exc)
+        {
+            import std.stdio;
+            stderr.writefln("Fetching package %s %s failed: %s",
+                            pkg.name, pkg.version_, exc.message());
+            throw exc;
+        }
     }
     output.log("Fetched dub packages");
 

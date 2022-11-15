@@ -27,7 +27,6 @@
           "sourcePaths": ["tests", "payload"],
           "mainSourceFile": "tests/ut_main.d",
           "versions": ["ReggaeTest"],
-          "dflags": ["-allinst"],
           "excludedSourceFiles": ["payload/reggae/buildgen_main.d",
                                   "src/reggae/reggae_main.d",
                                   "tests/projects/project1/src/main.d",

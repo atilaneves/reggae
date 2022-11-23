@@ -11,7 +11,7 @@ jobs:
         # Remember to change the compiler versions further below as well as here
         dc:
           - dmd-2.100.0
-          - ldc-1.29.0
+          - ldc-1.30.0
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -65,7 +65,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-20.04, macos-10.15, windows-2019]
-        dc: [dmd-2.098.0, ldc-1.28.0]
+        dc: [dmd-2.100.0, ldc-1.30.0]
     runs-on: ${{ matrix.os }}
     defaults:
       run:

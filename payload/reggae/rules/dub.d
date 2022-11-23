@@ -81,30 +81,31 @@ static if(isDubProject) {
     {
         import reggae.dub.info: TargetType, targetName;
         import std.exception : enforce;
-        import std.conv: text;
 
-        const config = "unittest" in configToDubInfo ? "unittest" : "default";
-        auto actualCompilerFlags = compilerFlags.value;
-        if("unittest" !in configToDubInfo) actualCompilerFlags ~= "-unittest";
-        const dubInfo = configToDubInfo[config];
-        enforce(dubInfo.packages.length, text("No dub packages found for config '", config, "'"));
-        const hasMain = dubInfo.packages[0].mainSourceFile != "";
-        const string[] emptyStrings;
-        const extraLinkerFlags = hasMain ? emptyStrings : ["-main"];
-        const actualLinkerFlags = extraLinkerFlags ~ linkerFlags.value;
-        const defaultTargetHasName = configToDubInfo["default"].packages.length > 0;
-        const sameNameAsDefaultTarget =
-            defaultTargetHasName
-            && dubInfo.targetName == configToDubInfo["default"].targetName;
-        const name = sameNameAsDefaultTarget
-            // don't emit two targets with the same name
-            ? targetName(TargetType.executable, "ut")
-            : dubInfo.targetName;
+        // No `dub test` config? Then it inherited some `targetType "none"`, and
+        // dub has printed an according message - return a dummy target and continue.
+        // [Similarly, `dub test` is a no-op and returns success in such scenarios.]
+        if ("unittest" !in configToDubInfo)
+            return Target(null);
+
+        const dubInfo = configToDubInfo["unittest"];
+        enforce(dubInfo.packages.length, "No dub packages found for the dub test configuration");
+        enforce(dubInfo.packages[0].mainSourceFile.length, "No mainSourceFile for the dub test configuration");
+
+        auto name = dubInfo.targetName;
+        const defaultDubInfo = configToDubInfo["default"];
+        if (defaultDubInfo.packages.length > 0 && defaultDubInfo.targetName == name) {
+            // The targetName of both default & test configs conflict (due to a bad
+            // `unittest` config in dub.{sdl,json}).
+            // Rename the test target to `ut[.exe]` to prevent conflicts in Ninja/make
+            // build scripts (in case the default config is included in the build too).
+            name = targetName(TargetType.executable, "ut");
+        }
 
         return dubTarget(name,
                          dubInfo,
-                         actualCompilerFlags,
-                         actualLinkerFlags,
+                         compilerFlags.value,
+                         linkerFlags.value,
                          compilationMode);
     }
 

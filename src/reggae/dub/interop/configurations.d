@@ -10,4 +10,5 @@ import reggae.from;
 struct DubConfigurations {
     string[] configurations;
     string default_;
+    string test; // special `dub test` config
 }

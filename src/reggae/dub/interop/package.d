@@ -11,7 +11,7 @@ public import reggae.dub.interop.reggaefile;
 from!"reggae.dub.info".DubInfo[string] gDubInfos;
 
 
-void writeDubConfig(T)(auto ref T output,
+void writeDubConfig(O)(ref O output,
                        in from!"reggae.options".Options options,
                        from!"std.stdio".File file) {
     import reggae.io: log;
@@ -83,8 +83,8 @@ private string ensureDubSelectionsJson
 
 
 private from!"reggae.dub.info".DubInfo getDubInfo
-    (T)
-    (auto ref T output,
+    (O)
+    (ref O output,
      ref from!"reggae.dub.interop.dublib".Dub dub,
      in from!"reggae.options".Options options)
 {
@@ -103,12 +103,14 @@ private from!"reggae.dub.info".DubInfo getDubInfo
 
         auto settings = dub.getGeneratorSettings(options);
         const configs = dubConfigurations(output, dub, options, settings);
+        const haveTestConfig = configs.test != "";
         bool atLeastOneConfigOk;
         Exception dubInfoFailure;
 
         foreach(config; configs.configurations) {
+            const isTestConfig = haveTestConfig && config == configs.test;
             try {
-                handleDubConfig(output, dub, options, settings, config);
+                gDubInfos[config] = handleDubConfig(output, dub, options, settings, config, isTestConfig);
                 atLeastOneConfigOk = true;
             } catch(Exception ex) {
                 output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);
@@ -116,13 +118,18 @@ private from!"reggae.dub.info".DubInfo getDubInfo
             }
         }
 
-        gDubInfos["default"] = gDubInfos[configs.default_];
-
         if(!atLeastOneConfigOk) {
             assert(dubInfoFailure !is null,
                    "Internal error: no configurations worked and no exception to throw");
             throw dubInfoFailure;
         }
+
+        gDubInfos["default"] = gDubInfos[configs.default_];
+
+        // (additionally) expose the special `dub test` config as `unittest` config in the DSL (`configToDubInfo`)
+        // (for `dubTestTarget!()`, `dubConfigurationTarget!(Configuration("unittest"))` etc.)
+        if(haveTestConfig && configs.test != "unittest" && configs.test in gDubInfos)
+            gDubInfos["unittest"] = gDubInfos[configs.test];
     }
 
     return gDubInfos["default"];
@@ -134,68 +141,76 @@ dubConfigurations
     (ref O output,
      ref from!"reggae.dub.interop.dublib".Dub dub,
      in from!"reggae.options".Options options,
-     from!"dub.generators.generator".GeneratorSettings settings)
+     in from!"dub.generators.generator".GeneratorSettings settings)
 {
     import reggae.dub.interop.configurations: DubConfigurations;
     import reggae.io: log;
 
-    if(options.dubConfig == "") {
+    const allConfigs = options.dubConfig == "";
 
-        output.log("Getting dub configurations");
-        auto ret = dub.getConfigs(settings.platform);
-        output.log("Number of dub configurations: ", ret.configurations.length);
+    if(allConfigs) output.log("Getting dub configurations");
+    auto ret = dub.getConfigs(settings, options.dubConfig);
+    if(allConfigs) output.log("Number of dub configurations: ", ret.configurations.length);
 
-        // this happens e.g. the targetType is "none"
-        if(ret.configurations.length == 0)
-            return DubConfigurations([""], "");
-
-        return ret;
-    } else {
-        return DubConfigurations([options.dubConfig], options.dubConfig);
+    // error out if the test config is explicitly requested but not available
+    if(options.dubConfig == "unittest" && ret.test == "") {
+        output.log("ERROR: No dub test configuration available (target type 'none'?)");
+        throw new Exception("No dub test configuration");
     }
+
+    // this happens e.g. the targetType is "none"
+    if(ret.configurations.length == 0)
+        return DubConfigurations([""], "", null);
+
+    return ret;
 }
 
-private void handleDubConfig
+private from!"reggae.dub.info".DubInfo handleDubConfig
     (O)
     (ref O output,
      ref from!"reggae.dub.interop.dublib".Dub dub,
      in from!"reggae.options".Options options,
      from!"dub.generators.generator".GeneratorSettings settings,
-     in string config)
+     in string config,
+     in bool isTestConfig)
 {
     import reggae.io: log;
     import std.conv: text;
 
     output.log("Querying dub configuration '", config, "'");
-    gDubInfos[config] = dub.configToDubInfo(settings, config);
 
-    // dub adds certain flags to certain configurations automatically but these flags
-    // don't know up in the output to `dub describe`. Special case them here.
+    auto dubInfo = dub.configToDubInfo(settings, config);
 
-    // unittest should only apply to the main package, hence [0].
-    // This doesn't show up in `dub describe`, it's secret info that dub knows
-    // so we have to add it manually here.
-    if(config == "unittest") {
-        if(config !in gDubInfos)
-            throw new Exception(
-                text("Configuration `", config, "` not found in ",
-                     () @trusted { return gDubInfos.keys; }()));
-        if(gDubInfos[config].packages.length == 0)
+    /**
+     For the `dub test` config, add `-unittest` (only for the main package, hence [0]).
+     [Similarly, `dub test` implies `--build=unittest`, with the unittest build type
+     being the debug one + `-unittest`.]
+
+     This enables (assuming no custom reggaefile.d):
+     * `reggae && ninja default ut`
+       => default `debug` build type for default config, extra `-unittest` for test config
+     * `reggae --dub-config=unittest && ninja`
+       => no need for extra `--dub-build-type=unittest`
+     */
+    if(isTestConfig) {
+        if(dubInfo.packages.length == 0)
             throw new Exception(
                 text("No main package in `", config, "` configuration"));
-        gDubInfos[config].packages[0].dflags ~= "-unittest";
+        dubInfo.packages[0].dflags ~= "-unittest";
     }
 
     try
-        callPreBuildCommands(output, options, gDubInfos[config]);
+        callPreBuildCommands(output, options, dubInfo);
     catch(Exception e) {
         output.log("Error calling prebuild commands: ", e.msg);
         throw e;
     }
+
+    return dubInfo;
 }
 
 
-private void callPreBuildCommands(T)(auto ref T output,
+private void callPreBuildCommands(O)(ref O output,
                                      in from!"reggae.options".Options options,
                                      in from!"reggae.dub.info".DubInfo dubInfo)
     @safe

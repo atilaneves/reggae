@@ -124,10 +124,10 @@ unittest {
         );
 
         version(Windows) {
-            enum ut = `daspath\ut.exe`;
+            enum ut = `daspath\issue157-test-application.exe`;
             enum bin = `daspath\issue157.exe`;
         } else {
-            enum ut = "daspath/ut";
+            enum ut = "daspath/issue157-test-application";
             enum bin = "daspath/issue157";
         }
 
@@ -168,10 +168,10 @@ unittest {
 
         version(Windows) {
             shouldExist(`bin\issue157.exe`);
-            shouldExist(`bin\ut.exe`);
+            shouldExist(`bin\issue157-test-application.exe`);
         } else {
             shouldExist("bin/issue157");
-            shouldExist("bin/ut");
+            shouldExist("bin/issue157-test-application");
         }
     }
 }
@@ -261,11 +261,9 @@ unittest {
         version(Windows) {
             enum exe = "issue144.exe";
             enum lib = "issue144.lib";
-            enum ut  = "ut.exe";
         } else {
             enum exe = "issue144";
             enum lib = "issue144.a";
-            enum ut  = "ut";
         }
 
         runReggae("-b", "ninja", "--dub-config=daslib");
@@ -274,7 +272,7 @@ unittest {
         ninja([exe]).shouldFailToExecute.should ==
             ["ninja: error: unknown target '" ~ exe ~ "', did you mean '" ~ lib ~ "'?"];
         // No unittest target when --dub-config is used
-        ninja([ut]).shouldFailToExecute.should ==
-            ["ninja: error: unknown target '" ~ ut ~ "'"];
+        ninja(["ut"]).shouldFailToExecute.should ==
+            ["ninja: error: unknown target 'ut'"];
     }
 }

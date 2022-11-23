@@ -74,10 +74,25 @@ struct Dub {
         return ret;
     }
 
-    DubConfigurations getConfigs(/*in*/ ref from!"dub.platform".BuildPlatform platform) {
-
+    DubConfigurations getConfigs
+    (in from!"dub.generators.generator".GeneratorSettings settings, in string singleConfig = null)
+    {
         import std.algorithm.iteration: filter, map;
         import std.array: array;
+
+        const allConfigs = singleConfig == "";
+
+        // add the special `dub test` configuration (which doesn't require an existing `unittest` config)
+        const testConfig = (allConfigs || singleConfig == "unittest")
+            ? _project.addTestRunnerConfiguration(settings)
+            : null; // skip when requesting a single non-unittest config
+        const haveSpecialTestConfig = testConfig.length && testConfig != "unittest";
+
+        if (!allConfigs) {
+            // translate `unittest` to the actual test configuration
+            const config = haveSpecialTestConfig ? testConfig : singleConfig;
+            return DubConfigurations([config], config, testConfig);
+        }
 
         // A violation of the Law of Demeter caused by a dub bug.
         // Otherwise _project.configurations would do, but it fails for one
@@ -86,12 +101,14 @@ struct Dub {
             .rootPackage
             .recipe
             .configurations
-            .filter!(c => c.matchesPlatform(platform))
+            .filter!(c => c.matchesPlatform(settings.platform))
             .map!(c => c.name)
+            // exclude unittest config if there's a derived special one
+            .filter!(n => !haveSpecialTestConfig || n != "unittest")
             .array;
 
-        // Project.getDefaultConfiguration() requires a mutable arg (forgotten `in`)
-        return DubConfigurations(configurations, _project.getDefaultConfiguration(platform));
+        const defaultConfig = _project.getDefaultConfiguration(settings.platform);
+        return DubConfigurations(configurations, defaultConfig, testConfig);
     }
 
     DubInfo configToDubInfo

@@ -13,8 +13,8 @@ package void dubFetch(O)(
 {
     import reggae.io: log;
     import dub.dub: Dub, FetchOptions;
-    import dub.dependency: Dependency;
-    import dub.project: PlacementLocation;
+    import dub.dependency: Version;
+    import dub.packagemanager: PlacementLocation;
     import std.array: replace;
     import std.json: parseJSON, JSONType;
     import std.file: readText, getcwd;
@@ -44,7 +44,7 @@ package void dubFetch(O)(
         try
             dubObj.fetch(
                 pkg.name,
-                Dependency("==" ~ pkg.version_),
+                Version(pkg.version_),
                 PlacementLocation.user,
                 FetchOptions.none,
             );

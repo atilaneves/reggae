@@ -214,21 +214,21 @@ string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
 
     auto srcs = sourcesFunc();
 
-    DirEntry[] modules;
+    string[] modules;
     foreach(dir; srcs.dirs.value.map!(a => buildPath(options.projectPath, a))) {
         enforce(isDir(dir), dir ~ " is not a directory name");
         auto entries = dirEntries(dir, SpanMode.depth);
-        auto normalised = entries.map!(a => DirEntry(buildNormalizedPath(a)));
+        auto normalised = entries.filter!(a => !a.isDir).map!(a => a.buildNormalizedPath);
 
-        modules ~= normalised.filter!(a => !a.isDir).array;
+        modules ~= normalised.array;
     }
 
     foreach(module_; srcs.files.value) {
-        modules ~= DirEntry(buildNormalizedPath(buildPath(options.projectPath, module_)));
+        modules ~= buildNormalizedPath(buildPath(options.projectPath, module_));
     }
 
-    return modules.
-        map!(a => a.name.removeProjectPath).
+    return modules.sort.
+        map!(removeProjectPath).
         filter!(srcs.filterFunc).
         filter!(a => a != "reggaefile.d").
         array;
@@ -251,22 +251,22 @@ string[] sourcesToFileNames(in string projectPath,
 
     excDirs = (excDirs ~ ".reggae").map!(a => buildPath(projectPath, a)).array;
 
-    DirEntry[] files;
+    string[] files;
     foreach(dir; srcDirs.map!(a => buildPath(projectPath, a))) {
         enforce(isDir(dir), dir ~ " is not a directory name");
 
         auto entries = dirEntries(dir, SpanMode.depth)
                 .map!(a => a.buildNormalizedPath)
                 .filter!(a => !excDirs.canFind!(b => a.dirName.absolutePath.startsWith(b)));
-        files ~= entries.map!(a => DirEntry(a)).array;
+        files ~= entries.array;
     }
 
     foreach(module_; srcFiles) {
-        files ~= DirEntry(buildNormalizedPath(buildPath(projectPath, module_)));
+        files ~= buildNormalizedPath(buildPath(projectPath, module_));
     }
 
-    return files.
-        map!(a => removeProjectPath(projectPath, a.name)).
+    return files.sort.
+        map!(a => removeProjectPath(projectPath, a)).
         filter!(a => !excFiles.canFind(a)).
         filter!(a => a != "reggaefile.d").
         array;

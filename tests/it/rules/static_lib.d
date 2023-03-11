@@ -25,9 +25,9 @@ unittest {
                              [Target("src/main.d")]),
                       Target("$builddir/maths" ~ libExt,
                              archiveCmd,
-                             [Target("libsrc_muler" ~ objExt,
+                             [Target("libsrc_adder" ~ objExt,
                                      compileCommand("libsrc.d", [], ["."]),
-                                     [Target(buildPath("libsrc/muler.d")), Target(buildPath("libsrc/adder.d"))]
+                                     [Target(buildPath("libsrc/adder.d")), Target(buildPath("libsrc/muler.d"))]
                                      )]),
                          ])));
 }

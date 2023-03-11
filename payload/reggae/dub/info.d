@@ -142,7 +142,7 @@ struct DubInfo {
         import std.array: array, replace;
         import std.functional: not;
         import std.path: baseName, dirSeparator;
-        import std.string: stripRight;
+        import std.string: indexOf, stripRight;
 
         const dubPackage = packages[dubPackageIndex];
         const importPaths = allImportPaths();
@@ -211,6 +211,15 @@ struct DubInfo {
                 const shortenedRoot = buildPath("__dub__", baseName(dubPackage.path));
                 foreach(ref target; packageTargets)
                     target.rawOutputs[0] = buildPath(target.rawOutputs[0]).replace(dubPkgRoot, shortenedRoot);
+            }
+        } else {
+            // shorten the object file output path for dub-generated dub_test_root.d
+            // (only generated for the main package) in the cache dir (important on Windows)
+            foreach(ref target; packageTargets) {
+                const p = buildPath(target.rawOutputs[0]);
+                const i = p.indexOf(dirSeparator ~ "__dub_cache__" ~ dirSeparator);
+                if (i > 0)
+                    target.rawOutputs[0] = p[i + 1 .. $];
             }
         }
 

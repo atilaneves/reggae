@@ -457,7 +457,8 @@ unittest {
 
 
 @("depends on package with prebuild")
-@Tags(["dub", "ninja"])
+// fails for CI with DMD on Windows - the path to dub-generated dub_test_root.d is just over 260 chars
+@Tags(["dub", "ninja", "fails-on-windows-with-dmd"])
 unittest {
 
     with(immutable ReggaeSandbox("dub_depends_on_prebuild")) {

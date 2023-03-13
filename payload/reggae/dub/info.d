@@ -142,7 +142,7 @@ struct DubInfo {
         import std.array: array, replace;
         import std.functional: not;
         import std.path: baseName, dirSeparator;
-        import std.string: stripRight;
+        import std.string: indexOf, stripRight;
 
         const dubPackage = packages[dubPackageIndex];
         const importPaths = allImportPaths();
@@ -196,21 +196,30 @@ struct DubInfo {
 
         auto packageTargets = targetsFunc()(files, flags, importPaths, stringImportPaths, [], projDir);
 
-        // go through dub dependencies and adjust object file output paths
-        if(!isMainPackage) {
-            // optionally put the object files in dubObjsDir
-            if(dubObjsDir.globalDir != "") {
-                foreach(ref target; packageTargets) {
-                    target.rawOutputs[0] = buildPath(dubObjsDir.globalDir,
-                                                    options.projectPath.deabsolutePath,
-                                                    dubObjsDir.targetDir,
-                                                    target.rawOutputs[0]);
-                }
-            } else {
-                const dubPkgRoot = buildPath(dubPackage.path).deabsolutePath.stripRight(dirSeparator);
-                const shortenedRoot = buildPath("__dub__", baseName(dubPackage.path));
-                foreach(ref target; packageTargets)
-                    target.rawOutputs[0] = buildPath(target.rawOutputs[0]).replace(dubPkgRoot, shortenedRoot);
+        // adjust object file output paths for all dub projects
+        // optionally put the object files in dubObjsDir
+        if(dubObjsDir.globalDir != "") {
+            foreach(ref target; packageTargets) {
+                target.rawOutputs[0] = buildPath(dubObjsDir.globalDir,
+                                                options.projectPath.deabsolutePath,
+                                                dubObjsDir.targetDir,
+                                                target.rawOutputs[0]);
+            }
+        } else {
+            const dubPkgRoot = buildPath(dubPackage.path).deabsolutePath.stripRight(dirSeparator);
+            const shortenedRoot = baseName(dubPackage.path);
+            foreach(ref target; packageTargets)
+                target.rawOutputs[0] = buildPath(target.rawOutputs[0]).replace(dubPkgRoot, shortenedRoot);
+        }
+
+        // shorten the object file output path for dub-generated dub_test_root.d
+        // (only generated for the main package) in the cache dir (important on Windows)
+        if (isMainPackage) {
+            foreach(ref target; packageTargets) {
+                const p = buildPath(target.rawOutputs[0]);
+                const i = p.indexOf(dirSeparator ~ "__dub_cache__" ~ dirSeparator);
+                if (i > 0)
+                    target.rawOutputs[0] = p[i + 1 .. $];
             }
         }
 

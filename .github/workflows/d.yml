@@ -51,12 +51,14 @@ jobs:
           if "%DC%" == "dmd" set MSVC_ARCH=x86
           call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=%MSVC_ARCH% || exit /b
           :: test
-          dub -q test -- ~@tup ~@make ~@posix ~@javascript ~@lua ~@python ~@ruby
+          set RUNNER_ARGS=~@tup ~@make ~@posix ~@javascript ~@lua ~@python ~@ruby
+          if "%DC%" == "dmd" set RUNNER_ARGS=%RUNNER_ARGS% ~@fails-on-windows-with-dmd
+          dub -q test -- %RUNNER_ARGS%
           if %ERRORLEVEL% NEQ 0 (
             echo.
             echo *** Retrying tests serially ***
             echo.
-            dub -q test -- -s ~@tup ~@make ~@posix ~@javascript ~@lua ~@python ~@ruby || exit /b
+            dub -q test -- -s %RUNNER_ARGS% || exit /b
           )
 
   bootstrap:

@@ -196,17 +196,22 @@ struct DubInfo {
 
         auto packageTargets = targetsFunc()(files, flags, importPaths, stringImportPaths, [], projDir);
 
+        const dubPkgRoot = buildPath(dubPackage.path).deabsolutePath.stripRight(dirSeparator);
+
         // adjust object file output paths for all dub projects
         // optionally put the object files in dubObjsDir
         if(dubObjsDir.globalDir != "") {
+            const shortenedRoot = buildPath(dubObjsDir.globalDir, baseName(dubPackage.path));
             foreach(ref target; packageTargets) {
-                target.rawOutputs[0] = buildPath(dubObjsDir.globalDir,
-                                                options.projectPath.deabsolutePath,
-                                                dubObjsDir.targetDir,
-                                                target.rawOutputs[0]);
+                import std.base64 : Base64URL;
+                import std.digest.sha : sha256Of;
+
+                const cmd = target.shellCommand(options);
+                const string hashstr = Base64URL.encode(sha256Of(cmd)[0 .. $ / 2]).stripRight("=");
+                const targetRoot = buildPath(shortenedRoot, hashstr);
+                target.rawOutputs[0] = buildPath(target.rawOutputs[0]).replace(dubPkgRoot, targetRoot);
             }
         } else {
-            const dubPkgRoot = buildPath(dubPackage.path).deabsolutePath.stripRight(dirSeparator);
             const shortenedRoot = baseName(dubPackage.path);
             foreach(ref target; packageTargets)
                 target.rawOutputs[0] = buildPath(target.rawOutputs[0]).replace(dubPkgRoot, shortenedRoot);

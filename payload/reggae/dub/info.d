@@ -145,8 +145,8 @@ struct DubInfo {
         import std.string: indexOf, stripRight;
 
         const dubPackage = packages[dubPackageIndex];
-        const importPaths = allImportPaths();
-        const stringImportPaths = dubPackage.allOf!(a => a.packagePaths(a.stringImportPaths))(packages);
+        const importPaths = dubPackage.packagePaths(dubPackage.importPaths);
+        const stringImportPaths = dubPackage.packagePaths(dubPackage.stringImportPaths);
         const isMainPackage = dubPackageIndex == 0;
         //the path must be explicit for the other packages, implicit for the "main"
         //package
@@ -288,18 +288,6 @@ struct DubInfo {
             ;
     }
 
-    string[] allImportPaths() @safe nothrow const {
-        import reggae.config: options;
-        import std.algorithm: sorted = sort, uniq;
-        import std.array: array;
-
-        string[] paths;
-        auto rng = packages.map!(a => a.packagePaths(a.importPaths));
-        foreach(p; rng) paths ~= p;
-        auto allPaths = paths ~ options.projectPath;
-        return allPaths.sorted.uniq.array;
-    }
-
     // must be at the very end
     private Target[] allStaticLibrarySources() @trusted /*join*/ nothrow const pure {
         import std.algorithm: filter, map;
@@ -344,25 +332,8 @@ struct DubInfo {
 }
 
 
-private auto packagePaths(in DubPackage dubPackage, in string[] paths) @trusted nothrow {
+private string[] packagePaths(in DubPackage dubPackage, in string[] paths) @trusted nothrow {
     return paths.map!(a => buildPath(dubPackage.path, a)).array;
-}
-
-//@trusted because of map.array
-private string[] allOf(alias F)(in DubPackage pack, in DubPackage[] packages) @trusted nothrow {
-
-    import std.range: chain, only;
-    import std.array: array, front, empty;
-
-    string[] result;
-
-    foreach(dependency; chain(only(pack.name), pack.dependencies)) {
-        auto depPack = packages.find!(a => a.name == dependency);
-        if(!depPack.empty) {
-            result ~= F(depPack.front).array;
-        }
-    }
-    return result;
 }
 
 

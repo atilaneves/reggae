@@ -272,6 +272,14 @@ version(DigitalMars) {
     }
 }
 
+version(unittest)
+private string getSingleSubdir(string parentDir) {
+    import std.array, std.file;
+    auto entries = dirEntries(parentDir, SpanMode.shallow).array;
+    entries.length.should == 1;
+    entries[0].isDir.should == true;
+    return entries[0].name;
+}
 
 @("dub objs option path dependency")
 @Tags("dub", "ninja", "dubObjsDir")
@@ -309,12 +317,12 @@ unittest {
         writelnUt(output);
         ninja.shouldExecuteOk;
 
-        shouldExist(buildPath("objsdir",
-                              testPath.deabsolutePath,
-                              "foo" ~ exeExt ~ ".objs",
-                              testPath.deabsolutePath,
-                              "bar",
-                              "source_bar" ~ objExt));
+        const barObjsDir = buildPath(dubObjsDir, "bar");
+        shouldExist(barObjsDir);
+        const hashDir = getSingleSubdir(barObjsDir);
+        const objPath = buildPath(hashDir, "source_bar" ~ objExt);
+        shouldExist(objPath);
+        shouldExist(objPath ~ ".dep");
     }
 }
 
@@ -349,12 +357,12 @@ unittest {
 
         ninja.shouldExecuteOk;
 
-        const dubNullDir = buildPath(dubPackagesDir, "dubnull-0.0.1/dubnull").deabsolutePath;
-        shouldExist(buildPath("objsdir",
-                              testPath.deabsolutePath,
-                              "foo" ~ exeExt ~ ".objs",
-                              dubNullDir,
-                              "source_dubnull" ~ objExt));
+        const dubNullObjsDir = buildPath(dubObjsDir, "dubnull");
+        shouldExist(dubNullObjsDir);
+        const hashDir = getSingleSubdir(dubNullObjsDir);
+        const objPath = buildPath(hashDir, "source_dubnull" ~ objExt);
+        shouldExist(objPath);
+        shouldExist(objPath ~ ".dep");
     }
 }
 

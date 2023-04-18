@@ -95,10 +95,19 @@ NinjaEntry[] defaultRules(in Options options) @safe pure {
             else
                 enum isMSVC = false;
 
-            if (isMSVC)
+            if (isMSVC) {
                 paramLines ~= "deps = msvc";
-            else
-                paramLines ~= ["deps = gcc", "depfile = $out.dep"];
+            } else {
+                // Disable the ninja deps database (.ninja_deps file) with --dub-objs-dir
+                // to enable sharing the build artifacts (incl. .dep files) across reggae
+                // builds with identical --dub-objs-dir.
+                // Ninja otherwise complains about local .ninja_deps being out of date when
+                // the shared build output is more recent, and rebuilds.
+                if (options.dubObjsDir.length == 0)
+                    paramLines ~= "deps = gcc";
+
+                paramLines ~= "depfile = $out.dep";
+            }
         }
 
         string getDescription() {

@@ -924,3 +924,33 @@ unittest {
         ninja.shouldExecuteOk;
     }
 }
+
+
+@("extra dflags")
+@Tags("dub", "ninja")
+unittest {
+    import std.file: readText;
+    import std.string: replace;
+
+    with(immutable ReggaeSandbox()) {
+        writeFile(
+            "dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "executable"`,
+                `lflags "-some_flag"`,
+            ],
+        );
+        writeFile(
+            "source/app.d",
+            [
+                q{void main() {}},
+            ],
+        );
+
+        runReggae("-b", "ninja", "--dub-build-type=plain", "--dflag=-Xcc=-fuse-ld=lld");
+        readText(buildPath(currentTestPath, "build.ninja"))
+            .replace(" -m64", "") // the model is added implicitly for DMD on Windows
+            .shouldContain("-L-some_flag -Xcc=-fuse-ld=lld");
+    }
+}

@@ -38,6 +38,7 @@ struct Dub {
     import dub.project: Project;
 
     private Project _project;
+    private const string[] _extraDFlags;
 
     this(in Options options) @safe {
         import reggae.path: buildPath;
@@ -48,6 +49,7 @@ struct Dub {
         enforce(path.exists, "Cannot create dub instance without dub.selections.json");
 
         _project = project(ProjectPath(options.projectPath));
+        _extraDFlags = options.dflags.dup;
     }
 
     auto getPackage(in string dubPackage, in string version_) @trusted /*dub*/ {
@@ -117,7 +119,7 @@ struct Dub {
     (from!"dub.generators.generator".GeneratorSettings settings, in string config)
         @trusted  // dub
     {
-        auto generator = new InfoGenerator(_project);
+        auto generator = new InfoGenerator(_project, _extraDFlags);
         settings.config = config;
         generator.generate(settings);
         return DubInfo(generator.dubPackages);
@@ -272,9 +274,11 @@ class InfoGenerator: ProjectGenerator {
     import dub.compilers.buildsettings: BuildSettings;
 
     DubPackage[] dubPackages;
+    private const string[] _extraDFlags;
 
-    this(Project project) @trusted {
+    this(Project project, const string[] extraDFlags) @trusted {
         super(project);
+        _extraDFlags = extraDFlags;
     }
 
     /** Copied from the dub documentation:
@@ -365,15 +369,16 @@ class InfoGenerator: ProjectGenerator {
         }
     }
 
-    private static adjustMainPackage(ref DubPackage pkg,
-                                     in GeneratorSettings settings,
-                                     in BuildSettings buildSettings)
+    private void adjustMainPackage(ref DubPackage pkg,
+                                   in GeneratorSettings settings,
+                                   in BuildSettings buildSettings) const
     {
         import dub.compilers.dmd: DMDCompiler;
         import dub.compilers.ldc: LDCCompiler;
         import std.algorithm.searching: canFind, startsWith;
         import std.algorithm.iteration: filter, map;
         import std.array: array;
+        import std.range: chain;
 
         // this is copied from dub's DMDCompiler.invokeLinker since
         // unfortunately that function modifies the arguments before
@@ -386,8 +391,9 @@ class InfoGenerator: ProjectGenerator {
         if(settings.platform.platform.canFind("linux"))
             pkg.lflags = "-L--no-as-needed" ~ pkg.lflags;
 
+        auto dflags = buildSettings.dflags.chain(_extraDFlags);
         pkg.lflags ~= settings.platform.compiler == "ldc"
-            ? buildSettings.dflags.filter!(LDCCompiler.isLinkerDFlag).array // ldc2 / ldmd2
-            : buildSettings.dflags.filter!(DMDCompiler.isLinkerDFlag).array;
+            ? dflags.filter!(LDCCompiler.isLinkerDFlag).array // ldc2 / ldmd2
+            : dflags.filter!(DMDCompiler.isLinkerDFlag).array;
     }
 }

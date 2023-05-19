@@ -574,20 +574,22 @@ struct Command {
         return params.get(key, ifNotFound).map!(a => a.replace(gProjdir, projectPath)).array;
     }
 
-    static private string getDefaultDCompilerModelArg(in Options options) @safe pure nothrow {
+    static private string[] getDefaultDCompilerModelArg(in Options options) @safe pure nothrow {
         version(Windows) {
             import std.path: baseName, stripExtension;
             const isDMD = baseName(stripExtension(options.dCompiler)) == "dmd";
-            return isDMD ? " -m32mscoff" : null;
+            return isDMD ? ["-m32mscoff"] : null;
         } else {
             return null;
         }
     }
 
-    static string builtinTemplate(in CommandType type,
-                                  in Language language,
-                                  in Options options,
-                                  in Flag!"dependencies" deps = Yes.dependencies) @safe pure {
+    static string[] builtinTemplate(in CommandType type,
+                                    in Language language,
+                                    in Options options,
+                                    in Flag!"dependencies" deps = Yes.dependencies) @safe pure {
+
+        import std.algorithm : startsWith, endsWith;
 
         final switch(type) with(CommandType) {
             case phony:
@@ -598,14 +600,14 @@ struct Command {
 
             case link: {
                 version(Windows)
-                    immutable cArgs = " /nologo /Fo$out $flags $in";
+                    auto cArgs = ["/nologo", "/Fo$out", "$flags", "$in"];
                 else
-                    immutable cArgs = " -o $out $flags $in";
+                    auto cArgs = ["-o", "$out", "$flags", "$in"];
 
                 final switch(language) with(Language) {
                     case D:
                     case unknown:
-                        return options.dCompiler ~ getDefaultDCompilerModelArg(options) ~ " -of$out $flags $in";
+                        return options.dCompiler ~ getDefaultDCompilerModelArg(options) ~ ["-of$out", "$flags", "$in"];
                     case Cplusplus:
                         return options.cppCompiler ~ cArgs;
                     case C:
@@ -617,36 +619,50 @@ struct Command {
                 throw new Exception("Command type 'code' has no built-in template");
 
             case compile:
-                return compileTemplate(type, language, options, deps).replace("$out $in", "$out -c $in");
+
+                auto template_ = compileTemplate(type, language, options, deps);
+
+                string[] outThenIn() {
+                    foreach(i; 0 .. template_.length - 1) {
+                        if(template_[i].endsWith("$out") && template_[i+1].startsWith("$in"))
+                           return template_[i .. i + 2];
+                    }
+                    return [];
+                }
+
+                const toReplace = outThenIn;
+                return toReplace
+                    ? template_.replace(toReplace, [toReplace[0], "-c", toReplace[1]])
+                    : template_;
 
             case compileAndLink:
                 return compileTemplate(type, language, options, deps);
         }
     }
 
-    private static string compileTemplate(in CommandType type,
-                                          in Language language,
-                                          in Options options,
-                                          in Flag!"dependencies" deps = Yes.dependencies) @safe pure {
+    private static string[] compileTemplate(in CommandType type,
+                                            in Language language,
+                                            in Options options,
+                                            in Flag!"dependencies" deps = Yes.dependencies) @safe pure {
         version(Windows)
         {
-            immutable ccParams =
-                " /nologo $flags $includes" ~ (deps ? " /showIncludes" : null) ~ " /Fo$out $in";
+            auto ccParams =
+                ["/nologo", "$flags", "$includes"] ~ (deps ? ["/showIncludes"] : null) ~ ["/Fo$out", "$in"];
         }
         else
         {
-            immutable ccParams = deps
-                ? " $flags $includes -MMD -MT $out -MF $out.dep -o $out $in"
-                : " $flags $includes -o $out $in";
+            auto ccParams = deps
+                ? ["$flags", "$includes", "-MMD", "-MT", "$out", "-MF", "$out.dep", "-o", "$out", "$in"]
+                : ["$flags", "$includes", "-o", "$out", "$in"];
         }
 
         final switch(language) with(Language) {
             case D: {
                 const modelArg = getDefaultDCompilerModelArg(options);
                 return deps
-                    ? buildPath(".reggae/dcompile") ~ " --objFile=$out --depFile=$out.dep " ~
-                      options.dCompiler ~ modelArg ~ " $flags $includes $stringImports $in"
-                    : options.dCompiler ~ modelArg ~ " $flags $includes $stringImports -of$out $in";
+                    ? buildPath(".reggae/dcompile") ~ ["--objFile=$out", "--depFile=$out.dep"] ~
+                      options.dCompiler ~ modelArg ~ ["$flags", "$includes", "$stringImports", "$in"]
+                    : options.dCompiler ~ modelArg ~ ["$flags", "$includes", "$stringImports", "-of$out", "$in"];
             }
             case Cplusplus:
                 return options.cppCompiler ~ ccParams;
@@ -664,21 +680,34 @@ struct Command {
                           Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
 
         import std.conv: text;
+        import std.string: join;
+        import std.process : escapeShellCommand;
+        import std.algorithm : map, canFind;
+        import std.array : array;
 
         assert(isDefaultCommand, text("This command is not a default command: ", this));
-        string cmd;
-        try
-            cmd = builtinTemplate(type, language, options, deps);
-        catch(Exception ex) {
-            throw new Exception(text(ex.msg, "\noutputs: ", outputs, "\ninputs: ", inputs));
-        }
+
+        auto cmd = () {
+            try
+                return
+                    builtinTemplate(type, language, options, deps)
+                    .array;
+            catch(Exception ex)
+                throw new Exception(text(ex.msg, "\noutputs: ", outputs, "\ninputs: ", inputs));
+        }();
 
         foreach(key; params.keys) {
-            immutable var = "$" ~ key;
-            immutable value = getParams(options.projectPath, key, []).join(" ");
+            const var = "$" ~ key;
+            const value = getParams(options.projectPath, key, []);
             cmd = cmd.replace(var, value);
         }
-        return expandCmd(cmd, options.projectPath, outputs, inputs);
+
+        auto cmdString = cmd
+            .map!(e => e.canFind(" ") ? escapeShellCommand(e) : e)
+            .join(" ");
+
+        // FIXME: expandCmd should take string[]
+        return expandCmd(cmdString, options.projectPath, outputs, inputs);
     }
 
     ///returns a command string to be run by the shell

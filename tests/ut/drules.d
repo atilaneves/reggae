@@ -45,20 +45,22 @@ import std.array;
 }
 
 version(DigitalMars) {
-                                                                                                                          @("DCompile include paths Make") unittest {
-                                                                                                                              import reggae.config: gDefaultOptions;
+    @("DCompile include paths Make")
+    unittest {
 
-                                                                                                                              auto build = Build(objectFile(SourceFile("path/to/src/foo.d"),
-                                                                                                                                                             Flags("-O"),
-                                                                                                                                                             ImportPaths(["path/to/src", "other/path"])));
-                                                                                                                              version(Windows)
-                                                                                                                                  enum defaultDCModel = " -m32mscoff";
-                                                                                                                              else
-                                                                                                                                  enum defaultDCModel = null;
-                                                                                                                              enum objPath = buildPath("path/to/src/foo" ~ objExt);
-                                                                                                                              build.targets.array[0].shellCommand(gDefaultOptions.withProjectPath("/tmp/myproject")).shouldEqual(
-                                                                                                                                  buildPath(".reggae/dcompile") ~ " --objFile=" ~ objPath ~ " --depFile=" ~ objPath ~ ".dep dmd" ~ defaultDCModel ~ " -O " ~
-                                                                                                                                  "-I" ~ buildPath("/tmp/myproject/path/to/src") ~ " -I" ~ buildPath("/tmp/myproject/other/path") ~ "  " ~ buildPath("/tmp/myproject/path/to/src/foo.d"));
+        import reggae.config: gDefaultOptions;
+
+        auto build = Build(objectFile(SourceFile("path/to/src/foo.d"),
+                                      Flags("-O"),
+                                      ImportPaths(["path/to/src", "other/path"])));
+        version(Windows)
+            enum defaultDCModel = " -m32mscoff";
+        else
+            enum defaultDCModel = null;
+        enum objPath = buildPath("path/to/src/foo" ~ objExt);
+        build.targets.array[0].shellCommand(gDefaultOptions.withProjectPath("/tmp/myproject")).shouldEqual(
+            buildPath(".reggae/dcompile") ~ " --objFile=" ~ objPath ~ " --depFile=" ~ objPath ~ ".dep dmd" ~ defaultDCModel ~ " -O " ~
+            "-I" ~ buildPath("/tmp/myproject/path/to/src") ~ " -I" ~ buildPath("/tmp/myproject/other/path") ~ " " ~ buildPath("/tmp/myproject/path/to/src/foo.d"));
     }
 }
 

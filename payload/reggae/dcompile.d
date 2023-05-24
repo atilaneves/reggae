@@ -198,7 +198,7 @@ private auto invokeCompiler(in string[] args, in string objFile) @safe {
             const rspFile = objFile ~ ".dcompile.rsp"; // Ninja uses `<objFile>.rsp`, don't collide
             mkdirRecurse(dirName(rspFile));
             write(rspFile, rspFileContent);
-            const res = execute([args[0], "@" ~ rspFile], /*env=*/null, Config.stderrPassThrough);
+            const res = execute([quoteArgIfNeeded(args[0]), "@" ~ rspFile], /*env=*/null, Config.stderrPassThrough);
             remove(rspFile);
             return res;
         }

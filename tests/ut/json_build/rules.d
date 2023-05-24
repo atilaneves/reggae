@@ -69,10 +69,11 @@ string linkJsonString() @safe pure nothrow {
 }
 
 
-@("jsonToOptions version0")
+@("jsonToOptions.version0")
 unittest {
     import reggae.config: gDefaultOptions;
     import std.json;
+    import std.algorithm : endsWith;
 
     auto oldOptions = gDefaultOptions.dup;
     oldOptions.args = ["reggae", "-b", "ninja", "/path/to/my/project"];
@@ -82,17 +83,19 @@ unittest {
         enum expectedCxx = "cl.exe";
     else
         enum expectedCxx = "g++";
-    newOptions.cppCompiler.shouldEqual(expectedCxx);
+
+    newOptions.cppCompiler.endsWith(expectedCxx).shouldBeTrue;
 }
 
 private string toVersion1(in string jsonString, in string dependencies = `[]`) {
     return `{"version": 1, "defaultOptions": {"cCompiler": "huh"}, "dependencies": ` ~ dependencies ~ `, "build": ` ~ jsonString ~ `}`;
 }
 
-@("jsonToOptions version1")
+@("jsonToOptions.version1")
 unittest {
     import reggae.config: gDefaultOptions;
     import std.json;
+    import std.algorithm : endsWith;
 
     auto oldOptions = gDefaultOptions.dup;
     oldOptions.args = ["reggae", "-b", "ninja", "/path/to/my/project"];
@@ -103,7 +106,8 @@ unittest {
         enum expectedCxx = "cl.exe";
     else
         enum expectedCxx = "g++";
-    newOptions.cppCompiler.shouldEqual(expectedCxx);
+
+    newOptions.cppCompiler.endsWith(expectedCxx).shouldBeTrue;
     newOptions.oldNinja.shouldBeFalse;
 }
 

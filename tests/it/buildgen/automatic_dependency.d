@@ -8,7 +8,7 @@ import reggae.path: buildPath;
 version(DigitalMars):
 
 static foreach (backend; ["ninja", "make", "tup", "binary"])
-    @("C++ dependencies get automatically computed with objectFile (" ~ backend ~ ")")
+    @("object.cpp." ~ backend)
     @Tags(backend)
     unittest {
         import reggae.config: options;
@@ -30,7 +30,7 @@ static foreach (backend; ["ninja", "make", "tup", "binary"])
     }
 
 static foreach (backend; ["ninja", "make", "tup", "binary"])
-    @("D dependencies get automatically computed with objectFile (" ~ backend ~ ")")
+    @("object.d." ~ backend)
     @Tags(backend)
     unittest {
         import reggae.config: options;

@@ -132,7 +132,7 @@ Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
         .map!(a => Target(outputFileName(a),
                           command(a),
                           a.map!(a => Target(a)).array,
-                          implicits))
+                          implicits ~ compilerBinary(srcFiles[0])))
         .array;
 }
 
@@ -239,7 +239,7 @@ private Target[] dlangTargetTogether(
     const outputFileName = toFileName(outputNameForSrcFiles);
     auto command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
 
-    return [Target(outputFileName, command, srcFiles.map!(a => Target(a)).array, implicits)];
+    return [Target(outputFileName, command, srcFiles.map!(a => Target(a)).array, implicits ~ compilerBinary(srcFiles[0]))];
 }
 
 

@@ -6,50 +6,51 @@ import tests.it.runtime;
 version(DigitalMars):
 version(linux):
 
+static foreach(backend; ["ninja", "make", "binary"]) {
 
-@ShouldFail
-@("change.compiler")
-@Tags("ninja")
-unittest {
-    with(immutable ReggaeSandbox()) {
+    @("change.compiler." ~ backend)
+    @Tags(backend)
+    unittest {
+        with(immutable ReggaeSandbox()) {
 
-        auto execute(string[] args) {
-            import std.process: execute_ = execute, Config;
-            string[string] env;
-            return execute_(args, env, Config.none, size_t.max, testPath);
+            auto execute(string[] args) {
+                import std.process: execute_ = execute, Config;
+                string[string] env;
+                return execute_(args, env, Config.none, size_t.max, testPath);
+            }
+
+            void buildFakeCompiler(int returnCode= 0) {
+                enum fakeCompilerSrc = "compiler.d";
+                writeFile(fakeCompilerSrc, fakeCompilerCode(returnCode));
+
+                execute(["dmd", inSandboxPath(fakeCompilerSrc)])
+                    .status
+                    .should == 0;
+            }
+
+            buildFakeCompiler;
+            const fakeCompiler = inSandboxPath("compiler");
+            execute([fakeCompiler, "-h"]).status.should == 0;
+
+            writeFile("reggaefile.d", q{
+                import reggae;
+                alias mylib = staticLibrary!("mylib", Sources!"src");
+                mixin build!mylib;
+            });
+
+            writeFile("src/foo.d", q{
+                void foo() {}
+            });
+
+            runReggae("-b", backend, "--dc=" ~ fakeCompiler);
+            mixin(backend).shouldExecuteOk;
+            mixin(backend).shouldExecuteOk; // no-op build
+
+            // change the compiler, the code should rebuild
+            buildFakeCompiler(42);
+            // should fail because the compiler always fails now
+            mixin(backend).shouldFailToExecute(testPath);
         }
-
-        void buildFakeCompiler(int returnCode= 0) {
-            enum fakeCompilerSrc = "compiler.d";
-            writeFile(fakeCompilerSrc, fakeCompilerCode(returnCode));
-
-            execute(["dmd", inSandboxPath(fakeCompilerSrc)])
-                .status
-                .should == 0;
-        }
-
-        buildFakeCompiler;
-        const fakeCompiler = inSandboxPath("compiler");
-        execute([fakeCompiler, "-h"]).status.should == 0;
-
-        writeFile("reggaefile.d", q{
-            import reggae;
-            alias mylib = staticLibrary!("mylib", Sources!"src");
-            mixin build!mylib;
-        });
-
-        writeFile("src/foo.d", q{
-            void foo() {}
-        });
-
-        runReggae("-b", "ninja", "--dc=" ~ fakeCompiler);
-        ninja.shouldExecuteOk;
-        ninja.shouldExecuteOk; // no-op build
-
-        // change the compiler, the code should rebuild
-        buildFakeCompiler(42);
-        // should fail because the compiler always fails now
-        ninja.shouldFailToExecute(testPath);
     }
 }
 

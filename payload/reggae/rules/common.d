@@ -31,7 +31,6 @@ Target[] objectFiles(alias sourcesFunc = Sources!(),
                      StringImportPaths stringImports = StringImportPaths(),
     )() @trusted {
 
-    import std.stdio;
     const srcFiles = sourcesToFileNames!(sourcesFunc);
     return srcFilesToObjectTargets(srcFiles, flags, includes, stringImports);
 }
@@ -52,9 +51,42 @@ Target objectFile(in SourceFile srcFile,
                   Target[] implicits = [],
                   in string projDir = "$project") @safe pure {
 
+
     auto cmd = compileCommand(srcFile.value, flags.value, includePaths.value, stringImportPaths.value, projDir);
-    return Target(srcFile.value.objFileName, cmd, [Target(srcFile.value)], implicits);
+
+    return Target(srcFile.value.objFileName, cmd, [Target(srcFile.value)], implicits ~ compilerBinary(srcFile.value));
 }
+
+
+package Target[] compilerBinary()(in string srcFile) {
+    import reggae.config : options;
+
+    // reggae.config takes two forms: one when compiling reggae
+    // itself, where it's fake and never used except in
+    // testing. Here `options` is a function that returns a
+    // mutable object.  Another form is "IRL" where `config.d` is
+    // generated at "reggae-time" and where `options` is an
+    // immutable struct.
+    // Since this function is `pure`, testing to see if we can
+    // access `options.dCompiler` differentiates between the two.
+    static if(!__traits(compiles, () @safe pure => options.dCompiler)) {
+        return [];
+    } else {
+        const language = getLanguage(srcFile);
+        switch(language) with(Language) {
+            default:
+                return [];
+            case D:
+                return [options.dCompiler.Target];
+            case Cplusplus:
+                return [options.cppCompiler.Target];
+            case C:
+                return [options.cCompiler.Target];
+        }
+    }
+}
+
+
 
 /**
  A binary executable. The same as calling objectFiles and link
@@ -127,7 +159,6 @@ Target staticLibrary(string name,
                      alias dependenciesFunc = () { Target[] ts; return ts; })
     ()
 {
-
     return staticLibraryTarget(
         name,
         objectFiles!(sourcesFunc, compilerFlags, includes, stringImports)() ~ dependenciesFunc()
@@ -383,14 +414,40 @@ string removeProjectPath(in string projectPath, in string path) @safe pure {
     return () @trusted { return path.absolutePath.relativePath(projectPath.absolutePath); }();
 }
 
+version(unittest) {
+    public Command compileCommand(
+        in string srcFileName,
+        in string[] flags = [],
+        in string[] includePaths = [],
+        in string[] stringImportPaths = [],
+        in string projDir = "$project",
+        Flag!"justCompile" justCompile = Yes.justCompile)
+        @safe pure
+    {
+        return compileCommandImpl(srcFileName, flags, includePaths, stringImportPaths, projDir, justCompile);
+    }
+} else {
+    package Command compileCommand(
+        in string srcFileName,
+        in string[] flags = [],
+        in string[] includePaths = [],
+        in string[] stringImportPaths = [],
+        in string projDir = "$project",
+        Flag!"justCompile" justCompile = Yes.justCompile)
+        @safe pure
+    {
+        return compileCommandImpl(srcFileName, flags, includePaths, stringImportPaths, projDir, justCompile);
+    }
+}
 
 
-Command compileCommand(in string srcFileName,
-                       in string[] flags = [],
-                       in string[] includePaths = [],
-                       in string[] stringImportPaths = [],
-                       in string projDir = "$project",
-                       Flag!"justCompile" justCompile = Yes.justCompile)
+private Command compileCommandImpl(
+    in string srcFileName,
+    in string[] flags = [],
+    in string[] includePaths = [],
+    in string[] stringImportPaths = [],
+    in string projDir = "$project",
+    Flag!"justCompile" justCompile = Yes.justCompile)
     @safe pure
 {
 

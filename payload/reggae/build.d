@@ -673,11 +673,14 @@ struct Command {
         }
     }
 
-    string defaultCommand(in Options options,
-                          in Language language,
-                          in string[] outputs,
-                          in string[] inputs,
-                          Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
+    private string defaultCommand(
+        in Options options,
+        in Language language,
+        in string[] outputs,
+        in string[] inputs,
+        Flag!"dependencies" deps = Yes.dependencies)
+        @safe pure const
+    {
 
         import std.conv: text;
         import std.string: join;

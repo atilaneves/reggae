@@ -82,6 +82,10 @@ struct ReggaeSandbox {
         copyProjectFiles(fromPath, toPath);
     }
 
+    string[] binary(string[] args = []) {
+        import tests.it: binary;
+        return .binary(testPath, args);
+    }
 
 private:
 

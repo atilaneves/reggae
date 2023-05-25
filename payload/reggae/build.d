@@ -328,7 +328,6 @@ struct Target {
         return _outputs.map!(o => expandOutput(o, projectPath)).array;
     }
 
-    //@trusted because of replace
     string rawCmdString(in string projectPath = "") @safe pure const {
         return _command.rawCmdString(projectPath);
     }

@@ -51,10 +51,20 @@ Target objectFile(in SourceFile srcFile,
                   Target[] implicits = [],
                   in string projDir = "$project") @safe pure {
 
+    auto cmd = compileCommand(
+        srcFile.value,
+        flags.value,
+        includePaths.value,
+        stringImportPaths.value,
+        projDir
+    );
 
-    auto cmd = compileCommand(srcFile.value, flags.value, includePaths.value, stringImportPaths.value, projDir);
-
-    return Target(srcFile.value.objFileName, cmd, [Target(srcFile.value)], implicits ~ compilerBinary(srcFile.value));
+    return Target(
+        srcFile.value.objFileName,
+        cmd,
+        [Target(srcFile.value)],
+        implicits ~ compilerBinary(srcFile.value)
+    );
 }
 
 

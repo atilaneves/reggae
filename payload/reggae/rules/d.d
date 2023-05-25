@@ -113,11 +113,13 @@ Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
     if(srcFiles.empty) return [];
 
     auto command(in string[] files) {
-        return compileCommand(files[0].packagePath ~ ".d",
-                              flags,
-                              importPaths,
-                              stringImportPaths,
-                              projDir);
+        return compileCommand(
+            files[0].packagePath ~ ".d",
+            flags,
+            importPaths,
+            stringImportPaths,
+            projDir
+        );
     }
 
     // the object file for a D package containing pkgFiles
@@ -127,12 +129,18 @@ Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
         return objFileName(path);
     }
 
+    auto target(in string[] files) {
+        return Target(
+            outputFileName(files),
+            command(files),
+            files.map!(a => Target(a)).array,
+            implicits ~ compilerBinary(srcFiles[0]),
+        );
+    }
+
     return srcFiles
         .byPackage
-        .map!(a => Target(outputFileName(a),
-                          command(a),
-                          a.map!(a => Target(a)).array,
-                          implicits ~ compilerBinary(srcFiles[0])))
+        .map!target
         .array;
 }
 
@@ -238,12 +246,15 @@ private Target[] dlangTargetTogether(
 
     const outputFileName = toFileName(outputNameForSrcFiles);
     auto command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
+    auto target = Target(
+        outputFileName,
+        command,
+        srcFiles.map!(a => Target(a)).array,
+        implicits ~ compilerBinary(srcFiles[0]),
+    );
 
-    return [Target(outputFileName, command, srcFiles.map!(a => Target(a)).array, implicits ~ compilerBinary(srcFiles[0]))];
+    return [target];
 }
-
-
-
 
 
 

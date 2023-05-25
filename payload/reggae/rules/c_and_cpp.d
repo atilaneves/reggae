@@ -88,12 +88,14 @@ Target unityTarget(R1, R2)(in ExeName exeName,
 
     auto justFileName = srcFiles.map!getLanguage.front == Language.C ? "unity.c" : "unity.cpp";
     auto unityFileName = buildPath(gBuilddir, objDirOf(Target(exeName.value)), justFileName);
-    auto command = compileCommand(unityFileName,
-                                   flags.value,
-                                   includes.value,
-                                   [],
-                                   projectPath,
-                                   No.justCompile);
+    auto command = compileCommand(
+        unityFileName,
+        flags.value,
+        includes.value,
+        [],
+        projectPath,
+        No.justCompile
+    );
     auto unityFileTarget = Target.phony(unityFileName, "", [], srcFiles.map!(a => Target(a)).array);
     return Target(exeName.value, command, unityFileTarget ~ dependencies.array);
 }

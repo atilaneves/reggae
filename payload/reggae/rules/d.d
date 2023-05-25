@@ -112,14 +112,6 @@ Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
 
     if(srcFiles.empty) return [];
 
-    auto command(in string[] files) {
-        return compileCommand(files[0].packagePath ~ ".d",
-                              flags,
-                              importPaths,
-                              stringImportPaths,
-                              projDir);
-    }
-
     // the object file for a D package containing pkgFiles
     static string outputFileName(in string[] pkgFiles) {
         import std.path: baseName;
@@ -127,12 +119,26 @@ Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
         return objFileName(path);
     }
 
+    auto target(in string[] files) {
+        auto incompleteTarget = Target(
+            outputFileName(files),
+            "", // filled in by compilerTarget below
+            files.map!(a => Target(a)).array,
+            implicits,
+        );
+        return compileTarget(
+            incompleteTarget,
+            files[0].packagePath ~ ".d",
+            flags,
+            importPaths,
+            stringImportPaths,
+            projDir,
+        );
+    }
+
     return srcFiles
         .byPackage
-        .map!(a => Target(outputFileName(a),
-                          command(a),
-                          a.map!(a => Target(a)).array,
-                          implicits))
+        .map!target
         .array;
 }
 
@@ -237,13 +243,25 @@ private Target[] dlangTargetTogether(
     }
 
     const outputFileName = toFileName(outputNameForSrcFiles);
-    auto command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
+    auto incompleteTarget = Target(
+        outputFileName,
+        "", // filled in by compilerTarget below
+        srcFiles.map!(a => Target(a)).array,
+        implicits,
+    );
 
-    return [Target(outputFileName, command, srcFiles.map!(a => Target(a)).array, implicits)];
+    auto target = compileTarget(
+        incompleteTarget,
+        srcFiles[0],
+        flags,
+        importPaths,
+        stringImportPaths,
+        projDir,
+    );
+
+
+    return [target];
 }
-
-
-
 
 
 

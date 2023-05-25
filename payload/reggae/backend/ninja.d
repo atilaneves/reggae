@@ -256,7 +256,10 @@ private:
         }
 
         const ruleName = cmdTypeToNinjaRuleName(target.getCommandType, target.getLanguage);
-        const buildLine = buildLine(target, ruleName, /*includeImplicitInputs=*/false);
+        // includeImplicitInputs used to be set to `false` here, and I don't know why.
+        // No tests fail if set to true, and one test in particular
+        // (tests.it.runtime.dependencies.ninja) *requires* it to pass.
+        const buildLine = buildLine(target, ruleName, /*includeImplicitInputs=*/true);
 
         buildEntries ~= NinjaEntry(buildLine, paramLines);
     }

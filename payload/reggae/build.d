@@ -328,7 +328,6 @@ struct Target {
         return _outputs.map!(o => expandOutput(o, projectPath)).array;
     }
 
-    //@trusted because of replace
     string rawCmdString(in string projectPath = "") @safe pure const {
         return _command.rawCmdString(projectPath);
     }
@@ -673,11 +672,14 @@ struct Command {
         }
     }
 
-    string defaultCommand(in Options options,
-                          in Language language,
-                          in string[] outputs,
-                          in string[] inputs,
-                          Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
+    private string defaultCommand(
+        in Options options,
+        in Language language,
+        in string[] outputs,
+        in string[] inputs,
+        Flag!"dependencies" deps = Yes.dependencies)
+        @safe pure const
+    {
 
         import std.conv: text;
         import std.string: join;

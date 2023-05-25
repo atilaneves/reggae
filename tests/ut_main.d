@@ -60,4 +60,5 @@ mixin runTestsMain!(
     "tests.it.runtime",
     "tests.it.runtime.dub",
     "tests.it.runtime.issues",
+    "tests.it.runtime.dependencies",
 );

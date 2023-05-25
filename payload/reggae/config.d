@@ -50,10 +50,6 @@ void setOptions(Options options) {
     gOptions = options;
 }
 
-void setDefaultOptions() {
-    gOptions = gDefaultOptions.dup;
-}
-
 enum userVars = AssocList!(string, string)();
 
 version(minimal) {}

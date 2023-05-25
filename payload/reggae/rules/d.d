@@ -112,16 +112,6 @@ Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
 
     if(srcFiles.empty) return [];
 
-    auto command(in string[] files) {
-        return compileCommand(
-            files[0].packagePath ~ ".d",
-            flags,
-            importPaths,
-            stringImportPaths,
-            projDir
-        );
-    }
-
     // the object file for a D package containing pkgFiles
     static string outputFileName(in string[] pkgFiles) {
         import std.path: baseName;
@@ -130,11 +120,19 @@ Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
     }
 
     auto target(in string[] files) {
-        return Target(
+        auto incompleteTarget = Target(
             outputFileName(files),
-            command(files),
+            "", // filled in by compilerTarget below
             files.map!(a => Target(a)).array,
-            implicits ~ compilerBinary(srcFiles[0]),
+            implicits,
+        );
+        return compileTarget(
+            incompleteTarget,
+            files[0].packagePath ~ ".d",
+            flags,
+            importPaths,
+            stringImportPaths,
+            projDir,
         );
     }
 
@@ -245,13 +243,22 @@ private Target[] dlangTargetTogether(
     }
 
     const outputFileName = toFileName(outputNameForSrcFiles);
-    auto command = compileCommand(srcFiles[0], flags, importPaths, stringImportPaths, projDir);
-    auto target = Target(
+    auto incompleteTarget = Target(
         outputFileName,
-        command,
+        "", // filled in by compilerTarget below
         srcFiles.map!(a => Target(a)).array,
-        implicits ~ compilerBinary(srcFiles[0]),
+        implicits,
     );
+
+    auto target = compileTarget(
+        incompleteTarget,
+        srcFiles[0],
+        flags,
+        importPaths,
+        stringImportPaths,
+        projDir,
+    );
+
 
     return [target];
 }

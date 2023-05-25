@@ -51,19 +51,20 @@ Target objectFile(in SourceFile srcFile,
                   Target[] implicits = [],
                   in string projDir = "$project") @safe pure {
 
-    auto cmd = compileCommand(
+    auto incompleteTarget = Target(
+        srcFile.value.objFileName,
+        "", // filled in below by compileTarget
+        [Target(srcFile.value)],
+        implicits ~ compilerBinary(srcFile.value)
+    );
+
+    return compileTarget(
+        incompleteTarget,
         srcFile.value,
         flags.value,
         includePaths.value,
         stringImportPaths.value,
         projDir
-    );
-
-    return Target(
-        srcFile.value.objFileName,
-        cmd,
-        [Target(srcFile.value)],
-        implicits ~ compilerBinary(srcFile.value)
     );
 }
 
@@ -436,20 +437,38 @@ version(unittest) {
     {
         return compileCommandImpl(srcFileName, flags, includePaths, stringImportPaths, projDir, justCompile);
     }
-} else {
-    package Command compileCommand(
-        in string srcFileName,
-        in string[] flags = [],
-        in string[] includePaths = [],
-        in string[] stringImportPaths = [],
-        in string projDir = "$project",
-        Flag!"justCompile" justCompile = Yes.justCompile)
-        @safe pure
-    {
-        return compileCommandImpl(srcFileName, flags, includePaths, stringImportPaths, projDir, justCompile);
-    }
 }
 
+// The reason this is needed is to have one and only one API for creating
+// a compilation target. Not all code goes through `objectFile` above, because
+// for D compilation can happen all-at-once, per-package, or per-module. We want
+// to add the compiler binary to the list of implicit dependencies, so this function
+// takes a target that wants to add a compilation command to it, and we also add
+// the compiler to the implicit dependencies.
+package Target compileTarget(
+    Target target,
+    in string srcFileName,
+    in string[] flags = [],
+    in string[] includePaths = [],
+    in string[] stringImportPaths = [],
+    in string projDir = "$project",
+    Flag!"justCompile" justCompile = Yes.justCompile)
+    @safe pure
+{
+    return Target(
+        target.rawOutputs,
+        compileCommandImpl(
+            srcFileName,
+            flags,
+            includePaths,
+            stringImportPaths,
+            projDir,
+            justCompile,
+        ),
+        target.dependencyTargets,
+        target.implicitTargets ~ compilerBinary(target.dependencyTargets[0].rawOutputs[0]),
+    );
+}
 
 private Command compileCommandImpl(
     in string srcFileName,

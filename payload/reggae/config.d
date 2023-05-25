@@ -40,7 +40,7 @@ immutable Options gDefaultOptions = Options(Backend.ninja,
             false,
 );
 
-Options gOptions = gDefaultOptions.dup;
+private Options gOptions = gDefaultOptions.dup;
 
 Options options() @safe nothrow {
     return gOptions;

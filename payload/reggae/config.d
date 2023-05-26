@@ -40,7 +40,7 @@ immutable Options gDefaultOptions = Options(Backend.ninja,
             false,
 );
 
-Options gOptions = gDefaultOptions.dup;
+private Options gOptions = gDefaultOptions.dup;
 
 Options options() @safe nothrow {
     return gOptions;
@@ -48,10 +48,6 @@ Options options() @safe nothrow {
 
 void setOptions(Options options) {
     gOptions = options;
-}
-
-void setDefaultOptions() {
-    gOptions = gDefaultOptions.dup;
 }
 
 enum userVars = AssocList!(string, string)();

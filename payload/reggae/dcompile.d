@@ -56,17 +56,14 @@ private int dcompile(string[] args) {
     enforce(args.length >= 2, "Usage: dcompile --objFile <objFile> --depFile <depFile> <compiler> <compiler args>");
     enforce(!depFile.empty && !objFile.empty, "The --depFile and --objFile 'options' are mandatory");
 
-    const compArgs = compilerArgs(args[1 .. $], objFile);
+    const makeDeps = "-makedeps=" ~ depFile;
+    const compArgs = compilerArgs(args[1 .. $], objFile) ~ makeDeps;
     const compRes = invokeCompiler(compArgs, objFile);
 
     if (compRes.status != 0) {
         stderr.writeln("Error compiling!");
         return compRes.status;
     }
-
-    auto file = File(depFile, "w");
-    file.write(dependenciesToFile(objFile, dMainDependencies(compRes.output)).join("\n"));
-    file.writeln;
 
     return 0;
 }
@@ -206,45 +203,6 @@ private auto invokeCompiler(in string[] args, in string objFile) @safe {
 
     // pass through stderr, capture stdout with -v output
     return execute(args, /*env=*/null, Config.stderrPassThrough);
-}
-
-
-/**
- * Given the output of compiling a file, return
- * the list of D files to compile to link the executable
- * Includes all dependencies, not just source files to
- * compile.
- */
-string[] dMainDependencies(in string output) @safe {
-    import reggae.dependencies: tryExtractPathFromImportLine;
-    import std.string: indexOf, splitLines;
-
-    string[] dependencies;
-
-    foreach(line; output.splitLines) {
-        const importPath = tryExtractPathFromImportLine(line);
-        if (importPath !is null) {
-            dependencies ~= importPath;
-        } else if (line.startsWith("file ") && line[$-1] == ')') {
-            const i = line.indexOf('(');
-            if (i > 0)
-                dependencies ~= line[i+1 .. $-1];
-        }
-    }
-
-    return dependencies;
-}
-
-
-string[] dependenciesToFile(in string objFile, in string[] deps) @safe pure nothrow {
-    import std.array: join, replace;
-    static string escape(string arg) {
-        return arg.replace(" ", `\ `); // TODO: there'd be more...
-    }
-    return [
-        escape(objFile) ~ ": \\",
-        deps.map!escape.join(" "),
-    ];
 }
 
 

@@ -2,11 +2,30 @@ module reggae.dependencies;
 
 
 /**
+ * Given the output of compiling a file, return
+ * the list of D files to compile to link the executable.
+ * Only includes source files to compile
+ */
+string[] dMainDepSrcs(in string output) {
+    import std.string: splitLines;
+
+    string[] dependencies;
+
+    foreach(line; output.splitLines) {
+        const importPath = tryExtractPathFromImportLine(line);
+        if (importPath !is null)
+            dependencies ~= importPath;
+    }
+
+    return dependencies;
+}
+
+/**
  * Given a line from verbose compiler output, checks if it is an import
  * of a non-druntime/Phobos module and returns its file path in that case.
  * Otherwise, returns null.
  */
-string tryExtractPathFromImportLine(in string line) @safe pure {
+private string tryExtractPathFromImportLine(in string line) @safe pure {
     import std.algorithm: any;
     import std.string: indexOf, startsWith, strip;
 
@@ -25,23 +44,4 @@ string tryExtractPathFromImportLine(in string line) @safe pure {
         return null;
 
     return rest[i+1 .. $-1];
-}
-
-/**
- * Given the output of compiling a file, return
- * the list of D files to compile to link the executable.
- * Only includes source files to compile
- */
-string[] dMainDepSrcs(in string output) {
-    import std.string: splitLines;
-
-    string[] dependencies;
-
-    foreach(line; output.splitLines) {
-        const importPath = tryExtractPathFromImportLine(line);
-        if (importPath !is null)
-            dependencies ~= importPath;
-    }
-
-    return dependencies;
 }

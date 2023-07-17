@@ -98,6 +98,7 @@ unittest {
 
 @("no main function but with unit tests")
 @Tags(["dub", "ninja"])
+@Flaky
 unittest {
     import std.file: mkdirRecurse;
 

@@ -7,7 +7,7 @@ import std.conv;
 
 
 static foreach (backend; ["ninja", "make", "tup"])
-    @("Export build system (" ~ backend ~ ")")
+    @(backend)
     @Tags(backend)
     unittest {
         auto options = testOptions(["--export", projectPath("export_proj")]);

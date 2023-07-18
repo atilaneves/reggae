@@ -308,16 +308,18 @@ Target scriptlike
     @trusted
 {
 
-    import reggae.dependencies: dMainDepSrcs;
+    import reggae.dependencies: makeDeps;
+    import std.path: buildPath;
 
     if(getLanguage(app.srcFileName.value) != Language.D)
         throw new Exception("'scriptlike' rule only works with D files");
 
-    auto mainObj = objectFile(SourceFile(app.srcFileName.value), flags, importPaths, stringImportPaths);
-    const output = runDCompiler(projectPath, buildPath(projectPath, app.srcFileName.value), flags.value,
-                                importPaths.value, stringImportPaths.value);
+    auto mainObj = objectFile(SourceFile(app.srcFileName.value), flags,
+                              importPaths, stringImportPaths);
+    const depsFile = runDCompiler(projectPath, buildPath(projectPath, app.srcFileName.value), flags.value,
+                                  importPaths.value, stringImportPaths.value);
 
-    const files = dMainDepSrcs(output).map!(a => a.removeProjectPath).array;
+    const files = makeDeps(depsFile);
     auto dependencies = [mainObj] ~ dlangObjectFiles(files, flags.value,
                                                      importPaths.value, stringImportPaths.value);
 
@@ -325,24 +327,33 @@ Target scriptlike
 }
 
 
-//@trusted because of splitter
+// run to get dependencies
 private auto runDCompiler(in string projectPath,
                           in string srcFileName,
                           in string[] flags,
                           in string[] importPaths,
-                          in string[] stringImportPaths) @trusted {
+                          in string[] stringImportPaths)
+    @safe
+{
     import reggae.config: options;
+    import reggae.dependencies: makeDeps;
     import std.process: execute;
     import std.exception: enforce;
-    import std.conv:text;
+    import std.file: tempDir;
+    import std.path: buildPath;
+    import std.conv: text;
 
     immutable compiler = options.dCompiler;
+    const depsFile = buildPath(tempDir, "scriptlike.dep");
+    const makeDepsFlag = "-makedeps=" ~ depsFile;
+
     const compArgs = [compiler] ~ flags ~
         importPaths.map!(a => "-I" ~ buildPath(projectPath, a)).array ~
         stringImportPaths.map!(a => "-J" ~ buildPath(projectPath, a)).array ~
-        ["-o-", "-v", "-c", srcFileName];
+        ["-o-", makeDepsFlag, "-c", srcFileName];
+
     const compRes = execute(compArgs);
     enforce(compRes.status == 0,
             text("scriptlike could not run ", compArgs.join(" "), ":\n", compRes.output));
-    return compRes.output;
+    return depsFile;
 }

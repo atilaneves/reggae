@@ -1,47 +1,33 @@
 module reggae.dependencies;
 
 
-/**
- * Given the output of compiling a file, return
- * the list of D files to compile to link the executable.
- * Only includes source files to compile
- */
-string[] dMainDepSrcs(in string output) {
-    import std.string: splitLines;
+// Get a D file's dependencies from a file generated with
+// -makedeps=$filename
+string[] makeDeps(in string fileName) @safe {
+    import std.string: chomp;
+    import std.algorithm: splitter, filter, canFind, among;
+    import std.array: array;
+    import std.file: readText, exists;
+    import std.string: replace;
+    import std.path: buildPath, baseName, extension;
 
-    string[] dependencies;
+    if(!fileName.exists) return [];
 
-    foreach(line; output.splitLines) {
-        const importPath = tryExtractPathFromImportLine(line);
-        if (importPath !is null)
-            dependencies ~= importPath;
-    }
-
-    return dependencies;
-}
-
-/**
- * Given a line from verbose compiler output, checks if it is an import
- * of a non-druntime/Phobos module and returns its file path in that case.
- * Otherwise, returns null.
- */
-private string tryExtractPathFromImportLine(in string line) @safe pure {
-    import std.algorithm: any;
-    import std.string: indexOf, startsWith, strip;
-
-    // looking for: `import <whitespace(s)> <moduleID> <whitespace(s)> (<filePath>)`
-    if (!(line.startsWith("import ") && line[$-1] == ')'))
-        return null;
-
-    const rest = line[7 .. $];
-    const i = rest.indexOf('(');
-    if (i <= 0)
-        return null;
-
-    const id = strip(rest[0 .. i-1]);
-    static immutable exclPrefixes = ["std.", "core.", "etc.", "ldc."];
-    if (id == "object" || exclPrefixes.any!(p => id.startsWith(p)))
-        return null;
-
-    return rest[i+1 .. $-1];
+    const text = readText(fileName);
+    // The file is going to be like this: `foo.o: foo.d`, but possibly
+    // with arbitrary backslashes to extend the line
+    return text
+        .chomp
+        .replace("\\\n", "")
+        .splitter(" ")
+        .filter!(a => a != "")
+        .filter!(a => a.extension.among(".d", ".di"))
+        .filter!(a => a.baseName != "object.d")
+        .filter!(a => !a.canFind(buildPath("src", "reggae", ""))) // ignore reggae files
+        .filter!(a => !a.canFind(buildPath("std", "")))  // ignore phobos
+        .filter!(a => !a.canFind(buildPath("core", ""))) // ignore druntime
+        .filter!(a => !a.canFind(buildPath("etc", "")))  // ignore druntime
+        .filter!(a => !a.canFind(buildPath("ldc", "")))  // ignore ldc modules
+        .array[1..$] // ignore the object file *and* the source file
+        ;
 }

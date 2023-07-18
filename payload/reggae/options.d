@@ -303,33 +303,11 @@ immutable hiddenDir = ".reggae";
 
 //returns the list of files that the `reggaefile` depends on
 //this will usually be empty, but won't be if the reggaefile imports other D files
-string[] getReggaeFileDependenciesDlang() @trusted {
-    import std.string: chomp;
-    import std.algorithm: splitter, filter, canFind;
-    import std.array: array;
-    import std.file: readText, exists;
-    import std.string: replace;
-    import std.path: buildPath, baseName;
+string[] getReggaeFileDependenciesDlang() @safe {
+    import reggae.dependencies: makeDeps;
 
     immutable fileName = buildPath(hiddenDir, "reggaefile.dep");
-    if(!fileName.exists) return [];
-
-    const text = readText(fileName);
-    // The file is going to be like this: `foo.o: foo.d`, but possibly
-    // with arbitrary backslashes to extend the line
-    return text
-        .chomp
-        .replace("\\\n", "")
-        .splitter(" ")
-        .filter!(a => a != "")
-        .filter!(a => a.baseName != "reggaefile.d" && a.baseName != "object.d")
-        .filter!(a => !a.canFind(buildPath("src", "reggae", ""))) // ignore reggae files
-        .filter!(a => !a.canFind(buildPath("std", "")))  // ignore phobos
-        .filter!(a => !a.canFind(buildPath("core", ""))) // ignore druntime
-        .filter!(a => !a.canFind(buildPath("etc", "")))  // ignore druntime
-        .filter!(a => !a.canFind(buildPath("ldc", "")))  // ignore ldc modules
-        .array[1..$]
-        ;
+    return makeDeps(fileName);
 }
 
 

@@ -643,6 +643,10 @@ struct Command {
                                             in Language language,
                                             in Options options,
                                             in Flag!"dependencies" deps = Yes.dependencies) @safe pure {
+
+        import std.path: baseName, stripExtension;
+        import std.algorithm: among;
+
         version(Windows)
         {
             auto ccParams =
@@ -657,6 +661,13 @@ struct Command {
 
         final switch(language) with(Language) {
             case D: {
+                const compilerBinName = baseName(stripExtension(options.dCompiler));
+                const colour = compilerBinName == "gdc"
+                    ? "-fdiagnostics-color=always"
+                    : compilerBinName.among("ldc", "ldc2")
+                    ? "-enable-color"
+                    : "-color=on";
+
                 const modelArg = getDefaultDCompilerModelArg(options);
                 // deps is always true except for tup
                 const prefix = deps
@@ -665,7 +676,8 @@ struct Command {
                 const postfix = deps
                     ? ["$in"]
                     : ["-of$out", "$in"];
-                return prefix ~ options.dCompiler ~ modelArg ~ ["$flags", "$includes", "$stringImports", "-c"] ~ postfix;
+                auto meat = options.dCompiler ~ modelArg ~ ["$flags", "$includes", "$stringImports", colour, "-c"];
+                return prefix ~ meat ~ postfix;
             }
             case Cplusplus:
                 return options.cppCompiler ~ ccParams;

@@ -305,24 +305,6 @@ void buildDCompile(T)(auto ref T output, in Options options) {
     buildBinary(output, options, Binary(dcompileExe, cmd));
 }
 
-private bool isExecutable(in char[] path) @trusted nothrow //TODO: @safe
-{
-    version(Posix) {
-        import core.sys.posix.unistd;
-        import std.internal.cstring;
-        return (access(path.tempCString(), X_OK) == 0);
-    } else {
-        import core.sys.windows.winbase: GetBinaryTypeW;
-        import core.sys.windows.windef: DWORD;
-        import std.conv: to;
-
-        DWORD type;
-        try
-            return GetBinaryTypeW(&path.to!wstring[0], &type) != 0;
-        catch(Exception _)
-            assert(false, "Conversion erro from string to wstring");
-    }
-}
 
 private void buildBinary(T)(auto ref T output, in Options options, in Binary bin) {
     import reggae.io: log;

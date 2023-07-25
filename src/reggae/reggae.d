@@ -341,7 +341,7 @@ private const(string)[] getCompileBuildGenCmd(in Options options) @safe {
     const commonBefore = [dcompile,
                           "--objFile=" ~ "build" ~ objExt,
                           "--depFile=" ~ "reggaefile.dep",
-                          options.dCompiler] ~
+                          options.dCompiler, "-c"] ~
         importPaths(options)
         // ~ ["-g", "-debug"]
         ;

@@ -126,7 +126,7 @@ private string[] compilerArgs(string[] args, string objFile) @safe pure {
         }
     }
 
-    args ~= ["-color=on", "-of" ~ objFile, "-c", "-v"];
+    args ~= ["-color=on", "-of" ~ objFile];
 
     final switch (cli) {
         case Compiler.dmd: return args;

@@ -658,10 +658,14 @@ struct Command {
         final switch(language) with(Language) {
             case D: {
                 const modelArg = getDefaultDCompilerModelArg(options);
-                return deps
-                    ? buildPath(".reggae/dcompile") ~ ["--objFile=$out", "--depFile=$out.dep"] ~
-                      options.dCompiler ~ modelArg ~ ["$flags", "$includes", "$stringImports", "$in"]
-                    : options.dCompiler ~ modelArg ~ ["$flags", "$includes", "$stringImports", "-of$out", "$in"];
+                // deps is always true except for tup
+                const prefix = deps
+                    ? buildPath(".reggae/dcompile") ~ ["--objFile=$out", "--depFile=$out.dep"]
+                    : [];
+                const postfix = deps
+                    ? ["$in"]
+                    : ["-of$out", "$in"];
+                return prefix ~ options.dCompiler ~ modelArg ~ ["$flags", "$includes", "$stringImports", "-c"] ~ postfix;
             }
             case Cplusplus:
                 return options.cppCompiler ~ ccParams;

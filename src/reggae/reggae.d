@@ -338,10 +338,15 @@ private const(string)[] getCompileBuildGenCmd(in Options options) @safe {
         ? ["-O", "-inline"]
         : [];
     enum dcompile = buildPath("./dcompile");
+    const buildObj = "build" ~ objExt;
+    version(GDC)
+        const output = "-o " ~ buildObj;
+    else
+        const output = "-of" ~ buildObj;
     const commonBefore = [dcompile,
-                          "--objFile=" ~ "build" ~ objExt,
+                          "--objFile=" ~ buildObj,
                           "--depFile=" ~ "reggaefile.dep",
-                          options.dCompiler, "-c"] ~
+                          options.dCompiler, "-c", output] ~
         importPaths(options)
         // ~ ["-g", "-debug"]
         ;

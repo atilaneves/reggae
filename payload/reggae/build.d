@@ -667,7 +667,9 @@ struct Command {
                     : compilerBinName.among("ldc", "ldc2")
                     ? "-enable-color"
                     : "-color=on";
-
+                const output = compilerBinName == "gdc"
+                    ? "-o$out"
+                    : "-of$out";
                 const modelArg = getDefaultDCompilerModelArg(options);
                 // deps is always true except for tup
                 const prefix = deps
@@ -675,8 +677,8 @@ struct Command {
                     : [];
                 const postfix = deps
                     ? ["$in"]
-                    : ["-of$out", "$in"];
-                auto meat = options.dCompiler ~ modelArg ~ ["$flags", "$includes", "$stringImports", colour, "-c"];
+                    : [output, "$in"];
+                auto meat = options.dCompiler ~ modelArg ~ ["$flags", "$includes", "$stringImports", output, colour, "-c"];
                 return prefix ~ meat ~ postfix;
             }
             case Cplusplus:

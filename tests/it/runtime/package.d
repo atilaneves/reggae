@@ -98,6 +98,15 @@ private:
         string[] fromWhereArgs;
         if(!args.canFind("-C")) fromWhereArgs = ["-C", testPath];
 
+        version(LDC)
+            enum compiler = "ldc2";
+        else version (GDC)
+            enum compiler = "gdc";
+        else version(DigitalMars)
+            enum compiler = "dmd";
+        else
+            static assert(false, "Unknown D compiler");
+
         return testRun(["reggae"] ~ fromWhereArgs ~ args ~ project);
     }
 }

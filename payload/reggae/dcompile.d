@@ -126,58 +126,8 @@ private string[] compilerArgs(string[] args, string objFile) @safe pure {
         }
     }
 
-    args ~= ["-of" ~ objFile];
-
-    final switch (cli) {
-        case Compiler.dmd: return args;
-        case Compiler.gdc: return mapToGdcOptions(args);
-        case Compiler.ldc: return mapToLdcOptions(args);
-    }
+    return args;
 }
-
-//takes a dmd command line and maps arguments to gdc ones
-private string[] mapToGdcOptions(in string[] compArgs) @safe pure {
-    string[string] options = [
-        "-v": "-fd-verbose",
-        "-O": "-O2",
-        "-debug": "-fdebug",
-        "-of": "-o",
-        "-color=on": "-fdiagnostics-color=always",
-    ];
-
-    string doMap(string a) {
-        foreach(k, v; options) {
-            if(a.startsWith(k)) a = a.replace(k, v);
-        }
-        return a;
-    }
-
-    return compArgs.map!doMap.array;
-}
-
-
-//takes a dmd command line and maps arguments to ldc2 ones
-private string[] mapToLdcOptions(in string[] compArgs) @safe pure {
-    string doMap(string a) {
-        switch (a) {
-            case "-m32mscoff": return "-m32";
-            case "-fPIC":      return "-relocation-model=pic";
-            case "-gs":        return "-frame-pointer=all";
-            case "-inline":    return "-enable-inlining";
-            case "-profile":   return "-fdmd-trace-functions";
-            case "-color=on": return "-enable-color";
-            default:
-                if (a.startsWith("-version="))
-                    return "-d-version=" ~ a[9 .. $];
-                if (a.startsWith("-debug"))
-                    return "-d-debug" ~ a[6 .. $];
-                return a;
-        }
-    }
-
-    return compArgs.map!doMap.array;
-}
-
 
 private auto invokeCompiler(in string[] args, in string objFile) @safe {
     version(Windows) {

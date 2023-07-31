@@ -955,3 +955,35 @@ unittest {
             .shouldContain("-L-some_flag -Xcc=-fuse-ld=lld");
     }
 }
+
+version(LDC) {
+    @Tags("dub", "ninja")
+    @("ldcStaticLibrary")
+    unittest {
+        import reggae.rules.common: objExt;
+        import std.path: buildPath;
+
+        with(immutable ReggaeSandbox()) {
+            writeFile(
+                "dub.sdl",
+                [
+                    `name "foo"`,
+                    `targetType "library"`,
+                    `dependency "bar" path="bar"`
+                ]);
+            writeFile("source/foo.d", "");
+            writeFile(
+                "bar/dub.sdl",
+                [
+                    `name "bar"`,
+                    `targetType "library"`,
+                ]);
+            writeFile("bar/source/bar.d", "");
+            runReggae("-b", "ninja", "--dc=ldc2");
+            // ldc should act like dmd and not generate object files when using
+            // -lib
+            ninja.shouldExecuteOk;
+            shouldNotExist(buildPath("bar", "obj", "bar" ~ objExt));
+        }
+    }
+}

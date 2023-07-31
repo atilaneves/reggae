@@ -215,6 +215,8 @@ unittest {
 
 
 private static auto arrayify(E, T)(T value) {
+    import std.array: array;
+
     static if(isInputRange!T && is(Unqual!(ElementType!T) == E))
         return value.array;
     else static if(is(Unqual!T == E))

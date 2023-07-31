@@ -226,10 +226,24 @@ Target[] targetConcat(T...)() {
 Target phony(string name,
              string shellCommand,
              alias dependenciesFunc = () { Target[] ts; return ts; },
-             alias implicitsFunc = () { Target[] ts; return ts; })() {
+             alias implicitsFunc = () { Target[] ts; return ts; })
+    ()
+    if(isTargets!dependenciesFunc && isTargets!implicitsFunc)
+{
     return Target.phony(name, shellCommand, arrayify!dependenciesFunc, arrayify!implicitsFunc);
 }
 
+private template isTargets(alias T) {
+    import std.traits: Unqual, ReturnType, isCallable;
+    import std.range: isInputRange, ElementType;
+    import std.array;
+
+    static if (is(T)) {
+        enum isRangeOfTarget = isInputRange!T && is(Unqual!(ElementType!T) == Target);
+        enum isTargets = isRangeOfTarget || is(Unqual!T == Target);
+    } else static if (isCallable!T)
+        enum isTargets = isTargets!(ReturnType!T);
+}
 
 //end of rules
 
@@ -246,6 +260,7 @@ auto sourcesToTargets(alias sourcesFunc = Sources!())() {
     return sourcesToFileNames!sourcesFunc.map!(a => Target(a));
 }
 
+// Converts Sources/SourcesImpl to file names
 string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
     import std.exception: enforce;
     import std.file;

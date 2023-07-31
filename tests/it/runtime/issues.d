@@ -277,3 +277,23 @@ unittest {
             ["ninja: error: unknown target 'ut'"];
     }
 }
+
+// on Windows the exception message is slightly different and it's just not worth it
+version(Posix) {
+    @("194")
+    unittest {
+        with (immutable ReggaeSandbox()) {
+            writeFile("reggaefile.d",
+                      [
+                          `import reggae;`,
+                          `enum foo = Target("foo/bar/quux", "make -C DIR bin/exe DMD=sdc");`,
+                          `mixin build!foo;`,
+                      ]
+            );
+            runReggae("-b", "ninja").shouldThrowWithMessage(
+                "Couldn't execute the produced buildgen binary:\n" ~
+                "Cannot have a custom rule with no $in or $out: " ~
+                "use `phony` or explicit $in/$out instead.\n");
+        }
+    }
+}

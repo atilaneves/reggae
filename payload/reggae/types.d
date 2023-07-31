@@ -207,16 +207,16 @@ struct SourcesImpl(alias F) {
     alias filterFunc = F;
 }
 
-auto Sources(Dirs dirs = Dirs(), Files files = Files(), F = Filter!(a => true))() {
-    return SourcesImpl!(F.func)(dirs, files);
+auto Sources(string dir, Files files = Files(), F = Filter!(a => true))() {
+    return Sources!([dir], files, F)();
 }
 
 auto Sources(string[] dirs, Files files = Files(), F = Filter!(a => true))() {
     return Sources!(Dirs(dirs), files, F)();
 }
 
-auto Sources(string dir, Files files = Files(), F = Filter!(a => true))() {
-    return Sources!([dir], files, F)();
+auto Sources(Dirs dirs = Dirs(), Files files = Files(), F = Filter!(a => true))() {
+    return SourcesImpl!(F.func)(dirs, files);
 }
 
 struct SourceFile {

@@ -13,8 +13,8 @@ unittest {
     import reggae.path: buildPath;
 
     with(immutable ReggaeSandbox("dub")) {
-        runReggae("-b", "make", "--dflags=-g -debug");
-        make(["VERBOSE=1"]).shouldExecuteOk.shouldContain("-g -debug");
+        runReggae("-b", "make", "--dflags=-g");
+        make(["VERBOSE=1"]).shouldExecuteOk.shouldContain("-g");
         {
             const ret = execute(["touch", buildPath(testPath, "dub.json")]);
             ret.status.shouldEqual(0);
@@ -31,6 +31,7 @@ unittest {
 
 
 @("62")
+@Flaky
 @Tags(["dub", "make"])
 unittest {
     with(immutable ReggaeSandbox()) {

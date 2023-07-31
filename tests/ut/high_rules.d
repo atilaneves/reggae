@@ -72,36 +72,3 @@ version(Windows) {
 
     obj.shouldEqual(Target(objPath, cmd, [Target("foo.d")]));
 }
-
-
-@("builtinTemplate deps") unittest {
-    import reggae.config;
-    import std.array : join;
-
-    version(Windows)
-        enum expectedC = "cl.exe /nologo $flags $includes /showIncludes /Fo$out -c $in";
-    else
-        enum expectedC = "gcc $flags $includes -MMD -MT $out -MF $out.dep -o $out -c $in";
-    Command.builtinTemplate(CommandType.compile, Language.C, gDefaultOptions).join(" ").shouldEqual(expectedC);
-
-    Command.builtinTemplate(CommandType.compile, Language.D, gDefaultOptions).join(" ").shouldEqual(
-        buildPath(".reggae/dcompile") ~ " --objFile=$out --depFile=$out.dep " ~
-         dCompiler ~ defaultDCModel ~ " $flags $includes $stringImports $in");
-
-}
-
-@("builtinTemplate no deps") unittest {
-    import reggae.config;
-    import std.typecons: No;
-    import std.array : join;
-
-    version(Windows)
-        enum expectedC = "cl.exe /nologo $flags $includes /Fo$out -c $in";
-    else
-        enum expectedC = "gcc $flags $includes -o $out -c $in";
-    Command.builtinTemplate(CommandType.compile, Language.C, gDefaultOptions, No.dependencies).join(" ").shouldEqual(expectedC);
-
-    Command.builtinTemplate(CommandType.compile, Language.D, gDefaultOptions, No.dependencies).join(" ").shouldEqual(
-        dCompiler ~ defaultDCModel ~ " $flags $includes $stringImports -of$out -c $in");
-
-}

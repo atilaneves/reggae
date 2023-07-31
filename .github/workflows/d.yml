@@ -10,10 +10,8 @@ jobs:
         os: [ubuntu-22.04, windows-2019]
         # Remember to change the compiler versions further below as well as here
         dc:
-          - dmd-2.103.1
-          - dmd-2.100.0
+          - dmd-2.104.1
           - ldc-1.32.2
-          - ldc-1.30.0
 
     runs-on: ${{ matrix.os }}
     steps:

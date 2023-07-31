@@ -159,10 +159,21 @@ struct DubInfo {
                 : flags.filter!(f => f != "-unittest" && f != "-main").array;
         }
 
-        const flags = chain(dubPackage.dflags,
-                            dubPackage.versions.map!(a => "-version=" ~ a),
-                            options.dflags,
-                            deUnitTest(compilerFlags))
+        version(DigitalMars)
+            enum versionOpt = "-version";
+        else version(LDC)
+            enum versionOpt = "-d-version";
+        else version(GDC)
+            enum versionOpt = "-version";
+        else
+            static assert(false, "Unknown compiler");
+
+        const flags = chain(
+            dubPackage.dflags,
+            dubPackage.versions.map!(a => versionOpt ~ "=" ~ a),
+            options.dflags,
+            deUnitTest(compilerFlags)
+        )
             .array;
 
         const files = dubPackage.files

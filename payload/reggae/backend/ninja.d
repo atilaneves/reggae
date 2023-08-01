@@ -168,7 +168,6 @@ struct Ninja {
         _options = options;
         _projectPath = _options.projectPath;
 
-
         foreach(target; _build.range) {
             target.hasDefaultCommand
                 ? defaultRule(target)
@@ -280,15 +279,23 @@ private:
                                               : ["cmd = " ~ cmd, "pool = console"]);
     }
 
+    // a random shell command the user wrote themselves
     void customRule(Target target) @safe {
 
         import std.algorithm.searching: canFind;
+        import std.conv: text;
 
-        //rawCmdString is used because ninja needs to find where $in and $out are,
-        //so shellCommand wouldn't work
-        immutable shellCommand = target.rawCmdString(_projectPath);
-        immutable implicitInput =  () @trusted { return !shellCommand.canFind("$in");  }();
-        immutable implicitOutput = () @trusted { return !shellCommand.canFind("$out"); }();
+        // rawCmdString is used because ninja needs to find where $in and $out are,
+        // so shellCommand wouldn't work
+        const shellCommand = target.rawCmdString(_projectPath);
+        const implicitInput  = !shellCommand.canFind("$in");
+        const implicitOutput = !shellCommand.canFind("$out");
+
+        if(implicitOutput && implicitInput)
+            throw new Exception(
+                text("Cannot have a custom rule with no $in or $out: use `phony` or explicit $in/$out instead."
+                )
+            );
 
         if(implicitOutput) {
             implicitOutputRule(target, shellCommand);
@@ -309,6 +316,7 @@ private:
         auto reg = regex(`^[^ ]+ +(.*?)(\$in|\$out)(.*?)(\$in|\$out)(.*?)$`);
 
         auto mat = shellCommand.match(reg);
+
         if(mat.captures.empty) { //this is usually bad since we need both $in and $out
             if(target.dependencyTargets.empty) { //ah, no $in needed then
                 mat = match(shellCommand ~ " $in", reg); //add a dummy one
@@ -457,12 +465,14 @@ private:
     }
 
     string buildLine(Target target, in string rule, in bool includeImplicitInputs,
-                     in string[] inputsOverride = null) @safe pure const {
+                     in string[] inputsOverride = null) @safe /*pure*/ const {
+
         const outputs = target.expandOutputs(_projectPath);
         const inputs = inputsOverride !is null ? inputsOverride : targetDependencies(target);
         const implicitInputs = includeImplicitInputs && target.implicitTargets.length
             ? target.implicitsInProjectPath(_projectPath)
             : null;
+
         return buildLine(outputs, rule, inputs, implicitInputs);
     }
 

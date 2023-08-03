@@ -957,33 +957,38 @@ unittest {
 }
 
 version(LDC) {
-    @Tags("dub", "ninja")
-    @("ldcStaticLibrary")
-    unittest {
-        import reggae.rules.common: objExt;
-        import std.path: buildPath;
+    // tup isn't supported with dub anyway
+    static foreach(backend; ["ninja", "make", /* FIXME "binary" */]) {
+        static foreach(compiler; ["ldc2", /* FIXME "ldmd" */]) {
+            @Tags("dub", backend)
+            @("staticLibrary.noObjs." ~ compiler ~ "." ~ backend)
+            unittest {
+                import reggae.rules.common: objExt;
+                import std.path: buildPath;
 
-        with(immutable ReggaeSandbox()) {
-            writeFile(
-                "dub.sdl",
-                [
-                    `name "foo"`,
-                    `targetType "library"`,
-                    `dependency "bar" path="bar"`
-                ]);
-            writeFile("source/foo.d", "");
-            writeFile(
-                "bar/dub.sdl",
-                [
-                    `name "bar"`,
-                    `targetType "library"`,
-                ]);
-            writeFile("bar/source/bar.d", "");
-            runReggae("-b", "ninja", "--dc=ldc2");
-            // ldc should act like dmd and not generate object files when using
-            // -lib
-            ninja.shouldExecuteOk;
-            shouldNotExist(buildPath("bar", "obj", "bar" ~ objExt));
+                with(immutable ReggaeSandbox()) {
+                    writeFile(
+                        "dub.sdl",
+                        [
+                            `name "foo"`,
+                            `targetType "library"`,
+                            `dependency "bar" path="bar"`
+                        ]);
+                    writeFile("source/foo.d", "");
+                    writeFile(
+                        "bar/dub.sdl",
+                        [
+                            `name "bar"`,
+                            `targetType "library"`,
+                        ]);
+                    writeFile("bar/source/bar.d", "");
+                    runReggae("-b", backend, "--dc=" ~ compiler);
+                    // ldc should act like dmd and not generate object files when using
+                    // -lib
+                    mixin(backend).shouldExecuteOk;
+                    shouldNotExist(buildPath("bar", "obj", "bar" ~ objExt));
+                }
+            }
         }
     }
 }

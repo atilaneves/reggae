@@ -57,7 +57,7 @@ private int dcompile(string[] args) {
     enforce(!depFile.empty && !objFile.empty, "The --depFile and --objFile 'options' are mandatory");
 
     const makeDeps = "-makedeps=" ~ depFile;
-    const compArgs = compilerArgs(args[1 .. $], objFile) ~ makeDeps;
+    const compArgs = args[1..$] ~ makeDeps;
     const compRes = invokeCompiler(compArgs, objFile);
 
     if (compRes.status != 0) {
@@ -66,67 +66,6 @@ private int dcompile(string[] args) {
     }
 
     return 0;
-}
-
-
-private string[] compilerArgs(string[] args, string objFile) @safe pure {
-    import std.path: absolutePath, baseName, dirName, stripExtension;
-
-    enum Compiler { dmd, gdc, ldc }
-
-    const compilerBinName = baseName(stripExtension(args[0]));
-    Compiler compiler = Compiler.dmd;
-    Compiler cli = Compiler.dmd;
-    switch (compilerBinName) {
-        default:
-            break;
-        case "gdmd":
-            compiler = Compiler.gdc;
-            break;
-        case "gdc":
-            compiler = Compiler.gdc;
-            cli = Compiler.gdc;
-            break;
-        case "ldmd":
-        case "ldmd2":
-            compiler = Compiler.ldc;
-            break;
-        case "ldc":
-        case "ldc2":
-            compiler = Compiler.ldc;
-            cli = Compiler.ldc;
-            break;
-    }
-
-    if (compiler == Compiler.ldc && args.length > 1 && args[1] == "-lib") {
-        /* Unlike DMD, LDC does not write static libraries directly, but writes
-         * object files and archives them to a static lib.
-         * Make sure the temporary object files don't collide across parallel
-         * compiler invocations in the same working dir by placing the object
-         * files into the library's output directory via -od.
-         */
-        const od = "-od=" ~ dirName(objFile);
-
-        if (cli == Compiler.ldc) { // ldc2
-            // mimic ldmd2 - uniquely-name and remove the object files
-            args.insertInPlace(2, "-oq", "-cleanup-obj", od);
-
-            // dub adds `--oq -od=…/obj`, remove it as it defeats our purpose
-            foreach (i; 5 .. args.length - 1) {
-                if (args[i] == "--oq" && args[i+1].startsWith("-od=")) {
-                    args = args[0 .. i] ~ args[i+2 .. $];
-                    break;
-                }
-            }
-        } else { // ldmd2
-            args.insertInPlace(2, od);
-            // As with dmd, -od may affect the final path of the static library
-            // (relative to -od) - make -of absolute to prevent this.
-            objFile = absolutePath(objFile);
-        }
-    }
-
-    return args;
 }
 
 private auto invokeCompiler(in string[] args, in string objFile) @safe {

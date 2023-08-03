@@ -198,18 +198,14 @@ Target[] dlangStaticLibraryTogether(in string[] srcFiles,
 {
     import reggae.rules.common: libFileName;
     import reggae.config: options;
-    import std.path: baseName, stripExtension;
-    import std.algorithm: among;
 
-    const compilerBinName = baseName(stripExtension(options.dCompiler));
-    const isLdc = compilerBinName.among("ldc", "ldc2");
     /* Unlike DMD, LDC does not write static libraries directly, but writes
      * object files and archives them to a static lib.
      * Make sure the temporary object files don't collide across parallel
      * compiler invocations in the same working dir by placing the object
      * files into the library's output directory via -od.
      */
-    const libFlags = isLdc
+    const libFlags = options.isLdc
         ? ["-lib", "--oq", "--cleanup-obj"]
         : ["-lib"];
 

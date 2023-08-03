@@ -27,9 +27,9 @@ private string filePackage(string path) @safe pure nothrow {
     Returns the path of the package corresponding to a file name.
  */
 string packagePath(in string fileName) @safe pure {
-    import std.algorithm: reduce;
+    import std.algorithm: fold;
     import reggae.path: buildPath;
-    return fileName.packageParts.reduce!((a, b) => buildPath(a, b));
+    return fileName.packageParts.fold!((a, b) => buildPath(a, b))("");
 }
 
 private string[] packageParts(string path) @safe pure nothrow {

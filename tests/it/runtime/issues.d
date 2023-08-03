@@ -278,7 +278,6 @@ unittest {
     }
 }
 
-@ShouldFail
 @Tags("issues", "ninja")
 @("193")
 unittest {
@@ -296,9 +295,24 @@ unittest {
                 mixin build!app;
             }
         );
-        writeFile("test.d", "");
-        writeFile("src/foo.d", "");
+        writeFile(
+            "test.d",
+            q{
+                static import foo;
+                int main() {
+                    return foo.foo(42);
+                }
+            }
+        );
+        writeFile(
+            "src/foo.d",
+            q{
+                module foo;
+                int foo(int i) { return i * 2; }
+            }
+        );
         runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
     }
 }
 

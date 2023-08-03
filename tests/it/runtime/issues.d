@@ -278,8 +278,47 @@ unittest {
     }
 }
 
+@Tags("issues", "ninja")
+@("193")
+unittest {
+    with (immutable ReggaeSandbox()) {
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+                alias testObjs = objectFiles!(
+                    Sources!(["src"], Files(["test.d"])),
+                    Flags("-g"),
+                    ImportPaths(["src"]),
+                );
+                alias app = link!(ExeName("app"), testObjs);
+                mixin build!app;
+            }
+        );
+        writeFile(
+            "test.d",
+            q{
+                static import foo;
+                int main() {
+                    return foo.foo(42);
+                }
+            }
+        );
+        writeFile(
+            "src/foo.d",
+            q{
+                module foo;
+                int foo(int i) { return i * 2; }
+            }
+        );
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+    }
+}
+
 // on Windows the exception message is slightly different and it's just not worth it
 version(Posix) {
+    @Tags("issues", "ninja")
     @("194")
     unittest {
         with (immutable ReggaeSandbox()) {

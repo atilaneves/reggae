@@ -641,6 +641,8 @@ struct Command {
         }
     }
 
+    // The `deps` flag is whether or not to automatically compute dependencies for D files.
+    // The reason for its existence is that tup does it itself.
     private static string[] compileTemplate(in CommandType type,
                                             in Language language,
                                             in Options options,
@@ -673,7 +675,6 @@ struct Command {
                     ? "-o$out"
                     : "-of$out";
                 const modelArg = getDefaultDCompilerModelArg(options);
-                // deps is always true except for tup
                 const prefix = deps
                     ? buildPath(".reggae/dcompile") ~ ["--objFile=$out", "--depFile=$out.dep"]
                     : [];

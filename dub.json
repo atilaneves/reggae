@@ -13,7 +13,7 @@
     "excludedSourceFiles": ["payload/reggae/buildgen_main.d"],
     "mainSourceFile": "src/reggae/reggae_main.d",
     "dependencies": {
-        "dub": "~>1.32.1"
+        "dub": "~>1.33.1"
     },
     "subConfigurations": {
         "dub": "library"

@@ -333,7 +333,7 @@ class InfoGenerator: ProjectGenerator {
 
             enum sameNameProperties = [
                 "mainSourceFile", "dflags", "lflags", "importPaths",
-                "stringImportPaths", "versions", "libs",
+                "cImportPaths", "stringImportPaths", "versions", "libs",
             ];
             static foreach(prop; sameNameProperties) {
                 mixin(`pkg.`, prop, ` = newBuildSettings.`, prop, `;`);

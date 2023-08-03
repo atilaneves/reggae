@@ -348,7 +348,8 @@ private const(string)[] getCompileBuildGenCmd(in Options options) @safe {
                           "--depFile=" ~ "reggaefile.dep",
                           options.dCompiler, "-c", output] ~
         importPaths(options)
-        // ~ ["-g", "-debug"]
+        // ~ ["-g", "-debug"] // dmd
+        // ~ ["-g", "--d-debug"] // ldc
         ;
     const commonAfter = buildBinFlags ~ options.reggaeFilePath ~ reggaeSrcs;
     version(minimal) return commonBefore ~ "-version=minimal" ~ commonAfter;

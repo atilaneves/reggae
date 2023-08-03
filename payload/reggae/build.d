@@ -585,6 +585,7 @@ struct Command {
         }
     }
 
+    // public because ninja needs string[] instead of a shell command to execute.
     static string[] builtinTemplate(in CommandType type,
                                     in Language language,
                                     in Options options,

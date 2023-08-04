@@ -207,6 +207,20 @@ struct Options {
         import std.path: dirSeparator;
         return str.replace(projectPath ~ dirSeparator, "");
     }
+
+    bool isLdc() @safe pure nothrow scope const {
+        import std.algorithm: among;
+        return cast(bool) compilerBinName.among("ldc", "ldc2");
+    }
+
+    bool isGdc() @safe pure nothrow scope const {
+        return compilerBinName == "gdc";
+    }
+
+    string compilerBinName() @safe pure nothrow scope const {
+        import std.path: baseName, stripExtension;
+        return baseName(stripExtension(dCompiler)).dup;
+    }
 }
 
 Options getOptions(string[] args) {

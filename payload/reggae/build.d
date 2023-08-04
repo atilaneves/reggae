@@ -585,6 +585,7 @@ struct Command {
         }
     }
 
+    // public because ninja needs string[] instead of a shell command to execute.
     static string[] builtinTemplate(in CommandType type,
                                     in Language language,
                                     in Options options,
@@ -641,13 +642,12 @@ struct Command {
         }
     }
 
+    // The `deps` flag is whether or not to automatically compute dependencies for D files.
+    // The reason for its existence is that tup does it itself.
     private static string[] compileTemplate(in CommandType type,
                                             in Language language,
                                             in Options options,
                                             in Flag!"dependencies" deps = Yes.dependencies) @safe pure {
-
-        import std.path: baseName, stripExtension;
-        import std.algorithm: among;
 
         version(Windows)
         {
@@ -663,17 +663,15 @@ struct Command {
 
         final switch(language) with(Language) {
             case D: {
-                const compilerBinName = baseName(stripExtension(options.dCompiler));
-                const colour = compilerBinName == "gdc"
+                const colour = options.isGdc
                     ? "-fdiagnostics-color=always"
-                    : compilerBinName.among("ldc", "ldc2")
+                    : options.isLdc
                     ? "-enable-color"
                     : "-color=on";
-                const output = compilerBinName == "gdc"
+                const output = options.isGdc
                     ? "-o$out"
                     : "-of$out";
                 const modelArg = getDefaultDCompilerModelArg(options);
-                // deps is always true except for tup
                 const prefix = deps
                     ? buildPath(".reggae/dcompile") ~ ["--objFile=$out", "--depFile=$out.dep"]
                     : [];

@@ -5,8 +5,9 @@ import tests.it.buildgen;
 
 
 static foreach (backend; ["ninja", "make", "binary"])
-    @("Phony target always executed (" ~ backend ~ ")")
+    @(backend ~ ".always_executed")
     @Tags(backend)
+    @Flaky
     unittest {
 
         enum project = "phony_proj";

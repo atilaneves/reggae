@@ -194,13 +194,20 @@ Target[] dlangStaticLibraryTogether(in string[] srcFiles,
                                     in string[] stringImportPaths = [],
                                     Target[] implicits = [],
                                     in string projDir = "$project")
-    @safe pure
+    @safe
 {
     import reggae.rules.common: libFileName;
+    import reggae.config: options;
+
+    // for ldc2, mimic ldmd2: uniquely-name and remove the temporary object files
+    const libFlags = options.isLdc
+        ? ["-lib", "-oq", "-cleanup-obj"]
+        : ["-lib"];
+
     return dlangTargetTogether(
         &libFileName,
         srcFiles,
-        "-lib" ~ flags,
+        libFlags ~ flags,
         importPaths,
         stringImportPaths,
         implicits,

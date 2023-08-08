@@ -140,6 +140,18 @@ struct Options {
         return buildPath(projectPath, "reggaefile.lua");
     }
 
+    //returns the list of files that the `reggaefile` depends on
+    //this will usually be empty, but won't be if the reggaefile imports other D files
+    string[] getReggaeFileDependenciesDlang() @safe const {
+        import reggae.dependencies: makeDeps;
+        return makeDeps(reggaeFileDepFile);
+    }
+
+    string reggaeFileDepFile() @safe pure const {
+        import std.path: buildPath;
+        return buildPath(projectPath, hiddenDir, "reggaefile.dep");
+    }
+
     string toString() @safe const pure {
         import std.conv: text;
         import std.traits: isSomeString, isAssociativeArray, Unqual;
@@ -313,16 +325,6 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
 
 
 immutable hiddenDir = ".reggae";
-
-
-//returns the list of files that the `reggaefile` depends on
-//this will usually be empty, but won't be if the reggaefile imports other D files
-string[] getReggaeFileDependenciesDlang() @safe {
-    import reggae.dependencies: makeDeps;
-
-    immutable fileName = buildPath(hiddenDir, "reggaefile.dep");
-    return makeDeps(fileName);
-}
 
 
 Options withProjectPath(in Options options, in string projectPath) @safe pure nothrow {

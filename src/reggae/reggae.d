@@ -265,7 +265,7 @@ private string compileBinaries(T)(auto ref T output, in Options options) {
     immutable buildObjName = "build" ~ objExt;
     buildBinary(output, options, Binary(buildObjName, buildGenCmd));
 
-    const reggaeFileDeps = getReggaeFileDependenciesDlang;
+    const reggaeFileDeps = options.getReggaeFileDependenciesDlang;
     auto objFiles = [buildObjName];
     if(!reggaeFileDeps.empty) {
         immutable rest = "rest" ~ objExt;
@@ -340,13 +340,14 @@ private const(string)[] getCompileBuildGenCmd(in Options options) @safe {
     enum dcompile = buildPath("./dcompile");
     const buildObj = "build" ~ objExt;
     version(GDC)
-        const output = "-o " ~ buildObj;
+        const output = ["-o", buildObj];
     else
-        const output = "-of" ~ buildObj;
-    const commonBefore = [dcompile,
-                          "--objFile=" ~ buildObj,
-                          "--depFile=" ~ "reggaefile.dep",
-                          options.dCompiler, "-c", output] ~
+        const output = ["-of" ~ buildObj];
+    const makeDeps = "-makedeps=" ~ options.reggaeFileDepFile;
+    const commonBefore =
+        [options.dCompiler, "-c"] ~
+        output ~
+        makeDeps ~
         importPaths(options)
         // ~ ["-g", "-debug"] // dmd
         // ~ ["-g", "--d-debug"] // ldc

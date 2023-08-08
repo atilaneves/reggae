@@ -672,14 +672,15 @@ struct Command {
                     ? "-o$out"
                     : "-of$out";
                 const modelArg = getDefaultDCompilerModelArg(options);
-                const prefix = deps
-                    ? buildPath(".reggae/dcompile") ~ ["--objFile=$out", "--depFile=$out.dep"]
+                const makeDeps =
+                    deps
+                    ? ["-makedeps=$out.dep"]
                     : [];
                 const postfix = deps
                     ? ["$in"]
                     : [output, "$in"];
-                auto meat = options.dCompiler ~ modelArg ~ ["$flags", "$includes", "$stringImports", output, colour, "-c"];
-                return prefix ~ meat ~ postfix;
+                auto meat = options.dCompiler ~ modelArg ~ makeDeps ~ ["$flags", "$includes", "$stringImports", output, colour, "-c"];
+                return meat ~ postfix;
             }
             case Cplusplus:
                 return options.cppCompiler ~ ccParams;

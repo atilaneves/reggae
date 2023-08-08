@@ -29,7 +29,6 @@ shared static this() nothrow {
         writelnUt("[IT] Creating new test path ", testsPath);
         mkdirRecurse(testsPath);
 
-        buildDCompile();
     } catch(Exception e) {
         import std.stdio: stderr;
         try
@@ -39,51 +38,6 @@ shared static this() nothrow {
             printf("Shared static ctor failed\n");
         }
     }
-}
-
-private string dcompileName() @safe pure nothrow {
-    import reggae.rules.common: exeExt;
-    return "dcompile" ~ exeExt;
-}
-
-private void buildDCompile() {
-    import std.meta: aliasSeqOf;
-    import std.exception: enforce;
-    import std.conv: text;
-    import std.stdio: writeln;
-    import std.algorithm: any;
-    import std.file: exists;
-    import std.process: execute, Config;
-    import std.array: join;
-    import reggae.file;
-    import reggae.rules.common: exeExt;
-    import reggae.config: options;
-
-    enum fileNames = ["dcompile.d", "dependencies.d"];
-
-    const exeName = buildPath("tmp", dcompileName);
-    immutable needToRecompile =
-        !exeName.exists ||
-        fileNames.
-            any!(a => buildPath(origPath, "payload/reggae", a).
-                          newerThan(buildPath(testsPath, a)));
-    if(!needToRecompile)
-        return;
-
-    writeln("[IT] Building dcompile");
-
-    foreach(fileName; aliasSeqOf!fileNames) {
-        writeFile!fileName;
-    }
-
-    const args = [options.dCompiler, "-ofdcompile" ~ exeExt] ~ fileNames;
-    const string[string] env = null;
-    Config config = Config.none;
-    size_t maxOutput = size_t.max;
-    const workDir = testsPath;
-
-    immutable res = execute(args, env, config, maxOutput, workDir);
-    enforce(res.status == 0, text("Could not execute '", args.join(" "), "':\n", res.output));
 }
 
 private void writeFile(string fileName)() {
@@ -218,16 +172,7 @@ void prepareTestBuild(string module_ = __MODULE__)(ref Options options) {
     import std.algorithm: canFind;
     import reggae.config;
 
-    version(Windows) {
-        static void symlink(in string org, in string dst) {
-            import std.file: copy;
-            copy(org, dst);
-        }
-    } else
-          import std.file: symlink;
-
     mkdirRecurse(buildPath(options.workingDir, ".reggae"));
-    symlink(buildPath(testsPath, dcompileName), buildPath(options.workingDir, ".reggae", dcompileName));
 
     // copy the project files over, that way the tests can modify them
     immutable projectsPath = buildPath(origPath, "tests/projects");

@@ -10,7 +10,7 @@
     "importPaths": ["src", "payload"],
     "stringImportPaths": ["payload/reggae"],
     "sourcePaths": ["src", "payload"],
-    "excludedSourceFiles": ["payload/reggae/buildgen_main.d", "payload/reggae/dcompile.d"],
+    "excludedSourceFiles": ["payload/reggae/buildgen_main.d"],
     "mainSourceFile": "src/reggae/reggae_main.d",
     "dependencies": {
         "dub": "~>1.32.1"

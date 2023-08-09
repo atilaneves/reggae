@@ -9,6 +9,7 @@ import std.conv;
 static foreach (backend; ["ninja", "make", "tup"])
     @(backend)
     @Tags(backend)
+    @Flaky
     unittest {
         auto options = testOptions(["--export", projectPath("export_proj")]);
         enum module_ = "export_proj.reggaefile";

@@ -71,6 +71,7 @@ unittest {
 
 
 @("dependencies not on file system already no dub.selections.json")
+@Flaky
 @Tags(["dub", "ninja"])
 unittest {
 

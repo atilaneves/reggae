@@ -5,7 +5,6 @@
    $(LI Generate a $(D reggaefile.d) for dub projects)
    $(LI Write out the reggae library files and $(D config.d))
    $(LI Compile the build description with the reggae library files to produce $(D buildgen))
-   $(LI Produce $(D dcompile), a binary to call the D compiler to obtain dependencies during compilation)
    $(LI Call the produced $(D buildgen) binary)
  )
  */
@@ -186,7 +185,7 @@ private enum coreFiles = [
     "build.d",
     "backend/package.d", "backend/binary.d",
     "package.d", "range.d", "reflect.d",
-    "dependencies.d", "types.d", "dcompile.d",
+    "dependencies.d", "types.d",
     "ctaa.d", "sorting.d", "file.d",
     "rules/package.d",
     "rules/common.d",
@@ -226,14 +225,15 @@ private void createBuild(T)(auto ref T output, in Options options) {
 
     enforce(options.reggaeFilePath.exists, text("Could not find ", options.reggaeFilePath));
 
-    //compile the binaries (the build generator and dcompile)
-    immutable buildGenName = compileBinaries(output, options);
+    // no need to build the description if interpreting it
+    if(options.isScriptBuild) return;
+
+    //compile the the build generator
+    immutable buildGenName = compileBuildGenerator(output, options);
 
     //binary backend has no build generator, it _is_ the build
     if(options.backend == Backend.binary) return;
 
-    //only got here to build .dcompile
-    if(options.isScriptBuild) return;
 
     //actually run the build generator
     output.log("Running the created binary to generate the build");
@@ -252,11 +252,9 @@ struct Binary {
 }
 
 
-private string compileBinaries(T)(auto ref T output, in Options options) {
+private string compileBuildGenerator(T)(auto ref T output, in Options options) {
 
     import reggae.rules.common: exeExt, objExt;
-
-    buildDCompile(output, options);
 
     immutable buildGenName = getBuildGenName(options) ~ exeExt;
     if(options.isScriptBuild) return buildGenName;
@@ -265,7 +263,7 @@ private string compileBinaries(T)(auto ref T output, in Options options) {
     immutable buildObjName = "build" ~ objExt;
     buildBinary(output, options, Binary(buildObjName, buildGenCmd));
 
-    const reggaeFileDeps = getReggaeFileDependenciesDlang;
+    const reggaeFileDeps = options.getReggaeFileDependenciesDlang;
     auto objFiles = [buildObjName];
     if(!reggaeFileDeps.empty) {
         immutable rest = "rest" ~ objExt;
@@ -287,24 +285,6 @@ private string compileBinaries(T)(auto ref T output, in Options options) {
 
     return buildGenName;
 }
-
-void buildDCompile(T)(auto ref T output, in Options options) {
-    import reggae.rules.common : exeExt;
-
-    enum dcompileExe = "dcompile" ~ exeExt;
-
-    if(!thisExePath.newerThan(buildPath(options.workingDir, hiddenDir, dcompileExe)))
-        return;
-
-    immutable cmd = [options.dCompiler,
-                     "-Isrc",
-                     "-of" ~ dcompileExe,
-                     buildPath(options.workingDir, hiddenDir, reggaeSrcRelDirName, "dcompile.d"),
-                     buildPath(options.workingDir, hiddenDir, reggaeSrcRelDirName, "dependencies.d")];
-
-    buildBinary(output, options, Binary(dcompileExe, cmd));
-}
-
 
 private void buildBinary(T)(auto ref T output, in Options options, in Binary bin) {
     import reggae.io: log;
@@ -331,22 +311,21 @@ private const(string)[] getCompileBuildGenCmd(in Options options) @safe {
     import reggae.rules.common: objExt;
 
     const reggaeSrcs = ("config.d" ~ fileNames).
-        filter!(a => a != "dcompile.d").
         map!(a => buildPath(reggaeSrcRelDirName, a)).array;
 
     immutable buildBinFlags = options.backend == Backend.binary
         ? ["-O", "-inline"]
         : [];
-    enum dcompile = buildPath("./dcompile");
     const buildObj = "build" ~ objExt;
     version(GDC)
-        const output = "-o " ~ buildObj;
+        const output = ["-o", buildObj];
     else
-        const output = "-of" ~ buildObj;
-    const commonBefore = [dcompile,
-                          "--objFile=" ~ buildObj,
-                          "--depFile=" ~ "reggaefile.dep",
-                          options.dCompiler, "-c", output] ~
+        const output = ["-of" ~ buildObj];
+    const makeDeps = "-makedeps=" ~ options.reggaeFileDepFile;
+    const commonBefore =
+        [options.dCompiler, "-c"] ~
+        output ~
+        makeDeps ~
         importPaths(options)
         // ~ ["-g", "-debug"] // dmd
         // ~ ["-g", "--d-debug"] // ldc

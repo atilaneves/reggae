@@ -59,9 +59,6 @@ private string[] initializeRuleParamLines(in Language language, in string[] comm
     version(Windows) {
         import std.algorithm: among;
 
-        import std.stdio;
-        debug writeln("Command: '", command, "'");
-
         // On Windows, the max command line length is ~32K.
         // Make ninja use a response file for all D/C[++] rules.
         if (language.among(Language.D, Language.C, Language.Cplusplus)) {

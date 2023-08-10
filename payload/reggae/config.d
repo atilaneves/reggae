@@ -56,7 +56,5 @@ version(minimal) {}
 else {
     import reggae.dub.info;
     import reggae.ctaa;
-
-    enum dubInfo = ["default": DubInfo() ];
     enum configToDubInfo = AssocList!(string, DubInfo)();
 }

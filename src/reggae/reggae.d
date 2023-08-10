@@ -349,9 +349,9 @@ private string getBuildGenName(in Options options) @safe pure nothrow {
 }
 
 
-immutable reggaeSrcRelDirName = buildPath("src/reggae");
+private immutable reggaeSrcRelDirName = buildPath("src/reggae");
 
-string reggaeSrcDirName(in Options options) @safe pure nothrow {
+private string reggaeSrcDirName(in Options options) @safe pure nothrow {
     return buildPath(options.workingDir, hiddenDir, reggaeSrcRelDirName);
 }
 

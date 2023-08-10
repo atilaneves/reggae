@@ -8,7 +8,7 @@ import reggae.from;
 public import reggae.dub.interop.reggaefile;
 
 
-from!"reggae.dub.info".DubInfo[string] gDubInfos;
+private from!"reggae.dub.info".DubInfo[string] gDubInfos;
 
 
 void writeDubConfig(O)(ref O output,

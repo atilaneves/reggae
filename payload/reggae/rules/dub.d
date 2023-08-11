@@ -100,8 +100,26 @@ static if(isDubProject) {
                          CompilationMode compilationMode)
                          ()
     {
-        import reggae.dub.info: TargetType, targetName;
         import reggae.config: options;
+        return dubTestTarget(
+            options,
+            configToDubInfo,
+            compilerFlags,
+            linkerFlags,
+            compilationMode
+        );
+    }
+
+    Target dubTestTarget(C)
+        (in imported!"reggae.options".Options options,
+        in C configToDubInfo,
+        CompilerFlags compilerFlags = CompilerFlags(),
+        LinkerFlags linkerFlags = LinkerFlags(),
+        CompilationMode compilationMode = CompilationMode.options)
+    {
+        import reggae.build : Target;
+        import reggae.dub.info: TargetType, targetName;
+        import reggae.rules.dub: dubTarget;
         import std.exception : enforce;
 
         // No `dub test` config? Then it inherited some `targetType "none"`, and

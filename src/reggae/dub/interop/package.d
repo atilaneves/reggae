@@ -8,9 +8,6 @@ import reggae.from;
 public import reggae.dub.interop.reggaefile;
 
 
-private from!"reggae.dub.info".DubInfo[string] gDubInfos;
-
-
 void writeDubConfig(O)(ref O output,
                        in from!"reggae.options".Options options,
                        from!"std.stdio".File file) {
@@ -34,24 +31,23 @@ void writeDubConfig(O)(ref O output,
 
     dubFetch(output, dub, options, dubSelectionsJson);
 
-    file.writeln("import reggae.dub.info;");
-    file.writeln("enum isDubProject = true;");
-
     output.log("    Getting dub build information");
-    auto dubInfo = getDubInfo(output, dub, options);
+    auto dubInfos = getDubInfos(output, dub, options);
     output.log("    Got     dub build information");
 
-    const targetType = dubInfo.packages.length
-        ? dubInfo.packages[0].targetType
+    const targetType = dubInfos["default"].packages.length
+        ? dubInfos["default"].packages[0].targetType
         : TargetType.sourceLibrary;
 
+    file.writeln("import reggae.dub.info;");
+    file.writeln("enum isDubProject = true;");
     file.writeln(`const configToDubInfo = assocList([`);
 
-    const keys = () @trusted { return gDubInfos.keys; }();
-    foreach(config; keys) {
-        file.writeln(`    assocEntry("`, config, `", `, gDubInfos[config], `),`);
+    foreach(k, v; dubInfos) {
+        file.writeln(`    assocEntry("`, k, `", `, v, `),`);
     }
     file.writeln(`]);`);
+
     file.writeln;
 }
 
@@ -66,8 +62,7 @@ auto dubInfos(O)(ref O output,
     const dubSelectionsJson = ensureDubSelectionsJson(output, options);
     auto dub = Dub(options);
     dubFetch(output, dub, options, dubSelectionsJson);
-    auto dubInfo = getDubInfo(output, dub, options);
-    return gDubInfos.dup;
+    return getDubInfos(output, dub, options);
 }
 
 private string ensureDubSelectionsJson
@@ -95,59 +90,56 @@ private string ensureDubSelectionsJson
 }
 
 
-
-private from!"reggae.dub.info".DubInfo getDubInfo
+private from!"reggae.dub.info".DubInfo[string] getDubInfos
     (O)
     (ref O output,
      ref from!"reggae.dub.interop.dublib".Dub dub,
      in from!"reggae.options".Options options)
 {
-    import reggae.dub.interop: gDubInfos;
     import reggae.io: log;
     import reggae.path: buildPath;
+    import reggae.dub.info: DubInfo;
     import std.file: exists;
     import std.exception: enforce;
 
-    version(unittest) gDubInfos = null;
+    DubInfo[string] ret;
 
-    if("default" !in gDubInfos) {
+    enforce(buildPath(options.projectPath, "dub.selections.json").exists,
+            "Cannot find dub.selections.json");
 
-        enforce(buildPath(options.projectPath, "dub.selections.json").exists,
-                "Cannot find dub.selections.json");
+    auto settings = dub.getGeneratorSettings(options);
+    const configs = dubConfigurations(output, dub, options, settings);
+    const haveTestConfig = configs.test != "";
+    bool atLeastOneConfigOk;
+    Exception dubInfoFailure;
 
-        auto settings = dub.getGeneratorSettings(options);
-        const configs = dubConfigurations(output, dub, options, settings);
-        const haveTestConfig = configs.test != "";
-        bool atLeastOneConfigOk;
-        Exception dubInfoFailure;
-
-        foreach(config; configs.configurations) {
-            const isTestConfig = haveTestConfig && config == configs.test;
-            try {
-                gDubInfos[config] = handleDubConfig(output, dub, options, settings, config, isTestConfig);
-                atLeastOneConfigOk = true;
-            } catch(Exception ex) {
-                output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);
-                if(dubInfoFailure is null) dubInfoFailure = ex;
-            }
+    foreach(config; configs.configurations) {
+        const isTestConfig = haveTestConfig && config == configs.test;
+        try {
+            ret[config] = handleDubConfig(output, dub, options, settings, config, isTestConfig);
+            atLeastOneConfigOk = true;
+        } catch(Exception ex) {
+            output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);
+            if(dubInfoFailure is null) dubInfoFailure = ex;
         }
-
-        if(!atLeastOneConfigOk) {
-            assert(dubInfoFailure !is null,
-                   "Internal error: no configurations worked and no exception to throw");
-            throw dubInfoFailure;
-        }
-
-        gDubInfos["default"] = gDubInfos[configs.default_];
-
-        // (additionally) expose the special `dub test` config as `unittest` config in the DSL (`configToDubInfo`)
-        // (for `dubTestTarget!()`, `dubConfigurationTarget!(Configuration("unittest"))` etc.)
-        if(haveTestConfig && configs.test != "unittest" && configs.test in gDubInfos)
-            gDubInfos["unittest"] = gDubInfos[configs.test];
     }
 
-    return gDubInfos["default"];
+    if(!atLeastOneConfigOk) {
+        assert(dubInfoFailure !is null,
+               "Internal error: no configurations worked and no exception to throw");
+        throw dubInfoFailure;
+    }
+
+    ret["default"] = ret[configs.default_];
+
+    // (additionally) expose the special `dub test` config as `unittest` config in the DSL (`configToDubInfo`)
+    // (for `dubTestTarget!()`, `dubConfigurationTarget!(Configuration("unittest"))` etc.)
+    if(haveTestConfig && configs.test != "unittest" && configs.test in ret)
+        ret["unittest"] = ret[configs.test];
+
+    return ret;
 }
+
 
 private from!"reggae.dub.interop.configurations".DubConfigurations
 dubConfigurations

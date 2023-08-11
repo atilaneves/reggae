@@ -16,7 +16,7 @@ unittest {
     with(immutable ReggaeSandbox("dub")) {
         shouldNotExist("reggaefile.d");
         writelnUt("\n\nReggae output:\n\n", runReggae("-b", "ninja").lines.join("\n"), "-----\n");
-        shouldExist("reggaefile.d");
+        shouldNotExist("reggaefile.d");
         auto output = ninja(["-v"]).shouldExecuteOk;
 
         version(Windows) {
@@ -72,7 +72,7 @@ unittest {
 
 @("dependencies not on file system already no dub.selections.json")
 @Flaky
-@Tags(["dub", "ninja"])
+@Tags("dub", "ninja", "online")
 unittest {
 
     import std.file: exists, rmdirRecurse;
@@ -98,7 +98,7 @@ unittest {
 
 
 @("no main function but with unit tests")
-@Tags(["dub", "ninja"])
+@Tags("dub", "ninja", "online")
 @Flaky
 unittest {
     import std.file: mkdirRecurse;

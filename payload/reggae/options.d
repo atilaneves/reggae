@@ -199,7 +199,11 @@ struct Options {
     }
 
     string[] reggaeFileDependencies() @safe const {
-        return [ranFromPath, reggaeFilePath] ~ getReggaeFileDependenciesDlang ~ dependencies;
+        import std.file: exists;
+        auto maybeReggaeFile = reggaeFilePath.exists
+            ? [reggaeFilePath]
+            : [];
+        return ranFromPath ~ maybeReggaeFile ~ getReggaeFileDependenciesDlang ~ dependencies;
     }
 
     bool isJsonBuild() @safe const {

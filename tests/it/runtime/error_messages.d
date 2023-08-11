@@ -11,7 +11,7 @@ import tests.it.runtime;
     else
         enum projectPath = "/non/existent";
 
-    ReggaeSandbox().runReggae(["-b", "binary"], projectPath).shouldThrowWithMessage(
+    ReggaeSandbox().runReggae(["-b", "ninja"], projectPath).shouldThrowWithMessage(
         "Could not find " ~ buildPath(projectPath, "reggaefile.d")
     );
 }
@@ -21,7 +21,7 @@ import tests.it.runtime;
 
     with(immutable ReggaeSandbox()) {
         writeFile("foo.txt");
-        runReggae("-b", "binary").shouldThrowWithMessage(
+        runReggae("-b", "ninja").shouldThrowWithMessage(
             "Could not find " ~ buildPath(testPath, "reggaefile.d"));
     }
 }
@@ -32,22 +32,22 @@ import tests.it.runtime;
         writeFile("reggaefile.d");
         writeFile("reggaefile.py");
 
-        runReggae("-b", "binary").shouldThrowWithMessage(
+        runReggae("-b", "ninja").shouldThrowWithMessage(
             "Reggae builds may only use one language. Found: D, Python"
             );
 
         writeFile("reggaefile.rb");
-        runReggae("-b", "binary").shouldThrowWithMessage(
+        runReggae("-b", "ninja").shouldThrowWithMessage(
             "Reggae builds may only use one language. Found: D, Python, Ruby"
             );
 
         writeFile("reggaefile.js");
-        runReggae("-b", "binary").shouldThrowWithMessage(
+        runReggae("-b", "ninja").shouldThrowWithMessage(
             "Reggae builds may only use one language. Found: D, Python, Ruby, JavaScript"
             );
 
         writeFile("reggaefile.lua");
-        runReggae("-b", "binary").shouldThrowWithMessage(
+        runReggae("-b", "ninja").shouldThrowWithMessage(
             "Reggae builds may only use one language. Found: D, Python, Ruby, JavaScript, Lua"
             );
     }

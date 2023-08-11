@@ -128,7 +128,6 @@ unittest {
     auto options = jsonToOptions(defaultOptions, parseJSON(jsonString));
     options.reggaeFileDependencies.shouldEqual(
         [thisExePath,
-         buildPath(projectPath, "reggaefile.d"),
          "/path/to/foo.py",
          "/other/path/bar.py"]);
 }

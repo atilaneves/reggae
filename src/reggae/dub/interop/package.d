@@ -55,6 +55,20 @@ void writeDubConfig(O)(ref O output,
     file.writeln;
 }
 
+auto dubInfos(O)(ref O output,
+                 in from!"reggae.options".Options options) {
+    import reggae.io: log;
+    import reggae.dub.info: TargetType;
+    import reggae.dub.interop.fetch: dubFetch;
+    import reggae.dub.interop.dublib: Dub;
+
+    // must check for dub.selections.json before creating dub instance
+    const dubSelectionsJson = ensureDubSelectionsJson(output, options);
+    auto dub = Dub(options);
+    dubFetch(output, dub, options, dubSelectionsJson);
+    auto dubInfo = getDubInfo(output, dub, options);
+    return gDubInfos.dup;
+}
 
 private string ensureDubSelectionsJson
     (O)

@@ -16,7 +16,7 @@ unittest {
     with(immutable ReggaeSandbox("dub")) {
         shouldNotExist("reggaefile.d");
         writelnUt("\n\nReggae output:\n\n", runReggae("-b", "ninja").lines.join("\n"), "-----\n");
-        shouldExist("reggaefile.d");
+        shouldNotExist("reggaefile.d");
         auto output = ninja(["-v"]).shouldExecuteOk;
 
         version(Windows) {

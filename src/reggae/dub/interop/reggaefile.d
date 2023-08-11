@@ -7,46 +7,28 @@ module reggae.dub.interop.reggaefile;
 import reggae.from;
 
 
-void maybeCreateReggaefile(T)(auto ref T output,
-                              in from!"reggae.options".Options options)
-{
+auto defaultDubBuild(in from!"reggae.options".Options options) {
+    import reggae.build: Build;
+    import reggae.dub.interop: dubInfos;
     import std.file: exists;
+    import std.stdio: stdout;
 
-    if(options.isDubProject && !options.reggaeFilePath.exists) {
-        createReggaefile(output, options);
-    }
+    if(!options.isDubProject || options.reggaeFilePath.exists)
+        return Build();
+
+    const configToDubInfo = dubInfos(stdout, options);
+
+    return options.dubConfig == ""
+        ? standardDubBuild(options, configToDubInfo)
+        : reducedDubBuild(options, configToDubInfo);
 }
 
-// default build for a dub project when there is no reggaefile
-private void createReggaefile(T)(auto ref T output,
-                                 in from!"reggae.options".Options options)
-{
-    import reggae.io: log;
-    import reggae.path: buildPath;
-    import std.stdio: File;
-    import std.string: replace;
+auto standardDubBuild(in from!"reggae.options".Options options, in ConfigToDubInfo configToDubInfo) {
+    import reggae.build: Build, Target, optional;
+    import reggae.rules.dub: dubDefaultTarget, dubTestTarget;
 
-    output.log("Creating reggaefile.d from dub information");
-    auto file = File(buildPath(options.projectPath, "reggaefile.d"), "w");
-
-    static cleanup(in string str) {
-        return str.replace("\n        ", "\n");
-    }
-
-    const text = options.dubConfig == ""
-        ? standardDubReggaefile
-        : reducedDubReggaefile;
-
-    file.write(text.replace("\n    ", "\n"));
-}
-
-
-// This is the default reggaefile for dub projects if one is not found
-private enum standardDubReggaefile = q{
-    import reggae;
-
-    alias buildTarget = dubDefaultTarget!(); // dub build
-    alias testTarget = dubTestTarget!();     // dub test
+    auto buildTarget = dubDefaultTarget(options, configToDubInfo); // dub build
+    auto testTarget = dubTestTarget(options, configToDubInfo);     // dub test
 
     Target aliasTarget(string aliasName, alias target)() {
         import std.algorithm: canFind, map;
@@ -71,16 +53,14 @@ private enum standardDubReggaefile = q{
     // And a `ut` convenience alias for the `dub test` target.
     alias utTarget = aliasTarget!("ut", testTarget);
 
-    mixin build!(buildTarget, optional!testTarget, optional!defaultTarget, optional!utTarget);
-};
+    return Build(buildTarget, optional(testTarget), optional(defaultTarget), optional(utTarget));
+}
 
+auto reducedDubBuild(in from!"reggae.options".Options options, in ConfigToDubInfo configToDubInfo) {
+    import reggae.build: Build, Target, optional;
+    import reggae.rules.dub: dubDefaultTarget;
 
-// This is the default reggaefile if one is not found when --dub-config is used. This speeds
-// up running reggae
-private enum reducedDubReggaefile = q{
-    import reggae;
-
-    alias buildTarget = dubDefaultTarget!(); // dub build
+    auto buildTarget = dubDefaultTarget(options, configToDubInfo); // dub build
 
     Target aliasTarget(string aliasName, alias target)() {
         import std.algorithm: map;
@@ -92,5 +72,7 @@ private enum reducedDubReggaefile = q{
     // Add a `default` convenience alias for the `dub build` target.
     alias defaultTarget = aliasTarget!("default", buildTarget);
 
-    mixin build!(buildTarget, optional!defaultTarget);
-};
+    return Build(buildTarget, optional(defaultTarget));
+}
+
+private alias ConfigToDubInfo = from!"reggae.dub.info".DubInfo[string];

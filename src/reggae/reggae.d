@@ -30,10 +30,13 @@ import reggae.path: buildPath;
 
 version(minimal) {
     //empty stubs for minimal version of reggae
-    void maybeCreateReggaefile(T...)(T) {}
     void writeDubConfig(T...)(T) {}
+    auto defaultDubBuild() {
+        import reggae.build: Build;
+        return Build();
+    }
 } else {
-    import reggae.dub.interop: writeDubConfig, maybeCreateReggaefile;
+    import reggae.dub.interop: writeDubConfig, defaultDubBuild;
 }
 
 mixin template reggaeGen(targets...) {
@@ -68,6 +71,9 @@ void run(T)(auto ref T output, Options options) {
 
     enforce(options.projectPath != "", "A project path must be specified");
 
+    // if there's no custom reggaefile, execute and exit early
+    if(dubBuild(options)) return;
+
     // write out the library source files to be compiled/interpreted
     // with the user's build description
     writeSrcFiles(output, options);
@@ -77,7 +83,6 @@ void run(T)(auto ref T output, Options options) {
         if(haveToReturn) return;
     }
 
-    maybeCreateReggaefile(output, options);
     createBuild(output, options);
 }
 
@@ -110,6 +115,29 @@ bool jsonBuild(Options options, in string jsonOutput) {
         //true -> exit early
         return !build.targets.canFind!(a => a.getLanguage == Language.D);
     }
+}
+
+bool dubBuild(in Options options) {
+    import reggae.dub.interop.reggaefile: defaultDubBuild;
+    import reggae.buildgen: doBuild;
+    import reggae.types: Backend;
+    import std.algorithm: among;
+
+    with(Backend) {
+        if(!options.backend.among(make, ninja, tup))
+            return false;
+    }
+
+    auto build = defaultDubBuild(options);
+    if(build == build.init) return false;
+
+    doBuild(build, options);
+
+    import reggae.buildgen:writeCompilationDB;
+    if(!options.noCompilationDB) writeCompilationDB(build, options);
+
+
+    return true;
 }
 
 

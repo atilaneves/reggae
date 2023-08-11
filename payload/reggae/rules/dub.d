@@ -56,19 +56,17 @@ static if(isDubProject) {
         LinkerFlags linkerFlags = LinkerFlags(),
         CompilationMode compilationMode = CompilationMode.options)
     {
-        import reggae.config: options;
-
         const config = "default";
         const dubInfo = configToDubInfo[config];
         const targetName = dubInfo.targetName;
-        const linkerFlags2 = dubInfo.mainLinkerFlags ~ linkerFlags.value;
+        const allLinkerFlags = dubInfo.mainLinkerFlags ~ linkerFlags.value;
 
         return dubTarget(
             options,
             targetName,
             dubInfo,
             compilerFlags.value,
-            linkerFlags2,
+            allLinkerFlags,
             compilationMode,
         );
     }

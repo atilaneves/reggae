@@ -38,12 +38,15 @@ static if(isDubProject) {
                             CompilationMode compilationMode = CompilationMode.options)
         ()
     {
+        import reggae.config: options;
+
         enum config = "default";
         enum dubInfo = configToDubInfo[config];
         enum targetName = dubInfo.targetName;
         enum linkerFlags = dubInfo.mainLinkerFlags ~ linkerFlags.value;
 
         return dubTarget(
+            options,
             targetName,
             dubInfo,
             compilerFlags.value,
@@ -80,6 +83,7 @@ static if(isDubProject) {
                          ()
     {
         import reggae.dub.info: TargetType, targetName;
+        import reggae.config: options;
         import std.exception : enforce;
 
         // No `dub test` config? Then it inherited some `targetType "none"`, and
@@ -102,7 +106,8 @@ static if(isDubProject) {
             name = targetName(TargetType.executable, "ut");
         }
 
-        return dubTarget(name,
+        return dubTarget(options,
+                         name,
                          dubInfo,
                          compilerFlags.value,
                          linkerFlags.value,
@@ -120,8 +125,12 @@ static if(isDubProject) {
                                   )
         () if(isCallable!objsFunction)
     {
+        import reggae.config: options;
+
         const dubInfo = configToDubInfo[config.value];
-        return dubTarget(dubInfo.targetName,
+
+        return dubTarget(options,
+                         dubInfo.targetName,
                          dubInfo,
                          compilerFlags.value,
                          linkerFlags.value,
@@ -139,17 +148,21 @@ static if(isDubProject) {
      )
         ()
     {
-        return dubTarget(targetName,
-                         configToDubInfo[config.value],
-                         compilerFlags.value,
-                         linkerFlags.value,
-                         compilationMode,
-                         objsFunction(),
-            );
+        import reggae.config: options;
+
+        return dubTarget(
+            options,
+            targetName,
+            configToDubInfo[config.value],
+            compilerFlags.value,
+            linkerFlags.value,
+            compilationMode,
+            objsFunction(),
+        );
     }
 
-
     Target dubTarget(
+        in imported!"reggae.options".Options options,
         in TargetName targetName,
         in DubInfo dubInfo,
         in string[] compilerFlags,
@@ -159,7 +172,6 @@ static if(isDubProject) {
         in size_t startingIndex = 0,
         )
     {
-        import reggae.config: options;
         import reggae.rules.common: staticLibraryTarget, link;
         import reggae.types: TargetName;
         import std.path: relativePath, buildPath;
@@ -300,7 +312,7 @@ static if(isDubProject) {
     }
 
 
-    private Target[] objs(in TargetName targetName,
+    /*private*/ Target[] objs(in TargetName targetName,
                           in DubInfo dubInfo,
                           in string[] compilerFlags,
                           in CompilationMode compilationMode,
@@ -320,7 +332,7 @@ static if(isDubProject) {
         return allObjs;
     }
 
-    private string realName(in TargetName targetName, in DubInfo dubInfo) {
+    /*private*/ string realName(in TargetName targetName, in DubInfo dubInfo) {
 
         import std.path: buildPath;
 

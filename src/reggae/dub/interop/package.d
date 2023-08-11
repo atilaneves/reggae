@@ -24,16 +24,7 @@ void writeDubConfig(O)(ref O output,
         return;
     }
 
-    // must check for dub.selections.json before creating dub instance
-    const dubSelectionsJson = ensureDubSelectionsJson(output, options);
-
-    auto dub = Dub(options);
-
-    dubFetch(output, dub, options, dubSelectionsJson);
-
-    output.log("    Getting dub build information");
-    auto dubInfos = getDubInfos(output, dub, options);
-    output.log("    Got     dub build information");
+    auto dubInfos = dubInfos(output, options);
 
     const targetType = dubInfos["default"].packages.length
         ? dubInfos["default"].packages[0].targetType
@@ -60,9 +51,16 @@ auto dubInfos(O)(ref O output,
 
     // must check for dub.selections.json before creating dub instance
     const dubSelectionsJson = ensureDubSelectionsJson(output, options);
+
     auto dub = Dub(options);
+
     dubFetch(output, dub, options, dubSelectionsJson);
-    return getDubInfos(output, dub, options);
+
+    output.log("    Getting dub build information");
+    auto ret = getDubInfos(output, dub, options);
+    output.log("    Got     dub build information");
+
+    return ret;
 }
 
 private string ensureDubSelectionsJson

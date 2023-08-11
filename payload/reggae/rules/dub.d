@@ -40,17 +40,35 @@ static if(isDubProject) {
     {
         import reggae.config: options;
 
-        enum config = "default";
-        enum dubInfo = configToDubInfo[config];
-        enum targetName = dubInfo.targetName;
-        enum linkerFlags = dubInfo.mainLinkerFlags ~ linkerFlags.value;
+        return dubDefaultTarget(
+            options,
+            configToDubInfo,
+            compilerFlags,
+            linkerFlags,
+            compilationMode
+        );
+    }
+
+    Target dubDefaultTarget(C)(
+        in imported!"reggae.options".Options options,
+        in C configToDubInfo,
+        CompilerFlags compilerFlags = CompilerFlags(),
+        LinkerFlags linkerFlags = LinkerFlags(),
+        CompilationMode compilationMode = CompilationMode.options)
+    {
+        import reggae.config: options;
+
+        const config = "default";
+        const dubInfo = configToDubInfo[config];
+        const targetName = dubInfo.targetName;
+        const linkerFlags2 = dubInfo.mainLinkerFlags ~ linkerFlags.value;
 
         return dubTarget(
             options,
             targetName,
             dubInfo,
             compilerFlags.value,
-            linkerFlags,
+            linkerFlags2,
             compilationMode,
         );
     }

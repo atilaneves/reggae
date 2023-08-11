@@ -43,7 +43,7 @@ version(DigitalMars) {
 version(DigitalMars) {
     version(linux) {
 
-        static foreach(backend; ["ninja", "make", "binary"]) {
+        static foreach(backend; ["ninja", "make"]) {
 
             @("change.compiler." ~ backend)
             @Tags(backend)

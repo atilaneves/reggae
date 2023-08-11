@@ -89,57 +89,46 @@ void run(T)(auto ref T output, Options options) {
 //get JSON description of the build from a scripting language
 //and transform it into a build description
 //return true if no D files are present
-bool jsonBuild(Options options) {
+private bool jsonBuild(Options options) {
+    import reggae.json_build;
+
     immutable jsonOutput = getJsonOutput(options);
-    return jsonBuild(options, jsonOutput);
+    auto build = jsonToBuild(options.projectPath, jsonOutput);
+
+    return runtimeBuild(jsonToOptions(options, jsonOutput), build);
 }
 
-//transform JSON description into a Build struct
-//return true if no D files are present
-bool jsonBuild(Options options, in string jsonOutput) {
-    enforce(options.backend != Backend.binary, "Binary backend not supported via JSON");
-
-    version(minimal)
-        assert(0, "JSON builds not supported in minimal version");
-    else {
-        import reggae.json_build;
-        import reggae.buildgen;
-        import reggae.rules.common: Language;
-
-        auto build = jsonToBuild(options.projectPath, jsonOutput);
-        doBuild(build, jsonToOptions(options, jsonOutput));
-
-        import reggae.buildgen:writeCompilationDB;
-        if(!options.noCompilationDB) writeCompilationDB(build, options);
-
-        //true -> exit early
-        return !build.targets.canFind!(a => a.getLanguage == Language.D);
-    }
-}
-
-bool dubBuild(in Options options) {
+// Call dub, get the build description, and generate the build now
+private bool dubBuild(in Options options) {
     import reggae.dub.interop.reggaefile: defaultDubBuild;
+    auto build = defaultDubBuild(options);
+    return runtimeBuild(options, build);
+}
+
+private bool runtimeBuild(in Options options, imported!"reggae.build".Build build) {
     import reggae.buildgen: doBuild;
     import reggae.types: Backend;
     import std.algorithm: among;
 
-    with(Backend) {
-        if(!options.backend.among(make, ninja, tup))
-            return false;
+    enforce(options.backend != Backend.binary, "Binary backend not supported at runtime");
+
+    version(minimal)
+        assert(0, "JSON builds not supported in minimal version");
+    else {
+        import reggae.buildgen;
+        import reggae.rules.common: Language;
+
+        if(build == build.init) return false;
+
+        doBuild(build, options);
+
+        import reggae.buildgen:writeCompilationDB;
+        if(!options.noCompilationDB) writeCompilationDB(build, options);
+
     }
-
-    auto build = defaultDubBuild(options);
-    if(build == build.init) return false;
-
-    doBuild(build, options);
-
-    import reggae.buildgen:writeCompilationDB;
-    if(!options.noCompilationDB) writeCompilationDB(build, options);
-
 
     return true;
 }
-
 
 private string getJsonOutput(in Options options) @safe {
     const args = getJsonOutputArgs(options);

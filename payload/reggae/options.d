@@ -200,10 +200,14 @@ struct Options {
 
     string[] reggaeFileDependencies() @safe const {
         import std.file: exists;
-        auto maybeReggaeFile = reggaeFilePath.exists
+        const hasReggaeFile = reggaeFilePath.exists;
+        auto maybeReggaeFile = hasReggaeFile
             ? [reggaeFilePath]
             : [];
-        return ranFromPath ~ maybeReggaeFile ~ getReggaeFileDependenciesDlang ~ dependencies;
+        auto maybeReggaeFileDeps = hasReggaeFile
+            ? getReggaeFileDependenciesDlang
+            : [];
+        return ranFromPath ~ maybeReggaeFile ~ maybeReggaeFileDeps ~ dependencies;
     }
 
     bool isJsonBuild() @safe const {

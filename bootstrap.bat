@@ -1,9 +1,7 @@
 @echo off
 setlocal
 
-set BACKEND=%1
 if "%BACKEND%" == "" set BACKEND=ninja
-
 if "%DC%" == "" set DC=dmd
 
 if exist bin rmdir /s /q bin
@@ -15,4 +13,4 @@ cd bin || exit /b
 
 echo Running bootstrapped reggae with backend %BACKEND%
 reggae -b "%BACKEND%" --dc="%DC%" .. || exit /b
-%BACKEND% || exit /b
+%BACKEND% %* || exit /b

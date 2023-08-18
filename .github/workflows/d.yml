@@ -73,7 +73,12 @@ jobs:
       - name: Set OS-specific SCRIPT_CMD environment variable
         run: |
           if [[ '${{ runner.os }}' == 'Windows' ]]; then
-            echo "SCRIPT_CMD=cmd.exe //c call bootstrap.bat" >> $GITHUB_ENV
+            if [[ '${{ matrix.dc }}' = ldc* ]]; then
+              # avoid out-of-memory kills by using a single ninja job
+              echo "SCRIPT_CMD=cmd.exe //c call bootstrap.bat -j1" >> $GITHUB_ENV
+            else
+              echo "SCRIPT_CMD=cmd.exe //c call bootstrap.bat" >> $GITHUB_ENV
+            fi
           else
             echo "SCRIPT_CMD=./bootstrap.sh" >> $GITHUB_ENV
           fi

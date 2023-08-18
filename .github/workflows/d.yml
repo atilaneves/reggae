@@ -73,7 +73,7 @@ jobs:
       - name: Set OS-specific SCRIPT_CMD environment variable
         run: |
           if [[ '${{ runner.os }}' == 'Windows' ]]; then
-            echo "SCRIPT_CMD=./bootstrap.bat" >> $GITHUB_ENV
+            echo "SCRIPT_CMD=cmd.exe //c call bootstrap.bat" >> $GITHUB_ENV
           else
             echo "SCRIPT_CMD=./bootstrap.sh" >> $GITHUB_ENV
           fi

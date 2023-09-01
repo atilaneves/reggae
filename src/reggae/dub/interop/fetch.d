@@ -94,7 +94,8 @@ private bool pkgExistsOnFS(in VersionedPackage pkg) @safe {
 
     return buildPath(
         dubPackagesDir,
-        pkg.name ~ "-" ~ version_,
+        pkg.name,
+        version_,
         pkg.name ~ ".lock"
     ).exists;
 }

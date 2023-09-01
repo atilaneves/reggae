@@ -31,6 +31,7 @@ struct DubPackage {
     string[] dflags;
     string[] lflags;
     string[] importPaths;
+    string[] cImportPaths;
     string[] stringImportPaths;
     string[] files;
     TargetType targetType;
@@ -145,7 +146,8 @@ struct DubInfo {
         import std.string: indexOf, stripRight;
 
         const dubPackage = packages[dubPackageIndex];
-        const importPaths = dubPackage.packagePaths(dubPackage.importPaths);
+        const importPaths = dubPackage.packagePaths(
+            dubPackage.importPaths ~ dubPackage.cImportPaths);
         const stringImportPaths = dubPackage.packagePaths(dubPackage.stringImportPaths);
         const isMainPackage = dubPackageIndex == 0;
         //the path must be explicit for the other packages, implicit for the "main"

@@ -24,19 +24,6 @@ jobs:
         with:
           compiler: ${{ matrix.dc }}
 
-      # Work around hardcoded `dmd` compiler in integration tests
-      - name: "LDC: Symlink dmd to ldmd2"
-        if: matrix.dc == 'ldc-beta'
-        shell: bash
-        run: |
-          set -ex
-          ldcBinDir=$(dirname $(which ldmd2))
-          if [[ '${{ runner.os }}' == 'Windows' ]]; then
-            cp $ldcBinDir/ldmd2.exe $ldcBinDir/dmd.exe
-          else
-            ln -s $ldcBinDir/ldmd2 $ldcBinDir/dmd
-          fi
-
       - name: "Posix: Run tests"
         if: runner.os != 'Windows'
         run: dub -q test -- ~@tup ~@travis_oops
@@ -86,7 +73,12 @@ jobs:
       - name: Set OS-specific SCRIPT_CMD environment variable
         run: |
           if [[ '${{ runner.os }}' == 'Windows' ]]; then
-            echo "SCRIPT_CMD=./bootstrap.bat" >> $GITHUB_ENV
+            if [[ '${{ matrix.dc }}' = ldc* ]]; then
+              # avoid out-of-memory kills by using a single ninja job
+              echo "SCRIPT_CMD=cmd.exe //c call bootstrap.bat -j1" >> $GITHUB_ENV
+            else
+              echo "SCRIPT_CMD=cmd.exe //c call bootstrap.bat" >> $GITHUB_ENV
+            fi
           else
             echo "SCRIPT_CMD=./bootstrap.sh" >> $GITHUB_ENV
           fi
@@ -95,5 +87,5 @@ jobs:
         run: ${{ env.SCRIPT_CMD }}
 
       - name: "LDC: Bootstrap with DC=ldmd2"
-        if: matrix.dc == 'ldc-beta'
+        if: startsWith(matrix.dc, 'ldc')
         run: DC=ldmd2 ${{ env.SCRIPT_CMD }}

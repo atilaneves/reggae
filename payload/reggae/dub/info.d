@@ -170,6 +170,8 @@ struct DubInfo {
                     return "-version";
                 case "ldc2":
                 case "ldc":
+                case "ldmd":
+                case "ldmd2":
                     return "-d-version";
             }
         }();

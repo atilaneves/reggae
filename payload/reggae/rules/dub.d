@@ -7,10 +7,6 @@
 module reggae.rules.dub;
 
 
-import reggae.config;
-import reggae.path: buildPath;
-
-
 enum CompilationMode {
     module_,  /// compile per module
     package_, /// compile per package
@@ -22,7 +18,7 @@ struct DubPackageName {
     string value;
 }
 
-static if(isDubProject) {
+static if(imported!"reggae.config".isDubProject) {
 
     import reggae.dub.info;
     import reggae.types;
@@ -38,7 +34,7 @@ static if(isDubProject) {
                             CompilationMode compilationMode = CompilationMode.options)
         ()
     {
-        import reggae.config: options;
+        import reggae.config: options, configToDubInfo;
 
         return dubDefaultTarget(
             options,
@@ -98,7 +94,7 @@ static if(isDubProject) {
                          CompilationMode compilationMode)
                          ()
     {
-        import reggae.config: options;
+        import reggae.config: options, configToDubInfo;
         return dubTestTarget(
             options,
             configToDubInfo,
@@ -159,7 +155,7 @@ static if(isDubProject) {
                                   )
         () if(isCallable!objsFunction)
     {
-        import reggae.config: options;
+        import reggae.config: options, configToDubInfo;
 
         const dubInfo = configToDubInfo[config.value];
 
@@ -182,7 +178,7 @@ static if(isDubProject) {
      )
         ()
     {
-        import reggae.config: options;
+        import reggae.config: options, configToDubInfo;
 
         return dubTarget(
             options,
@@ -257,6 +253,8 @@ static if(isDubProject) {
                              CompilerFlags compilerFlags = CompilerFlags())
         () // runtime args
     {
+        import reggae.config: configToDubInfo;
+
         const dubInfo = configToDubInfo[config.value];
         const startingIndex = 1;
 
@@ -280,6 +278,7 @@ static if(isDubProject) {
                         CompilationMode compilationMode = CompilationMode.options)
         ()
     {
+        import reggae.config: configToDubInfo;
         const dubInfo = configToDubInfo[config.value];
         return objs(dubInfo.targetName,
                     dubInfo,
@@ -316,6 +315,7 @@ static if(isDubProject) {
         )
         ()
     {
+        import reggae.config: configToDubInfo;
         return configToDubInfo[config.value].packageNameToTargets(
             dubPackageName.value,
             compilerFlags.value,
@@ -325,6 +325,7 @@ static if(isDubProject) {
 
 
     ImportPaths dubImportPaths(Configuration config = Configuration("default"))() {
+        import reggae.config: configToDubInfo;
         return ImportPaths(configToDubInfo[config.value].allImportPaths);
     }
 
@@ -338,6 +339,7 @@ static if(isDubProject) {
         )
         ()
     {
+        import reggae.config: configToDubInfo;
         return link!(
             ExeName(targetName.value),
             objsFunction,
@@ -346,7 +348,7 @@ static if(isDubProject) {
     }
 
 
-    /*private*/ Target[] objs(in TargetName targetName,
+    private Target[] objs(in TargetName targetName,
                           in DubInfo dubInfo,
                           in string[] compilerFlags,
                           in CompilationMode compilationMode,
@@ -366,7 +368,7 @@ static if(isDubProject) {
         return allObjs;
     }
 
-    /*private*/ string realName(in TargetName targetName, in DubInfo dubInfo) {
+    private string realName(in TargetName targetName, in DubInfo dubInfo) {
 
         import std.path: buildPath;
 

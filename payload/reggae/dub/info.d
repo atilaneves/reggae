@@ -1,7 +1,6 @@
 module reggae.dub.info;
 
 import reggae.build;
-import reggae.rules;
 import reggae.types;
 import reggae.sorting;
 import reggae.options: Options;
@@ -104,8 +103,10 @@ struct DubObjsDir {
 struct DubInfo {
 
     import reggae.rules.dub: CompilationMode;
+    import reggae.options: Options;
 
     DubPackage[] packages;
+    Options options;
 
     DubInfo dup() @safe pure nothrow const {
         import std.algorithm: map;
@@ -137,12 +138,11 @@ struct DubInfo {
         @safe const
     {
         import reggae.path: deabsolutePath;
-        import reggae.config: options;
         import std.range: chain, only;
-        import std.algorithm: filter, startsWith;
+        import std.algorithm: filter, startsWith, among;
         import std.array: array, replace;
         import std.functional: not;
-        import std.path: baseName, dirSeparator;
+        import std.path: dirSeparator, baseName;
         import std.string: indexOf, stripRight;
 
         const dubPackage = packages[dubPackageIndex];
@@ -161,17 +161,23 @@ struct DubInfo {
                 : flags.filter!(f => f != "-unittest" && f != "-main").array;
         }
 
-        version(DigitalMars)
-            enum versionOpt = "-version";
-        else version(LDC)
-            enum versionOpt = "-d-version";
-        else version(GDC)
-            enum versionOpt = "-version";
-        else
-            static assert(false, "Unknown compiler");
+        const versionOpt = () {
+            switch(options.compilerBinName) {
+                default:
+                    throw new Exception("Unknown compiler " ~ options.compilerBinName);
+                case "dmd":
+                case "gdc":
+                    return "-version";
+                case "ldc2":
+                case "ldc":
+                case "ldmd":
+                case "ldmd2":
+                    return "-d-version";
+            }
+        }();
 
         const(string)[] pkgDflags = dubPackage.dflags;
-        version(LDC) {
+        if(options.compilerBinName.among("ldc", "ldc2")) {
             if (pkgDflags.length) {
                 // For LDC, dub implicitly adds `--oq -od=…/obj` to avoid object-file collisions.
                 // Remove that workaround for reggae; it's not needed and unexpected.
@@ -199,17 +205,19 @@ struct DubInfo {
             .array;
 
         auto compileFunc() {
+            import reggae.rules.d: dlangObjectFilesTogether,
+                dlangObjectFilesPerModule, dlangObjectFilesPerPackage,
+                dlangObjectFilesFunc;
             final switch(compilationMode) with(CompilationMode) {
                 case all: return &dlangObjectFilesTogether;
                 case module_: return &dlangObjectFilesPerModule;
                 case package_: return &dlangObjectFilesPerPackage;
-                case options: return &dlangObjectFiles;
+                case options: return dlangObjectFilesFunc(this.options);
             }
         }
 
-        auto targetsFunc() {
+        auto packageTargets = () {
             import reggae.rules.d: dlangStaticLibraryTogether;
-            import reggae.config: options;
 
             const isStaticLibDep =
                 dubPackage.targetType == TargetType.staticLibrary &&
@@ -217,11 +225,9 @@ struct DubInfo {
                 !options.dubDepObjsInsteadOfStaticLib;
 
             return isStaticLibDep
-                ? &dlangStaticLibraryTogether
-                : compileFunc;
-        }
-
-        auto packageTargets = targetsFunc()(files, flags, importPaths, stringImportPaths, [], projDir);
+                ? dlangStaticLibraryTogether(options, files, flags, importPaths, stringImportPaths, [], projDir)
+                : compileFunc()(files, flags, importPaths, stringImportPaths, [], projDir);
+        }();
 
         const dubPkgRoot = buildPath(dubPackage.path).deabsolutePath.stripRight(dirSeparator);
 
@@ -299,12 +305,7 @@ struct DubInfo {
             : [];
     }
 
-    // template due to purity - in the 2nd build with the payload this is pure,
-    // but in the 1st build to generate the reggae executable it's not.
-    // See reggae.config.
-    string[] linkerFlags()() const {
-        import reggae.config: options;
-
+    string[] linkerFlags() @safe pure nothrow const {
         const allLibs = packages[0].libs;
 
         static string libFlag(in string lib) {

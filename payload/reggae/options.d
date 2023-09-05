@@ -63,9 +63,25 @@ struct Options {
     string[string] userVars; //must always be the last member variable
 
     Options dup() @safe pure const nothrow {
-        return Options(backend,
-                       projectPath, dflags, ranFromPath, cCompiler, cppCompiler, dCompiler,
-                       help, perModule, isDubProject, oldNinja, noCompilationDB, cacheBuildInfo);
+        import std.traits: isAssociativeArray;
+
+        Options ret;
+
+        static foreach(i; 0 .. this.tupleof.length) {
+            static if(__traits(compiles, { ret.tupleof[i] = this.tupleof[i].dup; }))
+                ret.tupleof[i] = this.tupleof[i].dup;
+            else static if(isAssociativeArray!(typeof(ret.tupleof[i]))) {
+                try {
+                    foreach(k, v; this.tupleof[i]) {
+                        ret.tupleof[i][k] = v;
+                    }
+                } catch(Exception _)
+                    assert(false);
+            }
+            else
+                ret.tupleof[i] = this.tupleof[i];
+        }
+        return ret;
     }
 
     //finished setup

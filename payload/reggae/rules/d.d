@@ -75,7 +75,6 @@ Target[] dlangObjectsPerModule(
 }
 
 
-
 /**
    Generate object file(s) for D sources.
    Depending on command-line options compiles all files together, per package, or per module.
@@ -90,15 +89,23 @@ Target[] dlangObjectFiles(in string[] srcFiles,
 {
 
     import reggae.config: options;
+    auto func = dlangObjectFilesFunc(options);
+    return func(srcFiles, flags, importPaths, stringImportPaths, implicits, projDir);
+}
 
-    auto func = options.perModule
+/**
+   Returns a function that compiles D sources in the manner specified by the user
+   in the command-line options.
+ */
+auto dlangObjectFilesFunc(in imported!"reggae.options".Options options) @safe pure nothrow {
+    return options.perModule
         ? &dlangObjectFilesPerModule
         : options.allAtOnce
             ? &dlangObjectFilesTogether
             : &dlangObjectFilesPerPackage;
-
-    return func(srcFiles, flags, importPaths, stringImportPaths, implicits, projDir);
 }
+
+
 
 /// Generate object files for D sources, compiling the whole package together.
 Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
@@ -107,7 +114,7 @@ Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
                                     in string[] stringImportPaths = [],
                                     Target[] implicits = [],
                                     in string projDir = "$project")
-    @trusted pure
+    @safe pure
 {
 
     if(srcFiles.empty) return [];
@@ -149,7 +156,7 @@ Target[] dlangObjectFilesPerModule(in string[] srcFiles,
                                    in string[] stringImportPaths = [],
                                    Target[] implicits = [],
                                    in string projDir = "$project")
-    @trusted pure
+    @safe pure
 {
     return srcFiles
         .map!(a => objectFile(const SourceFile(a),
@@ -188,16 +195,17 @@ Target[] dlangObjectFilesTogether(in string[] srcFiles,
    With dmd, this results in a different static library than compiling the
    source into object files then using `ar` to create the .a.
 */
-Target[] dlangStaticLibraryTogether(in string[] srcFiles,
-                                    in string[] flags = [],
-                                    in string[] importPaths = [],
-                                    in string[] stringImportPaths = [],
-                                    Target[] implicits = [],
-                                    in string projDir = "$project")
-    @safe
+Target[] dlangStaticLibraryTogether(
+    in imported!"reggae.options".Options options,
+    in string[] srcFiles,
+    in string[] flags = [],
+    in string[] importPaths = [],
+    in string[] stringImportPaths = [],
+    Target[] implicits = [],
+    in string projDir = "$project")
+    @safe pure
 {
     import reggae.rules.common: libFileName;
-    import reggae.config: options;
 
     // for ldc2, mimic ldmd2: uniquely-name and remove the temporary object files
     const libFlags = options.isLdc

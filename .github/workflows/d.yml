@@ -11,7 +11,7 @@ jobs:
         # Remember to change the compiler versions further below as well as here
         dc:
           - dmd-2.105.0
-          - ldc-1.33.0
+          - ldc-1.34.0
 
     runs-on: ${{ matrix.os }}
     steps:

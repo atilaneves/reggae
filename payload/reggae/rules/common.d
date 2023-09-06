@@ -70,7 +70,7 @@ Target objectFile(in SourceFile srcFile,
 }
 
 
-package Target[] compilerBinary()(in string srcFile) {
+private Target[] compilerBinary()(in string srcFile) {
     import reggae.config : options;
 
     // reggae.config takes two forms: one when compiling reggae

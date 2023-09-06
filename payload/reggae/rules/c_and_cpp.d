@@ -20,7 +20,7 @@ Target unityBuild(ExeName exeName,
 
     import reggae.config: options;
 
-    const srcFiles = sourcesToFileNames!(sourcesFunc);
+    const srcFiles = sourcesToFileNames!sourcesFunc(options);
 
     immutable dirName = buildPath(options.workingDir, objDirOf(Target(exeName.value)));
     dirName.exists || mkdirRecurse(dirName);

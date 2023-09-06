@@ -89,7 +89,7 @@ Target[] dlangObjectFiles(
     in string[] stringImportPaths = [],
     Target[] implicits = [],
     in string projDir = "$project")
-    @safe
+    @safe pure
 {
 
     auto func = dlangObjectFilesFunc(options);
@@ -334,8 +334,14 @@ Target scriptlike(
 
     auto mainObj = objectFile(SourceFile(app.srcFileName.value), flags,
                               importPaths, stringImportPaths);
-    const depsFile = runDCompiler(projectPath, buildPath(projectPath, app.srcFileName.value), flags.value,
-                                  importPaths.value, stringImportPaths.value);
+    const depsFile = runDCompiler(
+        options,
+        projectPath,
+        buildPath(projectPath, app.srcFileName.value),
+        flags.value,
+        importPaths.value,
+        stringImportPaths.value
+   );
 
     const files = makeDeps(depsFile);
     auto dependencies = [mainObj] ~ dlangObjectFiles(
@@ -350,14 +356,14 @@ Target scriptlike(
 
 
 // run to get dependencies
-private auto runDCompiler(in string projectPath,
+private auto runDCompiler(in imported!"reggae.options".Options options,
+                          in string projectPath,
                           in string srcFileName,
                           in string[] flags,
                           in string[] importPaths,
                           in string[] stringImportPaths)
     @safe
 {
-    import reggae.config: options;
     import reggae.dependencies: makeDeps;
     import std.process: execute;
     import std.exception: enforce;

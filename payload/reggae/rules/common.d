@@ -32,7 +32,7 @@ Target[] objectFiles(alias sourcesFunc = Sources!(),
     )() @trusted {
 
     import reggae.config: options;
-    const srcFiles = sourcesToFileNames!(sourcesFunc);
+    const srcFiles = sourcesToFileNames!sourcesFunc(options);
     return srcFilesToObjectTargets(options, srcFiles, flags, includes, stringImports);
 }
 
@@ -126,6 +126,7 @@ Target executable(in imported!"reggae.options".Options options,
                   in string[] linkerFlags,
                   in string[] includes,
                   in string[] stringImports)
+    @safe
 {
     auto objs = objectFiles(
         options,
@@ -268,18 +269,17 @@ private auto arrayify(alias func)() {
         return [ret];
 }
 
-auto sourcesToTargets(alias sourcesFunc = Sources!())() {
-    return sourcesToFileNames!sourcesFunc.map!(a => Target(a));
+auto sourcesToTargets(alias sourcesFunc = Sources!())(in imported!"reggae.options".Options options) {
+    return sourcesToFileNames!sourcesFunc(options).map!(a => Target(a));
 }
 
 // Converts Sources/SourcesImpl to file names
-string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
+string[] sourcesToFileNames(alias sourcesFunc = Sources!())(in imported!"reggae.options".Options options) {
     import std.exception: enforce;
     import std.file;
     import std.path: buildNormalizedPath;
     import std.array: array;
     import std.traits: isCallable;
-    import reggae.config: options;
 
     auto srcs = sourcesFunc();
 

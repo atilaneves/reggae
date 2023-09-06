@@ -25,7 +25,8 @@ immutable fooObjJson = `
 ]`;
 
 @("Foo object") unittest {
-    jsonToBuild("", fooObjJson).shouldEqual(
+    import reggae.config: options;
+    jsonToBuild(options, "", fooObjJson).shouldEqual(
         Build(Target("foo.o", "dmd -of$out -c $in", Target("foo.d"))));
 }
 
@@ -66,7 +67,8 @@ immutable optionalJson = `
 
 @("Optional target")
 unittest {
-    jsonToBuild("", optionalJson).shouldEqual(
+    import reggae.config: options;
+    jsonToBuild(options, "", optionalJson).shouldEqual(
         Build(Target("foo.o", "dmd -of$out -c $in", Target("foo.d")),
               optional(Target("bar.o", "dmd -of$out -c $in", Target("bar.d")))));
 }
@@ -98,6 +100,7 @@ immutable fooObjJson2 = `
 
 @("version2")
 unittest {
-    jsonToBuild("", fooObjJson2).shouldEqual(
+    import reggae.config: options;
+    jsonToBuild(options, "", fooObjJson2).shouldEqual(
         Build(Target("foo.o", "dmd -of$out -c $in", Target("foo.d"))));
 }

@@ -42,8 +42,11 @@ enum JsonDepsFuncName {
     executable,
 }
 
-Build jsonToBuild(in string projectPath, in string jsonString) {
-    return tryJson(jsonString, jsonToBuildImpl(projectPath, jsonString));
+Build jsonToBuild(in imported!"reggae.options".Options options,
+                  in string projectPath,
+                  in string jsonString)
+{
+    return tryJson(jsonString, jsonToBuildImpl(options, projectPath, jsonString));
 }
 
 private auto tryJson(E)(in string jsonString, lazy E expr) {
@@ -65,9 +68,28 @@ private void rethrow(E)(in string jsonString, E e) {
     throw new Exception("Wrong JSON description for:\n" ~ jsonString ~ "\n" ~ e.msg, e, e.file, e.line);
 }
 
+private Build jsonToBuildImpl(in imported!"reggae.options".Options options,
+                              in string projectPath,
+                              in string jsonString)
+{
+    import std.exception;
+
+    auto json = parseJSON(jsonString);
+    immutable version_ = version_(json);
+
+    enforce(version_ == 0 || version_ == 1, "Unknown JSON build version");
+
+    return version_ == 1
+        ? Version1.jsonToBuild(options, projectPath, json)
+        : Version0.jsonToBuild(options, projectPath, json);
+}
+
 private struct Version0 {
 
-    static Build jsonToBuild(in string projectPath, in JSONValue json) {
+    static Build jsonToBuild(in imported!"reggae.options".Options options,
+                             in string projectPath,
+                             in JSONValue json)
+    {
         Build.TopLevelTarget maybeOptional(in JSONValue json, Target target) {
             immutable optional = ("optional" in json.object) !is null;
             return createTopLevelTarget(target, optional);
@@ -75,7 +97,7 @@ private struct Version0 {
 
         auto targets = json.array.
             filter!(a => a.object["type"].str != "defaultOptions").
-            map!(a => maybeOptional(a, jsonToTarget(projectPath, a))).
+            map!(a => maybeOptional(a, jsonToTarget(options, projectPath, a))).
             array;
 
         return Build(targets);
@@ -92,27 +114,16 @@ private struct Version0 {
 
 private struct Version1 {
 
-    static Build jsonToBuild(in string projectPath, in JSONValue json) {
-        return Version0.jsonToBuild(projectPath, json.object["build"]);
+    static Build jsonToBuild(in imported!"reggae.options".Options options,
+                             in string projectPath,
+                             in JSONValue json)
+    {
+        return Version0.jsonToBuild(options, projectPath, json.object["build"]);
     }
 
     static const(Options) jsonToOptions(in Options options, in JSONValue json) {
         return jsonToOptionsImpl(options, json.object["defaultOptions"], json.object["dependencies"]);
     }
-}
-
-
-private Build jsonToBuildImpl(in string projectPath, in string jsonString) {
-    import std.exception;
-
-    auto json = parseJSON(jsonString);
-    immutable version_ = version_(json);
-
-    enforce(version_ == 0 || version_ == 1, "Unknown JSON build version");
-
-    return version_ == 1
-        ? Version1.jsonToBuild(projectPath, json)
-        : Version0.jsonToBuild(projectPath, json);
 }
 
 private long version_(in JSONValue json) {
@@ -121,13 +132,15 @@ private long version_(in JSONValue json) {
         : 0;
 }
 
-
-private Target jsonToTarget(in string projectPath, JSONValue json) {
+private Target jsonToTarget(in imported!"reggae.options".Options options,
+                            in string projectPath,
+                            JSONValue json)
+{
     if(json.object["type"].str.to!JsonTargetType == JsonTargetType.dynamic)
-        return callTargetFunc(projectPath, json);
+        return callTargetFunc(options, projectPath, json);
 
-    auto dependencies = getDeps(projectPath, json.object["dependencies"]);
-    auto implicits = getDeps(projectPath, json.object["implicits"]);
+    auto dependencies = getDeps(options, projectPath, json.object["dependencies"]);
+    auto implicits = getDeps(options, projectPath, json.object["implicits"]);
 
     if(isLeaf(json)) {
         return Target(json.object["outputs"].array.map!(a => a.str).array,
@@ -161,7 +174,10 @@ private Command jsonToCommand(in JSONValue json) pure {
 }
 
 
-private Target[] getDeps(in string projectPath, in JSONValue json) {
+private Target[] getDeps(in imported!"reggae.options".Options options,
+                         in string projectPath,
+                         in JSONValue json)
+{
     import core.exception;
     immutable type = json.object["type"].str.to!JsonDependencyType;
 
@@ -170,8 +186,8 @@ private Target[] getDeps(in string projectPath, in JSONValue json) {
     }
     try {
         return type == JsonDependencyType.fixed
-            ? fixedDeps(projectPath, json)
-            : callDepsFunc(projectPath, json);
+            ? fixedDeps(options, projectPath, json)
+            : callDepsFunc(options, projectPath, json);
     } catch(RangeError e) {
         import std.stdio;
         stderr.writeln(e.toString);
@@ -182,21 +198,28 @@ private Target[] getDeps(in string projectPath, in JSONValue json) {
     }
 }
 
-private Target[] fixedDeps(in string projectPath, in JSONValue json) {
+private Target[] fixedDeps(in imported!"reggae.options".Options options,
+                           in string projectPath,
+                           in JSONValue json)
+{
     return "targets" in json.object
-           ? json.object["targets"].array.map!(a => jsonToTarget(projectPath, a)).array
+           ? json.object["targets"].array.map!(a => jsonToTarget(options, projectPath, a)).array
            :  [Target(json.object["outputs"].array.map!(a => a.str.dup.to!string),
                       "",
-                      getDeps(projectPath, json.object["dependencies"]),
-                      getDeps(projectPath, json.object["implicits"]))];
+                      getDeps(options, projectPath, json.object["dependencies"]),
+                      getDeps(options, projectPath, json.object["implicits"]))];
 
 }
 
-private Target[] callDepsFunc(in string projectPath, in JSONValue json) {
+private Target[] callDepsFunc(in imported!"reggae.options".Options options,
+                              in string projectPath,
+                              in JSONValue json)
+{
     immutable func = json.object["func"].str.to!JsonDepsFuncName;
     final switch(func) {
     case JsonDepsFuncName.objectFiles:
-        return objectFiles(projectPath,
+        return objectFiles(options,
+                           projectPath,
                            strings(json, "src_dirs"),
                            strings(json, "exclude_dirs"),
                            strings(json, "src_files"),
@@ -205,29 +228,30 @@ private Target[] callDepsFunc(in string projectPath, in JSONValue json) {
                            strings(json, "includes"),
                            strings(json, "string_imports"));
     case JsonDepsFuncName.staticLibrary:
-        return [staticLibrary(projectPath,
-                             stringVal(json, "name"),
-                             strings(json, "src_dirs"),
-                             strings(json, "exclude_dirs"),
-                             strings(json, "src_files"),
-                             strings(json, "exclude_files"),
-                             strings(json, "flags"),
-                             strings(json, "includes"),
-                             strings(json, "string_imports"))];
+        return [staticLibrary(options,
+                              projectPath,
+                              stringVal(json, "name"),
+                              strings(json, "src_dirs"),
+                              strings(json, "exclude_dirs"),
+                              strings(json, "src_files"),
+                              strings(json, "exclude_files"),
+                              strings(json, "flags"),
+                              strings(json, "includes"),
+                              strings(json, "string_imports"))];
     case JsonDepsFuncName.executable:
-        return [executable(projectPath,
-                          stringVal(json, "name"),
-                          strings(json, "src_dirs"),
-                          strings(json, "exclude_dirs"),
-                          strings(json, "src_files"),
-                          strings(json, "exclude_files"),
-                          strings(json, "compiler_flags"),
-                          strings(json, "linker_flags"),
-                          strings(json, "includes"),
-                          strings(json, "string_imports"))];
+        return [executable(options, projectPath,
+                           stringVal(json, "name"),
+                           strings(json, "src_dirs"),
+                           strings(json, "exclude_dirs"),
+                           strings(json, "src_files"),
+                           strings(json, "exclude_files"),
+                           strings(json, "compiler_flags"),
+                           strings(json, "linker_flags"),
+                           strings(json, "includes"),
+                           strings(json, "string_imports"))];
     case JsonDepsFuncName.targetConcat:
         return json.object["dependencies"].array.
-            map!(a => getDeps(projectPath, a)).join;
+            map!(a => getDeps(options, projectPath, a)).join;
     }
 }
 
@@ -240,7 +264,10 @@ private const(string) stringVal(in JSONValue json, in string key) {
 }
 
 
-private Target callTargetFunc(in string projectPath, in JSONValue json) {
+private Target callTargetFunc(in imported!"reggae.options".Options options,
+                              in string projectPath,
+                              in JSONValue json)
+{
     import std.exception;
     import reggae.rules.d;
     import reggae.types;
@@ -254,11 +281,13 @@ private Target callTargetFunc(in string projectPath, in JSONValue json) {
         : App(srcFile, BinaryFileName(stringVal(json, "exe_name")));
 
 
-    return scriptlike(projectPath, app,
+    return scriptlike(options,
+                      projectPath,
+                      app,
                       const Flags(strings(json, "flags")),
                       const ImportPaths(strings(json, "includes")),
                       const StringImportPaths(strings(json, "string_imports")),
-                      getDeps(projectPath, json["link_with"]));
+                      getDeps(options, projectPath, json["link_with"]));
 }
 
 

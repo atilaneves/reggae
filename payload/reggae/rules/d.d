@@ -25,8 +25,10 @@ Target[] dlangObjects(
     )
     ()
 {
+    import reggae.config: options;
     return dlangObjectFiles(
-        sourcesToFileNames!sourcesFunc,
+        options,
+        sourcesToFileNames!sourcesFunc(options),
         compilerFlags.value,
         importPaths.value,
         stringImportPaths.value,
@@ -79,18 +81,19 @@ Target[] dlangObjectsPerModule(
    Generate object file(s) for D sources.
    Depending on command-line options compiles all files together, per package, or per module.
 */
-Target[] dlangObjectFiles(in string[] srcFiles,
-                          in string[] flags = [],
-                          in string[] importPaths = [],
-                          in string[] stringImportPaths = [],
-                          Target[] implicits = [],
-                          in string projDir = "$project")
-    @safe
+Target[] dlangObjectFiles(
+    in imported!"reggae.options".Options options,
+    in string[] srcFiles,
+    in string[] flags = [],
+    in string[] importPaths = [],
+    in string[] stringImportPaths = [],
+    Target[] implicits = [],
+    in string projDir = "$project")
+    @safe pure
 {
 
-    import reggae.config: options;
     auto func = dlangObjectFilesFunc(options);
-    return func(srcFiles, flags, importPaths, stringImportPaths, implicits, projDir);
+    return func(options, srcFiles, flags, importPaths, stringImportPaths, implicits, projDir);
 }
 
 /**
@@ -108,12 +111,14 @@ auto dlangObjectFilesFunc(in imported!"reggae.options".Options options) @safe pu
 
 
 /// Generate object files for D sources, compiling the whole package together.
-Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
-                                    in string[] flags = [],
-                                    in string[] importPaths = [],
-                                    in string[] stringImportPaths = [],
-                                    Target[] implicits = [],
-                                    in string projDir = "$project")
+Target[] dlangObjectFilesPerPackage(
+    in imported!"reggae.options".Options options,
+    in string[] srcFiles,
+    in string[] flags = [],
+    in string[] importPaths = [],
+    in string[] stringImportPaths = [],
+    Target[] implicits = [],
+    in string projDir = "$project")
     @safe pure
 {
 
@@ -134,6 +139,7 @@ Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
             implicits,
         );
         return compileTarget(
+            options,
             incompleteTarget,
             files[0].packagePath ~ ".d",
             flags,
@@ -150,16 +156,19 @@ Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
 }
 
 /// Generate object files for D sources, compiling each module separately
-Target[] dlangObjectFilesPerModule(in string[] srcFiles,
-                                   in string[] flags = [],
-                                   in string[] importPaths = [],
-                                   in string[] stringImportPaths = [],
-                                   Target[] implicits = [],
-                                   in string projDir = "$project")
+Target[] dlangObjectFilesPerModule(
+    in imported!"reggae.options".Options options,
+    in string[] srcFiles,
+    in string[] flags = [],
+    in string[] importPaths = [],
+    in string[] stringImportPaths = [],
+    Target[] implicits = [],
+    in string projDir = "$project")
     @safe pure
 {
     return srcFiles
-        .map!(a => objectFile(const SourceFile(a),
+        .map!(a => objectFile(options,
+                              const SourceFile(a),
                               const Flags(flags),
                               const ImportPaths(importPaths),
                               const StringImportPaths(stringImportPaths),
@@ -169,16 +178,19 @@ Target[] dlangObjectFilesPerModule(in string[] srcFiles,
 }
 
 /// Generate object files for D sources, compiling all of them together
-Target[] dlangObjectFilesTogether(in string[] srcFiles,
-                                  in string[] flags = [],
-                                  in string[] importPaths = [],
-                                  in string[] stringImportPaths = [],
-                                  Target[] implicits = [],
-                                  in string projDir = "$project")
+Target[] dlangObjectFilesTogether(
+    in imported!"reggae.options".Options options,
+    in string[] srcFiles,
+    in string[] flags = [],
+    in string[] importPaths = [],
+    in string[] stringImportPaths = [],
+    Target[] implicits = [],
+    in string projDir = "$project")
     @safe pure
 {
     import reggae.rules.common: objFileName;
     return dlangTargetTogether(
+        options,
         &objFileName,
         srcFiles,
         flags,
@@ -213,6 +225,7 @@ Target[] dlangStaticLibraryTogether(
         : ["-lib"];
 
     return dlangTargetTogether(
+        options,
         &libFileName,
         srcFiles,
         libFlags ~ flags,
@@ -225,6 +238,7 @@ Target[] dlangStaticLibraryTogether(
 
 
 private Target[] dlangTargetTogether(
+    in imported!"reggae.options".Options options,
     string function(in string) @safe pure toFileName,
     in string[] srcFiles,
     in string[] flags = [],
@@ -266,6 +280,7 @@ private Target[] dlangTargetTogether(
     );
 
     auto target = compileTarget(
+        options,
         incompleteTarget,
         srcFiles[0],
         flags,
@@ -306,21 +321,21 @@ Target scriptlike(App app,
 {
     auto linkWith = linkWithFunction();
     import reggae.config: options;
-    return scriptlike(options.projectPath, app, flags, importPaths, stringImportPaths, linkWith);
+    return scriptlike(options, options.projectPath, app, flags, importPaths, stringImportPaths, linkWith);
 }
 
 
 //regular runtime version of scriptlike
 //all paths relative to projectPath
 //@trusted because of .array
-Target scriptlike
-    ()
-    (in string projectPath,
-     in App app, in Flags flags,
-     in ImportPaths importPaths,
-     in StringImportPaths stringImportPaths,
-     Target[] linkWith)
-    @trusted
+Target scriptlike(
+    in imported!"reggae.options".Options options,
+    in string projectPath,
+    in App app, in Flags flags,
+    in ImportPaths importPaths,
+    in StringImportPaths stringImportPaths,
+    Target[] linkWith)
+    @safe
 {
 
     import reggae.dependencies: makeDeps;
@@ -329,28 +344,38 @@ Target scriptlike
     if(getLanguage(app.srcFileName.value) != Language.D)
         throw new Exception("'scriptlike' rule only works with D files");
 
-    auto mainObj = objectFile(SourceFile(app.srcFileName.value), flags,
-                              importPaths, stringImportPaths);
-    const depsFile = runDCompiler(projectPath, buildPath(projectPath, app.srcFileName.value), flags.value,
-                                  importPaths.value, stringImportPaths.value);
+    auto mainObj = objectFile(options, SourceFile(app.srcFileName.value), flags,
+                               importPaths, stringImportPaths);
+    const depsFile = runDCompiler(
+        options,
+        projectPath,
+        buildPath(projectPath, app.srcFileName.value),
+        flags.value,
+        importPaths.value,
+        stringImportPaths.value
+   );
 
     const files = makeDeps(depsFile);
-    auto dependencies = [mainObj] ~ dlangObjectFiles(files, flags.value,
-                                                     importPaths.value, stringImportPaths.value);
+    auto dependencies = [mainObj] ~ dlangObjectFiles(
+        options,
+        files, flags.value,
+        importPaths.value,
+        stringImportPaths.value,
+    );
 
     return link(ExeName(app.exeFileName.value), dependencies ~ linkWith);
 }
 
 
 // run to get dependencies
-private auto runDCompiler(in string projectPath,
+private auto runDCompiler(in imported!"reggae.options".Options options,
+                          in string projectPath,
                           in string srcFileName,
                           in string[] flags,
                           in string[] importPaths,
                           in string[] stringImportPaths)
     @safe
 {
-    import reggae.config: options;
     import reggae.dependencies: makeDeps;
     import std.process: execute;
     import std.exception: enforce;

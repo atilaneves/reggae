@@ -205,7 +205,7 @@ import std.format;
 
 
 @("$builddir in top-level target") unittest {
-    auto ao = objectFile(SourceFile("a.c"));
+    auto ao = objectFile(Options(), SourceFile("a.c"));
     auto liba = Target("$builddir/liba.a", "ar rcs liba.a a.o", [ao]);
     mixin build!(liba);
     auto build = buildFunc();

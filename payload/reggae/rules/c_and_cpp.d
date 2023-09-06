@@ -20,7 +20,7 @@ Target unityBuild(ExeName exeName,
 
     import reggae.config: options;
 
-    const srcFiles = sourcesToFileNames!(sourcesFunc);
+    const srcFiles = sourcesToFileNames!sourcesFunc(options);
 
     immutable dirName = buildPath(options.workingDir, objDirOf(Target(exeName.value)));
     dirName.exists || mkdirRecurse(dirName);
@@ -30,8 +30,16 @@ Target unityBuild(ExeName exeName,
 
     unityFile.writeln(unityFileContents(options.projectPath, srcFiles));
 
-    return unityTarget(exeName, options.projectPath, srcFiles, flags, includes,
-                       dependenciesFunc(), implicitsFunc());
+    return unityTarget(
+        options,
+        exeName,
+        options.projectPath,
+        srcFiles,
+        flags,
+        includes,
+        dependenciesFunc(),
+        implicitsFunc()
+    );
 }
 
 
@@ -70,19 +78,22 @@ Target unityTarget(ExeName exeName,
                    alias dependenciesFunc = emptyTargets,
                    alias implicitsFunc = emptyTargets,
     )() {
-    return unityTarget(exeName, projectPath, srcFiles, flags, includes, dependenciesFunc());
+    import reggae.config: options;
+    return unityTarget(options, exeName, projectPath, srcFiles, flags, includes, dependenciesFunc());
 }
 
-Target unityTarget(R1, R2)(in ExeName exeName,
-                           in string projectPath,
-                           in string[] srcFiles,
-                           in Flags flags = Flags(),
-                           in IncludePaths includes = IncludePaths(),
-                           R1 dependencies = emptyTargets(),
-                           R2 implicits = emptyTargets(),
+private Target unityTarget(R1, R2)(in imported!"reggae.options".Options options,
+                                   in ExeName exeName,
+                                   in string projectPath,
+                                   in string[] srcFiles,
+                                   in Flags flags = Flags(),
+                                   in IncludePaths includes = IncludePaths(),
+                                   R1 dependencies = emptyTargets(),
+                                   R2 implicits = emptyTargets(),
 
     )
-    pure if(isInputRange!R1 && is(ElementType!R1 == Target) && isInputRange!R2 && is(ElementType!R2 == Target)) {
+    if(isInputRange!R1 && is(ElementType!R1 == Target) && isInputRange!R2 && is(ElementType!R2 == Target))
+{
 
     import std.algorithm;
 
@@ -96,6 +107,7 @@ Target unityTarget(R1, R2)(in ExeName exeName,
     );
 
     return compileTarget(
+        options,
         incompleteTarget,
         unityFileName,
         flags.value,

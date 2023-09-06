@@ -40,7 +40,7 @@ import unit_threaded;
 
 
 @("include flags in project dir") unittest {
-    auto obj = objectFile(SourceFile("src/foo.c"),
+    auto obj = objectFile(Options(), SourceFile("src/foo.c"),
                           Flags("-include $project/includes/header.h"));
     auto app = link(ExeName("app"), [obj]);
     auto bld = Build(app);

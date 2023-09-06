@@ -12,7 +12,7 @@ unittest {
     with(immutable ReggaeSandbox()) {
         writeFile("reggaefile.d", q{
             import reggae;
-            enum ao = objectFile(SourceFile("a.c"));
+            enum ao = objectFile!(SourceFile("a.c"));
             enum liba = Target("$builddir/liba.a", "ar rcs $out $in", [ao]);
             mixin build!(liba);
         });

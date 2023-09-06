@@ -31,8 +31,53 @@ Target[] objectFiles(alias sourcesFunc = Sources!(),
                      StringImportPaths stringImports = StringImportPaths(),
     )() @trusted {
 
-    const srcFiles = sourcesToFileNames!(sourcesFunc);
-    return srcFilesToObjectTargets(srcFiles, flags, includes, stringImports);
+    import reggae.config: options;
+    const srcFiles = sourcesToFileNames!sourcesFunc(options);
+    return srcFilesToObjectTargets(options, srcFiles, flags, includes, stringImports);
+}
+
+/**
+ An object file, typically from one source file in a certain language
+ (although for D the default is a whole package). The language is determined
+ by the file extension of the file passed in.
+ The $(D projDir) variable is best left alone; right now only the dub targets
+ make use of it (since dub packages are by definition outside of the project
+ source tree).
+*/
+Target objectFile(SourceFile srcFile,
+                  Flags flags = Flags(),
+                  ImportPaths includePaths = ImportPaths(),
+                  StringImportPaths stringImportPaths = StringImportPaths(),
+                  Target[] implicits = [],
+                  string projDir = "$project")
+    ()
+{
+
+    static bool isOptionsPure() @safe pure nothrow {
+        import reggae.config : options;
+
+        // reggae.config takes two forms: one when compiling reggae
+        // itself, where it's fake and never used except in
+        // testing. Here `options` is a function that returns a
+        // mutable object.  Another form is "IRL" where `config.d` is
+        // generated at "reggae-time" and where `options` is an
+        // immutable struct.
+        // Since this function is `pure`, testing to see if we can
+        // access `options.dCompiler` differentiates between the two.
+        static if(__traits(compiles, () @safe pure => options.dCompiler))
+            return true;
+        else
+            return false;
+    }
+
+    static if(isOptionsPure) {
+        import reggae.config: options;
+    } else {
+        import reggae.options: Options;
+        enum options = Options();
+    }
+
+    return objectFile(options, srcFile, flags, includePaths, stringImportPaths, implicits, projDir);
 }
 
 
@@ -44,21 +89,26 @@ Target[] objectFiles(alias sourcesFunc = Sources!(),
  make use of it (since dub packages are by definition outside of the project
  source tree).
 */
-Target objectFile(in SourceFile srcFile,
-                  in Flags flags = Flags(),
-                  in ImportPaths includePaths = ImportPaths(),
-                  in StringImportPaths stringImportPaths = StringImportPaths(),
-                  Target[] implicits = [],
-                  in string projDir = "$project") @safe pure {
+Target objectFile(
+    in imported!"reggae.options".Options options,
+    in SourceFile srcFile,
+    in Flags flags = Flags(),
+    in ImportPaths includePaths = ImportPaths(),
+    in StringImportPaths stringImportPaths = StringImportPaths(),
+    Target[] implicits = [],
+    in string projDir = "$project")
+    @safe pure
+{
 
     auto incompleteTarget = Target(
         srcFile.value.objFileName,
         "", // filled in below by compileTarget
         [Target(srcFile.value)],
-        implicits ~ compilerBinary(srcFile.value)
+        implicits ~ compilerBinary(options, srcFile.value)
     );
 
     return compileTarget(
+        options,
         incompleteTarget,
         srcFile.value,
         flags.value,
@@ -68,36 +118,22 @@ Target objectFile(in SourceFile srcFile,
     );
 }
 
-
-package Target[] compilerBinary()(in string srcFile) {
-    import reggae.config : options;
-
-    // reggae.config takes two forms: one when compiling reggae
-    // itself, where it's fake and never used except in
-    // testing. Here `options` is a function that returns a
-    // mutable object.  Another form is "IRL" where `config.d` is
-    // generated at "reggae-time" and where `options` is an
-    // immutable struct.
-    // Since this function is `pure`, testing to see if we can
-    // access `options.dCompiler` differentiates between the two.
-    static if(!__traits(compiles, () @safe pure => options.dCompiler)) {
+private Target[] compilerBinary(in imported!"reggae.options".Options options, in string srcFile) @safe pure nothrow {
+    if(options == options.init)
         return [];
-    } else {
-        const language = getLanguage(srcFile);
-        switch(language) with(Language) {
-            default:
-                return [];
-            case D:
-                return [options.dCompiler.Target];
-            case Cplusplus:
-                return [options.cppCompiler.Target];
-            case C:
-                return [options.cCompiler.Target];
-        }
+
+    const language = getLanguage(srcFile);
+    switch(language) with(Language) {
+        default:
+            return [];
+        case D:
+            return [options.dCompiler.Target];
+        case Cplusplus:
+            return [options.cppCompiler.Target];
+        case C:
+            return [options.cCompiler.Target];
     }
 }
-
-
 
 /**
  A binary executable. The same as calling objectFiles and link
@@ -114,7 +150,8 @@ Target executable(ExeName exeName,
     return link!(exeName, { return objs; }, linkerFlags);
 }
 
-Target executable(in string projectPath,
+Target executable(in imported!"reggae.options".Options options,
+                  in string projectPath,
                   in string name,
                   in string[] srcDirs,
                   in string[] excDirs,
@@ -124,8 +161,19 @@ Target executable(in string projectPath,
                   in string[] linkerFlags,
                   in string[] includes,
                   in string[] stringImports)
+    @safe
 {
-    auto objs = objectFiles(projectPath, srcDirs, excDirs, srcFiles, excFiles, compilerFlags, includes, stringImports);
+    auto objs = objectFiles(
+        options,
+        projectPath,
+        srcDirs,
+        excDirs,
+        srcFiles,
+        excFiles,
+        compilerFlags,
+        includes,
+        stringImports
+    );
     return link(ExeName(name), objs, const Flags(linkerFlags));
 }
 
@@ -256,18 +304,17 @@ private auto arrayify(alias func)() {
         return [ret];
 }
 
-auto sourcesToTargets(alias sourcesFunc = Sources!())() {
-    return sourcesToFileNames!sourcesFunc.map!(a => Target(a));
+auto sourcesToTargets(alias sourcesFunc = Sources!())(in imported!"reggae.options".Options options) {
+    return sourcesToFileNames!sourcesFunc(options).map!(a => Target(a));
 }
 
 // Converts Sources/SourcesImpl to file names
-string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
+string[] sourcesToFileNames(alias sourcesFunc = Sources!())(in imported!"reggae.options".Options options) {
     import std.exception: enforce;
     import std.file;
     import std.path: buildNormalizedPath;
     import std.array: array;
     import std.traits: isCallable;
-    import reggae.config: options;
 
     auto srcs = sourcesFunc();
 
@@ -285,7 +332,7 @@ string[] sourcesToFileNames(alias sourcesFunc = Sources!())() @trusted {
     }
 
     return modules.sort.
-        map!(removeProjectPath).
+        map!(a => removeProjectPath(options.projectPath, a)).
         filter!(srcs.filterFunc).
         filter!(a => a != "reggaefile.d").
         array;
@@ -331,35 +378,55 @@ string[] sourcesToFileNames(in string projectPath,
 
 
 //run-time version
-Target[] objectFiles(in string projectPath,
-                     in string[] srcDirs,
-                     in string[] excDirs,
-                     in string[] srcFiles,
-                     in string[] excFiles,
-                     in string[] flags = [],
-                     in string[] includes = [],
-                     in string[] stringImports = []) @trusted {
+Target[] objectFiles(
+    in imported!"reggae.options".Options options,
+    in string projectPath,
+    in string[] srcDirs,
+    in string[] excDirs,
+    in string[] srcFiles,
+    in string[] excFiles,
+    in string[] flags = [],
+    in string[] includes = [],
+    in string[] stringImports = [])
+    @trusted
+{
 
-    return srcFilesToObjectTargets(sourcesToFileNames(projectPath, srcDirs, excDirs, srcFiles, excFiles),
-                                   const Flags(flags),
-                                   const ImportPaths(includes),
-                                   const StringImportPaths(stringImports));
+    return srcFilesToObjectTargets(
+        options,
+        sourcesToFileNames(projectPath, srcDirs, excDirs, srcFiles, excFiles),
+        const Flags(flags),
+        const ImportPaths(includes),
+        const StringImportPaths(stringImports)
+    );
 }
 
 //run-time version
-Target staticLibrary(in string projectPath,
-                       in string name,
-                       in string[] srcDirs,
-                       in string[] excDirs,
-                       in string[] srcFiles,
-                       in string[] excFiles,
-                       in string[] flags,
-                       in string[] includes,
-                       in string[] stringImports) @trusted {
-
+Target staticLibrary(
+    in imported!"reggae.options".Options options,
+    in string projectPath,
+    in string name,
+    in string[] srcDirs,
+    in string[] excDirs,
+    in string[] srcFiles,
+    in string[] excFiles,
+    in string[] flags,
+    in string[] includes,
+    in string[] stringImports)
+    @trusted
+{
     return staticLibraryTarget(
         name,
-        objectFiles(projectPath, srcDirs, excDirs, srcFiles, excFiles, flags, includes, stringImports)
+        objectFiles(
+            options,
+            projectPath,
+            srcDirs,
+            excDirs,
+            srcFiles,
+            excFiles,
+            flags,
+            includes,
+            stringImports
+        )
     );
 }
 
@@ -379,17 +446,19 @@ version(Windows)
 else
     private enum staticLibraryShellCommand = "ar rcs $out $in";
 
-private Target[] srcFilesToObjectTargets(in string[] srcFiles,
-                                         in Flags flags,
-                                         in ImportPaths includes,
-                                         in StringImportPaths stringImports) {
+private Target[] srcFilesToObjectTargets(
+    in imported!"reggae.options".Options options,
+    in string[] srcFiles,
+    in Flags flags,
+    in ImportPaths includes,
+    in StringImportPaths stringImports) {
 
     const dSrcs = srcFiles.filter!(a => a.getLanguage == Language.D).array;
     auto otherSrcs = srcFiles.filter!(a => a.getLanguage != Language.D && a.getLanguage != Language.unknown);
     import reggae.rules.d: dlangObjectFiles;
     return
-        dlangObjectFiles(dSrcs, flags.value, ["."] ~ includes.value, stringImports.value) ~
-        otherSrcs.map!(a => objectFile(SourceFile(a), flags, includes)).array;
+        dlangObjectFiles(options, dSrcs, flags.value, ["."] ~ includes.value, stringImports.value) ~
+        otherSrcs.map!(a => objectFile(options, SourceFile(a), flags, includes)).array;
 }
 
 
@@ -427,17 +496,9 @@ string extFileName(in string srcFileName, in string extension) @safe pure {
 }
 
 
-string removeProjectPath(in string path) @safe {
-    import std.path: relativePath, absolutePath;
-    import reggae.config: options;
-    //relativePath is @system
-    return () @trusted { return path.absolutePath.relativePath(options.projectPath.absolutePath); }();
-}
-
 string removeProjectPath(in string projectPath, in string path) @safe pure {
     import std.path: relativePath, absolutePath;
-    //relativePath is @system
-    return () @trusted { return path.absolutePath.relativePath(projectPath.absolutePath); }();
+    return path.absolutePath.relativePath(projectPath.absolutePath);
 }
 
 version(unittest) {
@@ -461,6 +522,7 @@ version(unittest) {
 // takes a target that wants to add a compilation command to it, and we also add
 // the compiler to the implicit dependencies.
 package Target compileTarget(
+    in imported!"reggae.options".Options options,
     Target target,
     in string srcFileName,
     in string[] flags = [],
@@ -481,9 +543,10 @@ package Target compileTarget(
             justCompile,
         ),
         target.dependencyTargets,
-        target.implicitTargets ~ compilerBinary(target.dependencyTargets[0].rawOutputs[0]),
+        target.implicitTargets ~ compilerBinary(options, target.dependencyTargets[0].rawOutputs[0]),
     );
 }
+
 
 private Command compileCommandImpl(
     in string srcFileName,

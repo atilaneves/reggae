@@ -31,9 +31,9 @@ import std.array;
 
 
 @("objectFile") unittest {
-    auto obj = objectFile(SourceFile("path/to/src/foo.c"), Flags("-m64 -fPIC -O3"));
+    auto obj = objectFile(Options(), SourceFile("path/to/src/foo.c"), Flags("-m64 -fPIC -O3"));
     obj.hasDefaultCommand.shouldBeTrue;
 
-    auto build = Build(objectFile(SourceFile("path/to/src/foo.c"), Flags("-m64 -fPIC -O3")));
+    auto build = Build(objectFile(Options(), SourceFile("path/to/src/foo.c"), Flags("-m64 -fPIC -O3")));
     build.targets.array[0].hasDefaultCommand.shouldBeTrue;
 }

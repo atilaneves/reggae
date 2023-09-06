@@ -18,7 +18,7 @@ version(Windows) {
 @("C object file") unittest {
     immutable fileName = "foo.c";
     enum objPath = "foo" ~ objExt;
-    auto obj = objectFile(SourceFile(fileName),
+    auto obj = objectFile(Options(), SourceFile(fileName),
                            Flags("-g -O0"),
                            IncludePaths(["myhdrs", "otherhdrs"]));
     auto cmd = Command(CommandType.compile,
@@ -45,7 +45,7 @@ version(Windows) {
     foreach(ext; ["cpp", "CPP", "cc", "cxx", "C", "c++"]) {
         immutable fileName = "foo." ~ ext;
         enum objPath = "foo" ~ objExt;
-        auto obj = objectFile(SourceFile(fileName),
+        auto obj = objectFile(Options(), SourceFile(fileName),
                                Flags("-g -O0"),
                                IncludePaths(["myhdrs", "otherhdrs"]));
         auto cmd = Command(CommandType.compile,
@@ -59,7 +59,7 @@ version(Windows) {
 
 
 @("D object file") unittest {
-    auto obj = objectFile(SourceFile("foo.d"),
+    auto obj = objectFile(Options(), SourceFile("foo.d"),
                            Flags("-g -debug"),
                            ImportPaths(["myhdrs", "otherhdrs"]),
                            StringImportPaths(["strings", "otherstrings"]));

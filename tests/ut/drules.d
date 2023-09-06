@@ -11,7 +11,7 @@ import std.array;
 
 
 @("DCompile no include paths Ninja") unittest {
-    auto build = Build(objectFile(SourceFile("path/to/src/foo.d")));
+    auto build = Build(objectFile(Options(), SourceFile("path/to/src/foo.d")));
     auto ninja = Ninja(build, "/tmp/myproject");
     enum objPath = buildPath("path/to/src/foo" ~ objExt);
     ninja.buildEntries.shouldEqual(
@@ -21,7 +21,7 @@ import std.array;
 
 
 @("DCompile include paths Ninja") unittest {
-    auto build = Build(objectFile(SourceFile("path/to/src/foo.d"),
+    auto build = Build(objectFile(Options(), SourceFile("path/to/src/foo.d"),
                                    Flags("-O"),
                                    ImportPaths(["path/to/src", "other/path"])));
     auto ninja = Ninja(build, "/tmp/myproject");
@@ -33,7 +33,7 @@ import std.array;
 }
 
 @("DCompile with spaces Ninja") unittest {
-    auto build = Build(objectFile(SourceFile("my src/foo.d"),
+    auto build = Build(objectFile(Options(), SourceFile("my src/foo.d"),
                                    Flags(["-O", "-L/LIBPATH:my libs"]),
                                    ImportPaths(["my src", "other/path"])));
     auto ninja = Ninja(build, "/tmp/myproject");
@@ -48,7 +48,8 @@ import std.array;
 @ShouldFail
 @("dlangObjectFilesPerPackage")
 unittest {
-    auto build = Build(dlangObjectFilesPerPackage(["path/to/src/foo.d",
+    auto build = Build(dlangObjectFilesPerPackage(options,
+                                                  ["path/to/src/foo.d",
                                                    "path/to/src/bar.d",
                                                    "other/weird.d"],
                                                   ["-O"], ["path/to/src", "other/path"]));
@@ -67,7 +68,7 @@ unittest {
 
 @("dlangObjectFilesPerPackage ..")
 unittest {
-    auto build = Build(dlangObjectFilesPerModule(["/project/source/main.d",
+    auto build = Build(dlangObjectFilesPerModule(options, ["/project/source/main.d",
                                                   "/project/../../common/source/foo.d",
                                                   "/project/../../common/source/bar.d",
                                                  ]));
@@ -85,6 +86,6 @@ unittest {
 
 
 @("Object files empty") unittest {
-    dlangObjectFilesPerPackage([]).shouldBeEmpty;
-    dlangObjectFilesPerModule([]).shouldBeEmpty;
+    dlangObjectFilesPerPackage(options, []).shouldBeEmpty;
+    dlangObjectFilesPerModule(options, []).shouldBeEmpty;
 }

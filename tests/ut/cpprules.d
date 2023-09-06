@@ -9,7 +9,7 @@ import unit_threaded;
 
 
 @("No include paths") unittest {
-    auto build = Build(objectFile(SourceFile("path/to/src/foo.cpp")));
+    auto build = Build(objectFile(Options(), SourceFile("path/to/src/foo.cpp")));
     auto ninja = Ninja(build, "/tmp/myproject");
     enum objPath = buildPath("path/to/src/foo" ~ objExt);
     ninja.buildEntries.shouldEqual(
@@ -20,7 +20,7 @@ import unit_threaded;
 
 
 @("Include paths") unittest {
-    auto build = Build(objectFile(SourceFile("path/to/src/foo.cpp"), Flags(""),
+    auto build = Build(objectFile(Options(), SourceFile("path/to/src/foo.cpp"), Flags(""),
                                    IncludePaths(["path/to/src", "other/path"])));
     auto ninja = Ninja(build, "/tmp/myproject");
     enum objPath = buildPath("path/to/src/foo" ~ objExt);
@@ -32,7 +32,7 @@ import unit_threaded;
 
 
 @("Flags compile C") unittest {
-    auto build = Build(objectFile(SourceFile("path/to/src/foo.c"), Flags("-m64 -fPIC -O3")));
+    auto build = Build(objectFile(Options(), SourceFile("path/to/src/foo.c"), Flags("-m64 -fPIC -O3")));
     auto ninja = Ninja(build, "/tmp/myproject");
     enum objPath = buildPath("path/to/src/foo" ~ objExt);
     ninja.buildEntries.shouldEqual(
@@ -42,7 +42,7 @@ import unit_threaded;
 }
 
 @("Flags compile C++") unittest {
-    auto build = Build(objectFile(SourceFile("path/to/src/foo.cpp"), Flags("-m64 -fPIC -O3")));
+    auto build = Build(objectFile(Options(), SourceFile("path/to/src/foo.cpp"), Flags("-m64 -fPIC -O3")));
     auto ninja = Ninja(build, "/tmp/myproject");
     enum objPath = buildPath("path/to/src/foo" ~ objExt);
     ninja.buildEntries.shouldEqual(
@@ -52,7 +52,7 @@ import unit_threaded;
 }
 
 @("C++ compile") unittest {
-    auto mathsObj = objectFile(SourceFile("src/cpp/maths.cpp"),
+    auto mathsObj = objectFile(Options(), SourceFile("src/cpp/maths.cpp"),
                                 Flags("-m64 -fPIC -O3"),
                                 IncludePaths(["headers"]));
 
@@ -69,7 +69,7 @@ import unit_threaded;
 }
 
 @("C compile") unittest {
-    auto mathsObj = objectFile(SourceFile("src/c/maths.c"),
+    auto mathsObj = objectFile(Options(), SourceFile("src/c/maths.c"),
                                 Flags("-m64 -fPIC -O3"),
                                 IncludePaths(["headers"]));
 

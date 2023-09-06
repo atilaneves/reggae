@@ -59,8 +59,7 @@ struct Options {
     string dubBuildType = "debug";
     string dubArchOverride;
     string dubConfig;
-
-    string[string] userVars; //must always be the last member variable
+    string[string] userVars;
 
     Options dup() @safe pure const nothrow {
         import std.traits: isAssociativeArray;

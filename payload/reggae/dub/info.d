@@ -226,7 +226,7 @@ struct DubInfo {
 
             return isStaticLibDep
                 ? dlangStaticLibraryTogether(options, files, flags, importPaths, stringImportPaths, [], projDir)
-                : compileFunc()(files, flags, importPaths, stringImportPaths, [], projDir);
+                : compileFunc()(options, files, flags, importPaths, stringImportPaths, [], projDir);
         }();
 
         const dubPkgRoot = buildPath(dubPackage.path).deabsolutePath.stripRight(dirSeparator);

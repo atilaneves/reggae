@@ -93,7 +93,7 @@ Target[] dlangObjectFiles(
 {
 
     auto func = dlangObjectFilesFunc(options);
-    return func(srcFiles, flags, importPaths, stringImportPaths, implicits, projDir);
+    return func(options, srcFiles, flags, importPaths, stringImportPaths, implicits, projDir);
 }
 
 /**
@@ -111,12 +111,14 @@ auto dlangObjectFilesFunc(in imported!"reggae.options".Options options) @safe pu
 
 
 /// Generate object files for D sources, compiling the whole package together.
-Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
-                                    in string[] flags = [],
-                                    in string[] importPaths = [],
-                                    in string[] stringImportPaths = [],
-                                    Target[] implicits = [],
-                                    in string projDir = "$project")
+Target[] dlangObjectFilesPerPackage(
+    in imported!"reggae.options".Options options,
+    in string[] srcFiles,
+    in string[] flags = [],
+    in string[] importPaths = [],
+    in string[] stringImportPaths = [],
+    Target[] implicits = [],
+    in string projDir = "$project")
     @safe pure
 {
 
@@ -153,16 +155,19 @@ Target[] dlangObjectFilesPerPackage(in string[] srcFiles,
 }
 
 /// Generate object files for D sources, compiling each module separately
-Target[] dlangObjectFilesPerModule(in string[] srcFiles,
-                                   in string[] flags = [],
-                                   in string[] importPaths = [],
-                                   in string[] stringImportPaths = [],
-                                   Target[] implicits = [],
-                                   in string projDir = "$project")
+Target[] dlangObjectFilesPerModule(
+    in imported!"reggae.options".Options options,
+    in string[] srcFiles,
+    in string[] flags = [],
+    in string[] importPaths = [],
+    in string[] stringImportPaths = [],
+    Target[] implicits = [],
+    in string projDir = "$project")
     @safe pure
 {
     return srcFiles
-        .map!(a => objectFile(const SourceFile(a),
+        .map!(a => objectFile(options,
+                              const SourceFile(a),
                               const Flags(flags),
                               const ImportPaths(importPaths),
                               const StringImportPaths(stringImportPaths),
@@ -172,12 +177,14 @@ Target[] dlangObjectFilesPerModule(in string[] srcFiles,
 }
 
 /// Generate object files for D sources, compiling all of them together
-Target[] dlangObjectFilesTogether(in string[] srcFiles,
-                                  in string[] flags = [],
-                                  in string[] importPaths = [],
-                                  in string[] stringImportPaths = [],
-                                  Target[] implicits = [],
-                                  in string projDir = "$project")
+Target[] dlangObjectFilesTogether(
+    in imported!"reggae.options".Options options,
+    in string[] srcFiles,
+    in string[] flags = [],
+    in string[] importPaths = [],
+    in string[] stringImportPaths = [],
+    Target[] implicits = [],
+    in string projDir = "$project")
     @safe pure
 {
     import reggae.rules.common: objFileName;
@@ -332,8 +339,8 @@ Target scriptlike(
     if(getLanguage(app.srcFileName.value) != Language.D)
         throw new Exception("'scriptlike' rule only works with D files");
 
-    auto mainObj = objectFile(SourceFile(app.srcFileName.value), flags,
-                              importPaths, stringImportPaths);
+    auto mainObj = objectFile(options, SourceFile(app.srcFileName.value), flags,
+                               importPaths, stringImportPaths);
     const depsFile = runDCompiler(
         options,
         projectPath,

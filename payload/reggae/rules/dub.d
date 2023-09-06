@@ -213,7 +213,8 @@ static if(imported!"reggae.config".isDubProject) {
             ? ["-shared"]
             : [];
         const allLinkerFlags = linkerFlags ~ dubInfo.linkerFlags ~ sharedFlags;
-        auto allObjs = objs(targetName,
+        auto allObjs = objs(options,
+                            targetName,
                             dubInfo,
                             compilerFlags,
                             compilationMode,
@@ -278,9 +279,10 @@ static if(imported!"reggae.config".isDubProject) {
                         CompilationMode compilationMode = CompilationMode.options)
         ()
     {
-        import reggae.config: configToDubInfo;
+        import reggae.config: options, configToDubInfo;
         const dubInfo = configToDubInfo[config.value];
-        return objs(dubInfo.targetName,
+        return objs(options,
+                    dubInfo.targetName,
                     dubInfo,
                     compilerFlags.value,
                     compilationMode);
@@ -348,7 +350,8 @@ static if(imported!"reggae.config".isDubProject) {
     }
 
 
-    private Target[] objs(in TargetName targetName,
+    private Target[] objs(in imported!"reggae.options".Options options,
+                          in TargetName targetName,
                           in DubInfo dubInfo,
                           in string[] compilerFlags,
                           in CompilationMode compilationMode,
@@ -360,7 +363,7 @@ static if(imported!"reggae.config".isDubProject) {
         auto dubObjs = dubInfo.toTargets(
             compilerFlags,
             compilationMode,
-            dubObjsDir(targetName, dubInfo),
+            dubObjsDir(options, targetName, dubInfo),
             startingIndex
         );
         auto allObjs = dubObjs ~ extraObjects;
@@ -383,8 +386,10 @@ static if(imported!"reggae.config".isDubProject) {
         return ret == "" ? "placeholder" : ret;
     }
 
-    private auto dubObjsDir(in TargetName targetName, in DubInfo dubInfo) {
-        import reggae.config: options;
+    private auto dubObjsDir(in imported!"reggae.options".Options options,
+                            in TargetName targetName,
+                            in DubInfo dubInfo)
+    {
         import reggae.dub.info: DubObjsDir;
 
         return DubObjsDir(

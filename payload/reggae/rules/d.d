@@ -139,6 +139,7 @@ Target[] dlangObjectFilesPerPackage(
             implicits,
         );
         return compileTarget(
+            options,
             incompleteTarget,
             files[0].packagePath ~ ".d",
             flags,
@@ -189,6 +190,7 @@ Target[] dlangObjectFilesTogether(
 {
     import reggae.rules.common: objFileName;
     return dlangTargetTogether(
+        options,
         &objFileName,
         srcFiles,
         flags,
@@ -223,6 +225,7 @@ Target[] dlangStaticLibraryTogether(
         : ["-lib"];
 
     return dlangTargetTogether(
+        options,
         &libFileName,
         srcFiles,
         libFlags ~ flags,
@@ -235,6 +238,7 @@ Target[] dlangStaticLibraryTogether(
 
 
 private Target[] dlangTargetTogether(
+    in imported!"reggae.options".Options options,
     string function(in string) @safe pure toFileName,
     in string[] srcFiles,
     in string[] flags = [],
@@ -276,6 +280,7 @@ private Target[] dlangTargetTogether(
     );
 
     auto target = compileTarget(
+        options,
         incompleteTarget,
         srcFiles[0],
         flags,

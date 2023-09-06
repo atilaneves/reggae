@@ -90,6 +90,7 @@ Target objectFile(
     );
 
     return compileTarget(
+        options,
         incompleteTarget,
         srcFile.value,
         flags.value,
@@ -543,6 +544,7 @@ version(unittest) {
 // takes a target that wants to add a compilation command to it, and we also add
 // the compiler to the implicit dependencies.
 package Target compileTarget(
+    in imported!"reggae.options".Options options,
     Target target,
     in string srcFileName,
     in string[] flags = [],
@@ -566,6 +568,7 @@ package Target compileTarget(
         target.implicitTargets ~ compilerBinary(target.dependencyTargets[0].rawOutputs[0]),
     );
 }
+
 
 private Command compileCommandImpl(
     in string srcFileName,

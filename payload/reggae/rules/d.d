@@ -314,13 +314,12 @@ Target scriptlike(App app,
 //all paths relative to projectPath
 //@trusted because of .array
 Target scriptlike
-    ()
     (in string projectPath,
      in App app, in Flags flags,
      in ImportPaths importPaths,
      in StringImportPaths stringImportPaths,
      Target[] linkWith)
-    @trusted
+    @safe
 {
 
     import reggae.dependencies: makeDeps;

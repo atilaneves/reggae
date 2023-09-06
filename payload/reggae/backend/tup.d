@@ -15,11 +15,13 @@ struct Tup {
     Build build;
     const(Options) options;
 
-    this(Build build, in string projectPath) {
-        import reggae.config: options;
-        auto modOptions = options.dup;
-        modOptions.projectPath = projectPath;
-        this(build, modOptions);
+    version(unittest) {
+        this(Build build, in string projectPath) {
+            import reggae.config: options;
+            auto modOptions = options.dup;
+            modOptions.projectPath = projectPath;
+            this(build, modOptions);
+        }
     }
 
     this(Build build, in Options options) {

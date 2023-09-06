@@ -28,7 +28,7 @@ Target[] dlangObjects(
     import reggae.config: options;
     return dlangObjectFiles(
         options,
-        sourcesToFileNames!sourcesFunc,
+        sourcesToFileNames!sourcesFunc(options),
         compilerFlags.value,
         importPaths.value,
         stringImportPaths.value,

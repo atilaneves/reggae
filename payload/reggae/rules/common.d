@@ -297,7 +297,7 @@ string[] sourcesToFileNames(alias sourcesFunc = Sources!())(in imported!"reggae.
     }
 
     return modules.sort.
-        map!(removeProjectPath).
+        map!(a => removeProjectPath(options.projectPath, a)).
         filter!(srcs.filterFunc).
         filter!(a => a != "reggaefile.d").
         array;
@@ -461,17 +461,9 @@ string extFileName(in string srcFileName, in string extension) @safe pure {
 }
 
 
-string removeProjectPath(in string path) @safe {
-    import std.path: relativePath, absolutePath;
-    import reggae.config: options;
-    //relativePath is @system
-    return () @trusted { return path.absolutePath.relativePath(options.projectPath.absolutePath); }();
-}
-
 string removeProjectPath(in string projectPath, in string path) @safe pure {
     import std.path: relativePath, absolutePath;
-    //relativePath is @system
-    return () @trusted { return path.absolutePath.relativePath(projectPath.absolutePath); }();
+    return path.absolutePath.relativePath(projectPath.absolutePath);
 }
 
 version(unittest) {

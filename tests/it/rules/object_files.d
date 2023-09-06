@@ -24,6 +24,7 @@ import std.stdio: File;
 }
 
 @("C++ files with regular objectFiles") unittest {
+    import reggae.config: options;
     import std.path: absolutePath;
 
     auto testPath = newTestDir.absolutePath;
@@ -34,7 +35,7 @@ import std.stdio: File;
     }
 
     string[] none;
-    objectFiles(testPath, ["."], none, none, none, ["-g", "-O0"]).shouldBeSameSetAs(
+    objectFiles(options, testPath, ["."], none, none, none, ["-g", "-O0"]).shouldBeSameSetAs(
         [Target(buildPath("proj/main" ~ objExt),
                 compileCommand("proj/main.cpp", ["-g", "-O0"]),
                 [Target(buildPath("proj/main.cpp"))]),

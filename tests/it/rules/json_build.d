@@ -29,10 +29,11 @@ immutable linkJsonStr =
 
 @("link with no files")
 unittest {
+    import reggae.config: options;
     const testPath = newTestDir;
     mkdir(buildPath(testPath, "src"));
 
-    jsonToBuild(testPath, linkJsonStr).shouldEqual(
+    jsonToBuild(options, testPath, linkJsonStr).shouldEqual(
         Build(Target("myapp",
                      Command(CommandType.link, assocListT("flags", ["-L-M"]))))
     );
@@ -49,7 +50,7 @@ unittest {
         File(buildPath(testPath, "src", fileName), "w").writeln;
     }
 
-    jsonToBuild(testPath, linkJsonStr).shouldEqual(
+    jsonToBuild(options, testPath, linkJsonStr).shouldEqual(
         Build(Target("myapp",
                      Command(CommandType.link, assocListT("flags", ["-L-M"])),
                      [Target(buildPath("src/foo" ~ objExt),

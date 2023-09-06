@@ -31,8 +31,9 @@ Target[] objectFiles(alias sourcesFunc = Sources!(),
                      StringImportPaths stringImports = StringImportPaths(),
     )() @trusted {
 
+    import reggae.config: options;
     const srcFiles = sourcesToFileNames!(sourcesFunc);
-    return srcFilesToObjectTargets(srcFiles, flags, includes, stringImports);
+    return srcFilesToObjectTargets(options, srcFiles, flags, includes, stringImports);
 }
 
 
@@ -114,7 +115,8 @@ Target executable(ExeName exeName,
     return link!(exeName, { return objs; }, linkerFlags);
 }
 
-Target executable(in string projectPath,
+Target executable(in imported!"reggae.options".Options options,
+                  in string projectPath,
                   in string name,
                   in string[] srcDirs,
                   in string[] excDirs,
@@ -125,7 +127,17 @@ Target executable(in string projectPath,
                   in string[] includes,
                   in string[] stringImports)
 {
-    auto objs = objectFiles(projectPath, srcDirs, excDirs, srcFiles, excFiles, compilerFlags, includes, stringImports);
+    auto objs = objectFiles(
+        options,
+        projectPath,
+        srcDirs,
+        excDirs,
+        srcFiles,
+        excFiles,
+        compilerFlags,
+        includes,
+        stringImports
+    );
     return link(ExeName(name), objs, const Flags(linkerFlags));
 }
 
@@ -331,35 +343,55 @@ string[] sourcesToFileNames(in string projectPath,
 
 
 //run-time version
-Target[] objectFiles(in string projectPath,
-                     in string[] srcDirs,
-                     in string[] excDirs,
-                     in string[] srcFiles,
-                     in string[] excFiles,
-                     in string[] flags = [],
-                     in string[] includes = [],
-                     in string[] stringImports = []) @trusted {
+Target[] objectFiles(
+    in imported!"reggae.options".Options options,
+    in string projectPath,
+    in string[] srcDirs,
+    in string[] excDirs,
+    in string[] srcFiles,
+    in string[] excFiles,
+    in string[] flags = [],
+    in string[] includes = [],
+    in string[] stringImports = [])
+    @trusted
+{
 
-    return srcFilesToObjectTargets(sourcesToFileNames(projectPath, srcDirs, excDirs, srcFiles, excFiles),
-                                   const Flags(flags),
-                                   const ImportPaths(includes),
-                                   const StringImportPaths(stringImports));
+    return srcFilesToObjectTargets(
+        options,
+        sourcesToFileNames(projectPath, srcDirs, excDirs, srcFiles, excFiles),
+        const Flags(flags),
+        const ImportPaths(includes),
+        const StringImportPaths(stringImports)
+    );
 }
 
 //run-time version
-Target staticLibrary(in string projectPath,
-                       in string name,
-                       in string[] srcDirs,
-                       in string[] excDirs,
-                       in string[] srcFiles,
-                       in string[] excFiles,
-                       in string[] flags,
-                       in string[] includes,
-                       in string[] stringImports) @trusted {
-
+Target staticLibrary(
+    in imported!"reggae.options".Options options,
+    in string projectPath,
+    in string name,
+    in string[] srcDirs,
+    in string[] excDirs,
+    in string[] srcFiles,
+    in string[] excFiles,
+    in string[] flags,
+    in string[] includes,
+    in string[] stringImports)
+    @trusted
+{
     return staticLibraryTarget(
         name,
-        objectFiles(projectPath, srcDirs, excDirs, srcFiles, excFiles, flags, includes, stringImports)
+        objectFiles(
+            options,
+            projectPath,
+            srcDirs,
+            excDirs,
+            srcFiles,
+            excFiles,
+            flags,
+            includes,
+            stringImports
+        )
     );
 }
 
@@ -379,16 +411,18 @@ version(Windows)
 else
     private enum staticLibraryShellCommand = "ar rcs $out $in";
 
-private Target[] srcFilesToObjectTargets(in string[] srcFiles,
-                                         in Flags flags,
-                                         in ImportPaths includes,
-                                         in StringImportPaths stringImports) {
+private Target[] srcFilesToObjectTargets(
+    in imported!"reggae.options".Options options,
+    in string[] srcFiles,
+    in Flags flags,
+    in ImportPaths includes,
+    in StringImportPaths stringImports) {
 
     const dSrcs = srcFiles.filter!(a => a.getLanguage == Language.D).array;
     auto otherSrcs = srcFiles.filter!(a => a.getLanguage != Language.D && a.getLanguage != Language.unknown);
     import reggae.rules.d: dlangObjectFiles;
     return
-        dlangObjectFiles(dSrcs, flags.value, ["."] ~ includes.value, stringImports.value) ~
+        dlangObjectFiles(options, dSrcs, flags.value, ["."] ~ includes.value, stringImports.value) ~
         otherSrcs.map!(a => objectFile(SourceFile(a), flags, includes)).array;
 }
 

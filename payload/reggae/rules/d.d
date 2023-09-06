@@ -25,7 +25,9 @@ Target[] dlangObjects(
     )
     ()
 {
+    import reggae.config: options;
     return dlangObjectFiles(
+        options,
         sourcesToFileNames!sourcesFunc,
         compilerFlags.value,
         importPaths.value,
@@ -79,16 +81,17 @@ Target[] dlangObjectsPerModule(
    Generate object file(s) for D sources.
    Depending on command-line options compiles all files together, per package, or per module.
 */
-Target[] dlangObjectFiles(in string[] srcFiles,
-                          in string[] flags = [],
-                          in string[] importPaths = [],
-                          in string[] stringImportPaths = [],
-                          Target[] implicits = [],
-                          in string projDir = "$project")
+Target[] dlangObjectFiles(
+    in imported!"reggae.options".Options options,
+    in string[] srcFiles,
+    in string[] flags = [],
+    in string[] importPaths = [],
+    in string[] stringImportPaths = [],
+    Target[] implicits = [],
+    in string projDir = "$project")
     @safe
 {
 
-    import reggae.config: options;
     auto func = dlangObjectFilesFunc(options);
     return func(srcFiles, flags, importPaths, stringImportPaths, implicits, projDir);
 }
@@ -306,19 +309,20 @@ Target scriptlike(App app,
 {
     auto linkWith = linkWithFunction();
     import reggae.config: options;
-    return scriptlike(options.projectPath, app, flags, importPaths, stringImportPaths, linkWith);
+    return scriptlike(options, options.projectPath, app, flags, importPaths, stringImportPaths, linkWith);
 }
 
 
 //regular runtime version of scriptlike
 //all paths relative to projectPath
 //@trusted because of .array
-Target scriptlike
-    (in string projectPath,
-     in App app, in Flags flags,
-     in ImportPaths importPaths,
-     in StringImportPaths stringImportPaths,
-     Target[] linkWith)
+Target scriptlike(
+    in imported!"reggae.options".Options options,
+    in string projectPath,
+    in App app, in Flags flags,
+    in ImportPaths importPaths,
+    in StringImportPaths stringImportPaths,
+    Target[] linkWith)
     @safe
 {
 
@@ -334,8 +338,12 @@ Target scriptlike
                                   importPaths.value, stringImportPaths.value);
 
     const files = makeDeps(depsFile);
-    auto dependencies = [mainObj] ~ dlangObjectFiles(files, flags.value,
-                                                     importPaths.value, stringImportPaths.value);
+    auto dependencies = [mainObj] ~ dlangObjectFiles(
+        options,
+        files, flags.value,
+        importPaths.value,
+        stringImportPaths.value,
+    );
 
     return link(ExeName(app.exeFileName.value), dependencies ~ linkWith);
 }

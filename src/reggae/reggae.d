@@ -93,7 +93,7 @@ private bool jsonBuild(Options options) {
     import reggae.json_build;
 
     immutable jsonOutput = getJsonOutput(options);
-    auto build = jsonToBuild(options.projectPath, jsonOutput);
+    auto build = jsonToBuild(options, options.projectPath, jsonOutput);
 
     return runtimeBuild(jsonToOptions(options, jsonOutput), build);
 }

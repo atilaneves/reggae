@@ -52,6 +52,24 @@ Target objectFile(SourceFile srcFile,
                   string projDir = "$project")
     ()
 {
+
+    static bool isOptionsPure() @safe pure nothrow {
+        import reggae.config : options;
+
+        // reggae.config takes two forms: one when compiling reggae
+        // itself, where it's fake and never used except in
+        // testing. Here `options` is a function that returns a
+        // mutable object.  Another form is "IRL" where `config.d` is
+        // generated at "reggae-time" and where `options` is an
+        // immutable struct.
+        // Since this function is `pure`, testing to see if we can
+        // access `options.dCompiler` differentiates between the two.
+        static if(__traits(compiles, () @safe pure => options.dCompiler))
+            return true;
+        else
+            return false;
+    }
+
     static if(isOptionsPure) {
         import reggae.config: options;
     } else {
@@ -86,7 +104,7 @@ Target objectFile(
         srcFile.value.objFileName,
         "", // filled in below by compileTarget
         [Target(srcFile.value)],
-        implicits ~ compilerBinary(srcFile.value)
+        implicits ~ compilerBinary(options, srcFile.value)
     );
 
     return compileTarget(
@@ -99,8 +117,6 @@ Target objectFile(
         projDir
     );
 }
-
-
 
 private Target[] compilerBinary(in imported!"reggae.options".Options options, in string srcFile) @safe pure nothrow {
     if(options == options.init)
@@ -118,44 +134,6 @@ private Target[] compilerBinary(in imported!"reggae.options".Options options, in
             return [options.cCompiler.Target];
     }
 }
-
-private Target[] compilerBinary()(in string srcFile) {
-    static if(!isOptionsPure) {
-        return [];
-    } else {
-        import reggae.config: options;
-        const language = getLanguage(srcFile);
-        switch(language) with(Language) {
-            default:
-                return [];
-            case D:
-                return [options.dCompiler.Target];
-            case Cplusplus:
-                return [options.cppCompiler.Target];
-            case C:
-                return [options.cCompiler.Target];
-        }
-    }
-}
-
-private bool isOptionsPure() @safe pure nothrow {
-    import reggae.config : options;
-
-    // reggae.config takes two forms: one when compiling reggae
-    // itself, where it's fake and never used except in
-    // testing. Here `options` is a function that returns a
-    // mutable object.  Another form is "IRL" where `config.d` is
-    // generated at "reggae-time" and where `options` is an
-    // immutable struct.
-    // Since this function is `pure`, testing to see if we can
-    // access `options.dCompiler` differentiates between the two.
-    static if(__traits(compiles, () @safe pure => options.dCompiler))
-        return true;
-    else
-        return false;
-}
-
-
 
 /**
  A binary executable. The same as calling objectFiles and link
@@ -565,7 +543,7 @@ package Target compileTarget(
             justCompile,
         ),
         target.dependencyTargets,
-        target.implicitTargets ~ compilerBinary(target.dependencyTargets[0].rawOutputs[0]),
+        target.implicitTargets ~ compilerBinary(options, target.dependencyTargets[0].rawOutputs[0]),
     );
 }
 

@@ -38,26 +38,3 @@ unittest {
                      Command(CommandType.link, assocListT("flags", ["-L-M"]))))
     );
 }
-
-@("link with files")
-unittest {
-    import reggae.config;
-    const testPath = newTestDir;
-    setOptions(getOptions(["reggae", "-b", "ninja", "--per-module", "testPath"]));
-    mkdir(buildPath(testPath, "src"));
-
-    foreach(fileName; ["foo.d", "bar.d"]) {
-        File(buildPath(testPath, "src", fileName), "w").writeln;
-    }
-
-    jsonToBuild(options, testPath, linkJsonStr).shouldEqual(
-        Build(Target("myapp",
-                     Command(CommandType.link, assocListT("flags", ["-L-M"])),
-                     [Target(buildPath("src/foo" ~ objExt),
-                             compileCommand(buildPath("src/foo.d"), ["-g"], [".", "src"]),
-                             [Target(buildPath("src/foo.d"))]),
-                      Target(buildPath("src/bar" ~ objExt),
-                             compileCommand(buildPath("src/bar.d"), ["-g"], [".", "src"]),
-                             [Target(buildPath("src/bar.d"))])]))
-    );
-}

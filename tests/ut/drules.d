@@ -68,7 +68,7 @@ unittest {
 
 @("dlangObjectFilesPerPackage ..")
 unittest {
-    auto build = Build(dlangObjectFilesPerModule(options, ["/project/source/main.d",
+    auto build = Build(dlangObjectFilesPerModule(Options(), ["/project/source/main.d",
                                                   "/project/../../common/source/foo.d",
                                                   "/project/../../common/source/bar.d",
                                                  ]));

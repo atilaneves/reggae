@@ -102,6 +102,7 @@ private:
     string[] _srcDirs;
 
     void defaultRule(Target target) @safe {
+        import reggae.backend: maybeAddDirDependencies;
         import std.algorithm: canFind, map, startsWith;
         import std.array: join, replace;
         import std.path: extension;
@@ -131,45 +132,7 @@ private:
         const buildLine = buildLine(target, ruleName, /*includeImplicitInputs=*/true);
 
         buildEntries ~= NinjaEntry(buildLine, paramLines);
-        maybeAddDirDependencies(target, ruleName);
-    }
-
-    // For D source code, add the directories that contain them to the
-    // dependencies for rerunning reggae so it picks up new files.
-    private void maybeAddDirDependencies(in Target target, in string ruleName) @safe pure {
-        import std.algorithm: filter, map, sort, uniq, joiner, canFind, among;
-        import std.path: extension, dirName;
-        import std.array: array;
-        import std.format: format;
-
-        if(!ruleName.canFind("compile"))
-            return;
-
-        const outputs = target.expandOutputs(_projectPath);
-
-        static bool isSrcFile(in Target t) {
-            return t.rawOutputs.length == 1
-                && t.dependencyTargets.length == 0
-                && t.rawOutputs[0].extension.among(".d", ".di", "c", "cpp", "CPP", "cc", "cxx", "C", "c++");
-        }
-
-        auto srcs = target
-            .dependencyTargets
-            .filter!isSrcFile;
-
-        if(srcs.empty)
-            return;
-
-        auto dirs = srcs
-            .map!(t => t.expandOutputs(_projectPath)[0])
-            .map!dirName;
-
-        _srcDirs ~= dirs
-            // otherwise ninja will emit this as 2 or more dependencies
-            .filter!(d => !d.canFind(" "))
-            .array;
-
-        return;
+        _srcDirs ~= maybeAddDirDependencies(target, _projectPath);
     }
 
     void phonyRule(Target target) @safe {

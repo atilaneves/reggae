@@ -993,3 +993,25 @@ version(LDC) {
         }
     }
 }
+
+@("custom.binary")
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile(
+            "dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "library"`,
+            ]
+        );
+        writeFile("source/foo.d", "");
+        writeFile(
+            "reggaefile.d",
+            [
+                `import reggae;`,
+                `mixin build!(dubDefaultTarget!());`,
+            ]
+        );
+        runReggae("-b", "binary");
+    }
+}

@@ -6,146 +6,6 @@ import reggae.rules.common: Language;
 import reggae.options: Options;
 
 
-string cmdTypeToNinjaRuleName(CommandType commandType, Language language) @safe pure {
-    final switch(commandType) with(CommandType) {
-        case shell: assert(0, "cmdTypeToNinjaRuleName doesn't work for shell");
-        case phony: assert(0, "cmdTypeToNinjaRuleName doesn't work for phony");
-        case code: throw new Exception("Command type 'code' not supported for ninja backend");
-        case link:
-            final switch(language) with(Language) {
-                case D: return "_dlink";
-                case Cplusplus: return "_cpplink";
-                case C: return "_clink";
-                case unknown: return "_ulink";
-            }
-        case compile:
-            final switch(language) with(Language) {
-                case D: return "_dcompile";
-                case Cplusplus: return "_cppcompile";
-                case C: return "_ccompile";
-                case unknown: throw new Exception("Unsupported language");
-            }
-        case compileAndLink:
-            final switch(language) with(Language) {
-                case D: return "_dcompileAndLink";
-                case Cplusplus: return "_cppcompileAndLink";
-                case C: return "_ccompileAndLink";
-                case unknown: throw new Exception("Unsupported language");
-            }
-    }
-}
-
-struct NinjaEntry {
-    string mainLine;
-    string[] paramLines;
-    string toString() @safe pure nothrow const {
-
-        import std.array: join;
-        import std.range: chain, only;
-        import std.algorithm.iteration: map;
-
-        return chain(only(mainLine), paramLines.map!(a => "  " ~ a)).join("\n");
-    }
-}
-
-
-private bool hasDepFile(in CommandType type) @safe pure nothrow {
-    return type == CommandType.compile || type == CommandType.compileAndLink;
-}
-
-private string[] initializeRuleParamLines(in Language language, in string[] command) @safe pure {
-    import std.string : join;
-
-    version(Windows) {
-        import std.algorithm: among;
-
-        // On Windows, the max command line length is ~32K.
-        // Make ninja use a response file for all D/C[++] rules.
-        if (language.among(Language.D, Language.C, Language.Cplusplus)) {
-            if (command.length > 1) {
-                const program = command[0];
-                const args = command[1 .. $];
-                return [
-                    "command = " ~ program ~ " @$out.rsp",
-                    "rspfile = $out.rsp",
-                    "rspfile_content = " ~ args.join(" "),
-                ];
-            }
-        }
-    }
-
-    return ["command = " ~ command.join(" ")];
-}
-
-/**
- * Pre-built rules
- */
-NinjaEntry[] defaultRules(in Options options) @safe pure {
-
-    import reggae.build: Command;
-
-    NinjaEntry createNinjaEntry(in CommandType type, in Language language) @safe pure {
-        const command = Command.builtinTemplate(type, language, options);
-
-        string[] paramLines = initializeRuleParamLines(language, command);
-
-        if(hasDepFile(type)) {
-            version(Windows)
-                const isMSVC = language == Language.C || language == Language.Cplusplus;
-            else
-                enum isMSVC = false;
-
-            if (isMSVC) {
-                paramLines ~= "deps = msvc";
-            } else {
-                // Disable the ninja deps database (.ninja_deps file) with --dub-objs-dir
-                // to enable sharing the build artifacts (incl. .dep files) across reggae
-                // builds with identical --dub-objs-dir.
-                // Ninja otherwise complains about local .ninja_deps being out of date when
-                // the shared build output is more recent, and rebuilds.
-                if (options.dubObjsDir.length == 0)
-                    paramLines ~= "deps = gcc";
-
-                paramLines ~= "depfile = $out.dep";
-            }
-        }
-
-        string getDescription() {
-            switch(type) with(CommandType) {
-                case compile:        return "Compiling $out";
-                case link:           return "Linking $out";
-                case compileAndLink: return "Building $out";
-                default:             return null;
-            }
-        }
-
-        const description = getDescription();
-        if (description.length)
-            paramLines ~= "description = " ~ description;
-
-        return NinjaEntry("rule " ~ cmdTypeToNinjaRuleName(type, language), paramLines);
-    }
-
-    NinjaEntry[] entries;
-    foreach(type; [CommandType.compile, CommandType.link, CommandType.compileAndLink]) {
-        for(Language language = Language.min; language <= Language.max; ++language) {
-            if(hasDepFile(type) && language == Language.unknown) continue;
-            entries ~= createNinjaEntry(type, language);
-        }
-    }
-
-    string[] phonyParamLines;
-    version(Windows) {
-        phonyParamLines = [`command = cmd.exe /c "$cmd"`, "description = $cmd"];
-    } else {
-        phonyParamLines = ["command = $cmd"];
-    }
-    entries ~= NinjaEntry("rule _phony", phonyParamLines);
-
-    return entries;
-}
-
-
 struct Ninja {
 
     import reggae.build: Build, Target;
@@ -178,13 +38,20 @@ struct Ninja {
 
     //includes rerunning reggae
     const(NinjaEntry)[] allBuildEntries() @safe {
-        immutable files = flattenEntriesInBuildLine(_options.reggaeFileDependencies);
+        import std.array: array;
+        import std.algorithm: sort, uniq;
+        import std.range: chain;
+
+        const files = flattenEntriesInBuildLine(
+            chain(_options.reggaeFileDependencies, _srcDirs.sort.uniq).array
+        );
         auto paramLines = _options.oldNinja ? [] : ["pool = console"];
 
         const(NinjaEntry)[] rerunEntries() {
             // if exporting the build system, don't include rerunning reggae
-            return _options.export_ ? [] : [NinjaEntry("build build.ninja: _rerun | " ~ files,
-                                                       paramLines)];
+            return _options.export_
+                ? []
+                : [NinjaEntry("build build.ninja: _rerun | " ~ files, paramLines)];
         }
 
         const defaultOutputs = _build.defaultTargetsOutputs(_projectPath);
@@ -230,10 +97,15 @@ private:
     string _projectPath;
     const(Options) _options;
     int _counter = 1;
+    // we keep a list of directories with sources here to add them as
+    // dependencies for a reggae rerun
+    string[] _srcDirs;
 
     void defaultRule(Target target) @safe {
-        import std.algorithm: canFind, map;
+        import reggae.backend: maybeAddDirDependencies;
+        import std.algorithm: canFind, map, startsWith;
         import std.array: join, replace;
+        import std.path: extension;
 
         static string flattenShellArgs(in string[] args) {
             static string quoteArgIfNeeded(string a) {
@@ -260,6 +132,7 @@ private:
         const buildLine = buildLine(target, ruleName, /*includeImplicitInputs=*/true);
 
         buildEntries ~= NinjaEntry(buildLine, paramLines);
+        _srcDirs ~= maybeAddDirDependencies(target, _projectPath);
     }
 
     void phonyRule(Target target) @safe {
@@ -464,7 +337,7 @@ private:
     }
 
     string buildLine(Target target, in string rule, in bool includeImplicitInputs,
-                     in string[] inputsOverride = null) @safe /*pure*/ const {
+                     in string[] inputsOverride = null) @safe pure const {
 
         const outputs = target.expandOutputs(_projectPath);
         const inputs = inputsOverride !is null ? inputsOverride : targetDependencies(target);
@@ -514,6 +387,149 @@ private:
         return target.dependenciesInProjectPath(_projectPath);
     }
 
+    private string dirSentinelFileName(in Target target) @safe pure const {
+        return target.expandOutputs(_projectPath)[0] ~ ".files.txt";
+    }
+}
+
+
+struct NinjaEntry {
+    string mainLine;
+    string[] paramLines;
+    string toString() @safe pure nothrow const {
+
+        import std.array: join;
+        import std.range: chain, only;
+        import std.algorithm.iteration: map;
+
+        return chain(only(mainLine), paramLines.map!(a => "  " ~ a)).join("\n");
+    }
+}
+
+
+private bool hasDepFile(in CommandType type) @safe pure nothrow {
+    return type == CommandType.compile || type == CommandType.compileAndLink;
+}
+
+private string[] initializeRuleParamLines(in Language language, in string[] command) @safe pure {
+    import std.string : join;
+
+    version(Windows) {
+        import std.algorithm: among;
+
+        // On Windows, the max command line length is ~32K.
+        // Make ninja use a response file for all D/C[++] rules.
+        if (language.among(Language.D, Language.C, Language.Cplusplus)) {
+            if (command.length > 1) {
+                const program = command[0];
+                const args = command[1 .. $];
+                return [
+                    "command = " ~ program ~ " @$out.rsp",
+                    "rspfile = $out.rsp",
+                    "rspfile_content = " ~ args.join(" "),
+                ];
+            }
+        }
+    }
+
+    return ["command = " ~ command.join(" ")];
+}
+
+/**
+ * Pre-built rules
+ */
+NinjaEntry[] defaultRules(in Options options) @safe pure {
+
+    import reggae.build: Command;
+
+    NinjaEntry createNinjaEntry(in CommandType type, in Language language) @safe pure {
+        const command = Command.builtinTemplate(type, language, options);
+
+        string[] paramLines = initializeRuleParamLines(language, command);
+
+        if(hasDepFile(type)) {
+            version(Windows)
+                const isMSVC = language == Language.C || language == Language.Cplusplus;
+            else
+                enum isMSVC = false;
+
+            if (isMSVC) {
+                paramLines ~= "deps = msvc";
+            } else {
+                // Disable the ninja deps database (.ninja_deps file) with --dub-objs-dir
+                // to enable sharing the build artifacts (incl. .dep files) across reggae
+                // builds with identical --dub-objs-dir.
+                // Ninja otherwise complains about local .ninja_deps being out of date when
+                // the shared build output is more recent, and rebuilds.
+                if (options.dubObjsDir.length == 0)
+                    paramLines ~= "deps = gcc";
+
+                paramLines ~= "depfile = $out.dep";
+            }
+        }
+
+        string getDescription() {
+            switch(type) with(CommandType) {
+                case compile:        return "Compiling $out";
+                case link:           return "Linking $out";
+                case compileAndLink: return "Building $out";
+                default:             return null;
+            }
+        }
+
+        const description = getDescription();
+        if (description.length)
+            paramLines ~= "description = " ~ description;
+
+        return NinjaEntry("rule " ~ cmdTypeToNinjaRuleName(type, language), paramLines);
+    }
+
+    NinjaEntry[] entries;
+    foreach(type; [CommandType.compile, CommandType.link, CommandType.compileAndLink]) {
+        for(Language language = Language.min; language <= Language.max; ++language) {
+            if(hasDepFile(type) && language == Language.unknown) continue;
+            entries ~= createNinjaEntry(type, language);
+        }
+    }
+
+    string[] phonyParamLines;
+    version(Windows) {
+        phonyParamLines = [`command = cmd.exe /c "$cmd"`, "description = $cmd"];
+    } else {
+        phonyParamLines = ["command = $cmd"];
+    }
+    entries ~= NinjaEntry("rule _phony", phonyParamLines);
+
+    return entries;
+}
+
+private string cmdTypeToNinjaRuleName(CommandType commandType, Language language) @safe pure {
+    final switch(commandType) with(CommandType) {
+        case shell: assert(0, "cmdTypeToNinjaRuleName doesn't work for shell");
+        case phony: assert(0, "cmdTypeToNinjaRuleName doesn't work for phony");
+        case code: throw new Exception("Command type 'code' not supported for ninja backend");
+        case link:
+            final switch(language) with(Language) {
+                case D: return "_dlink";
+                case Cplusplus: return "_cpplink";
+                case C: return "_clink";
+                case unknown: return "_ulink";
+            }
+        case compile:
+            final switch(language) with(Language) {
+                case D: return "_dcompile";
+                case Cplusplus: return "_cppcompile";
+                case C: return "_ccompile";
+                case unknown: throw new Exception("Unsupported language");
+            }
+        case compileAndLink:
+            final switch(language) with(Language) {
+                case D: return "_dcompileAndLink";
+                case Cplusplus: return "_cppcompileAndLink";
+                case C: return "_ccompileAndLink";
+                case unknown: throw new Exception("Unsupported language");
+            }
+    }
 }
 
 

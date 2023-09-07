@@ -101,6 +101,11 @@ private bool jsonBuild(Options options) {
 // Call dub, get the build description, and generate the build now
 private bool dubBuild(in Options options) {
     import reggae.dub.interop.reggaefile: defaultDubBuild;
+    import std.file: exists;
+
+    if(options.reggaeFilePath.exists)
+        return false;
+
     auto build = defaultDubBuild(options);
     return runtimeBuild(options, build);
 }
@@ -326,12 +331,13 @@ private void buildBinary(T)(auto ref T output, in Options options, in Binary bin
 
 private const(string)[] getCompileBuildGenCmd(in Options options) @safe {
     import reggae.rules.common: objExt;
+    import std.algorithm: canFind;
 
     const reggaeSrcs = ("config.d" ~ fileNames).
         map!(a => buildPath(reggaeSrcRelDirName, a)).array;
 
     immutable buildBinFlags = options.backend == Backend.binary
-        ? ["-O", "-inline"]
+        ? options.compilerBinName.canFind("dmd") ? ["-O", "-inline"] : ["-O2"]
         : [];
     const buildObj = "build" ~ objExt;
     version(GDC)

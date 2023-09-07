@@ -43,7 +43,7 @@
                                   "tests/projects/dub/source/main.d",
                                   "tests/projects/dub_prebuild/source/lemain.d",
                                   "tests/projects/implicits/main.d",
-                                  "tests/projects/phony_proj/main.d",
+                                  "tests/projects/phony_proj/src/main.d",
                                   "tests/projects/export_proj/hello.d",
                                   "tests/projects/dub_postbuild/source/app.d",
                                   "tests/projects/dub_postbuild/reggaefile.d",

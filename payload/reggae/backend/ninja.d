@@ -38,13 +38,20 @@ struct Ninja {
 
     //includes rerunning reggae
     const(NinjaEntry)[] allBuildEntries() @safe {
-        immutable files = flattenEntriesInBuildLine(_options.reggaeFileDependencies);
+        import std.array: join;
+        import std.algorithm: sort, uniq;
+
+        const files =
+            flattenEntriesInBuildLine(_options.reggaeFileDependencies)
+            ~ " " ~ _dlangSrcDirs.sort.uniq.join(" ")
+            ;
         auto paramLines = _options.oldNinja ? [] : ["pool = console"];
 
         const(NinjaEntry)[] rerunEntries() {
             // if exporting the build system, don't include rerunning reggae
-            return _options.export_ ? [] : [NinjaEntry("build build.ninja: _rerun | " ~ files,
-                                                       paramLines)];
+            return _options.export_
+                ? []
+                : [NinjaEntry("build build.ninja: _rerun | " ~ files, paramLines)];
         }
 
         const defaultOutputs = _build.defaultTargetsOutputs(_projectPath);
@@ -90,10 +97,14 @@ private:
     string _projectPath;
     const(Options) _options;
     int _counter = 1;
+    // we keep a list of directories with sources here to add them as
+    // dependencies for a reggae rerun
+    string[] _dlangSrcDirs;
 
     void defaultRule(Target target) @safe {
-        import std.algorithm: canFind, map;
+        import std.algorithm: canFind, map, startsWith;
         import std.array: join, replace;
+        import std.path: extension;
 
         static string flattenShellArgs(in string[] args) {
             static string quoteArgIfNeeded(string a) {
@@ -120,6 +131,45 @@ private:
         const buildLine = buildLine(target, ruleName, /*includeImplicitInputs=*/true);
 
         buildEntries ~= NinjaEntry(buildLine, paramLines);
+        maybeAddDirDependencies(target, ruleName);
+    }
+
+    // For D source code, add the directories that contain them to the
+    // dependencies for rerunning reggae so it picks up new files.
+    private void maybeAddDirDependencies(in Target target, in string ruleName) @safe pure {
+        import std.algorithm: startsWith, filter, map, sort, uniq, joiner, canFind;
+        import std.path: extension, dirName;
+        import std.array: array;
+        import std.format: format;
+
+        if(!ruleName.startsWith("_dcompile"))
+            return;
+
+        const outputs = target.expandOutputs(_projectPath);
+
+        static bool isDlangSrcFile(in Target t) {
+            return t.rawOutputs.length == 1
+                && t.dependencyTargets.length == 0
+                && t.rawOutputs[0].extension == ".d";
+        }
+
+        auto dlangSrcs = target
+            .dependencyTargets
+            .filter!isDlangSrcFile;
+
+        if(dlangSrcs.empty)
+            return;
+
+        auto dlangDirs = dlangSrcs
+            .map!(t => t.expandOutputs(_projectPath)[0])
+            .map!dirName;
+
+        _dlangSrcDirs ~= dlangDirs
+            // otherwise ninja will emit this as 2 or more dependencies
+            .filter!(d => !d.canFind(" "))
+            .array;
+
+        return;
     }
 
     void phonyRule(Target target) @safe {
@@ -372,6 +422,10 @@ private:
 
     private string[] targetDependencies(in Target target) @safe pure const {
         return target.dependenciesInProjectPath(_projectPath);
+    }
+
+    private string dirSentinelFileName(in Target target) @safe pure const {
+        return target.expandOutputs(_projectPath)[0] ~ ".files.txt";
     }
 }
 

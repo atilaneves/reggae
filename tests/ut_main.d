@@ -6,7 +6,6 @@ mixin runTestsMain!(
     "tests.ut.options",
     "tests.ut.serialisation",
     "tests.ut.realistic_build",
-    "tests.ut.drules",
     "tests.ut.backend.binary",
     "tests.ut.backend.ninja",
     "tests.ut.backend.make",

@@ -15,12 +15,12 @@ version(DigitalMars) {
                     "reggaefile.d",
                     q{
                         import reggae;
-                        import constants;
+                        import other.constants;
                         alias exe = executable!(ExeName(exeName), Sources!("source"));
                         mixin build!exe;
                     }
                 );
-                writeFile("constants.d", q{enum exeName = "foo"; void lefoo() { }});
+                writeFile("other/constants.d", q{enum exeName = "foo"; void lefoo() { }});
                 writeFile("source/main.d", "void main() { }");
 
                 runReggae("-b", backend);
@@ -33,8 +33,17 @@ version(DigitalMars) {
                 // been identified as an implicit dependency of the reggaefile.
                 // If things actually worked, we'd assert that there's now a file named
                 // `bar`.
-                writeFile("constants.d", q{enum exeName = "bar"; void lefoo() { }});
-                auto lines = mixin(backend).shouldFailToExecute;
+                writeFile("other/constants.d", q{enum exeName = "bar"; void lefoo() { }});
+                mixin(backend).shouldFailToExecute.shouldContain("reggae");
+
+                runReggae("-b", backend); // but this should be fine
+                mixin(backend).shouldExecuteOk; // it's rerun, so ninja succeeds
+
+                static if(backend == "ninja") {
+                    // test that adding a file triggers a rerun
+                    writeFile("source/foo.d");
+                    mixin(backend).shouldFailToExecute.shouldContain("reggae");
+                }
             }
         }
  }

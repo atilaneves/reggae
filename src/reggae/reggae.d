@@ -336,7 +336,7 @@ private const(string)[] getCompileBuildGenCmd(in Options options) @safe {
         map!(a => buildPath(reggaeSrcRelDirName, a)).array;
 
     immutable buildBinFlags = options.backend == Backend.binary
-        ? ["-O", "-inline"]
+        ? options.compilerBinName == "dmd" ? ["-O", "-inline"] : ["-O2"]
         : [];
     const buildObj = "build" ~ objExt;
     version(GDC)

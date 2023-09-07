@@ -6,7 +6,7 @@ import reggae.rules.common: Language;
 import reggae.options: Options;
 
 
-string cmdTypeToNinjaRuleName(CommandType commandType, Language language) @safe pure {
+private string cmdTypeToNinjaRuleName(CommandType commandType, Language language) @safe pure {
     final switch(commandType) with(CommandType) {
         case shell: assert(0, "cmdTypeToNinjaRuleName doesn't work for shell");
         case phony: assert(0, "cmdTypeToNinjaRuleName doesn't work for phony");

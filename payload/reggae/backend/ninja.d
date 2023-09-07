@@ -43,7 +43,7 @@ struct Ninja {
 
         const files =
             flattenEntriesInBuildLine(_options.reggaeFileDependencies)
-            ~ " " ~ _dlangSrcDirs.sort.uniq.join(" ")
+            ~ " " ~ _srcDirs.sort.uniq.join(" ")
             ;
         auto paramLines = _options.oldNinja ? [] : ["pool = console"];
 
@@ -99,7 +99,7 @@ private:
     int _counter = 1;
     // we keep a list of directories with sources here to add them as
     // dependencies for a reggae rerun
-    string[] _dlangSrcDirs;
+    string[] _srcDirs;
 
     void defaultRule(Target target) @safe {
         import std.algorithm: canFind, map, startsWith;
@@ -137,34 +137,34 @@ private:
     // For D source code, add the directories that contain them to the
     // dependencies for rerunning reggae so it picks up new files.
     private void maybeAddDirDependencies(in Target target, in string ruleName) @safe pure {
-        import std.algorithm: startsWith, filter, map, sort, uniq, joiner, canFind;
+        import std.algorithm: filter, map, sort, uniq, joiner, canFind, among;
         import std.path: extension, dirName;
         import std.array: array;
         import std.format: format;
 
-        if(!ruleName.startsWith("_dcompile"))
+        if(!ruleName.canFind("compile"))
             return;
 
         const outputs = target.expandOutputs(_projectPath);
 
-        static bool isDlangSrcFile(in Target t) {
+        static bool isSrcFile(in Target t) {
             return t.rawOutputs.length == 1
                 && t.dependencyTargets.length == 0
-                && t.rawOutputs[0].extension == ".d";
+                && t.rawOutputs[0].extension.among(".d", ".di", "c", "cpp", "CPP", "cc", "cxx", "C", "c++");
         }
 
-        auto dlangSrcs = target
+        auto srcs = target
             .dependencyTargets
-            .filter!isDlangSrcFile;
+            .filter!isSrcFile;
 
-        if(dlangSrcs.empty)
+        if(srcs.empty)
             return;
 
-        auto dlangDirs = dlangSrcs
+        auto dirs = srcs
             .map!(t => t.expandOutputs(_projectPath)[0])
             .map!dirName;
 
-        _dlangSrcDirs ~= dlangDirs
+        _srcDirs ~= dirs
             // otherwise ninja will emit this as 2 or more dependencies
             .filter!(d => !d.canFind(" "))
             .array;

@@ -9,6 +9,7 @@ struct Makefile {
     Build build;
     const(Options) options;
     string projectPath;
+    private string[] _srcDirs;
 
     this(Build build, in Options options) @safe pure {
         this.build = build;
@@ -75,6 +76,7 @@ struct Makefile {
     string output() @safe {
 
         import std.array: join;
+        import std.range: chain;
 
         auto ret = simpleOutput;
 
@@ -83,7 +85,7 @@ struct Makefile {
         } else {
             // add a dependency on the Makefile to reggae itself and the build description,
             // but only if not exporting a build
-            ret ~= fileName() ~ ": " ~ options.reggaeFileDependencies.join(" ") ~ "\n";
+            ret ~= fileName() ~ ": " ~ chain(options.reggaeFileDependencies, _srcDirs).join(" ") ~ "\n";
             ret ~= "\t" ~ options.rerunArgs.join(" ") ~ "\n";
         }
 
@@ -101,15 +103,18 @@ struct Makefile {
 
     //the only reason this is needed is to add auto dependency
     //tracking
-    string command(Target target) @safe const {
+    string command(Target target) @safe {
         import reggae.build: CommandType, replaceConcreteCompilersWithVars;
 
         immutable cmdType = target.getCommandType;
         if(cmdType == CommandType.code)
             throw new Exception("Command type 'code' not supported for make backend");
 
+        maybeAddDirDependencies(target, projectPath);
+
         immutable cmd = target.shellCommand(options).replaceConcreteCompilersWithVars(options);
         immutable depfile = target.expandOutputs(options.projectPath)[0] ~ ".dep";
+
         if(target.hasDefaultCommand) {
             return cmdType == CommandType.link ? cmd : cmd ~ makeAutoDeps(depfile);
         } else {
@@ -125,6 +130,45 @@ struct Makefile {
             import std.file;
             if(!output.dirName.exists) mkdirRecurse(output.dirName);
         }
+    }
+
+    private void maybeAddDirDependencies(in Target target, in string _projectPath) @safe pure {
+        import reggae.build: CommandType;
+        import std.algorithm: filter, map, sort, uniq, joiner, canFind, among;
+        import std.path: extension, dirName;
+        import std.array: array;
+        import std.format: format;
+
+        with(CommandType)
+            if(!target.getCommandType.among(compile, compileAndLink))
+                return;
+
+        const outputs = target.expandOutputs(_projectPath);
+
+        static bool isSrcFile(in Target t) {
+            return t.rawOutputs.length == 1
+                && t.dependencyTargets.length == 0
+                && t.rawOutputs[0].extension.among(".d", ".di", "c", "cpp", "CPP", "cc", "cxx", "C", "c++");
+        }
+
+        auto srcs = target
+            .dependencyTargets
+            .filter!isSrcFile;
+
+        if(srcs.empty)
+            return;
+
+        auto dirs = srcs
+            .map!(t => t.expandOutputs(_projectPath)[0])
+            .map!dirName;
+
+        _srcDirs ~= dirs
+            // otherwise ninja will emit this as 2 or more dependencies
+            .filter!(d => !d.canFind(" "))
+            .array;
+
+        return;
+
     }
 }
 

@@ -39,11 +39,9 @@ version(DigitalMars) {
                 runReggae("-b", backend); // but this should be fine
                 mixin(backend).shouldExecuteOk; // it's rerun, so ninja succeeds
 
-                static if(backend == "ninja") {
-                    // test that adding a file triggers a rerun
-                    writeFile("source/foo.d");
-                    mixin(backend).shouldFailToExecute.shouldContain("reggae");
-                }
+                // test that adding a file triggers a rerun
+                writeFile("source/foo.d");
+                mixin(backend).shouldFailToExecute.shouldContain("reggae");
             }
         }
  }

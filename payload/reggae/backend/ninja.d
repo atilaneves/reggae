@@ -42,9 +42,9 @@ struct Ninja {
         import std.algorithm: sort, uniq;
         import std.range: chain;
 
-        const files =
-            flattenEntriesInBuildLine(chain(_options.reggaeFileDependencies, _srcDirs.sort.uniq).array);
-            ;
+        const files = flattenEntriesInBuildLine(
+            chain(_options.reggaeFileDependencies, _srcDirs.sort.uniq).array
+        );
         auto paramLines = _options.oldNinja ? [] : ["pool = console"];
 
         const(NinjaEntry)[] rerunEntries() {

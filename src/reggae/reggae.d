@@ -101,6 +101,11 @@ private bool jsonBuild(Options options) {
 // Call dub, get the build description, and generate the build now
 private bool dubBuild(in Options options) {
     import reggae.dub.interop.reggaefile: defaultDubBuild;
+    import std.file: exists;
+
+    if(options.reggaeFilePath.exists)
+        return false;
+
     auto build = defaultDubBuild(options);
     return runtimeBuild(options, build);
 }

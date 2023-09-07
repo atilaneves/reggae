@@ -331,12 +331,13 @@ private void buildBinary(T)(auto ref T output, in Options options, in Binary bin
 
 private const(string)[] getCompileBuildGenCmd(in Options options) @safe {
     import reggae.rules.common: objExt;
+    import std.algorithm: canFind;
 
     const reggaeSrcs = ("config.d" ~ fileNames).
         map!(a => buildPath(reggaeSrcRelDirName, a)).array;
 
     immutable buildBinFlags = options.backend == Backend.binary
-        ? options.compilerBinName == "dmd" ? ["-O", "-inline"] : ["-O2"]
+        ? options.compilerBinName.canFind("dmd") ? ["-O", "-inline"] : ["-O2"]
         : [];
     const buildObj = "build" ~ objExt;
     version(GDC)

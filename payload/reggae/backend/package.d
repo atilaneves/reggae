@@ -39,12 +39,8 @@ package string[] maybeAddDirDependencies(
     if(srcs.empty)
         return [];
 
-    auto dirs = srcs
+    return srcs
         .map!(t => t.expandOutputs(projectPath)[0])
-        .map!dirName;
-
-    return dirs
-        // otherwise ninja/make will emit this as 2 or more dependencies
-        .filter!(d => !d.canFind(" "))
+        .map!dirName
         .array;
 }

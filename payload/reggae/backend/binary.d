@@ -69,6 +69,7 @@ struct BinaryT(T) {
     Build build;
     const(Options) options;
     T* output;
+    private string[] _srcDirs;
 
     this(Build build, in Options options, ref T output) @trusted {
         version(unittest) {
@@ -90,11 +91,11 @@ struct BinaryT(T) {
         handleOptions(binaryOptions);
         if(binaryOptions.earlyReturn) return;
 
-        bool didAnything = binaryOptions.norerun ? false : checkReRun();
-
         auto topTargets = topLevelTargets(binaryOptions.args);
         if(topTargets.empty)
             throw new Exception(text("Unknown target(s) ", binaryOptions.args.map!(a => "'" ~ a ~ "'").join(" ")));
+
+        bool didAnything = binaryOptions.norerun ? false : checkReRun(topTargets);
 
         if(binaryOptions.singleThreaded)
             didAnything = mainLoop(topTargets, binaryOptions, didAnything);
@@ -164,12 +165,28 @@ private:
         }
     }
 
-    bool checkReRun() @safe {
+    bool checkReRun(Target[] topTargets) @safe {
+        import reggae.backend: maybeAddDirDependencies;
+        import reggae.range: ByDepthLevel;
+        import std.range: chain;
+        import std.algorithm: map, joiner, uniq;
+        import std.array: array;
+
         // don't bother if the build system was exported
         if(options.export_) return false;
 
+        auto srcDirs = topTargets
+            .map!ByDepthLevel
+            .map!(l => l.map!(ts => ts.map!(t => maybeAddDirDependencies(t, options.projectPath)).joiner).joiner)
+            .joiner
+            .array
+            .sort
+            .uniq;
+
+        auto deps = chain(options.reggaeFileDependencies, srcDirs);
+
         immutable myPath = thisExePath;
-        if(options.reggaeFileDependencies.any!(a => a.newerThan(myPath))) {
+        if(deps.any!(a => a.newerThan(myPath))) {
             output.writeln("[build] " ~ options.rerunArgs.join(" "));
             immutable reggaeRes = execute(options.rerunArgs);
             enforce(reggaeRes.status == 0,

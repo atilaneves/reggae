@@ -324,7 +324,7 @@ private:
     }
 
     string buildLine(Target target, in string rule, in bool includeImplicitInputs,
-                     in string[] inputsOverride = null) @safe /*pure*/ const {
+                     in string[] inputsOverride = null) @safe pure const {
 
         const outputs = target.expandOutputs(_projectPath);
         const inputs = inputsOverride !is null ? inputsOverride : targetDependencies(target);

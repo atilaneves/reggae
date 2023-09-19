@@ -336,3 +336,30 @@ version(Posix) {
         }
     }
 }
+
+@("210")
+@Tags("issues", "ninja")
+unittest {
+    with (immutable ReggaeSandbox()) {
+        // we write to something containing "core" since the directory
+        // name must include that to reproduce the bug
+        writeFile(
+            "no123core/dub.sdl",
+            [
+                `name "oops"`,
+                `targetType "library"`,
+            ]
+        );
+        // the reggaefile must exist since the bug had to do with
+        // getting dependencies for it
+        writeFile(
+            "no123core/reggaefile.d",
+            [
+                `import reggae;`,
+                `mixin build!(dubDefaultTarget!());`
+            ]
+        );
+        writeFile("no123core/src/no123core/oops.d", "module no123core.oops;");
+        runReggae("-b", "ninja", inSandboxPath("no123core"));
+    }
+}

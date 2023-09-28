@@ -115,3 +115,24 @@ version(DigitalMars) {
         }
     }
 }
+
+@("reggaefile.imports.explicitpath")
+@Tags("ninja")
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+                import foo.bar;
+                mixin build!(executable!(ExeName("foo"), Sources!("source")));
+            }
+        );
+        writeFile(
+            "source/app.d",
+            q{void main() {}}
+        );
+        writeFile("other/foo/bar.d", "");
+        runReggae("-b", "ninja", "--reggaefile-import-path=" ~ inSandboxPath("other"));
+    }
+}

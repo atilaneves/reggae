@@ -59,7 +59,8 @@ struct Options {
     string dubBuildType = "debug";
     string dubArchOverride;
     string dubConfig;
-    string[string] userVars;
+    string[] reggaefileImportPaths;
+    string[string] userVars; // must be last
 
     Options dup() @safe pure const nothrow {
         import std.traits: isAssociativeArray;
@@ -301,6 +302,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             "dub-deps-objs", "Use object files instead of static library for dub dependencies", &options.dubDepObjsInsteadOfStaticLib,
             "dub-build-type", "Dub build type (debug, release, ...)", &options.dubBuildType,
             "dub-config", "Only use this dub configuration", &options.dubConfig,
+            "reggaefile-import-path", "Import paths for the reggaefile itself", &options.reggaefileImportPaths,
         );
 
         if(helpInfo.helpWanted) {

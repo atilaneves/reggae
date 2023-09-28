@@ -354,17 +354,25 @@ private const(string)[] getCompileBuildGenCmd(in Options options) @safe {
         // ~ ["-g", "--d-debug"] // ldc
         ;
     const commonAfter = buildBinFlags ~ options.reggaeFilePath ~ reggaeSrcs;
-    version(minimal) return commonBefore ~ "-version=minimal" ~ commonAfter;
-    else return commonBefore ~ commonAfter;
+    version(minimal)
+        return commonBefore ~ "-version=minimal" ~ commonAfter;
+    else
+        return commonBefore ~ commonAfter;
 }
 
 private string[] importPaths(in Options options) @safe nothrow {
-    import std.file;
+    import std.file: exists;
+    import std.algorithm: map;
+    import std.array: array;
+    import std.range: chain, only;
 
-    immutable srcDir = "-I" ~ buildPath("src");
+    auto imports = chain(only("src"), options.reggaefileImportPaths)
+        .map!(p => "-I" ~ p)
+        .array;
+    auto projPathImport = "-I" ~ options.projectPath;
     // if compiling phobos, the includes for the reggaefile.d compilation
     // will pick up the new phobos if we include the src path
-    return "std".exists ? [srcDir] : ["-I" ~ options.projectPath, srcDir];
+    return "std".exists ? imports : projPathImport ~ imports;
 }
 
 private string getBuildGenName(in Options options) @safe pure nothrow {

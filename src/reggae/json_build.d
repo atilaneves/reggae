@@ -90,9 +90,10 @@ private struct Version0 {
                              in string projectPath,
                              in JSONValue json)
     {
+        import std.typecons: Yes, No;
         Build.TopLevelTarget maybeOptional(in JSONValue json, Target target) {
             immutable optional = ("optional" in json.object) !is null;
-            return createTopLevelTarget(target, optional);
+            return createTopLevelTarget(target, optional ? Yes.optional : No.optional);
         }
 
         auto targets = json.array.

@@ -20,7 +20,7 @@ private Build binaryBuild() {
     mixin build!(Target(copyFileName, cmd, Target(origFileName)),
                  optional(Target.phony(`opt`, `echo Optional!`)));
 
-    return buildFunc();
+    return reggaeBuild();
 }
 
 private void writeOrigFile() {

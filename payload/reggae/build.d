@@ -199,7 +199,7 @@ version(reggaelib) {
 }
 
 mixin template buildImpl(targets...) if(allSatisfy!(isTarget, targets)) {
-    Build buildFunc() {
+    Build reggaeBuild() {
         return Build(targets);
     }
 }

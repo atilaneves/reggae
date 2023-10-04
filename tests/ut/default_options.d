@@ -17,7 +17,7 @@ import unit_threaded;
     defaultOptions.cCompiler = "weirdcc";
     enum target = objectFile!(SourceFile("foo.c"), Flags("-g -O0"), IncludePaths(["includey", "headers"]));
     mixin build!(target);
-    auto build = buildFunc();
+    auto build = reggaeBuild();
 
     version(Windows)
         enum projectPath = "C:/path/to/proj";

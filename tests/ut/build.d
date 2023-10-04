@@ -133,7 +133,7 @@ import std.format;
 
     optional(bar).target.shouldEqual(newBar);
     mixin build!(foo, optional(bar));
-    auto build = buildFunc();
+    auto build = reggaeBuild();
     build.targets.array[1].shouldEqual(newBar);
 }
 
@@ -167,7 +167,7 @@ import std.format;
         return Target("bar", "dmd -of$out $in", [obj1, obj2]);
     }
     mixin build!(foo, optional!(bar));
-    auto build = buildFunc();
+    auto build = reggaeBuild();
 
     auto fooObj1 = Target(buildPath(".reggae/objs/foo.objs/obj1.o"), "dmd -of$out -c $in", Target(buildPath("$project/src1.d")));
     auto fooObj2 = Target(buildPath(".reggae/objs/foo.objs/obj2.o"), "dmd -of$out -c $in", Target(buildPath("$project/src2.d")));
@@ -208,7 +208,7 @@ import std.format;
     auto ao = objectFile(Options(), SourceFile("a.c"));
     auto liba = Target("$builddir/liba.a", "ar rcs liba.a a.o", [ao]);
     mixin build!(liba);
-    auto build = buildFunc();
+    auto build = reggaeBuild();
     build.targets[0].rawOutputs.shouldEqual(["liba.a"]);
 }
 

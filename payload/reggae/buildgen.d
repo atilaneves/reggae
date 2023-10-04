@@ -12,7 +12,6 @@ import reggae.build;
 import reggae.options;
 import reggae.types;
 import reggae.backend;
-import reggae.reflect;
 import reggae.path: buildPath;
 
 import std.stdio;
@@ -56,6 +55,7 @@ void doBuildFor(alias module_ = "reggaefile")(in Options options, string[] args 
 // calls the build function or loads it from the cache and returns
 // the Build object
 Build getBuildObject(alias module_)(in Options options) {
+    import reggae.reflect: getBuild;
     import std.file;
 
     immutable cacheFileName = buildPath(".reggae", "cache");

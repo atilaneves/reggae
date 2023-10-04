@@ -91,15 +91,14 @@ Options testOptions(string[] args) {
     return options;
 }
 
-Options testProjectOptions(in string backend, in string projectName) {
-    return testOptions(["-b", backend, projectPath(projectName)]);
-}
-
 Options testProjectOptions(string module_)(string backend) {
     import std.string;
     return testProjectOptions(backend, module_.split(".")[0]);
 }
 
+Options testProjectOptions(in string backend, in string projectName) {
+    return testOptions(["-b", backend, projectPath(projectName)]);
+}
 
 // used to change files and cause a rebuild
 void overwrite(in Options options, in string fileName, in string newContents) {

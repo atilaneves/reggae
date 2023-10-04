@@ -178,12 +178,6 @@ unittest {
     static assert(isTarget!t3);
 }
 
-mixin template buildImpl(targets...) if(allSatisfy!(isTarget, targets)) {
-    Build buildFunc() {
-        return Build(targets);
-    }
-}
-
 /**
  Two variations on a template mixin. When reggae is used as a library,
  this will essentially build reggae itself as part of the build description.
@@ -204,21 +198,11 @@ version(reggaelib) {
     alias build = buildImpl;
 }
 
-package template isBuildFunction(alias T) {
-    static if(!isSomeFunction!T) {
-        enum isBuildFunction = false;
-    } else {
-        enum isBuildFunction = is(ReturnType!T == Build) && arity!T == 0;
+mixin template buildImpl(targets...) if(allSatisfy!(isTarget, targets)) {
+    Build reggaeBuild() {
+        return Build(targets);
     }
 }
-
-unittest {
-    Build myBuildFunction() { return Build(); }
-    static assert(isBuildFunction!myBuildFunction);
-    float foo;
-    static assert(!isBuildFunction!foo);
-}
-
 
 private static auto arrayify(E, T)(T value) {
     import std.array: array;

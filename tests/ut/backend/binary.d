@@ -68,9 +68,8 @@ import tests.utils;
 
 
 private Build binaryBuild() {
-    mixin build!(Target("app", "dmd -of$out $in", [Target("foo.o"), Target("bar.o") ]),
+    return Build(Target("app", "dmd -of$out $in", [Target("foo.o"), Target("bar.o") ]),
                  optional(Target.phony(`opt`, `echo Optional!`)));
-    return buildFunc();
 }
 
 @("Listing targets") unittest {

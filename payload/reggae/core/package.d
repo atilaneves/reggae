@@ -6,7 +6,6 @@
 module reggae.core;
 
 public import reggae.build;
-public import reggae.reflect;
 public import reggae.buildgen;
 public import reggae.types;
 public import reggae.config;

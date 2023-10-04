@@ -206,7 +206,7 @@ private enum coreFiles = [
     "buildgen_main.d", "buildgen.d",
     "build.d",
     "backend/package.d", "backend/binary.d",
-    "package.d", "range.d", "reflect.d",
+    "package.d", "range.d",
     "dependencies.d", "types.d",
     "ctaa.d", "sorting.d", "file.d",
     "rules/package.d",

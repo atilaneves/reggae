@@ -74,9 +74,9 @@ luarocks to install the reggae package (reggae-js for npm). This is
 not required; the reggae binary includes the API for all scripting
 languages.
 
-In D, a function with return type `Build` must exist with any name.
-Normally this function isn't written by hand but by using the
-[build template mixin](payload/reggae/build.d).
+In D, a function called `reggaeBuild` must exist that returns a
+`Build` object. Normally this function isn't written by hand but by
+using the [build template mixin](payload/reggae/build.d).
 
 From the the build directory, run `reggae [-b <ninja|make|tup|binary>]
 /path/to/your/project`. You can now build your project using the

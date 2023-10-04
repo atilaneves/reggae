@@ -6,10 +6,6 @@ import tests.utils;
 import reggae.path: buildPath;
 
 
-private string projectToModule(in string project) {
-    return project ~ ".reggaefile";
-}
-
 void generateBuild(string project)(in string backend, string[] args = []) {
     enum module_ = projectToModule(project);
     auto options = testProjectOptions!module_(backend);
@@ -21,6 +17,11 @@ void generateBuild(string project)(in string backend, string[] args = []) {
         doBuildFor!module_(options, cmdArgs);
     }
 }
+
+private string projectToModule(in string project) {
+    return project ~ ".reggaefile";
+}
+
 
 
 // runs ninja, make, etc. in an integraton test

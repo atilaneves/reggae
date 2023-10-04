@@ -111,25 +111,20 @@ private bool dubBuild(in Options options) {
 }
 
 private bool runtimeBuild(in Options options, imported!"reggae.build".Build build) {
-    import reggae.buildgen: doBuild;
     import reggae.types: Backend;
-    import std.algorithm: among;
 
     enforce(options.backend != Backend.binary, "Binary backend not supported at runtime");
 
     version(minimal)
         assert(0, "JSON builds not supported in minimal version");
     else {
-        import reggae.buildgen;
-        import reggae.rules.common: Language;
+        import reggae.buildgen: doBuild, writeCompilationDB;
 
         if(build == build.init) return false;
 
         doBuild(build, options);
 
-        import reggae.buildgen:writeCompilationDB;
         if(!options.noCompilationDB) writeCompilationDB(build, options);
-
     }
 
     return true;

@@ -23,7 +23,7 @@ auto defaultDubBuild(in from!"reggae.options".Options options) {
         : reducedDubBuild(options, configToDubInfo);
 }
 
-auto standardDubBuild(in from!"reggae.options".Options options, in ConfigToDubInfo configToDubInfo) {
+private auto standardDubBuild(in from!"reggae.options".Options options, in ConfigToDubInfo configToDubInfo) {
     import reggae.build: Build, Target, optional;
     import reggae.rules.dub: dubDefaultTarget, dubTestTarget;
 
@@ -56,7 +56,7 @@ auto standardDubBuild(in from!"reggae.options".Options options, in ConfigToDubIn
     return Build(buildTarget, optional(testTarget), optional(defaultTarget), optional(utTarget));
 }
 
-auto reducedDubBuild(in from!"reggae.options".Options options, in ConfigToDubInfo configToDubInfo) {
+private auto reducedDubBuild(in from!"reggae.options".Options options, in ConfigToDubInfo configToDubInfo) {
     import reggae.build: Build, Target, optional;
     import reggae.rules.dub: dubDefaultTarget;
 

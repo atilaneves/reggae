@@ -52,17 +52,24 @@ void doBuildFor(alias module_ = "reggaefile")(in Options options, string[] args 
     doBuild(build, options, args);
 }
 
+Build getBuildObject(alias module_)(in Options options) {
+    alias buildFunc = getBuildFunc!module_;
+    static if(is(buildFunc == void))
+        throw new Exception("No `Build reggaeBuild()` function in " ~ module_);
+    else
+        return getBuildObjectImpl!module_(options);
+}
+
 // calls the build function or loads it from the cache and returns
 // the Build object
-Build getBuildObject(alias module_)(in Options options) {
-    import reggae.reflect: getBuild;
+private Build getBuildObjectImpl(alias module_)(in Options options) {
     import std.file;
 
     immutable cacheFileName = buildPath(".reggae", "cache");
     if(!options.cacheBuildInfo ||
        !cacheFileName.exists ||
         thisExePath.timeLastModified > cacheFileName.timeLastModified) {
-        const buildFunc = getBuild!(module_); //get the function to call by CT reflection
+        alias buildFunc = getBuildFunc!module_;
         auto build = buildFunc(); //actually call the function to get the build description
 
         if(options.cacheBuildInfo) {
@@ -76,6 +83,19 @@ Build getBuildObject(alias module_)(in Options options) {
         auto buffer = new ubyte[cast(size_t) file.size];
         return Build.fromBytes(file.rawRead(buffer));
     }
+}
+
+private template getBuildFunc(alias module_) {
+    static if(is(typeof(module_) == string)) {
+        mixin(`static import `, module_, `;`);
+        alias getBuildFunc = getBuildFunc!(mixin(module_));
+    } else { // it's a module, not a string
+        static if(__traits(hasMember, module_, "reggaeBuild"))
+            alias getBuildFunc = module_.reggaeBuild;
+        else
+            alias getBuildFunc = void;
+    }
+
 }
 
 // Exports / does the build (binary backend) / produces the build file(s) (make, ninja, tup)

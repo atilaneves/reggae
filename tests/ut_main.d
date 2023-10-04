@@ -22,7 +22,6 @@ mixin runTestsMain!(
     "tests.ut.default_rules",
     "tests.ut.rules.link",
     "tests.ut.rules.common",
-    "tests.ut.reflect",
     "tests.ut.range",
     "tests.ut.ctaa",
     "tests.ut.types",

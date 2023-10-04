@@ -204,22 +204,6 @@ mixin template buildImpl(targets...) if(allSatisfy!(isTarget, targets)) {
     }
 }
 
-package template isBuildFunction(alias T) {
-    static if(!isSomeFunction!T) {
-        enum isBuildFunction = false;
-    } else {
-        enum isBuildFunction = is(ReturnType!T == Build) && arity!T == 0;
-    }
-}
-
-unittest {
-    Build myBuildFunction() { return Build(); }
-    static assert(isBuildFunction!myBuildFunction);
-    float foo;
-    static assert(!isBuildFunction!foo);
-}
-
-
 private static auto arrayify(E, T)(T value) {
     import std.array: array;
 

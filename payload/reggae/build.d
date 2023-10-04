@@ -178,12 +178,6 @@ unittest {
     static assert(isTarget!t3);
 }
 
-mixin template buildImpl(targets...) if(allSatisfy!(isTarget, targets)) {
-    Build buildFunc() {
-        return Build(targets);
-    }
-}
-
 /**
  Two variations on a template mixin. When reggae is used as a library,
  this will essentially build reggae itself as part of the build description.
@@ -202,6 +196,12 @@ version(reggaelib) {
     }
 } else {
     alias build = buildImpl;
+}
+
+mixin template buildImpl(targets...) if(allSatisfy!(isTarget, targets)) {
+    Build buildFunc() {
+        return Build(targets);
+    }
 }
 
 package template isBuildFunction(alias T) {

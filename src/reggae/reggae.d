@@ -116,7 +116,7 @@ private bool runtimeBuild(in Options options, imported!"reggae.build".Build buil
     enforce(options.backend != Backend.binary, "Binary backend not supported at runtime");
 
     version(minimal)
-        assert(0, "JSON builds not supported in minimal version");
+        assert(0, "Runtime builds not supported in minimal version");
     else {
         import reggae.buildgen: doBuild, writeCompilationDB;
 

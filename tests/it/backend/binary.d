@@ -17,10 +17,8 @@ private Build binaryBuild() {
     else
         enum cmd = `cp $in $out`;
 
-    mixin build!(Target(copyFileName, cmd, Target(origFileName)),
+    return Build(Target(copyFileName, cmd, Target(origFileName)),
                  optional(Target.phony(`opt`, `echo Optional!`)));
-
-    return reggaeBuild();
 }
 
 private void writeOrigFile() {

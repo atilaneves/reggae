@@ -147,29 +147,6 @@ static if(imported!"reggae.config".isDubProject) {
     }
 
     Target dubTarget(
-        TargetName targetName,
-        Configuration config,
-        CompilerFlags compilerFlags = CompilerFlags(),
-        LinkerFlags linkerFlags = LinkerFlags(),
-        CompilationMode compilationMode = CompilationMode.options,
-        alias objsFunction = () { Target[] t; return t; },
-     )
-        ()
-    {
-        import reggae.config: options, configToDubInfo;
-
-        return dubTarget(
-            options,
-            targetName,
-            configToDubInfo[config.value],
-            compilerFlags.value,
-            linkerFlags.value,
-            compilationMode,
-            objsFunction(),
-        );
-    }
-
-    Target dubTarget(
         in imported!"reggae.options".Options options,
         in TargetName targetName,
         in DubInfo dubInfo,

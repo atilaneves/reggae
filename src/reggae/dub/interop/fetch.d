@@ -17,7 +17,7 @@ package void dubFetch(O)(
     import dub.packagemanager: PlacementLocation;
     import std.array: replace;
     import std.json: parseJSON, JSONType;
-    import std.file: readText, getcwd;
+    import std.file: readText;
     import std.parallelism: parallel;
 
     const(VersionedPackage)[] pkgsToFetch;
@@ -36,8 +36,7 @@ package void dubFetch(O)(
     }
 
     output.log("Creating dub object");
-    auto dubObj = new Dub(getcwd());
-
+    auto dubObj = new Dub(options.projectPath);
 
     output.log("Fetching dub packages");
     foreach(pkg; pkgsToFetch.parallel) {

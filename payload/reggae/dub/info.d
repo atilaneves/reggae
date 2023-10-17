@@ -154,13 +154,6 @@ struct DubInfo {
         //package
         const projDir = isMainPackage ? "" : dubPackage.path;
 
-        // -unittest should only apply to the main package
-        const(string)[] deUnitTest(in string[] flags) {
-            return isMainPackage
-                ? flags
-                : flags.filter!(f => f != "-unittest" && f != "-main").array;
-        }
-
         const versionOpt = () {
             switch(options.compilerBinName) {
                 default:
@@ -194,7 +187,7 @@ struct DubInfo {
             pkgDflags,
             dubPackage.versions.map!(a => versionOpt ~ "=" ~ a),
             options.dflags,
-            deUnitTest(compilerFlags)
+            compilerFlags
         )
             .array;
 

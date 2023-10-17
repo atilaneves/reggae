@@ -14,10 +14,6 @@ enum CompilationMode {
     options,  /// whatever the command-line option was
 }
 
-struct DubPackageName {
-    string value;
-}
-
 static if(imported!"reggae.config".isDubProject) {
 
     import reggae.dub.info;
@@ -223,63 +219,6 @@ static if(imported!"reggae.config".isDubProject) {
             startingIndex
         );
     }
-
-
-
-    /**
-       All dub object files for a configuration
-     */
-    Target[] dubObjects(Configuration config,
-                        CompilerFlags compilerFlags = CompilerFlags(),
-                        CompilationMode compilationMode = CompilationMode.options)
-        ()
-    {
-        import reggae.config: options, configToDubInfo;
-        const dubInfo = configToDubInfo[config.value];
-        return objs(options,
-                    dubInfo.targetName,
-                    dubInfo,
-                    compilerFlags.value,
-                    compilationMode);
-    }
-
-    /**
-       Object files from one dub package
-     */
-    Target[] dubPackageObjects(
-        DubPackageName dubPackageName,
-        CompilerFlags compilerFlags = CompilerFlags(),
-        CompilationMode compilationMode = CompilationMode.all,
-        )
-        ()
-    {
-        return dubPackageObjects!(
-            dubPackageName,
-            Configuration("default"),
-            compilerFlags,
-            compilationMode,
-        );
-    }
-
-    /**
-       Object files from one dub package
-     */
-    Target[] dubPackageObjects(
-        DubPackageName dubPackageName,
-        Configuration config = Configuration("default"),
-        CompilerFlags compilerFlags = CompilerFlags(),
-        CompilationMode compilationMode = CompilationMode.all,
-        )
-        ()
-    {
-        import reggae.config: configToDubInfo;
-        return configToDubInfo[config.value].packageNameToTargets(
-            dubPackageName.value,
-            compilerFlags.value,
-            compilationMode,
-        );
-    }
-
 
     ImportPaths dubImportPaths(Configuration config = Configuration("default"))() {
         import reggae.config: configToDubInfo;

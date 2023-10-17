@@ -264,21 +264,6 @@ struct DubInfo {
         return packageTargets;
     }
 
-    Target[] packageNameToTargets(
-        in string name,
-        in string[] compilerFlags = [],
-        in CompilationMode compilationMode = CompilationMode.options,
-        in DubObjsDir dubObjsDir = DubObjsDir())
-        @safe const
-    {
-        foreach(const index, const dubPackage; packages) {
-            if(dubPackage.name == name)
-                return packageIndexToTargets(index, compilerFlags, compilationMode, dubObjsDir);
-        }
-
-        throw new Exception("Couldn't find package '" ~ name ~ "'");
-    }
-
     TargetName targetName() @safe const pure nothrow {
         const fileName = packages[0].targetFileName;
         return .targetName(targetType, fileName);

@@ -25,37 +25,27 @@ static if(imported!"reggae.config".isDubProject) {
     /**
      Builds the main dub target (equivalent of "dub build")
     */
-    Target dubDefaultTarget(alias compilerFlags = CompilerFlags(),
-                            alias linkerFlags = LinkerFlags(),
-                            CompilationMode compilationMode = CompilationMode.options)
+    Target dubDefaultTarget(CompilationMode compilationMode = CompilationMode.options)
         ()
     {
         return dubConfigurationTarget!(
             Configuration("default"),
-            compilerFlags,
-            linkerFlags,
-            compilationMode
+            compilationMode,
         );
     }
 
     Target dubDefaultTarget(C)(
         in imported!"reggae.options".Options options,
         in C configToDubInfo,
-        CompilerFlags compilerFlags = CompilerFlags(),
-        LinkerFlags linkerFlags = LinkerFlags(),
         CompilationMode compilationMode = CompilationMode.options)
     {
         enum config = "default";
         const dubInfo = configToDubInfo[config];
-        const targetName = dubInfo.targetName;
-        const allLinkerFlags = dubInfo.mainLinkerFlags ~ linkerFlags.value;
 
         return dubTarget(
             options,
-            targetName,
+            dubInfo.targetName,
             dubInfo,
-            compilerFlags.value,
-            allLinkerFlags,
             compilationMode,
         );
     }
@@ -63,17 +53,13 @@ static if(imported!"reggae.config".isDubProject) {
     /**
        A target corresponding to `dub test`
      */
-    Target dubTestTarget(alias compilerFlags = CompilerFlags(),
-                         alias linkerFlags = LinkerFlags(),
-                         CompilationMode compilationMode = CompilationMode.options)
+    Target dubTestTarget(CompilationMode compilationMode = CompilationMode.options)
                          ()
     {
         import reggae.config: options, configToDubInfo;
         return dubTestTarget(
             options,
             configToDubInfo,
-            reify!compilerFlags,
-            reify!linkerFlags,
             compilationMode
         );
     }
@@ -81,8 +67,6 @@ static if(imported!"reggae.config".isDubProject) {
     Target dubTestTarget(C)
         (in imported!"reggae.options".Options options,
         in C configToDubInfo,
-        CompilerFlags compilerFlags = CompilerFlags(),
-        LinkerFlags linkerFlags = LinkerFlags(),
         CompilationMode compilationMode = CompilationMode.options)
     {
         import reggae.build : Target;
@@ -113,8 +97,6 @@ static if(imported!"reggae.config".isDubProject) {
         return dubTarget(options,
                          name,
                          dubInfo,
-                         compilerFlags.value,
-                         linkerFlags.value,
                          compilationMode);
     }
 
@@ -122,8 +104,6 @@ static if(imported!"reggae.config".isDubProject) {
      Builds a particular dub configuration (executable, unittest, etc.)
      */
     Target dubConfigurationTarget(Configuration config,
-                                  alias compilerFlags = CompilerFlags(),
-                                  alias linkerFlags = LinkerFlags(),
                                   CompilationMode compilationMode = CompilationMode.options,
                                   alias objsFunction = () { Target[] t; return t; },
                                   )
@@ -136,8 +116,6 @@ static if(imported!"reggae.config".isDubProject) {
         return dubTarget(options,
                          dubInfo.targetName,
                          dubInfo,
-                         reify!(compilerFlags).value,
-                         reify!(linkerFlags).value,
                          compilationMode,
                          objsFunction());
     }
@@ -146,8 +124,6 @@ static if(imported!"reggae.config".isDubProject) {
         in imported!"reggae.options".Options options,
         in TargetName targetName,
         in DubInfo dubInfo,
-        in string[] compilerFlags,
-        in string[] linkerFlags = [],
         in CompilationMode compilationMode = CompilationMode.options,
         Target[] extraObjects = [],
         in size_t startingIndex = 0,
@@ -163,11 +139,10 @@ static if(imported!"reggae.config".isDubProject) {
         const sharedFlags = dubInfo.targetType == TargetType.dynamicLibrary
             ? ["-shared"]
             : [];
-        const allLinkerFlags = linkerFlags ~ dubInfo.linkerFlags ~ sharedFlags;
+        const allLinkerFlags = dubInfo.linkerFlags ~ sharedFlags;
         auto allObjs = objs(options,
                             targetName,
                             dubInfo,
-                            compilerFlags,
                             compilationMode,
                             extraObjects,
                             startingIndex);
@@ -193,16 +168,7 @@ static if(imported!"reggae.config".isDubProject) {
        All dub packages object files from the dependencies, but nothing from the
        main package (the one actually being built).
      */
-    Target[] dubDependencies(CompilerFlags compilerFlags = CompilerFlags())
-        () // runtime args
-    {
-        return dubDependencies!(Configuration("default"), compilerFlags)();
-    }
-
-
-    ///ditto
-    Target[] dubDependencies(Configuration config,
-                             CompilerFlags compilerFlags = CompilerFlags())
+    Target[] dubDependencies(Configuration config = Configuration("default"))
         () // runtime args
     {
         import reggae.config: configToDubInfo;
@@ -213,7 +179,6 @@ static if(imported!"reggae.config".isDubProject) {
         return objs(
             dubInfo.targetName,
             dubInfo,
-            compilerFlags.value,
             CompilationMode.options,
             [], // extra objects
             startingIndex
@@ -247,7 +212,6 @@ static if(imported!"reggae.config".isDubProject) {
     private Target[] objs(in imported!"reggae.options".Options options,
                           in TargetName targetName,
                           in DubInfo dubInfo,
-                          in string[] compilerFlags,
                           in CompilationMode compilationMode,
                           Target[] extraObjects = [],
                           in size_t startingIndex = 0)
@@ -255,7 +219,6 @@ static if(imported!"reggae.config".isDubProject) {
 
 
         auto dubObjs = dubInfo.toTargets(
-            compilerFlags,
             compilationMode,
             dubObjsDir(options, targetName, dubInfo),
             startingIndex
@@ -292,13 +255,4 @@ static if(imported!"reggae.config".isDubProject) {
         );
     }
 
-    // this allows the user to pass in template arguments such as linker flags
-    // as a value or a function to be called at runtime
-    private auto reify(alias linkerFlags)() {
-        import std.traits: isCallable;
-        static if(isCallable!(typeof(linkerFlags)))
-            return linkerFlags();
-        else
-            return linkerFlags;
-    }
 }

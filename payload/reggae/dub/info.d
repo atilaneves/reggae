@@ -156,8 +156,7 @@ struct DubInfo {
         return DubInfo(packages.map!(a => a.dup).array);
     }
 
-    Target[] toTargets(in string[] compilerFlags = [],
-                       in CompilationMode compilationMode = CompilationMode.options,
+    Target[] toTargets(in CompilationMode compilationMode = CompilationMode.options,
                        in DubObjsDir dubObjsDir = DubObjsDir(),
                        in size_t startingIndex = 0)
         @safe const
@@ -165,7 +164,7 @@ struct DubInfo {
         Target[] targets;
 
         foreach(i; startingIndex .. packages.length) {
-            targets ~= packageIndexToTargets(i, compilerFlags, compilationMode, dubObjsDir);
+            targets ~= packageIndexToTargets(i, compilationMode, dubObjsDir);
         }
 
         return targets ~ allObjectFileSources ~ allStaticLibrarySources;
@@ -174,7 +173,6 @@ struct DubInfo {
     // dubPackage[i] -> Target[]
     private Target[] packageIndexToTargets(
         in size_t dubPackageIndex,
-        in string[] compilerFlags = [],
         in CompilationMode compilationMode = CompilationMode.options,
         in DubObjsDir dubObjsDir = DubObjsDir())
         @safe const
@@ -200,7 +198,6 @@ struct DubInfo {
             dubPackage.compilerFlags(options.compilerBinName),
             dubPackage.versionFlags(options.compilerBinName),
             options.dflags,
-            compilerFlags
         )
             .array;
 
@@ -285,15 +282,6 @@ struct DubInfo {
 
     TargetType targetType() @safe const pure nothrow {
         return packages[0].targetType;
-    }
-
-    string[] mainLinkerFlags() @safe pure nothrow const {
-        import std.array: join;
-
-        const pack = packages[0];
-        return (pack.targetType == TargetType.library || pack.targetType == TargetType.staticLibrary)
-            ? ["-shared"]
-            : [];
     }
 
     string[] linkerFlags() @safe pure nothrow const {

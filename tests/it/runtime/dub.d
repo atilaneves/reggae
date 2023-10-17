@@ -1016,34 +1016,3 @@ unittest {
         runReggae("-b", "binary");
     }
 }
-
-@("linkerFlags.runtime")
-@Tags("ninja")
-unittest {
-    with(immutable ReggaeSandbox()) {
-        writeFile(
-            "dub.sdl",
-            [
-                `name "foo"`,
-                `targetType "library"`,
-            ]
-        );
-        writeFile("source/foo.d", "");
-        writeFile(
-            "reggaefile.d",
-            [
-                `import reggae;`,
-                `alias def = dubDefaultTarget!(`,
-                `     () => CompilerFlags(),`,
-                `     () => LinkerFlags(),`,
-                `);`,
-                `alias tst = dubTestTarget!(`,
-                `     () => CompilerFlags(),`,
-                `     () => LinkerFlags(),`,
-                `);`,
-                `mixin build!(def, tst);`
-            ]
-        );
-        runReggae("-b", "ninja");
-    }
-}

@@ -165,27 +165,6 @@ static if(imported!"reggae.config".isDubProject) {
     }
 
     /**
-       All dub packages object files from the dependencies, but nothing from the
-       main package (the one actually being built).
-     */
-    Target[] dubDependencies(Configuration config = Configuration("default"))
-        () // runtime args
-    {
-        import reggae.config: configToDubInfo;
-
-        const dubInfo = configToDubInfo[config.value];
-        const startingIndex = 1;
-
-        return objs(
-            dubInfo.targetName,
-            dubInfo,
-            CompilationMode.options,
-            [], // extra objects
-            startingIndex
-        );
-    }
-
-    /**
        Link a target taking into account the dub linker flags
      */
     Target dubLink(TargetName targetName,

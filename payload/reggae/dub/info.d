@@ -227,7 +227,7 @@ struct DubInfo {
 
             const isStaticLibDep =
                 dubPackage.targetType == TargetType.staticLibrary &&
-                dubPackageIndex != 0 &&
+                !isMainPackage &&
                 !options.dubDepObjsInsteadOfStaticLib;
 
             return isStaticLibDep

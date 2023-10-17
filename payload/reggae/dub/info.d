@@ -196,7 +196,7 @@ struct DubInfo {
         //package
         const projDir = isMainPackage ? "" : dubPackage.path;
 
-        const flags = chain(
+        const allCompilerFlags = chain(
             dubPackage.compilerFlags(options.compilerBinName),
             dubPackage.versionFlags(options.compilerBinName),
             options.dflags,
@@ -204,7 +204,7 @@ struct DubInfo {
         )
             .array;
 
-        const files = dubPackage.files
+        const srcFiles = dubPackage.files
             .filter!(not!isStaticLibrary)
             .filter!(not!isObjectFile)
             .map!(a => buildPath(dubPackage.path, a))
@@ -231,8 +231,8 @@ struct DubInfo {
                 !options.dubDepObjsInsteadOfStaticLib;
 
             return isStaticLibDep
-                ? dlangStaticLibraryTogether(options, files, flags, importPaths, stringImportPaths, [], projDir)
-                : compileFunc()(options, files, flags, importPaths, stringImportPaths, [], projDir);
+                ? dlangStaticLibraryTogether(options, srcFiles, allCompilerFlags, importPaths, stringImportPaths, [], projDir)
+                : compileFunc()(options, srcFiles, allCompilerFlags, importPaths, stringImportPaths, [], projDir);
         }();
 
         const dubPkgRoot = buildPath(dubPackage.path).deabsolutePath.stripRight(dirSeparator);

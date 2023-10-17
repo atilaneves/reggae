@@ -8,7 +8,7 @@
     "targetType": "executable",
     "targetPath": "bin",
     "importPaths": ["src", "payload"],
-    "stringImportPaths": ["payload/reggae"],
+    "stringImportPaths": ["payload/reggae", "."],
     "sourcePaths": ["src", "payload"],
     "excludedSourceFiles": ["payload/reggae/buildgen_main.d"],
     "mainSourceFile": "src/reggae/reggae_main.d",

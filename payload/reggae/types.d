@@ -83,10 +83,17 @@ struct LinkerFlags {
 }
 
 struct ImportPaths {
+    import std.range.primitives: isInputRange;
+
     string[] value;
 
     this(inout(string)[] value) inout pure {
         this.value = value;
+    }
+
+    this(R)(R range) @trusted /*array*/ if(isInputRange!R) {
+        import std.array: array;
+        this.value = range.array;
     }
 
     this(inout(string) value) inout pure {
@@ -195,7 +202,8 @@ struct Filter(alias F) {
 }
 
 auto Sources(Files files, F = Filter!(a => true))() {
-    return Sources!(Dirs(), files, F)();
+    enum string[] empty = [];
+    return Sources!(Dirs(empty), files, F)();
 }
 
 auto Sources(string dir, Files files = Files(), F = Filter!(a => true))() {

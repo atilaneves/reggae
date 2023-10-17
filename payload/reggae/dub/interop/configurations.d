@@ -1,9 +1,6 @@
 module reggae.dub.interop.configurations;
 
 
-import reggae.from;
-
-
 @safe:
 
 

@@ -338,7 +338,7 @@ Target scriptlike(
     @safe
 {
 
-    import reggae.dependencies: makeDeps;
+    import reggae.dependencies: parseDepFile;
     import std.path: buildPath;
 
     if(getLanguage(app.srcFileName.value) != Language.D)
@@ -355,7 +355,7 @@ Target scriptlike(
         stringImportPaths.value
    );
 
-    const files = makeDeps(depsFile);
+    const files = parseDepFile(depsFile);
     auto dependencies = [mainObj] ~ dlangObjectFiles(
         options,
         files, flags.value,
@@ -376,7 +376,6 @@ private auto runDCompiler(in imported!"reggae.options".Options options,
                           in string[] stringImportPaths)
     @safe
 {
-    import reggae.dependencies: makeDeps;
     import std.process: execute;
     import std.exception: enforce;
     import std.file: tempDir;

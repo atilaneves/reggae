@@ -1,10 +1,8 @@
 module reggae.io;
 
 
-import reggae.from;
+immutable imported!"std.datetime.systime".SysTime gStartTime;
 
-
-immutable from!"std.datetime.systime".SysTime gStartTime;
 
 shared static this() {
     import std.datetime: Clock;

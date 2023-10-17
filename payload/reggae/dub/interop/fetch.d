@@ -1,12 +1,9 @@
 module reggae.dub.interop.fetch;
 
 
-import reggae.from;
-
-
 package void dubFetch(O)(
     auto ref O output,
-    in from!"reggae.options".Options options,
+    in imported!"reggae.options".Options options,
     in string dubSelectionsJson)
     @trusted
 {
@@ -67,7 +64,7 @@ private struct VersionedPackage {
 
 
 private bool needDubFetch(
-    ref from!"reggae.dub.interop.dublib".Dub dub,
+    ref imported!"reggae.dub.interop.dublib".Dub dub,
     in VersionedPackage pkg)
     @safe
 {

@@ -31,14 +31,12 @@ version(minimal) {
 
 
 } else {
-    import std.typecons: Yes;
-
     //fully featured build
 
+    import std.typecons: Yes;
+
     //the actual reggae binary
-    //could also be dubConfigurationTarget(ExeName("reggae"), Configuration("executable"), Flags(...))
-    //or use the `scriptlike` rule to figure out dependencies itself
-    alias main = dubDefaultTarget!();
+    alias main = dubTarget!();
 
     //the unit test binary
     alias ut = dubTestTarget!(CompilationMode.all, Yes.coverage);

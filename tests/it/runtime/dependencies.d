@@ -20,10 +20,16 @@ version(DigitalMars) {
                         mixin build!exe;
                     }
                 );
-                writeFile("other/constants.d", q{enum exeName = "foo"; void lefoo() { }});
+                writeFile(
+                    "other/constants.d",
+                    q{
+                        module other.constants;
+                        enum exeName = "foo"; void lefoo() { }
+                    }
+                );
                 writeFile("source/main.d", "void main() { }");
 
-                runReggae("-b", backend);
+                runReggae("-b", backend, "--verbose");
                 mixin(backend).shouldExecuteOk;
 
                 // Rerunning reggae fails in this fake environment because there is no
@@ -33,7 +39,13 @@ version(DigitalMars) {
                 // been identified as an implicit dependency of the reggaefile.
                 // If things actually worked, we'd assert that there's now a file named
                 // `bar`.
-                writeFile("other/constants.d", q{enum exeName = "bar"; void lefoo() { }});
+                writeFile(
+                    "other/constants.d",
+                    q{
+                        module other.constants;
+                        enum exeName = "bar"; void lefoo() { }
+                    }
+                );
                 mixin(backend).shouldFailToExecute.shouldContain("reggae");
 
                 runReggae("-b", backend); // but this should be fine
@@ -132,7 +144,7 @@ unittest {
             "source/app.d",
             q{void main() {}}
         );
-        writeFile("other/foo/bar.d", "");
+        writeFile("other/foo/bar.d", "module foo.bar;");
         runReggae("-b", "ninja", "--reggaefile-import-path=" ~ inSandboxPath("other"));
     }
 }

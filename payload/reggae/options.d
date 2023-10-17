@@ -121,6 +121,7 @@ struct Options {
         return "";
     }
 
+    // The path to reggaefile.{d,py,rb,js,lua}
     string reggaeFilePath() @safe const {
         import std.algorithm, std.array, std.exception, std.conv;
 
@@ -159,8 +160,8 @@ struct Options {
     //returns the list of files that the `reggaefile` depends on
     //this will usually be empty, but won't be if the reggaefile imports other D files
     string[] getReggaeFileDependenciesDlang() @safe const {
-        import reggae.dependencies: makeDeps;
-        return makeDeps(reggaeFileDepFile);
+        import reggae.dependencies: parseDepFile;
+        return parseDepFile(reggaeFileDepFile);
     }
 
     string reggaeFileDepFile() @safe pure const {

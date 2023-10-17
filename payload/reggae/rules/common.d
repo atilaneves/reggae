@@ -36,6 +36,20 @@ Target[] objectFiles(alias sourcesFunc = Sources!(),
     return srcFilesToObjectTargets(options, srcFiles, flags, includes, stringImports);
 }
 
+/// ditto
+Target[] objectFiles
+    (alias sourcesFunc = Sources!())
+    (Flags flags = Flags(),
+     ImportPaths includes = ImportPaths(),
+     StringImportPaths stringImports = StringImportPaths(),
+    ) {
+
+    import reggae.config: options;
+    const srcFiles = sourcesToFileNames!sourcesFunc(options);
+    return srcFilesToObjectTargets(options, srcFiles, flags, includes, stringImports);
+}
+
+
 /**
  An object file, typically from one source file in a certain language
  (although for D the default is a whole package). The language is determined

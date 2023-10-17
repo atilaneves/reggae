@@ -1,15 +1,5 @@
 module reggae.dub.info;
 
-import reggae.build;
-import reggae.types;
-import reggae.sorting;
-import reggae.options: Options;
-import reggae.path: buildPath;
-import std.algorithm: map, filter, find, splitter;
-import std.array: array, join;
-import std.range: chain;
-
-
 enum TargetType {
     autodetect,
     none,
@@ -20,7 +10,6 @@ enum TargetType {
     staticLibrary,
     object,
 }
-
 
 struct DubPackage {
     string name;
@@ -132,6 +121,8 @@ bool isObjectFile(in string fileName) @safe pure nothrow {
 
 string inDubPackagePath(in string packagePath, in string filePath) @safe pure nothrow {
     import std.algorithm: startsWith;
+    import std.path: buildPath;
+
     return filePath.startsWith("$project")
         ? buildPath(filePath)
         : buildPath(packagePath, filePath);
@@ -146,6 +137,8 @@ struct DubInfo {
 
     import reggae.rules.dub: CompilationMode;
     import reggae.options: Options;
+    import reggae.build: Target;
+    import reggae.types: CompilerFlags, TargetName;
 
     DubPackage[] packages;
     Options options;
@@ -178,11 +171,12 @@ struct DubInfo {
     {
         import reggae.path: deabsolutePath;
         import std.range: chain, only;
-        import std.algorithm: filter;
+        import std.algorithm: filter, map;
         import std.array: array, replace;
         import std.functional: not;
         import std.path: dirSeparator, baseName;
         import std.string: indexOf, stripRight;
+        import std.path: buildPath;
 
         const importPaths = dubPackage.packagePaths(
             dubPackage.importPaths ~ dubPackage.cImportPaths);
@@ -280,6 +274,7 @@ struct DubInfo {
      */
     TargetName targetName() @safe const pure nothrow {
         import reggae.rules.common: exeExt, libExt, dynExt;
+        import reggae.types: TargetName;
 
         const fileName = packages[0].targetFileName;
 
@@ -317,6 +312,9 @@ struct DubInfo {
     }
 
     string[] linkerFlags() @safe pure nothrow const {
+        import std.algorithm: map;
+        import std.array: array;
+
         const allLibs = packages[0].libs;
 
         static string libFlag(in string lib) {
@@ -377,5 +375,8 @@ struct DubInfo {
 
 
 private string[] packagePaths(in DubPackage dubPackage, in string[] paths) @safe pure nothrow {
+    import std.algorithm: map;
+    import std.array: array;
+    import std.path: buildPath;
     return paths.map!(a => buildPath(dubPackage.path, a)).array;
 }

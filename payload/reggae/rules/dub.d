@@ -185,11 +185,6 @@ static if(imported!"reggae.config".isDubProject) {
         );
     }
 
-    ImportPaths dubImportPaths(Configuration config = Configuration("default"))() {
-        import reggae.config: configToDubInfo;
-        return ImportPaths(configToDubInfo[config.value].allImportPaths);
-    }
-
     /**
        Link a target taking into account the dub linker flags
      */

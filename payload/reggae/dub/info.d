@@ -72,6 +72,28 @@ struct DubPackage {
         }
         return ret;
     }
+
+    // abstracts the compiler and returns a range of version flags
+    auto versionFlags(in string compilerBinName) @safe pure const {
+        import std.algorithm: map;
+
+        const versionOpt = () {
+            switch(compilerBinName) {
+                default:
+                    throw new Exception("Unknown compiler " ~ compilerBinName);
+                case "dmd":
+                case "gdc":
+                    return "-version";
+                case "ldc2":
+                case "ldc":
+                case "ldmd":
+                case "ldmd2":
+                    return "-d-version";
+            }
+        }();
+
+        return versions.map!(a => versionOpt ~ "=" ~ a);
+    }
 }
 
 bool isStaticLibrary(in string fileName) @safe pure nothrow {
@@ -154,21 +176,6 @@ struct DubInfo {
         //package
         const projDir = isMainPackage ? "" : dubPackage.path;
 
-        const versionOpt = () {
-            switch(options.compilerBinName) {
-                default:
-                    throw new Exception("Unknown compiler " ~ options.compilerBinName);
-                case "dmd":
-                case "gdc":
-                    return "-version";
-                case "ldc2":
-                case "ldc":
-                case "ldmd":
-                case "ldmd2":
-                    return "-d-version";
-            }
-        }();
-
         const(string)[] pkgDflags = dubPackage.dflags;
         if(options.compilerBinName.among("ldc", "ldc2")) {
             if (pkgDflags.length) {
@@ -185,7 +192,7 @@ struct DubInfo {
 
         const flags = chain(
             pkgDflags,
-            dubPackage.versions.map!(a => versionOpt ~ "=" ~ a),
+            dubPackage.versionFlags(options.compilerBinName),
             options.dflags,
             compilerFlags
         )

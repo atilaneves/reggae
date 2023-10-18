@@ -175,13 +175,11 @@ static if(imported!"reggae.config".isDubProject) {
 
         import std.path: buildPath;
 
-        const path = targetName;
-
         // otherwise the target wouldn't be top-level in the presence of
         // postBuildCommands
         auto ret = dubInfo.postBuildCommands == ""
-            ? path
-            : buildPath("$builddir", path);
+            ? targetName
+            : buildPath("$builddir", targetName);
 
         return ret == "" ? "placeholder" : ret;
     }

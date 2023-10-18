@@ -43,12 +43,11 @@ static if(imported!"reggae.config".isDubProject) {
     Target dubTarget(
         Configuration config = Configuration("default"),
         CompilationMode compilationMode = CompilationMode.options,
-        alias objsFunction = () { Target[] t; return t; },
         )
-        () if(isCallable!objsFunction)
+        ()
     {
         import reggae.config: options, configToDubInfo;
-        return dubTarget(options, configToDubInfo, config, compilationMode, objsFunction());
+        return dubTarget(options, configToDubInfo, config, compilationMode);
     }
 
 
@@ -91,22 +90,19 @@ static if(imported!"reggae.config".isDubProject) {
         (in imported!"reggae.options".Options options,
          in C configToDubInfo,
          Configuration config = Configuration("default"),
-         CompilationMode compilationMode = CompilationMode.options,
-         Target[] extraObjects = [])
+         CompilationMode compilationMode = CompilationMode.options)
     {
         return dubTarget(
             options,
             configToDubInfo[config.value],
             compilationMode,
-            extraObjects
         );
     }
 
     Target dubTarget(
         in imported!"reggae.options".Options options,
         in DubInfo dubInfo,
-        in CompilationMode compilationMode = CompilationMode.options,
-        Target[] extraObjects = [],
+        in CompilationMode compilationMode = CompilationMode.options
         )
     {
         import reggae.rules.common: staticLibraryTarget, link;
@@ -115,11 +111,10 @@ static if(imported!"reggae.config".isDubProject) {
         const isStaticLibrary =
             dubInfo.targetType == TargetType.library ||
             dubInfo.targetType == TargetType.staticLibrary;
-        auto dubObjs = dubInfo.toTargets(
+        auto allObjs = dubInfo.toTargets(
             compilationMode,
             dubObjsDir(options, dubInfo),
         );
-        auto allObjs = dubObjs ~ extraObjects;
 
         const targetPath = dubInfo.targetPath(options);
         const name = fixNameForPostBuild(buildPath(targetPath, dubInfo.targetName.value), dubInfo);

@@ -84,18 +84,8 @@ static if(imported!"reggae.config".isDubProject) {
         enforce(dubInfo.packages.length, "No dub packages found for the dub test configuration");
         enforce(dubInfo.packages[0].mainSourceFile.length, "No mainSourceFile for the dub test configuration");
 
-        auto name = dubInfo.targetName;
-        const defaultDubInfo = configToDubInfo["default"];
-        if (defaultDubInfo.packages.length > 0 && defaultDubInfo.targetName == name) {
-            // The targetName of both default & test configs conflict (due to a bad
-            // `unittest` config in dub.{sdl,json}).
-            // Rename the test target to `ut[.exe]` to prevent conflicts in Ninja/make
-            // build scripts (in case the default config is included in the build too).
-            name = targetName(TargetType.executable, "ut");
-        }
-
         return dubTarget(options,
-                         name,
+                         dubInfo.targetName,
                          dubInfo,
                          compilationMode);
     }

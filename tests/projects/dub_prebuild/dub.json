@@ -11,6 +11,7 @@
         },
         {
             "name": "unittest",
+            "targetName": "ut",
             "preBuildCommands": ["dub run unit-threaded -c gen_ut_main -- -f ut.d"],
             "mainSourceFile": "ut.d",
             "excludedSourceFiles": ["source/lemain.d"],

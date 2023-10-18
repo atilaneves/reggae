@@ -114,8 +114,7 @@ static if(imported!"reggae.config".isDubProject) {
         )
     {
         import reggae.rules.common: staticLibraryTarget, link;
-        import reggae.types: TargetName;
-        import std.path: relativePath, buildPath;
+        import std.path: buildPath;
 
         const isStaticLibrary =
             dubInfo.targetType == TargetType.library ||
@@ -127,7 +126,7 @@ static if(imported!"reggae.config".isDubProject) {
         auto allObjs = dubObjs ~ extraObjects;
 
         const targetPath = dubInfo.targetPath(options);
-        const name = realName(TargetName(buildPath(targetPath, dubInfo.targetName.value)), dubInfo);
+        const name = realName(buildPath(targetPath, dubInfo.targetName.value), dubInfo);
 
         auto target = isStaticLibrary
             ? staticLibraryTarget(name, allObjs)
@@ -168,15 +167,15 @@ static if(imported!"reggae.config".isDubProject) {
 
         return DubObjsDir(
             options.dubObjsDir,
-            realName(dubInfo.targetName, dubInfo) ~ ".objs"
+            realName(dubInfo.targetName.value, dubInfo) ~ ".objs"
         );
     }
 
-    private string realName(in TargetName targetName, in DubInfo dubInfo) {
+    private string realName(in string targetName, in DubInfo dubInfo) {
 
         import std.path: buildPath;
 
-        const path = targetName.value;
+        const path = targetName;
 
         // otherwise the target wouldn't be top-level in the presence of
         // postBuildCommands

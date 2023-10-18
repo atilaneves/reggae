@@ -167,20 +167,20 @@ static if(imported!"reggae.config".isDubProject) {
 
         return DubObjsDir(
             options.dubObjsDir,
-            realName(dubInfo.targetName.value, dubInfo) ~ ".objs"
+            dubInfo.targetName.value ~ ".objs",
         );
     }
 
+    // fixes postBuildCommands, somehow
     private string realName(in string targetName, in DubInfo dubInfo) {
 
         import std.path: buildPath;
 
         // otherwise the target wouldn't be top-level in the presence of
         // postBuildCommands
-        auto ret = dubInfo.postBuildCommands == ""
+        const ret = dubInfo.postBuildCommands == ""
             ? targetName
             : buildPath("$builddir", targetName);
-
-        return ret == "" ? "placeholder" : ret;
+        return ret;
     }
 }

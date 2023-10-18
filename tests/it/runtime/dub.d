@@ -63,6 +63,7 @@ unittest {
 unittest {
     with(immutable ReggaeSandbox("dub_postbuild")) {
         runReggae("-b", "ninja");
+        shouldNotExist("foo.txt");
         ninja.shouldExecuteOk;
         shouldExist("foo.txt");
         shouldSucceed("postbuild");

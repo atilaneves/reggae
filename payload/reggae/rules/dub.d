@@ -126,7 +126,6 @@ static if(imported!"reggae.config".isDubProject) {
         in DubInfo dubInfo,
         in CompilationMode compilationMode = CompilationMode.options,
         Target[] extraObjects = [],
-        in size_t startingIndex = 0,
         )
     {
         import reggae.rules.common: staticLibraryTarget, link;
@@ -139,7 +138,6 @@ static if(imported!"reggae.config".isDubProject) {
         auto dubObjs = dubInfo.toTargets(
             compilationMode,
             dubObjsDir(options, targetName, dubInfo),
-            startingIndex,
         );
         auto allObjs = dubObjs ~ extraObjects;
 

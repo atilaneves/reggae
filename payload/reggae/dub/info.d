@@ -157,13 +157,12 @@ struct DubInfo {
     }
 
     Target[] toTargets(in CompilationMode compilationMode = CompilationMode.options,
-                       in DubObjsDir dubObjsDir = DubObjsDir(),
-                       in size_t startingIndex = 0)
+                       in DubObjsDir dubObjsDir = DubObjsDir())
         @safe const
     {
         Target[] targets;
 
-        foreach(i; startingIndex .. packages.length) {
+        foreach(i; 0 .. packages.length) {
             targets ~= packageIndexToTargets(i, compilationMode, dubObjsDir);
         }
 

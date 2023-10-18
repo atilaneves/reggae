@@ -306,17 +306,31 @@ class InfoGenerator: ProjectGenerator {
         @trusted
     {
 
-        import dub.compilers.buildsettings: BuildSetting;
+        import dub.compilers.buildsettings: BuildSetting, TargetType;
         import std.file: exists, mkdirRecurse;
+        import std.algorithm: among;
 
         DubPackage nameToDubPackage(in string targetName,
                                     in bool isFirstPackage = false)
         {
             const targetInfo = targets[targetName];
             auto newBuildSettings = targetInfo.buildSettings.dup;
+            // Of course I can't just create a compiler and use it.
+            // No, I have to call other !@#$% commands to make it usable.
             settings.compiler.prepareBuildSettings(newBuildSettings,
                                                    settings.platform,
                                                    BuildSetting.noOptions /*???*/);
+            // If this one in particular isn't called, then dynamicLibrary targets
+            // won't work.
+            with(TargetType) {
+                if(!newBuildSettings.targetType.among(autodetect, none)) {
+                    // otherwise dub throws when setting the target
+                    if(!newBuildSettings.targetName)
+                        newBuildSettings.targetName = targetName;
+                    settings.compiler.setTarget(newBuildSettings, settings.platform);
+                }
+            }
+
             DubPackage pkg;
 
             pkg.name = targetInfo.pack.name;

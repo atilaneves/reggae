@@ -136,10 +136,6 @@ static if(imported!"reggae.config".isDubProject) {
         const isStaticLibrary =
             dubInfo.targetType == TargetType.library ||
             dubInfo.targetType == TargetType.staticLibrary;
-        const sharedFlags = dubInfo.targetType == TargetType.dynamicLibrary
-            ? ["-shared"]
-            : [];
-        const allLinkerFlags = dubInfo.linkerFlags ~ sharedFlags;
         auto allObjs = objs(options,
                             targetName,
                             dubInfo,
@@ -156,7 +152,7 @@ static if(imported!"reggae.config".isDubProject) {
                 ? Target.phony(name, "", allObjs)
                 : link(ExeName(name),
                        allObjs,
-                       const Flags(allLinkerFlags));
+                       const Flags(dubInfo.linkerFlags));
 
         const combinedPostBuildCommands = dubInfo.postBuildCommands;
         return combinedPostBuildCommands.length == 0

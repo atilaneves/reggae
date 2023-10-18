@@ -122,7 +122,7 @@ static if(imported!"reggae.config".isDubProject) {
             dubInfo.targetType == TargetType.staticLibrary;
         auto dubObjs = dubInfo.toTargets(
             compilationMode,
-            dubObjsDir(options, dubInfo.targetName, dubInfo),
+            dubObjsDir(options, dubInfo),
         );
         auto allObjs = dubObjs ~ extraObjects;
 
@@ -162,14 +162,13 @@ static if(imported!"reggae.config".isDubProject) {
     }
 
     private auto dubObjsDir(in imported!"reggae.options".Options options,
-                            in TargetName targetName,
                             in DubInfo dubInfo)
     {
         import reggae.dub.info: DubObjsDir;
 
         return DubObjsDir(
             options.dubObjsDir,
-            realName(targetName, dubInfo) ~ ".objs"
+            realName(dubInfo.targetName, dubInfo) ~ ".objs"
         );
     }
 

@@ -126,7 +126,7 @@ static if(imported!"reggae.config".isDubProject) {
         auto allObjs = dubObjs ~ extraObjects;
 
         const targetPath = dubInfo.targetPath(options);
-        const name = realName(buildPath(targetPath, dubInfo.targetName.value), dubInfo);
+        const name = fixNameForPostBuild(buildPath(targetPath, dubInfo.targetName.value), dubInfo);
 
         auto target = isStaticLibrary
             ? staticLibraryTarget(name, allObjs)
@@ -172,7 +172,7 @@ static if(imported!"reggae.config".isDubProject) {
     }
 
     // fixes postBuildCommands, somehow
-    private string realName(in string targetName, in DubInfo dubInfo) {
+    private string fixNameForPostBuild(in string targetName, in DubInfo dubInfo) {
 
         import std.path: buildPath;
 
@@ -181,6 +181,6 @@ static if(imported!"reggae.config".isDubProject) {
         const ret = dubInfo.postBuildCommands == ""
             ? targetName
             : buildPath("$builddir", targetName);
-        return ret;
+        return ret == "" ? "placeholder" : ret;
     }
 }

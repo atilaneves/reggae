@@ -138,8 +138,8 @@ string inDubPackagePath(in string packagePath, in string filePath) @safe pure no
 }
 
 struct DubObjsDir {
-    string globalDir;
-    string targetDir;
+    string globalDir; /// where object files for all targets go
+    string targetDir; /// where object files for *one* target go (inside globalDir)
 }
 
 struct DubInfo {

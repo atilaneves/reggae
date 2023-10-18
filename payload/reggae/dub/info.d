@@ -162,16 +162,14 @@ struct DubInfo {
     {
         Target[] targets;
 
-        foreach(i; 0 .. packages.length) {
-            targets ~= packageIndexToTargets(i, compilationMode, dubObjsDir);
-        }
+        foreach(ref const dubPackage; packages)
+            targets ~= packageToTargets(dubPackage, compilationMode, dubObjsDir);
 
         return targets ~ allObjectFileSources ~ allStaticLibrarySources;
     }
 
-    // dubPackage[i] -> Target[]
-    private Target[] packageIndexToTargets(
-        in size_t dubPackageIndex,
+    private Target[] packageToTargets(
+        ref const(DubPackage) dubPackage,
         in CompilationMode compilationMode = CompilationMode.options,
         in DubObjsDir dubObjsDir = DubObjsDir())
         @safe const
@@ -184,11 +182,10 @@ struct DubInfo {
         import std.path: dirSeparator, baseName;
         import std.string: indexOf, stripRight;
 
-        const dubPackage = packages[dubPackageIndex];
         const importPaths = dubPackage.packagePaths(
             dubPackage.importPaths ~ dubPackage.cImportPaths);
         const stringImportPaths = dubPackage.packagePaths(dubPackage.stringImportPaths);
-        const isMainPackage = dubPackageIndex == 0;
+        const isMainPackage = dubPackage.name == packages[0].name;
         //the path must be explicit for the other packages, implicit for the "main"
         //package
         const projDir = isMainPackage ? "" : dubPackage.path;

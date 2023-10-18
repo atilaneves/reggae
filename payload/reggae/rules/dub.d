@@ -161,6 +161,18 @@ static if(imported!"reggae.config".isDubProject) {
         );
     }
 
+    private auto dubObjsDir(in imported!"reggae.options".Options options,
+                            in TargetName targetName,
+                            in DubInfo dubInfo)
+    {
+        import reggae.dub.info: DubObjsDir;
+
+        return DubObjsDir(
+            options.dubObjsDir,
+            realName(targetName, dubInfo) ~ ".objs"
+        );
+    }
+
     private string realName(in TargetName targetName, in DubInfo dubInfo) {
 
         import std.path: buildPath;
@@ -175,17 +187,4 @@ static if(imported!"reggae.config".isDubProject) {
 
         return ret == "" ? "placeholder" : ret;
     }
-
-    private auto dubObjsDir(in imported!"reggae.options".Options options,
-                            in TargetName targetName,
-                            in DubInfo dubInfo)
-    {
-        import reggae.dub.info: DubObjsDir;
-
-        return DubObjsDir(
-            options.dubObjsDir,
-            realName(targetName, dubInfo) ~ ".objs"
-        );
-    }
-
 }

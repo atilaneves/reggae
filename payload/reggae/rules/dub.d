@@ -69,8 +69,6 @@ static if(imported!"reggae.config".isDubProject) {
         CompilationMode compilationMode = CompilationMode.options)
     {
         import reggae.build : Target;
-        import reggae.rules.dub: dubTarget;
-        import std.exception : enforce;
 
         // No `dub test` config? Then it inherited some `targetType "none"`, and
         // dub has printed an according message - return a dummy target and continue.
@@ -78,12 +76,8 @@ static if(imported!"reggae.config".isDubProject) {
         if ("unittest" !in configToDubInfo)
             return Target(null);
 
-        const dubInfo = configToDubInfo["unittest"];
-        enforce(dubInfo.packages.length, "No dub packages found for the dub test configuration");
-        enforce(dubInfo.packages[0].mainSourceFile.length, "No mainSourceFile for the dub test configuration");
-
         return dubTarget(options,
-                         dubInfo,
+                         configToDubInfo["unittest"],
                          compilationMode);
     }
 

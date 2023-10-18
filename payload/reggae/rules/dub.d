@@ -39,13 +39,11 @@ static if(imported!"reggae.config".isDubProject) {
         in C configToDubInfo,
         CompilationMode compilationMode = CompilationMode.options)
     {
-        enum config = "default";
-        const dubInfo = configToDubInfo[config];
-
-        return dubTarget(
+        return dubConfigurationTarget(
             options,
-            dubInfo,
-            compilationMode,
+            configToDubInfo,
+            Configuration("default"),
+            compilationMode
         );
     }
 
@@ -76,9 +74,12 @@ static if(imported!"reggae.config".isDubProject) {
         if ("unittest" !in configToDubInfo)
             return Target(null);
 
-        return dubTarget(options,
-                         configToDubInfo["unittest"],
-                         compilationMode);
+        return dubConfigurationTarget(
+            options,
+            configToDubInfo,
+            Configuration("unittest"),
+            compilationMode
+        );
     }
 
     /**
@@ -91,16 +92,23 @@ static if(imported!"reggae.config".isDubProject) {
         () if(isCallable!objsFunction)
     {
         import reggae.config: options, configToDubInfo;
-
-        const dubInfo = configToDubInfo[config.value];
-
-        return dubTarget(options,
-                         dubInfo,
-                         compilationMode,
-                         objsFunction());
+        return dubConfigurationTarget(options, configToDubInfo, config, compilationMode, objsFunction());
     }
 
-    Target dubTarget(
+    Target dubConfigurationTarget(C)
+        (in imported!"reggae.options".Options options,
+         in C configToDubInfo,
+         Configuration config,
+         CompilationMode compilationMode = CompilationMode.options,
+         Target[] extraObjects = [])
+    {
+        return dubTarget(options,
+                         configToDubInfo[config.value],
+                         compilationMode,
+                         extraObjects);
+    }
+
+    private Target dubTarget(
         in imported!"reggae.options".Options options,
         in DubInfo dubInfo,
         in CompilationMode compilationMode = CompilationMode.options,

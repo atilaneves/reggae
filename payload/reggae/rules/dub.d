@@ -22,30 +22,35 @@ static if(imported!"reggae.config".isDubProject) {
     import reggae.rules.common;
     import std.traits;
 
+    alias dubConfigurationTarget = dubTarget;
+    alias dubDefaultTarget = dubTarget;
+
     /**
-     Builds the main dub target (equivalent of "dub build")
-    */
-    Target dubDefaultTarget(CompilationMode compilationMode = CompilationMode.options)
+       Builds a particular dub configuration (usually "default")
+     */
+    Target dubTarget(CompilationMode compilationMode)
         ()
     {
-        return dubConfigurationTarget!(
+        return dubTarget!(
             Configuration("default"),
             compilationMode,
         );
     }
 
-    Target dubDefaultTarget(C)(
-        in imported!"reggae.options".Options options,
-        in C configToDubInfo,
-        CompilationMode compilationMode = CompilationMode.options)
+    /**
+       Builds a particular dub configuration (usually "default")
+     */
+    Target dubTarget(
+        Configuration config = Configuration("default"),
+        CompilationMode compilationMode = CompilationMode.options,
+        alias objsFunction = () { Target[] t; return t; },
+        )
+        () if(isCallable!objsFunction)
     {
-        return dubConfigurationTarget(
-            options,
-            configToDubInfo,
-            Configuration("default"),
-            compilationMode
-        );
+        import reggae.config: options, configToDubInfo;
+        return dubTarget(options, configToDubInfo, config, compilationMode, objsFunction());
     }
+
 
     /**
        A target corresponding to `dub test`
@@ -74,7 +79,7 @@ static if(imported!"reggae.config".isDubProject) {
         if ("unittest" !in configToDubInfo)
             return Target(null);
 
-        return dubConfigurationTarget(
+        return dubTarget(
             options,
             configToDubInfo,
             Configuration("unittest"),
@@ -82,33 +87,22 @@ static if(imported!"reggae.config".isDubProject) {
         );
     }
 
-    /**
-     Builds a particular dub configuration (executable, unittest, etc.)
-     */
-    Target dubConfigurationTarget(Configuration config,
-                                  CompilationMode compilationMode = CompilationMode.options,
-                                  alias objsFunction = () { Target[] t; return t; },
-                                  )
-        () if(isCallable!objsFunction)
-    {
-        import reggae.config: options, configToDubInfo;
-        return dubConfigurationTarget(options, configToDubInfo, config, compilationMode, objsFunction());
-    }
-
-    Target dubConfigurationTarget(C)
+    Target dubTarget(C)
         (in imported!"reggae.options".Options options,
          in C configToDubInfo,
-         Configuration config,
+         Configuration config = Configuration("default"),
          CompilationMode compilationMode = CompilationMode.options,
          Target[] extraObjects = [])
     {
-        return dubTarget(options,
-                         configToDubInfo[config.value],
-                         compilationMode,
-                         extraObjects);
+        return dubTarget(
+            options,
+            configToDubInfo[config.value],
+            compilationMode,
+            extraObjects
+        );
     }
 
-    private Target dubTarget(
+    Target dubTarget(
         in imported!"reggae.options".Options options,
         in DubInfo dubInfo,
         in CompilationMode compilationMode = CompilationMode.options,

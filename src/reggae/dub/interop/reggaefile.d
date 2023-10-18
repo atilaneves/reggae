@@ -25,9 +25,9 @@ auto defaultDubBuild(in from!"reggae.options".Options options) {
 
 private auto standardDubBuild(in from!"reggae.options".Options options, in ConfigToDubInfo configToDubInfo) {
     import reggae.build: Build, Target, optional;
-    import reggae.rules.dub: dubDefaultTarget, dubTestTarget;
+    import reggae.rules.dub: dubTarget, dubTestTarget;
 
-    auto buildTarget = dubDefaultTarget(options, configToDubInfo); // dub build
+    auto buildTarget = dubTarget(options, configToDubInfo); // dub build
     auto testTarget = dubTestTarget(options, configToDubInfo);     // dub test
 
     Target aliasTarget(string aliasName, alias target)() {

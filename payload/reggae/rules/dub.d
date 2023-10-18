@@ -136,12 +136,12 @@ static if(imported!"reggae.config".isDubProject) {
         const isStaticLibrary =
             dubInfo.targetType == TargetType.library ||
             dubInfo.targetType == TargetType.staticLibrary;
-        auto allObjs = objs(options,
-                            targetName,
-                            dubInfo,
-                            compilationMode,
-                            extraObjects,
-                            startingIndex);
+        auto dubObjs = dubInfo.toTargets(
+            compilationMode,
+            dubObjsDir(options, targetName, dubInfo),
+            startingIndex,
+        );
+        auto allObjs = dubObjs ~ extraObjects;
 
         const targetPath = dubInfo.targetPath(options);
         const name = realName(TargetName(buildPath(targetPath, targetName.value)), dubInfo);
@@ -176,26 +176,6 @@ static if(imported!"reggae.config".isDubProject) {
             objsFunction,
             Flags(linkerFlags.value ~ configToDubInfo[config.value].linkerFlags)
         );
-    }
-
-
-    private Target[] objs(in imported!"reggae.options".Options options,
-                          in TargetName targetName,
-                          in DubInfo dubInfo,
-                          in CompilationMode compilationMode,
-                          Target[] extraObjects = [],
-                          in size_t startingIndex = 0)
-    {
-
-
-        auto dubObjs = dubInfo.toTargets(
-            compilationMode,
-            dubObjsDir(options, targetName, dubInfo),
-            startingIndex
-        );
-        auto allObjs = dubObjs ~ extraObjects;
-
-        return allObjs;
     }
 
     private string realName(in TargetName targetName, in DubInfo dubInfo) {

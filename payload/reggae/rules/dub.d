@@ -44,7 +44,6 @@ static if(imported!"reggae.config".isDubProject) {
 
         return dubTarget(
             options,
-            dubInfo.targetName,
             dubInfo,
             compilationMode,
         );
@@ -70,7 +69,6 @@ static if(imported!"reggae.config".isDubProject) {
         CompilationMode compilationMode = CompilationMode.options)
     {
         import reggae.build : Target;
-        import reggae.dub.info: TargetType, targetName;
         import reggae.rules.dub: dubTarget;
         import std.exception : enforce;
 
@@ -85,7 +83,6 @@ static if(imported!"reggae.config".isDubProject) {
         enforce(dubInfo.packages[0].mainSourceFile.length, "No mainSourceFile for the dub test configuration");
 
         return dubTarget(options,
-                         dubInfo.targetName,
                          dubInfo,
                          compilationMode);
     }
@@ -104,7 +101,6 @@ static if(imported!"reggae.config".isDubProject) {
         const dubInfo = configToDubInfo[config.value];
 
         return dubTarget(options,
-                         dubInfo.targetName,
                          dubInfo,
                          compilationMode,
                          objsFunction());
@@ -112,7 +108,6 @@ static if(imported!"reggae.config".isDubProject) {
 
     Target dubTarget(
         in imported!"reggae.options".Options options,
-        in TargetName targetName,
         in DubInfo dubInfo,
         in CompilationMode compilationMode = CompilationMode.options,
         Target[] extraObjects = [],
@@ -127,12 +122,12 @@ static if(imported!"reggae.config".isDubProject) {
             dubInfo.targetType == TargetType.staticLibrary;
         auto dubObjs = dubInfo.toTargets(
             compilationMode,
-            dubObjsDir(options, targetName, dubInfo),
+            dubObjsDir(options, dubInfo.targetName, dubInfo),
         );
         auto allObjs = dubObjs ~ extraObjects;
 
         const targetPath = dubInfo.targetPath(options);
-        const name = realName(TargetName(buildPath(targetPath, targetName.value)), dubInfo);
+        const name = realName(TargetName(buildPath(targetPath, dubInfo.targetName.value)), dubInfo);
 
         auto target = isStaticLibrary
             ? staticLibraryTarget(name, allObjs)
@@ -145,7 +140,7 @@ static if(imported!"reggae.config".isDubProject) {
         const combinedPostBuildCommands = dubInfo.postBuildCommands;
         return combinedPostBuildCommands.length == 0
             ? target
-            : Target.phony(targetName.value ~ "_postBuild", combinedPostBuildCommands, target);
+            : Target.phony(dubInfo.targetName.value ~ "_postBuild", combinedPostBuildCommands, target);
     }
 
     /**

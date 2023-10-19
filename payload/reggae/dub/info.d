@@ -264,8 +264,7 @@ struct DubInfo {
     }
 
     TargetName targetName() @safe const pure nothrow {
-        const fileName = packages[0].targetFileName;
-        return .targetName(targetType, fileName);
+        return .targetName(targetType, packages[0].targetFileName);
     }
 
     string targetPath(in Options options) @safe const pure {

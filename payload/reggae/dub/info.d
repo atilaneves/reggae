@@ -157,13 +157,14 @@ struct DubInfo {
     }
 
     Target[] toTargets(in CompilationMode compilationMode = CompilationMode.options,
-                       in DubObjsDir dubObjsDir = DubObjsDir())
+                       in DubObjsDir dubObjsDir = DubObjsDir(),
+                       in CompilerFlags extraCompilerFlags = CompilerFlags())
         @safe const
     {
         Target[] targets;
 
         foreach(ref const dubPackage; packages)
-            targets ~= packageToTargets(dubPackage, compilationMode, dubObjsDir);
+            targets ~= packageToTargets(dubPackage, compilationMode, dubObjsDir, extraCompilerFlags);
 
         return targets ~ allObjectFileSources ~ allStaticLibrarySources;
     }
@@ -171,7 +172,8 @@ struct DubInfo {
     private Target[] packageToTargets(
         ref const(DubPackage) dubPackage,
         in CompilationMode compilationMode = CompilationMode.options,
-        in DubObjsDir dubObjsDir = DubObjsDir())
+        in DubObjsDir dubObjsDir = DubObjsDir(),
+        in CompilerFlags extraCompilerFlags)
         @safe const
     {
         import reggae.path: deabsolutePath;
@@ -194,6 +196,7 @@ struct DubInfo {
             dubPackage.compilerFlags(options.compilerBinName),
             dubPackage.versionFlags(options.compilerBinName),
             options.dflags,
+            extraCompilerFlags.value,
         )
             .array;
 

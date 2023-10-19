@@ -54,21 +54,25 @@ static if(imported!"reggae.config".isDubProject) {
     /**
        A target corresponding to `dub test`
      */
-    Target dubTestTarget(CompilationMode compilationMode = CompilationMode.options)
-                         ()
+    Target dubTestTarget(
+        CompilationMode compilationMode = CompilationMode.options,
+        imported!"std.typecons".Flag!"coverage" coverage = imported!"std.typecons".No.coverage)
+        ()
     {
         import reggae.config: options, configToDubInfo;
         return dubTestTarget(
             options,
             configToDubInfo,
-            compilationMode
+            compilationMode,
+            coverage,
         );
     }
 
     Target dubTestTarget(C)
         (in imported!"reggae.options".Options options,
-        in C configToDubInfo,
-        CompilationMode compilationMode = CompilationMode.options)
+         in C configToDubInfo,
+         in CompilationMode compilationMode = CompilationMode.options,
+         in imported!"std.typecons".Flag!"coverage" coverage = imported!"std.typecons".No.coverage)
     {
         import reggae.build : Target;
 
@@ -82,27 +86,31 @@ static if(imported!"reggae.config".isDubProject) {
             options,
             configToDubInfo,
             Configuration("unittest"),
-            compilationMode
+            compilationMode,
+            coverage ? CompilerFlags("-cov") : CompilerFlags(),
         );
     }
 
     Target dubTarget(C)
         (in imported!"reggae.options".Options options,
          in C configToDubInfo,
-         Configuration config = Configuration("default"),
-         CompilationMode compilationMode = CompilationMode.options)
+         in Configuration config = Configuration("default"),
+         in CompilationMode compilationMode = CompilationMode.options,
+         in CompilerFlags extraCompilerFlags = CompilerFlags())
     {
         return dubTarget(
             options,
             configToDubInfo[config.value],
             compilationMode,
+            extraCompilerFlags,
         );
     }
 
     Target dubTarget(
         in imported!"reggae.options".Options options,
         in DubInfo dubInfo,
-        in CompilationMode compilationMode = CompilationMode.options
+        in CompilationMode compilationMode = CompilationMode.options,
+        in CompilerFlags extraCompilerFlags = CompilerFlags(),
         )
     {
         import reggae.rules.common: staticLibraryTarget, link;
@@ -114,6 +122,7 @@ static if(imported!"reggae.config".isDubProject) {
         auto allObjs = dubInfo.toTargets(
             compilationMode,
             dubObjsDir(options, dubInfo),
+            extraCompilerFlags,
         );
 
         const targetPath = dubInfo.targetPath(options);

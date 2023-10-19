@@ -81,37 +81,62 @@ struct Dub {
     DubConfigurations getConfigs
     (in from!"dub.generators.generator".GeneratorSettings settings, in string singleConfig = null)
     {
-        import std.algorithm.iteration: filter, map;
+        import std.algorithm: filter, map, canFind;
         import std.array: array;
+        import std.conv: text;
 
         const allConfigs = singleConfig == "";
-
         // add the special `dub test` configuration (which doesn't require an existing `unittest` config)
-        const testConfig = (allConfigs || singleConfig == "unittest")
+        const lookingForUnitTestsConfig = allConfigs || singleConfig == "unittest";
+        const testConfig = lookingForUnitTestsConfig
             ? _project.addTestRunnerConfiguration(settings)
             : null; // skip when requesting a single non-unittest config
         const haveSpecialTestConfig = testConfig.length && testConfig != "unittest";
-
-        if (!allConfigs) {
-            // translate `unittest` to the actual test configuration
-            const config = haveSpecialTestConfig ? testConfig : singleConfig;
-            return DubConfigurations([config], config, testConfig);
-        }
+        const defaultConfig = _project.getDefaultConfiguration(settings.platform);
 
         // A violation of the Law of Demeter caused by a dub bug.
         // Otherwise _project.configurations would do, but it fails for one
         // projet and no reduced test case was found.
-        auto configurations = _project
+        auto allConfigurationsAsStrings =
+            _project
             .rootPackage
             .recipe
             .configurations
             .filter!(c => c.matchesPlatform(settings.platform))
             .map!(c => c.name)
+            ;
+
+        if (!allConfigs) { // i.e. one single config specified by the user
+            // translate `unittest` to the actual test configuration
+            const requestedConfig = haveSpecialTestConfig ? testConfig : singleConfig;
+
+
+            const canFindConfig = allConfigurationsAsStrings.save.canFind(requestedConfig);
+            if (!canFindConfig && requestedConfig != "default")
+                throw new Exception(
+                    text("Unknown dub configuration `", requestedConfig, "` - known configurations:\n    ",
+                         allConfigurationsAsStrings.save)
+                );
+            // if the user requests "default", then give them the
+            // first available configuration, whether or not it's
+            // actually called "default".
+            assert(canFindConfig || requestedConfig == "default");
+            const actualConfig = canFindConfig
+                ? requestedConfig
+                : defaultConfig;
+
+            return DubConfigurations([actualConfig], actualConfig, testConfig);
+        }
+
+        // A violation of the Law of Demeter caused by a dub bug.
+        // Otherwise _project.configurations would do, but it fails for one
+        // projet and no reduced test case was found.
+        auto configurations = allConfigurationsAsStrings
+            .save
             // exclude unittest config if there's a derived special one
             .filter!(n => !haveSpecialTestConfig || n != "unittest")
             .array;
 
-        const defaultConfig = _project.getDefaultConfiguration(settings.platform);
         return DubConfigurations(configurations, defaultConfig, testConfig);
     }
 

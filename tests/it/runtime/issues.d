@@ -363,3 +363,27 @@ unittest {
         runReggae("-b", "ninja", inSandboxPath("no123core"));
     }
 }
+
+@("dubConfig.implicit.default")
+@Tags("dub", "issues", "ninja")
+unittest {
+    with (immutable ReggaeSandbox()) {
+        // no *explicit* default configuration, should still work
+        writeFile("dub.sdl", `name "oops"`);
+        writeFile("source/oops.d", "void oops() {}");
+        runReggae("-b", "ninja", "--dub-config=default");
+    }
+}
+
+@("dubConfig.explicit.wrong")
+@Tags("dub", "issues", "ninja")
+unittest {
+    with (immutable ReggaeSandbox()) {
+        // no *explicit* default configuration, should still work
+        writeFile("dub.sdl", `name "oops"`);
+        writeFile("source/oops.d", "void oops() {}");
+        runReggae("-b", "ninja", "--dub-config=ohnoes")
+            .shouldThrowWithMessage(
+                "Unknown dub configuration `ohnoes` - known configurations:\n    [\"library\"]");
+    }
+}

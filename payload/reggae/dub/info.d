@@ -159,7 +159,7 @@ struct DubInfo {
     Target[] toTargets(in CompilationMode compilationMode = CompilationMode.options,
                        in DubObjsDir dubObjsDir = DubObjsDir(),
                        in CompilerFlags extraCompilerFlags = CompilerFlags())
-        @safe const
+        @safe pure const
     {
         Target[] targets;
 
@@ -174,7 +174,7 @@ struct DubInfo {
         in CompilationMode compilationMode = CompilationMode.options,
         in DubObjsDir dubObjsDir = DubObjsDir(),
         in CompilerFlags extraCompilerFlags)
-        @safe const
+        @safe pure const
     {
         import reggae.path: deabsolutePath;
         import std.range: chain, only;
@@ -342,7 +342,7 @@ struct DubInfo {
 }
 
 
-private string[] packagePaths(in DubPackage dubPackage, in string[] paths) @trusted nothrow {
+private string[] packagePaths(in DubPackage dubPackage, in string[] paths) @safe pure nothrow {
     return paths.map!(a => buildPath(dubPackage.path, a)).array;
 }
 

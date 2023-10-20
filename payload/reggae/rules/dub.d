@@ -112,17 +112,10 @@ static if(imported!"reggae.config".isDubProject) {
         in CompilationMode compilationMode = CompilationMode.options,
         in CompilerFlags extraCompilerFlags = CompilerFlags(),
         )
+        @safe pure
     {
-        import reggae.rules.common: staticLibraryTarget, link;
         import std.path: buildPath;
 
-        const isStaticLibrary =
-            dubInfo.targetType == TargetType.library ||
-            dubInfo.targetType == TargetType.staticLibrary;
-        const sharedFlags = dubInfo.targetType == TargetType.dynamicLibrary
-            ? ["-shared"]
-            : [];
-        const allLinkerFlags = dubInfo.linkerFlags ~ sharedFlags;
         auto allObjs = dubInfo.toTargets(
             compilationMode,
             dubObjsDir(options, dubInfo),
@@ -131,19 +124,51 @@ static if(imported!"reggae.config".isDubProject) {
 
         const targetPath = dubInfo.targetPath(options);
         const name = fixNameForPostBuild(buildPath(targetPath, dubInfo.targetName.value), dubInfo);
-
-        auto target = isStaticLibrary
-            ? staticLibraryTarget(name, allObjs)
-            : dubInfo.targetType == TargetType.none
-                ? Target.phony(name, "", allObjs)
-                : link(ExeName(name),
-                       allObjs,
-                       const Flags(allLinkerFlags));
-
+        auto target = objectsToTarget(dubInfo, name, allObjs);
         const combinedPostBuildCommands = dubInfo.postBuildCommands;
+
         return combinedPostBuildCommands.length == 0
             ? target
             : Target.phony(dubInfo.targetName.value ~ "_postBuild", combinedPostBuildCommands, target);
+    }
+
+    // This function needs some explaining in case somebody (probably
+    // me) tries to make things "better" by removing custom logic to
+    // produce the final binary.  For "reasons", dub does 1 pass to
+    // generate static and dynamic libraries, but 2 to generate
+    // executables. In the former case it calls the compiler once with
+    // `-lib` or `-shared` as appropriate, but in the latter it first
+    // generates an object file then links. Reggae can't copy this
+    // behaviour, because dub always builds all-at-once. Since we
+    // support building in other ways, especially since the default
+    // for reggae is to build per D package, even for libraries reggae
+    // needs to do it in 2 steps since in the general case there will
+    // be multiple object files. Instead of asking dub what it does,
+    // we generate our own object files then link/archive.
+    private Target objectsToTarget(
+        in DubInfo dubInfo,
+        in string name,
+        Target[] allObjs,
+        )
+        @safe pure
+    {
+        import reggae.rules.common: staticLibraryTarget, link;
+
+        const isStaticLibrary =
+            dubInfo.targetType == TargetType.library ||
+            dubInfo.targetType == TargetType.staticLibrary;
+        if(isStaticLibrary)
+            return staticLibraryTarget(name, allObjs);
+
+        if(dubInfo.targetType == TargetType.none)
+            return Target.phony(name, "", allObjs);
+
+        const maybeShared = dubInfo.targetType == TargetType.dynamicLibrary
+            ? ["-shared"]
+            : [];
+        const allLinkerFlags = dubInfo.linkerFlags ~ maybeShared;
+
+        return link(ExeName(name), allObjs, const Flags(allLinkerFlags));
     }
 
     /**
@@ -164,8 +189,10 @@ static if(imported!"reggae.config".isDubProject) {
         );
     }
 
-    private auto dubObjsDir(in imported!"reggae.options".Options options,
-                            in DubInfo dubInfo)
+    private auto dubObjsDir(
+        in imported!"reggae.options".Options options,
+        in DubInfo dubInfo)
+        @safe pure
     {
         import reggae.dub.info: DubObjsDir;
 
@@ -176,7 +203,7 @@ static if(imported!"reggae.config".isDubProject) {
     }
 
     // fixes postBuildCommands, somehow
-    private string fixNameForPostBuild(in string targetName, in DubInfo dubInfo) {
+    private string fixNameForPostBuild(in string targetName, in DubInfo dubInfo) @safe pure {
 
         import std.path: buildPath;
 

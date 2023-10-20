@@ -14,13 +14,13 @@ enum CompilationMode {
     options,  /// whatever the command-line option was
 }
 
+struct Configuration {
+    string value = "default";
+}
+
 static if(imported!"reggae.config".isDubProject) {
 
-    import reggae.dub.info;
-    import reggae.types;
-    import reggae.build;
-    import reggae.rules.common;
-    import std.traits;
+    import reggae.build: Target;
 
     alias dubConfigurationTarget = dubTarget;
     alias dubDefaultTarget = dubTarget;
@@ -75,6 +75,7 @@ static if(imported!"reggae.config".isDubProject) {
          in imported!"std.typecons".Flag!"coverage" coverage = imported!"std.typecons".No.coverage)
     {
         import reggae.build : Target;
+        import reggae.types: CompilerFlags;
 
         // No `dub test` config? Then it inherited some `targetType "none"`, and
         // dub has printed an according message - return a dummy target and continue.
@@ -96,7 +97,7 @@ static if(imported!"reggae.config".isDubProject) {
          in C configToDubInfo,
          in Configuration config = Configuration("default"),
          in CompilationMode compilationMode = CompilationMode.options,
-         in CompilerFlags extraCompilerFlags = CompilerFlags())
+         in imported!"reggae.types".CompilerFlags extraCompilerFlags = imported!"reggae.types".CompilerFlags())
     {
         return dubTarget(
             options,
@@ -108,9 +109,9 @@ static if(imported!"reggae.config".isDubProject) {
 
     Target dubTarget(
         in imported!"reggae.options".Options options,
-        in DubInfo dubInfo,
+        in imported!"reggae.dub.info".DubInfo dubInfo,
         in CompilationMode compilationMode = CompilationMode.options,
-        in CompilerFlags extraCompilerFlags = CompilerFlags(),
+        in imported!"reggae.types".CompilerFlags extraCompilerFlags = imported!"reggae.types".CompilerFlags(),
         )
         @safe pure
     {
@@ -146,13 +147,15 @@ static if(imported!"reggae.config".isDubProject) {
     // be multiple object files. Instead of asking dub what it does,
     // we generate our own object files then link/archive.
     private Target objectsToTarget(
-        in DubInfo dubInfo,
+        in imported!"reggae.dub.info".DubInfo dubInfo,
         in string name,
         Target[] allObjs,
         )
         @safe pure
     {
         import reggae.rules.common: staticLibraryTarget, link;
+        import reggae.dub.info: TargetType;
+        import reggae.types: ExeName, Flags;
 
         const isStaticLibrary =
             dubInfo.targetType == TargetType.library ||
@@ -174,14 +177,17 @@ static if(imported!"reggae.config".isDubProject) {
     /**
        Link a target taking into account the dub linker flags
      */
-    Target dubLink(TargetName targetName,
+    Target dubLink(imported!"reggae.types".TargetName targetName,
                    Configuration config = Configuration("default"),
                    alias objsFunction = () { Target[] t; return t; },
-                   LinkerFlags linkerFlags = LinkerFlags()
+                   imported!"reggae.types".LinkerFlags linkerFlags = imported!"reggae.types".LinkerFlags()
         )
         ()
     {
         import reggae.config: configToDubInfo;
+        import reggae.rules.common: link;
+        import reggae.types: ExeName, Flags;
+
         return link!(
             ExeName(targetName.value),
             objsFunction,
@@ -191,7 +197,7 @@ static if(imported!"reggae.config".isDubProject) {
 
     private auto dubObjsDir(
         in imported!"reggae.options".Options options,
-        in DubInfo dubInfo)
+        in imported!"reggae.dub.info".DubInfo dubInfo)
         @safe pure
     {
         import reggae.dub.info: DubObjsDir;
@@ -203,7 +209,7 @@ static if(imported!"reggae.config".isDubProject) {
     }
 
     // fixes postBuildCommands, somehow
-    private string fixNameForPostBuild(in string targetName, in DubInfo dubInfo) @safe pure {
+    private string fixNameForPostBuild(in string targetName, in imported!"reggae.dub.info".DubInfo dubInfo) @safe pure {
 
         import std.path: buildPath;
 

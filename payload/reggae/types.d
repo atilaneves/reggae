@@ -157,11 +157,6 @@ struct TargetName {
     string value;
 }
 
-
-struct Configuration {
-    string value = "default";
-}
-
 enum Backend {
     none,
     make,

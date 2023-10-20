@@ -72,6 +72,48 @@ struct DubPackage {
         }
         return ret;
     }
+
+    // abstracts the compiler and returns a range of version flags
+    auto versionFlags(in string compilerBinName) @safe pure const {
+        import std.algorithm: map;
+
+        const versionOpt = () {
+            switch(compilerBinName) {
+                default:
+                    throw new Exception("Unknown compiler " ~ compilerBinName);
+                case "dmd":
+                case "gdc":
+                    return "-version";
+                case "ldc2":
+                case "ldc":
+                case "ldmd":
+                case "ldmd2":
+                    return "-d-version";
+            }
+        }();
+
+        return versions.map!(a => versionOpt ~ "=" ~ a);
+    }
+
+    const(string)[] compilerFlags(in string compilerBinName) @safe pure const {
+        import std.algorithm: among, startsWith;
+
+        const(string)[] pkgDflags = dflags;
+        if(compilerBinName.among("ldc", "ldc2")) {
+            if (pkgDflags.length) {
+                // For LDC, dub implicitly adds `--oq -od=…/obj` to avoid object-file collisions.
+                // Remove that workaround for reggae; it's not needed and unexpected.
+                foreach (i; 0 .. pkgDflags.length - 1) {
+                    if (pkgDflags[i] == "--oq" && pkgDflags[i+1].startsWith("-od=")) {
+                        pkgDflags = pkgDflags[0 .. i] ~ pkgDflags[i+2 .. $];
+                        break;
+                    }
+                }
+            }
+        }
+
+        return pkgDflags;
+    }
 }
 
 bool isStaticLibrary(in string fileName) @safe pure nothrow {
@@ -96,8 +138,8 @@ string inDubPackagePath(in string packagePath, in string filePath) @safe pure no
 }
 
 struct DubObjsDir {
-    string globalDir;
-    string targetDir;
+    string globalDir; /// where object files for all targets go
+    string targetDir; /// where object files for *one* target go (inside globalDir)
 }
 
 struct DubInfo {
@@ -114,91 +156,51 @@ struct DubInfo {
         return DubInfo(packages.map!(a => a.dup).array);
     }
 
-    Target[] toTargets(in string[] compilerFlags = [],
-                       in CompilationMode compilationMode = CompilationMode.options,
+    Target[] toTargets(in CompilationMode compilationMode = CompilationMode.options,
                        in DubObjsDir dubObjsDir = DubObjsDir(),
-                       in size_t startingIndex = 0)
-        @safe const
+                       in CompilerFlags extraCompilerFlags = CompilerFlags())
+        @safe pure const
     {
         Target[] targets;
 
-        foreach(i; startingIndex .. packages.length) {
-            targets ~= packageIndexToTargets(i, compilerFlags, compilationMode, dubObjsDir);
-        }
+        foreach(ref const dubPackage; packages)
+            targets ~= packageToTargets(dubPackage, compilationMode, dubObjsDir, extraCompilerFlags);
 
         return targets ~ allObjectFileSources ~ allStaticLibrarySources;
     }
 
-    // dubPackage[i] -> Target[]
-    private Target[] packageIndexToTargets(
-        in size_t dubPackageIndex,
-        in string[] compilerFlags = [],
+    private Target[] packageToTargets(
+        ref const(DubPackage) dubPackage,
         in CompilationMode compilationMode = CompilationMode.options,
-        in DubObjsDir dubObjsDir = DubObjsDir())
-        @safe const
+        in DubObjsDir dubObjsDir = DubObjsDir(),
+        in CompilerFlags extraCompilerFlags)
+        @safe pure const
     {
         import reggae.path: deabsolutePath;
         import std.range: chain, only;
-        import std.algorithm: filter, startsWith, among;
+        import std.algorithm: filter;
         import std.array: array, replace;
         import std.functional: not;
         import std.path: dirSeparator, baseName;
         import std.string: indexOf, stripRight;
 
-        const dubPackage = packages[dubPackageIndex];
         const importPaths = dubPackage.packagePaths(
             dubPackage.importPaths ~ dubPackage.cImportPaths);
         const stringImportPaths = dubPackage.packagePaths(dubPackage.stringImportPaths);
-        const isMainPackage = dubPackageIndex == 0;
+        const isMainPackage = dubPackage.name == packages[0].name;
         //the path must be explicit for the other packages, implicit for the "main"
         //package
         const projDir = isMainPackage ? "" : dubPackage.path;
 
-        // -unittest should only apply to the main package
-        const(string)[] deUnitTest(in string[] flags) {
-            return isMainPackage
-                ? flags
-                : flags.filter!(f => f != "-unittest" && f != "-main").array;
-        }
-
-        const versionOpt = () {
-            switch(options.compilerBinName) {
-                default:
-                    throw new Exception("Unknown compiler " ~ options.compilerBinName);
-                case "dmd":
-                case "gdc":
-                    return "-version";
-                case "ldc2":
-                case "ldc":
-                case "ldmd":
-                case "ldmd2":
-                    return "-d-version";
-            }
-        }();
-
-        const(string)[] pkgDflags = dubPackage.dflags;
-        if(options.compilerBinName.among("ldc", "ldc2")) {
-            if (pkgDflags.length) {
-                // For LDC, dub implicitly adds `--oq -od=…/obj` to avoid object-file collisions.
-                // Remove that workaround for reggae; it's not needed and unexpected.
-                foreach (i; 0 .. pkgDflags.length - 1) {
-                    if (pkgDflags[i] == "--oq" && pkgDflags[i+1].startsWith("-od=")) {
-                        pkgDflags = pkgDflags[0 .. i] ~ pkgDflags[i+2 .. $];
-                        break;
-                    }
-                }
-            }
-        }
-
-        const flags = chain(
-            pkgDflags,
-            dubPackage.versions.map!(a => versionOpt ~ "=" ~ a),
+        const allCompilerFlags = chain(
+            dubPackage.compilerFlags(options.compilerBinName),
+            dubPackage.versionFlags(options.compilerBinName),
             options.dflags,
-            deUnitTest(compilerFlags)
+            extraCompilerFlags.value,
         )
             .array;
 
-        const files = dubPackage.files
+        const srcFiles = dubPackage.files
             .filter!(not!isStaticLibrary)
             .filter!(not!isObjectFile)
             .map!(a => buildPath(dubPackage.path, a))
@@ -221,12 +223,12 @@ struct DubInfo {
 
             const isStaticLibDep =
                 dubPackage.targetType == TargetType.staticLibrary &&
-                dubPackageIndex != 0 &&
+                !isMainPackage &&
                 !options.dubDepObjsInsteadOfStaticLib;
 
             return isStaticLibDep
-                ? dlangStaticLibraryTogether(options, files, flags, importPaths, stringImportPaths, [], projDir)
-                : compileFunc()(options, files, flags, importPaths, stringImportPaths, [], projDir);
+                ? dlangStaticLibraryTogether(options, srcFiles, allCompilerFlags, importPaths, stringImportPaths, [], projDir)
+                : compileFunc()(options, srcFiles, allCompilerFlags, importPaths, stringImportPaths, [], projDir);
         }();
 
         const dubPkgRoot = buildPath(dubPackage.path).deabsolutePath.stripRight(dirSeparator);
@@ -264,24 +266,8 @@ struct DubInfo {
         return packageTargets;
     }
 
-    Target[] packageNameToTargets(
-        in string name,
-        in string[] compilerFlags = [],
-        in CompilationMode compilationMode = CompilationMode.options,
-        in DubObjsDir dubObjsDir = DubObjsDir())
-        @safe const
-    {
-        foreach(const index, const dubPackage; packages) {
-            if(dubPackage.name == name)
-                return packageIndexToTargets(index, compilerFlags, compilationMode, dubObjsDir);
-        }
-
-        throw new Exception("Couldn't find package '" ~ name ~ "'");
-    }
-
     TargetName targetName() @safe const pure nothrow {
-        const fileName = packages[0].targetFileName;
-        return .targetName(targetType, fileName);
+        return .targetName(targetType, packages[0].targetFileName);
     }
 
     string targetPath(in Options options) @safe const pure {
@@ -294,15 +280,6 @@ struct DubInfo {
 
     TargetType targetType() @safe const pure nothrow {
         return packages[0].targetType;
-    }
-
-    string[] mainLinkerFlags() @safe pure nothrow const {
-        import std.array: join;
-
-        const pack = packages[0];
-        return (pack.targetType == TargetType.library || pack.targetType == TargetType.staticLibrary)
-            ? ["-shared"]
-            : [];
     }
 
     string[] linkerFlags() @safe pure nothrow const {
@@ -365,7 +342,7 @@ struct DubInfo {
 }
 
 
-private string[] packagePaths(in DubPackage dubPackage, in string[] paths) @trusted nothrow {
+private string[] packagePaths(in DubPackage dubPackage, in string[] paths) @safe pure nothrow {
     return paths.map!(a => buildPath(dubPackage.path, a)).array;
 }
 

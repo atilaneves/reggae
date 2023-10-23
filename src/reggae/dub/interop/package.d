@@ -109,7 +109,6 @@ private from!"reggae.dub.info".DubInfo[string] getDubInfos
     enforce(buildPath(options.projectPath, "dub.selections.json").exists,
             "Cannot find dub.selections.json");
 
-    auto settings = dub.getGeneratorSettings(options);
     const configs = dubConfigurations(output, dub, options);
     const haveTestConfig = configs.test != "";
     bool atLeastOneConfigOk;
@@ -118,7 +117,7 @@ private from!"reggae.dub.info".DubInfo[string] getDubInfos
     foreach(config; configs.configurations) {
         const isTestConfig = haveTestConfig && config == configs.test;
         try {
-            ret[config] = configToDubInfo(output, dub, options, settings, config, isTestConfig);
+            ret[config] = configToDubInfo(output, dub, options, config, isTestConfig);
             atLeastOneConfigOk = true;
         } catch(Exception ex) {
             output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);
@@ -177,7 +176,6 @@ private from!"reggae.dub.info".DubInfo configToDubInfo
     (ref O output,
      ref from!"reggae.dub.interop.dublib".Dub dub,
      in from!"reggae.options".Options options,
-     from!"dub.generators.generator".GeneratorSettings settings,
      in string config,
      in bool isTestConfig)
 {
@@ -186,7 +184,7 @@ private from!"reggae.dub.info".DubInfo configToDubInfo
 
     output.log("Querying dub configuration '", config, "'");
 
-    auto dubInfo = dub.configToDubInfo(settings, config, options);
+    auto dubInfo = dub.configToDubInfo(config, options);
 
     /**
      For the `dub test` config, add `-unittest` (only for the main package, hence [0]).

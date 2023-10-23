@@ -58,9 +58,9 @@ private auto standardDubBuild(in from!"reggae.options".Options options, in Confi
 
 private auto reducedDubBuild(in from!"reggae.options".Options options, in ConfigToDubInfo configToDubInfo) {
     import reggae.build: Build, Target, optional;
-    import reggae.rules.dub: dubDefaultTarget;
+    import reggae.rules.dub: dubTarget;
 
-    auto buildTarget = dubDefaultTarget(options, configToDubInfo); // dub build
+    auto buildTarget = dubTarget(options, configToDubInfo); // dub build
 
     Target aliasTarget(string aliasName, alias target)() {
         import std.algorithm: map;

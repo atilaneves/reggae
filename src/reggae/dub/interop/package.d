@@ -42,6 +42,10 @@ void writeDubConfig(O)(ref O output,
     file.writeln;
 }
 
+/**
+   Returns an associative array of string -> DubInfo, where the string
+   is the name of a dub configuration.
+ */
 auto dubInfos(O)(ref O output,
                  in from!"reggae.options".Options options) {
     import reggae.io: log;
@@ -114,7 +118,7 @@ private from!"reggae.dub.info".DubInfo[string] getDubInfos
     foreach(config; configs.configurations) {
         const isTestConfig = haveTestConfig && config == configs.test;
         try {
-            ret[config] = handleDubConfig(output, dub, options, settings, config, isTestConfig);
+            ret[config] = configToDubInfo(output, dub, options, settings, config, isTestConfig);
             atLeastOneConfigOk = true;
         } catch(Exception ex) {
             output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);
@@ -169,7 +173,7 @@ dubConfigurations
     return ret;
 }
 
-private from!"reggae.dub.info".DubInfo handleDubConfig
+private from!"reggae.dub.info".DubInfo configToDubInfo
     (O)
     (ref O output,
      ref from!"reggae.dub.interop.dublib".Dub dub,

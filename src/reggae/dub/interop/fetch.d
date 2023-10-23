@@ -6,7 +6,7 @@ import reggae.from;
 
 package void dubFetch(O)(
     auto ref O output,
-    ref from!"reggae.dub.interop.dublib".Dub dub,
+    ref from!"reggae.dub.interop.dublib".Dub dublib,
     in from!"reggae.options".Options options,
     in string dubSelectionsJson)
     @trusted
@@ -32,7 +32,7 @@ package void dubFetch(O)(
         const version_ = versionJson.str.replace("==", "");
         const pkg = VersionedPackage(dubPackageName, version_);
 
-        if(needDubFetch(dub, pkg)) pkgsToFetch ~= pkg;
+        if(needDubFetch(dublib, pkg)) pkgsToFetch ~= pkg;
     }
 
     output.log("Creating dub object");
@@ -57,7 +57,7 @@ package void dubFetch(O)(
     }
     output.log("Fetched dub packages");
 
-    dub.reinit;
+    dublib.reinit;
 }
 
 

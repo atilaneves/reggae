@@ -7,7 +7,7 @@ import std.file;
 
 
 static foreach (backend; ["ninja", "make", "binary"])
-    @("optional (" ~ backend ~ ")")
+    @("optional." ~ backend)
     @Flaky
     @Tags(backend)
     unittest {

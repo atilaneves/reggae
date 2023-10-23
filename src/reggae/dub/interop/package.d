@@ -110,7 +110,7 @@ private from!"reggae.dub.info".DubInfo[string] getDubInfos
             "Cannot find dub.selections.json");
 
     auto settings = dub.getGeneratorSettings(options);
-    const configs = dubConfigurations(output, dub, options, settings);
+    const configs = dubConfigurations(output, dub, options);
     const haveTestConfig = configs.test != "";
     bool atLeastOneConfigOk;
     Exception dubInfoFailure;
@@ -148,8 +148,7 @@ dubConfigurations
     (O)
     (ref O output,
      ref from!"reggae.dub.interop.dublib".Dub dub,
-     in from!"reggae.options".Options options,
-     in from!"dub.generators.generator".GeneratorSettings settings)
+     in from!"reggae.options".Options options)
 {
     import reggae.dub.interop.configurations: DubConfigurations;
     import reggae.io: log;
@@ -157,7 +156,7 @@ dubConfigurations
     const allConfigs = options.dubConfig == "";
 
     if(allConfigs) output.log("Getting dub configurations");
-    auto ret = dub.getConfigs(settings, options.dubConfig);
+    auto ret = dub.getConfigs(dub.getGeneratorSettings(options), options.dubConfig);
     if(allConfigs) output.log("Number of dub configurations: ", ret.configurations.length);
 
     // error out if the test config is explicitly requested but not available

@@ -387,3 +387,40 @@ unittest {
                 "Unknown dub configuration `ohnoes` - known configurations:\n    [\"library\"]");
     }
 }
+
+@("compdb.no")
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+                alias exe = executable!(ExeName("app"), Sources!("src"));
+                mixin build!exe;
+            }
+        );
+        writeFile("src/app.d", q{void main() {}});
+        shouldNotExist("compile_commands.json");
+        runReggae("--no-comp-db");
+        shouldNotExist("compile_commands.json");
+    }
+}
+
+
+@("compdb.yes")
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+                alias exe = executable!(ExeName("app"), Sources!("src"));
+                mixin build!exe;
+            }
+        );
+        writeFile("src/app.d", q{void main() {}});
+        shouldNotExist("compile_commands.json");
+        runReggae;
+        shouldExist("compile_commands.json");
+    }
+}

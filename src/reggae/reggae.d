@@ -118,13 +118,11 @@ private bool runtimeBuild(in Options options, imported!"reggae.build".Build buil
     version(minimal)
         assert(0, "Runtime builds not supported in minimal version");
     else {
-        import reggae.buildgen: doBuild, writeCompilationDB;
+        import reggae.buildgen: doBuild;
 
         if(build == build.init) return false;
 
         doBuild(build, options);
-
-        if(!options.noCompilationDB) writeCompilationDB(build, options);
     }
 
     return true;

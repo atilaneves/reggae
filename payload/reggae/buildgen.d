@@ -48,7 +48,6 @@ mixin template BuildGenMain(string buildModule = "reggaefile") {
 
 void doBuildFor(alias module_ = "reggaefile")(in Options options, string[] args = []) {
     auto build = getBuildObject!module_(options);
-    if(!options.noCompilationDB) writeCompilationDB(build, options);
     doBuild(build, options, args);
 }
 
@@ -100,6 +99,7 @@ private template getBuildFunc(alias module_) {
 
 // Exports / does the build (binary backend) / produces the build file(s) (make, ninja, tup)
 void doBuild(Build build, in Options options, string[] args = []) {
+    if(!options.noCompilationDB) writeCompilationDB(build, options);
     options.export_ ? exportBuild(build, options) : doOneBuild(build, options, args);
 }
 
@@ -152,7 +152,7 @@ private void exportBuild(Build build, in Options options) {
 }
 
 
-void writeCompilationDB(Build build, in Options options) {
+private void writeCompilationDB(Build build, in Options options) {
     import std.file;
     import std.conv;
     import std.algorithm;

@@ -233,7 +233,7 @@ private void callPreBuildCommands(O)(ref O output,
 
     foreach(const package_; dubInfo.packages) {
         foreach(const dubCommandString; package_.preBuildCommands) {
-            auto cmd = dubCommandString.replace("$project", options.projectPath);
+            auto cmd = dubCommandString.replace("$project", workDir);
             output.log("Executing pre-build command `", cmd, "`");
             const ret = executeShell(cmd, env, config, maxOutput, workDir);
             enforce(ret.status == 0, text("Error calling ", cmd, ":\n", ret.output));

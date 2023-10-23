@@ -81,11 +81,12 @@ struct Dub {
         return ret;
     }
 
-    DubConfigurations getConfigs(in string singleConfig = null) {
+    DubConfigurations getConfigs() {
         import std.algorithm: filter, map, canFind;
         import std.array: array;
         import std.conv: text;
 
+        auto singleConfig = _options.dubConfig;
         auto settings = getGeneratorSettings(_options);
         const allConfigs = singleConfig == "";
         // add the special `dub test` configuration (which doesn't require an existing `unittest` config)

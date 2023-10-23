@@ -152,11 +152,9 @@ dubConfigurations
     import reggae.dub.interop.configurations: DubConfigurations;
     import reggae.io: log;
 
-    const allConfigs = options.dubConfig == "";
-
-    if(allConfigs) output.log("Getting dub configurations");
-    auto ret = dub.getConfigs(options.dubConfig);
-    if(allConfigs) output.log("Number of dub configurations: ", ret.configurations.length);
+    output.log("Getting dub configurations");
+    auto ret = dub.getConfigs;
+    output.log("Number of dub configurations: ", ret.configurations.length);
 
     // error out if the test config is explicitly requested but not available
     if(options.dubConfig == "unittest" && ret.test == "") {

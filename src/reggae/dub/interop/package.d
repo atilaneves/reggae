@@ -115,7 +115,7 @@ private from!"reggae.dub.info".DubInfo[string] getDubInfos
     foreach(config; configs.configurations) {
         const isTestConfig = haveTestConfig && config == configs.test;
         try {
-            ret[config] = configToDubInfo(output, dub, dub.options, config, isTestConfig);
+            ret[config] = configToDubInfo(output, dub, config, isTestConfig);
             atLeastOneConfigOk = true;
         } catch(Exception ex) {
             output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);
@@ -164,7 +164,6 @@ private from!"reggae.dub.info".DubInfo configToDubInfo
     (O)
     (ref O output,
      ref from!"reggae.dub.interop.dublib".Dub dub,
-     in from!"reggae.options".Options options,
      in string config,
      in bool isTestConfig)
 {
@@ -194,7 +193,7 @@ private from!"reggae.dub.info".DubInfo configToDubInfo
     }
 
     try
-        callPreBuildCommands(output, options.projectPath, dubInfo);
+        callPreBuildCommands(output, dub.options.projectPath, dubInfo);
     catch(Exception e) {
         output.log("Error calling prebuild commands: ", e.msg);
         throw e;

@@ -143,16 +143,12 @@ struct Dub {
         return DubConfigurations(configurations, defaultConfig, testConfig);
     }
 
-    DubInfo configToDubInfo
-    (in string config,
-     in imported!"reggae.options".Options options)
-        @trusted  // dub
-    {
+    DubInfo configToDubInfo(in string config) @trusted /*dub*/ {
         auto generator = new InfoGenerator(_project, _extraDFlags);
-        auto settings = getGeneratorSettings(options);
+        auto settings = getGeneratorSettings(_options);
         settings.config = config;
         generator.generate(settings);
-        return DubInfo(generator.dubPackages, options.dup);
+        return DubInfo(generator.dubPackages, _options.dup);
     }
 
     void reinit() @trusted {

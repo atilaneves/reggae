@@ -182,7 +182,7 @@ private from!"reggae.dub.info".DubInfo configToDubInfo
 
     output.log("Querying dub configuration '", config, "'");
 
-    auto dubInfo = dub.configToDubInfo(config, options);
+    auto dubInfo = dub.configToDubInfo(config);
 
     /**
      For the `dub test` config, add `-unittest` (only for the main package, hence [0]).

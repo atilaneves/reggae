@@ -7,6 +7,8 @@ module reggae.dub.interop.dublib;
 import reggae.from;
 import dub.generators.generator: ProjectGenerator;
 
+// to avoid using it in the wrong way
+package:
 
 // Not shared because, for unknown reasons, dub registers compilers
 // in thread-local storage so we register the compilers in all

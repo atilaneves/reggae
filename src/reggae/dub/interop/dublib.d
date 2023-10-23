@@ -7,6 +7,8 @@ module reggae.dub.interop.dublib;
 import reggae.from;
 import dub.generators.generator: ProjectGenerator;
 
+// to avoid using it in the wrong way
+package:
 
 // Not shared because, for unknown reasons, dub registers compilers
 // in thread-local storage so we register the compilers in all
@@ -39,17 +41,24 @@ struct Dub {
 
     private Project _project;
     private const string[] _extraDFlags;
+    private const(Options) _options;
 
     this(in Options options) @safe {
         import reggae.path: buildPath;
         import std.exception: enforce;
         import std.file: exists;
 
+        _options = options;
+
         const path = buildPath(options.projectPath, "dub.selections.json");
         enforce(path.exists, "Cannot create dub instance without dub.selections.json");
 
         _project = project(ProjectPath(options.projectPath));
         _extraDFlags = options.dflags.dup;
+    }
+
+    const(Options) options() @safe @nogc pure nothrow const return scope {
+        return _options;
     }
 
     auto getPackage(in string dubPackage, in string version_) @trusted /*dub*/ {
@@ -78,19 +87,25 @@ struct Dub {
         return ret;
     }
 
-    DubConfigurations getConfigs
-    (in from!"dub.generators.generator".GeneratorSettings settings, in string singleConfig = null)
-    {
+    DubConfigurations getConfigs() {
         import std.algorithm: filter, map, canFind;
         import std.array: array;
         import std.conv: text;
 
+        auto singleConfig = _options.dubConfig;
+        auto settings = getGeneratorSettings(_options);
         const allConfigs = singleConfig == "";
         // add the special `dub test` configuration (which doesn't require an existing `unittest` config)
         const lookingForUnitTestsConfig = allConfigs || singleConfig == "unittest";
         const testConfig = lookingForUnitTestsConfig
             ? _project.addTestRunnerConfiguration(settings)
             : null; // skip when requesting a single non-unittest config
+
+        // error out if the test config is explicitly requested but not available
+        if(_options.dubConfig == "unittest" && testConfig == "") {
+            throw new Exception("No dub test configuration available (target type 'none'?)");
+        }
+
         const haveSpecialTestConfig = testConfig.length && testConfig != "unittest";
         const defaultConfig = _project.getDefaultConfiguration(settings.platform);
 
@@ -140,16 +155,12 @@ struct Dub {
         return DubConfigurations(configurations, defaultConfig, testConfig);
     }
 
-    DubInfo configToDubInfo
-    (from!"dub.generators.generator".GeneratorSettings settings,
-     in string config,
-     in imported!"reggae.options".Options options)
-        @trusted  // dub
-    {
+    DubInfo configToDubInfo(in string config = "") @trusted /*dub*/ {
         auto generator = new InfoGenerator(_project, _extraDFlags);
+        auto settings = getGeneratorSettings(_options);
         settings.config = config;
         generator.generate(settings);
-        return DubInfo(generator.dubPackages, options.dup);
+        return DubInfo(generator.dubPackages, _options.dup);
     }
 
     void reinit() @trusted {

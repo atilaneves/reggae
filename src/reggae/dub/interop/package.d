@@ -13,7 +13,6 @@ void writeDubConfig(O)(ref O output,
                        from!"std.stdio".File file) {
     import reggae.io: log;
     import reggae.dub.info: TargetType;
-    import reggae.dub.interop.fetch: dubFetch;
     import reggae.dub.interop.dublib: Dub;
 
     output.log("Writing dub configuration");
@@ -42,6 +41,10 @@ void writeDubConfig(O)(ref O output,
     file.writeln;
 }
 
+/**
+   Returns an associative array of string -> DubInfo, where the string
+   is the name of a dub configuration.
+ */
 auto dubInfos(O)(ref O output,
                  in from!"reggae.options".Options options) {
     import reggae.io: log;
@@ -54,10 +57,10 @@ auto dubInfos(O)(ref O output,
 
     auto dub = Dub(options);
 
-    dubFetch(output, dub, options, dubSelectionsJson);
+    dubFetch(output, dub, dubSelectionsJson);
 
     output.log("    Getting dub build information");
-    auto ret = getDubInfos(output, dub, options);
+    auto ret = getDubInfos(output, dub);
     output.log("    Got     dub build information");
 
     return ret;
@@ -91,8 +94,7 @@ private string ensureDubSelectionsJson
 private from!"reggae.dub.info".DubInfo[string] getDubInfos
     (O)
     (ref O output,
-     ref from!"reggae.dub.interop.dublib".Dub dub,
-     in from!"reggae.options".Options options)
+     ref from!"reggae.dub.interop.dublib".Dub dub)
 {
     import reggae.io: log;
     import reggae.path: buildPath;
@@ -102,11 +104,10 @@ private from!"reggae.dub.info".DubInfo[string] getDubInfos
 
     DubInfo[string] ret;
 
-    enforce(buildPath(options.projectPath, "dub.selections.json").exists,
+    enforce(buildPath(dub.options.projectPath, "dub.selections.json").exists,
             "Cannot find dub.selections.json");
 
-    auto settings = dub.getGeneratorSettings(options);
-    const configs = dubConfigurations(output, dub, options, settings);
+    const configs = dubConfigurations(output, dub);
     const haveTestConfig = configs.test != "";
     bool atLeastOneConfigOk;
     Exception dubInfoFailure;
@@ -114,7 +115,7 @@ private from!"reggae.dub.info".DubInfo[string] getDubInfos
     foreach(config; configs.configurations) {
         const isTestConfig = haveTestConfig && config == configs.test;
         try {
-            ret[config] = handleDubConfig(output, dub, options, settings, config, isTestConfig);
+            ret[config] = configToDubInfo(output, dub, config, isTestConfig);
             atLeastOneConfigOk = true;
         } catch(Exception ex) {
             output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);
@@ -143,24 +144,14 @@ private from!"reggae.dub.interop.configurations".DubConfigurations
 dubConfigurations
     (O)
     (ref O output,
-     ref from!"reggae.dub.interop.dublib".Dub dub,
-     in from!"reggae.options".Options options,
-     in from!"dub.generators.generator".GeneratorSettings settings)
+     ref from!"reggae.dub.interop.dublib".Dub dub)
 {
     import reggae.dub.interop.configurations: DubConfigurations;
     import reggae.io: log;
 
-    const allConfigs = options.dubConfig == "";
-
-    if(allConfigs) output.log("Getting dub configurations");
-    auto ret = dub.getConfigs(settings, options.dubConfig);
-    if(allConfigs) output.log("Number of dub configurations: ", ret.configurations.length);
-
-    // error out if the test config is explicitly requested but not available
-    if(options.dubConfig == "unittest" && ret.test == "") {
-        output.log("ERROR: No dub test configuration available (target type 'none'?)");
-        throw new Exception("No dub test configuration");
-    }
+    output.log("Getting dub configurations");
+    auto ret = dub.getConfigs;
+    output.log("Number of dub configurations: ", ret.configurations.length);
 
     // this happens e.g. the targetType is "none"
     if(ret.configurations.length == 0)
@@ -169,12 +160,10 @@ dubConfigurations
     return ret;
 }
 
-private from!"reggae.dub.info".DubInfo handleDubConfig
+private from!"reggae.dub.info".DubInfo configToDubInfo
     (O)
     (ref O output,
      ref from!"reggae.dub.interop.dublib".Dub dub,
-     in from!"reggae.options".Options options,
-     from!"dub.generators.generator".GeneratorSettings settings,
      in string config,
      in bool isTestConfig)
 {
@@ -183,7 +172,7 @@ private from!"reggae.dub.info".DubInfo handleDubConfig
 
     output.log("Querying dub configuration '", config, "'");
 
-    auto dubInfo = dub.configToDubInfo(settings, config, options);
+    auto dubInfo = dub.configToDubInfo(config);
 
     /**
      For the `dub test` config, add `-unittest` (only for the main package, hence [0]).
@@ -204,7 +193,7 @@ private from!"reggae.dub.info".DubInfo handleDubConfig
     }
 
     try
-        callPreBuildCommands(output, options, dubInfo);
+        callPreBuildCommands(output, dub.options.projectPath, dubInfo);
     catch(Exception e) {
         output.log("Error calling prebuild commands: ", e.msg);
         throw e;
@@ -215,7 +204,7 @@ private from!"reggae.dub.info".DubInfo handleDubConfig
 
 
 private void callPreBuildCommands(O)(ref O output,
-                                     in from!"reggae.options".Options options,
+                                     in string workDir,
                                      in from!"reggae.dub.info".DubInfo dubInfo)
     @safe
 {
@@ -228,13 +217,12 @@ private void callPreBuildCommands(O)(ref O output,
     const string[string] env = null;
     Config config = Config.none;
     size_t maxOutput = size_t.max;
-    immutable workDir = options.projectPath;
 
     if(dubInfo.packages.length == 0) return;
 
     foreach(const package_; dubInfo.packages) {
         foreach(const dubCommandString; package_.preBuildCommands) {
-            auto cmd = dubCommandString.replace("$project", options.projectPath);
+            auto cmd = dubCommandString.replace("$project", workDir);
             output.log("Executing pre-build command `", cmd, "`");
             const ret = executeShell(cmd, env, config, maxOutput, workDir);
             enforce(ret.status == 0, text("Error calling ", cmd, ":\n", ret.output));

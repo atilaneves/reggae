@@ -194,12 +194,8 @@ struct Filter(alias F) {
     alias func = F;
 }
 
-struct SourcesImpl(alias F) {
-    Dirs dirs;
-    Files files;
-    Filter!F filter;
-
-    alias filterFunc = F;
+auto Sources(Files files, F = Filter!(a => true))() {
+    return Sources!(Dirs(), files, F)();
 }
 
 auto Sources(string dir, Files files = Files(), F = Filter!(a => true))() {
@@ -218,6 +214,13 @@ struct SourceFile {
     string value;
 }
 
+struct SourcesImpl(alias F) {
+    Dirs dirs;
+    Files files;
+    Filter!F filter;
+
+    alias filterFunc = F;
+}
 
 struct ProjectDir {
     string value = "$project";

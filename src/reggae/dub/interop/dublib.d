@@ -57,6 +57,10 @@ struct Dub {
         _extraDFlags = options.dflags.dup;
     }
 
+    const(Options) options() @safe @nogc pure nothrow const return scope {
+        return _options;
+    }
+
     auto getPackage(in string dubPackage, in string version_) @trusted /*dub*/ {
         import dub.dependency: Version;
         return _project.packageManager.getPackage(dubPackage, Version(version_));

@@ -7,7 +7,6 @@ import reggae.from;
 package void dubFetch(O)(
     auto ref O output,
     ref from!"reggae.dub.interop.dublib".Dub dublib,
-    in from!"reggae.options".Options options,
     in string dubSelectionsJson)
     @trusted
 {
@@ -36,7 +35,7 @@ package void dubFetch(O)(
     }
 
     output.log("Creating dub object");
-    auto dubObj = new Dub(options.projectPath);
+    auto dubObj = new Dub(dublib.options.projectPath);
 
     output.log("Fetching dub packages");
     foreach(pkg; pkgsToFetch.parallel) {

@@ -60,7 +60,7 @@ auto dubInfos(O)(ref O output,
     dubFetch(output, dub, dubSelectionsJson);
 
     output.log("    Getting dub build information");
-    auto ret = getDubInfos(output, dub, options);
+    auto ret = getDubInfos(output, dub);
     output.log("    Got     dub build information");
 
     return ret;
@@ -94,8 +94,7 @@ private string ensureDubSelectionsJson
 private from!"reggae.dub.info".DubInfo[string] getDubInfos
     (O)
     (ref O output,
-     ref from!"reggae.dub.interop.dublib".Dub dub,
-     in from!"reggae.options".Options options)
+     ref from!"reggae.dub.interop.dublib".Dub dub)
 {
     import reggae.io: log;
     import reggae.path: buildPath;
@@ -105,7 +104,7 @@ private from!"reggae.dub.info".DubInfo[string] getDubInfos
 
     DubInfo[string] ret;
 
-    enforce(buildPath(options.projectPath, "dub.selections.json").exists,
+    enforce(buildPath(dub.options.projectPath, "dub.selections.json").exists,
             "Cannot find dub.selections.json");
 
     const configs = dubConfigurations(output, dub);
@@ -116,7 +115,7 @@ private from!"reggae.dub.info".DubInfo[string] getDubInfos
     foreach(config; configs.configurations) {
         const isTestConfig = haveTestConfig && config == configs.test;
         try {
-            ret[config] = configToDubInfo(output, dub, options, config, isTestConfig);
+            ret[config] = configToDubInfo(output, dub, dub.options, config, isTestConfig);
             atLeastOneConfigOk = true;
         } catch(Exception ex) {
             output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);

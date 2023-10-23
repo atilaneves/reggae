@@ -155,7 +155,7 @@ struct Dub {
         return DubConfigurations(configurations, defaultConfig, testConfig);
     }
 
-    DubInfo configToDubInfo(in string config) @trusted /*dub*/ {
+    DubInfo configToDubInfo(in string config = "") @trusted /*dub*/ {
         auto generator = new InfoGenerator(_project, _extraDFlags);
         auto settings = getGeneratorSettings(_options);
         settings.config = config;

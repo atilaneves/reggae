@@ -39,11 +39,14 @@ struct Dub {
 
     private Project _project;
     private const string[] _extraDFlags;
+    private const(Options) _options;
 
     this(in Options options) @safe {
         import reggae.path: buildPath;
         import std.exception: enforce;
         import std.file: exists;
+
+        _options = options;
 
         const path = buildPath(options.projectPath, "dub.selections.json");
         enforce(path.exists, "Cannot create dub instance without dub.selections.json");
@@ -78,13 +81,12 @@ struct Dub {
         return ret;
     }
 
-    DubConfigurations getConfigs
-    (in from!"dub.generators.generator".GeneratorSettings settings, in string singleConfig = null)
-    {
+    DubConfigurations getConfigs(in string singleConfig = null) {
         import std.algorithm: filter, map, canFind;
         import std.array: array;
         import std.conv: text;
 
+        auto settings = getGeneratorSettings(_options);
         const allConfigs = singleConfig == "";
         // add the special `dub test` configuration (which doesn't require an existing `unittest` config)
         const lookingForUnitTestsConfig = allConfigs || singleConfig == "unittest";

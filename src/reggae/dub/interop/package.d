@@ -155,7 +155,7 @@ dubConfigurations
     const allConfigs = options.dubConfig == "";
 
     if(allConfigs) output.log("Getting dub configurations");
-    auto ret = dub.getConfigs(dub.getGeneratorSettings(options), options.dubConfig);
+    auto ret = dub.getConfigs(options.dubConfig);
     if(allConfigs) output.log("Number of dub configurations: ", ret.configurations.length);
 
     // error out if the test config is explicitly requested but not available

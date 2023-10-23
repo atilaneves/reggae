@@ -94,6 +94,12 @@ struct Dub {
         const testConfig = lookingForUnitTestsConfig
             ? _project.addTestRunnerConfiguration(settings)
             : null; // skip when requesting a single non-unittest config
+
+        // error out if the test config is explicitly requested but not available
+        if(_options.dubConfig == "unittest" && testConfig == "") {
+            throw new Exception("No dub test configuration available (target type 'none'?)");
+        }
+
         const haveSpecialTestConfig = testConfig.length && testConfig != "unittest";
         const defaultConfig = _project.getDefaultConfiguration(settings.platform);
 

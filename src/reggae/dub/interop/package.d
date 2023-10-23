@@ -109,7 +109,7 @@ private from!"reggae.dub.info".DubInfo[string] getDubInfos
     enforce(buildPath(options.projectPath, "dub.selections.json").exists,
             "Cannot find dub.selections.json");
 
-    const configs = dubConfigurations(output, dub, options);
+    const configs = dubConfigurations(output, dub);
     const haveTestConfig = configs.test != "";
     bool atLeastOneConfigOk;
     Exception dubInfoFailure;
@@ -146,8 +146,7 @@ private from!"reggae.dub.interop.configurations".DubConfigurations
 dubConfigurations
     (O)
     (ref O output,
-     ref from!"reggae.dub.interop.dublib".Dub dub,
-     in from!"reggae.options".Options options)
+     ref from!"reggae.dub.interop.dublib".Dub dub)
 {
     import reggae.dub.interop.configurations: DubConfigurations;
     import reggae.io: log;
@@ -155,12 +154,6 @@ dubConfigurations
     output.log("Getting dub configurations");
     auto ret = dub.getConfigs;
     output.log("Number of dub configurations: ", ret.configurations.length);
-
-    // error out if the test config is explicitly requested but not available
-    if(options.dubConfig == "unittest" && ret.test == "") {
-        output.log("ERROR: No dub test configuration available (target type 'none'?)");
-        throw new Exception("No dub test configuration");
-    }
 
     // this happens e.g. the targetType is "none"
     if(ret.configurations.length == 0)

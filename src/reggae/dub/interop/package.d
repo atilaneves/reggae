@@ -203,7 +203,7 @@ private from!"reggae.dub.info".DubInfo configToDubInfo
     }
 
     try
-        callPreBuildCommands(output, options, dubInfo);
+        callPreBuildCommands(output, options.projectPath, dubInfo);
     catch(Exception e) {
         output.log("Error calling prebuild commands: ", e.msg);
         throw e;
@@ -214,7 +214,7 @@ private from!"reggae.dub.info".DubInfo configToDubInfo
 
 
 private void callPreBuildCommands(O)(ref O output,
-                                     in from!"reggae.options".Options options,
+                                     in string workDir,
                                      in from!"reggae.dub.info".DubInfo dubInfo)
     @safe
 {
@@ -227,7 +227,6 @@ private void callPreBuildCommands(O)(ref O output,
     const string[string] env = null;
     Config config = Config.none;
     size_t maxOutput = size_t.max;
-    immutable workDir = options.projectPath;
 
     if(dubInfo.packages.length == 0) return;
 

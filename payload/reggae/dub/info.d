@@ -266,6 +266,18 @@ struct DubInfo {
         return packageTargets;
     }
 
+    /**
+       At first glance, it's not obvious why this exists, since dub
+       has logic to generate these file names in
+       `Compiler.getTargetFileName`. Not only is it hard to use
+       because of the paramters that function takes (BuildSettings and
+       BuildPlatform), it also sometimes asserts that the targetName
+       isn't set in the build settings. I don't know what's supposed
+       to be done so it's easier to replicate the logic here.  If an
+       equivalent assert is added below for
+       `packages[0].targetFileName` it also fires, but I don't know
+       why that'd be a problem.
+     */
     TargetName targetName() @safe const pure nothrow {
         import reggae.rules.common: exeExt;
 

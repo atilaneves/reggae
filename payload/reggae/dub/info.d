@@ -347,7 +347,7 @@ private string[] packagePaths(in DubPackage dubPackage, in string[] paths) @safe
 }
 
 
-TargetName targetName(in TargetType targetType, in string fileName) @safe pure nothrow {
+private TargetName targetName(in TargetType targetType, in string fileName) @safe pure nothrow {
 
     import reggae.rules.common: exeExt;
 

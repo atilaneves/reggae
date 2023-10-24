@@ -6,10 +6,11 @@ import reggae.from;
 
 package void dubFetch(O)(
     auto ref O output,
-    ref from!"reggae.dub.interop.dublib".Dub dublib,
+    in from!"reggae.options".Options options,
     in string dubSelectionsJson)
     @trusted
 {
+    static import reggae.dub.interop.dublib;
     import reggae.io: log;
     import dub.dub: Dub, FetchOptions;
     import dub.dependency: Version;
@@ -23,6 +24,7 @@ package void dubFetch(O)(
 
     const json = parseJSON(readText(dubSelectionsJson));
 
+    auto dublib = reggae.dub.interop.dublib.Dub(options);
     foreach(dubPackageName, versionJson; json["versions"].object) {
 
         // skip the ones with a defined path
@@ -55,8 +57,6 @@ package void dubFetch(O)(
         }
     }
     output.log("Fetched dub packages");
-
-    dublib.reinit;
 }
 
 

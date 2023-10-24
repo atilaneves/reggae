@@ -162,10 +162,6 @@ struct Dub {
         generator.generate(settings);
         return DubInfo(generator.dubPackages, _options.dup);
     }
-
-    void reinit() @trusted {
-        _project.reinit;
-    }
 }
 
 

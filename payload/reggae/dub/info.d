@@ -267,7 +267,29 @@ struct DubInfo {
     }
 
     TargetName targetName() @safe const pure nothrow {
-        return .targetName(targetType, packages[0].targetFileName);
+        import reggae.rules.common: exeExt;
+
+        const fileName = packages[0].targetFileName;
+
+        switch(targetType) with(TargetType) {
+            default:
+                return TargetName(fileName);
+
+            case executable:
+                return TargetName(fileName ~ exeExt);
+
+            case library:
+                version(Posix)
+                    return TargetName("lib" ~ fileName ~ ".a");
+                else
+                    return TargetName(fileName ~ ".lib");
+
+            case dynamicLibrary:
+                version(Posix)
+                    return TargetName("lib" ~ fileName ~ ".so");
+                else
+                    return TargetName(fileName ~ ".dll");
+            }
     }
 
     string targetPath(in Options options) @safe const pure {
@@ -344,30 +366,4 @@ struct DubInfo {
 
 private string[] packagePaths(in DubPackage dubPackage, in string[] paths) @safe pure nothrow {
     return paths.map!(a => buildPath(dubPackage.path, a)).array;
-}
-
-
-private TargetName targetName(in TargetType targetType, in string fileName) @safe pure nothrow {
-
-    import reggae.rules.common: exeExt;
-
-    switch(targetType) with(TargetType) {
-    default:
-        return TargetName(fileName);
-
-    case executable:
-        return TargetName(fileName ~ exeExt);
-
-    case library:
-        version(Posix)
-            return TargetName("lib" ~ fileName ~ ".a");
-        else
-            return TargetName(fileName ~ ".lib");
-
-    case dynamicLibrary:
-        version(Posix)
-            return TargetName("lib" ~ fileName ~ ".so");
-        else
-            return TargetName(fileName ~ ".dll");
-    }
 }

@@ -66,7 +66,7 @@ struct Dub {
         return _project.packageManager.getPackage(dubPackage, Version(version_));
     }
 
-    static auto getGeneratorSettings(in Options options) {
+    private static auto getGeneratorSettings(in Options options) {
         import dub.compilers.compiler: getCompiler;
         import dub.generators.generator: GeneratorSettings;
         import dub.internal.vibecompat.inet.path: NativePath;

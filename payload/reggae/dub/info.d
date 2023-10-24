@@ -266,8 +266,42 @@ struct DubInfo {
         return packageTargets;
     }
 
+    /**
+       At first glance, it's not obvious why this exists, since dub
+       has logic to generate these file names in
+       `Compiler.getTargetFileName`. Not only is it hard to use
+       because of the paramters that function takes (BuildSettings and
+       BuildPlatform), it also sometimes asserts that the targetName
+       isn't set in the build settings. I don't know what's supposed
+       to be done so it's easier to replicate the logic here.  If an
+       equivalent assert is added below for
+       `packages[0].targetFileName` it also fires, but I don't know
+       why that'd be a problem.
+     */
     TargetName targetName() @safe const pure nothrow {
-        return .targetName(targetType, packages[0].targetFileName);
+        import reggae.rules.common: exeExt;
+
+        const fileName = packages[0].targetFileName;
+
+        switch(targetType) with(TargetType) {
+            default:
+                return TargetName(fileName);
+
+            case executable:
+                return TargetName(fileName ~ exeExt);
+
+            case library:
+                version(Posix)
+                    return TargetName("lib" ~ fileName ~ ".a");
+                else
+                    return TargetName(fileName ~ ".lib");
+
+            case dynamicLibrary:
+                version(Posix)
+                    return TargetName("lib" ~ fileName ~ ".so");
+                else
+                    return TargetName(fileName ~ ".dll");
+            }
     }
 
     string targetPath(in Options options) @safe const pure {
@@ -344,30 +378,4 @@ struct DubInfo {
 
 private string[] packagePaths(in DubPackage dubPackage, in string[] paths) @safe pure nothrow {
     return paths.map!(a => buildPath(dubPackage.path, a)).array;
-}
-
-
-TargetName targetName(in TargetType targetType, in string fileName) @safe pure nothrow {
-
-    import reggae.rules.common: exeExt;
-
-    switch(targetType) with(TargetType) {
-    default:
-        return TargetName(fileName);
-
-    case executable:
-        return TargetName(fileName ~ exeExt);
-
-    case library:
-        version(Posix)
-            return TargetName("lib" ~ fileName ~ ".a");
-        else
-            return TargetName(fileName ~ ".lib");
-
-    case dynamicLibrary:
-        version(Posix)
-            return TargetName("lib" ~ fileName ~ ".so");
-        else
-            return TargetName(fileName ~ ".dll");
-    }
 }

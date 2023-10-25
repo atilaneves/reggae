@@ -60,6 +60,7 @@ imported!"reggae.build".Target dubDependant(
     import std.array: array;
     import std.range: chain;
 
+    // FIXME: static and dynamic libraries
     static assert(targetType == DubDependantTargetType.executable,
                   "Can only handle executables for now");
 

@@ -1,4 +1,7 @@
-module tests.it.runtime.dub;
+/**
+   Tests for actual dub projects (i.e. that have a dub recipe)
+*/
+module tests.it.runtime.dub.proper;
 
 
 import tests.it.runtime;
@@ -1015,53 +1018,5 @@ unittest {
             ]
         );
         runReggae("-b", "binary");
-    }
-}
-
-// A dub package that isn't at the root of the project directory
-@("dubDependant.path")
-@Tags("ninja")
-unittest {
-    with(immutable ReggaeSandbox()) {
-        // a dub package we're going to depend on by path
-        writeFile(
-            "over/there/dub.sdl",
-            [
-                `name "foo"`,
-                `targetType "library"`
-            ]
-        );
-        // src code for the dub dependency
-        writeFile(
-            "over/there/source/foo.d",
-            q{int twice(int i) { return i * 2; }}
-        );
-        // our main program, which will depend on a dub package by path
-        writeFile(
-            "app.d",
-            q{
-                import foo;
-                void main() {
-                    assert(5.twice == 10);
-                }
-            }
-        );
-        writeFile(
-            "reggaefile.d",
-            q{
-                import reggae;
-                alias app = dubDependant!(
-                    DubDependantTargetType.executable,
-                    Sources!(Files("app.d")),
-                    CompilerFlags("-m64"),
-                    DubPath("over/there"),
-                );
-                mixin build!app;
-            }
-        );
-
-        runReggae("-b", "ninja");
-        ninja.shouldExecuteOk;
-        shouldSucceed("app");
     }
 }

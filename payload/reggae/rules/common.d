@@ -39,9 +39,9 @@ Target[] objectFiles(alias sourcesFunc = Sources!(),
 /// ditto
 Target[] objectFiles
     (alias sourcesFunc = Sources!())
-    (Flags flags = Flags(),
-     ImportPaths includes = ImportPaths(),
-     StringImportPaths stringImports = StringImportPaths(),
+    (in Flags flags = Flags(),
+     in ImportPaths includes = ImportPaths(),
+     in StringImportPaths stringImports = StringImportPaths(),
     ) {
 
     import reggae.config: options;
@@ -577,14 +577,13 @@ private Command compileCommandImpl(
     }
 
     auto includeParams = includePaths.map!(a => "-I" ~ maybeExpand(a)). array;
-    immutable language = getLanguage(srcFileName);
 
     auto params = [
         assocEntry("includes", includeParams),
         assocEntry("flags", flags.dup),
     ];
 
-    if(language == Language.D)
+    if(stringImportPaths.length)
         params ~= assocEntry("stringImports",
                              stringImportPaths.map!(a => "-J" ~ maybeExpand(a)).array);
 

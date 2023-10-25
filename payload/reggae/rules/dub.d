@@ -39,95 +39,123 @@ struct DubPath {
 // project in order to use this. There might not be a top-level
 // dub.{sdl,json} but there could be dub dependencies anyway.
 imported!"reggae.build".Target dubDependant(
+    string targetName,
     DubDependantTargetType targetType,
     alias sourcesFunc,
-    imported!"reggae.types".CompilerFlags compilerFlags,
-    DubPaths...
+    // the other arguments can be:
+    // * DubPath
+    // * CompilerFlags
+    // * LinkerFlags
+    // * ImportPaths
+    // * StringImportPaths
+    A...
     )
     ()
 {
     import reggae.rules.common: objectFiles, link;
-    import reggae.types: ExeName, Flags, ImportPaths, StringImportPaths;
+    import reggae.types: ExeName, CompilerFlags, LinkerFlags, Flags, ImportPaths, StringImportPaths;
     import reggae.config: reggaeOptions = options; // the ones used to run reggae
-    import std.meta: allSatisfy;
+    import std.meta: Filter;
     import std.algorithm: map, joiner;
     import std.array: array;
-    import std.path: buildPath;
+    import std.range: chain;
 
-    static assert(targetType == DubDependantTargetType.executable);
-    enum isDubPath(alias T) = is(typeof(T) == DubPath);
-    static assert(allSatisfy!isDubPath, DubPaths);
-    static assert(DubPaths.length > 0);
+    static assert(targetType == DubDependantTargetType.executable,
+                  "Can only handle executables for now");
 
-    auto dubDependencies = [DubPaths]
-        .map!(p => dubPathTarget(buildPath(reggaeOptions.projectPath, p.value)))
-        .array;
+    alias DubPaths = Filter!(isOfType!DubPath, A);
+    static assert(DubPaths.length > 0, "At least one `DubPath` needed");
 
-    auto dubInfos = [DubPaths]
-        .map!(p => dubInfo(buildPath(reggaeOptions.projectPath, p.value)))
+    enum compilerFlags = oneOptionalOf!(CompilerFlags, A);
+    enum linkerFlags = oneOptionalOf!(LinkerFlags, A);
+    enum importPaths = oneOptionalOf!(ImportPaths, A);
+    enum stringImportPaths = oneOptionalOf!(StringImportPaths, A);
+
+    auto dubPathDependencies = [DubPaths]
+        .map!(p => DubPathDependency(reggaeOptions.projectPath, p));
+
+    auto allImportPaths = dubPathDependencies
+        .save
+        .map!(d => d.dubInfo.packages.map!(p => p.importPaths).joiner)
+        .joiner
+        .chain(importPaths.value)
         ;
 
-    auto allImportPaths = dubInfos
+    auto allStringImportPaths = dubPathDependencies
         .save
-        .map!(i => i.packages.map!(p => p.importPaths).joiner)
-        .joiner;
+        .map!(d => d.dubInfo.packages.map!(p => p.stringImportPaths).joiner)
+        .joiner
+        .chain(stringImportPaths.value)
+        ;
 
     auto objs = objectFiles!sourcesFunc(
         Flags(compilerFlags.value), // FIXME - this conversion is silly
-        ImportPaths(allImportPaths), // FIXME - allow the user to add to this
-        StringImportPaths(), // FIXME
+        ImportPaths(allImportPaths),
+        StringImportPaths(allStringImportPaths),
     );
 
-    const targetName = "app"; // FIXME
-    return link(ExeName(targetName), objs ~ dubDependencies); // FIXME: linker flags
+    auto dubDepsObjs = dubPathDependencies
+        .save
+        .map!(d => d.target)
+        .array
+        ;
+
+    return link(
+        ExeName(targetName), // FIXME: ExeName doesn't make sense for libraries
+        objs ~ dubDepsObjs,
+        Flags(linkerFlags.value), // FIXME: silly translation
+    );
 }
 
-private imported!"reggae.build".Target dubPathTarget(in string path) {
-    import reggae.options: getOptions;
-    import reggae.dub.interop: dubInfos;
-    import std.stdio: stdout;
-
-    // These options are not the same as the ones used to run reggae
-    // with.  They're "sub-options" for the sole purpose of reusing
-    // the dub bindings to get dub builds for dependencies.
-    auto options = getOptions(
-        [
-            "reggae",
-            "-C",
-            path,
-            "--dub-config=default",
-            path, // not sure why I need this again with -C above...
-        ]
-    );
-
-    // dubInfos in this case returns an associative array but there's
-    // only really one key.
-    auto dubInfo = dubInfos(stdout, options)["default"];
-
-    return dubTarget(options, dubInfo);
+private template isOfType(T) {
+    enum isOfType(alias A) = is(typeof(A) == T);
 }
 
-private DubInfo dubInfo(in string path) {
-    import reggae.options: getOptions;
-    import reggae.dub.interop: dubInfos;
-    import std.stdio: stdout;
+private template oneOptionalOf(T, A...) {
+    import std.meta: Filter;
 
-    // These options are not the same as the ones used to run reggae
-    // with.  They're "sub-options" for the sole purpose of reusing
-    // the dub bindings to get dub builds for dependencies.
-    auto options = getOptions(
-        [
-            "reggae",
-            "-C",
-            path,
-            "--dub-config=default",
-            path, // not sure why I need this again with -C above...
-        ]
-    );
+    alias ofType = Filter!(isOfType!T, A);
+    static assert(ofType.length == 0 || ofType.length == 1,
+                  "Only 0 or one of `" ~ T.stringof ~ "` allowed");
 
-    // dubInfos in this case returns an associative array but there's
-    // only really one key.
-    return dubInfos(stdout, options)["default"];
+    static if(ofType.length == 0)
+        enum oneOptionalOf = T();
+    else
+        enum oneOptionalOf = ofType[0];
+
+}
+
+private struct DubPathDependency {
+    import reggae.options: Options;
+    import reggae.build: Target;
+
+    Options options;
+    DubInfo dubInfo;
+
+    this(in string projectPath, in DubPath dubPath) {
+        import reggae.dub.interop: dubInfos;
+        import reggae.options: getOptions;
+        import std.stdio: stdout;
+        import std.path: buildPath;
+
+        const path = buildPath(projectPath, dubPath.value);
+        options = getOptions(
+            [
+                "reggae",
+                "-C",
+                path,
+                "--dub-config=default",
+                path, // not sure why I need this again with -C above...
+            ]
+        );
+        // dubInfos in this case returns an associative array but there's
+        // only really one key.
+        dubInfo = dubInfos(stdout, options)["default"];
+    }
+
+    Target target() {
+        return dubTarget(options, dubInfo);
+    }
 }
 
 

@@ -25,7 +25,7 @@
           "targetName": "ut",
           "targetPath": "bin",
           "sourcePaths": ["tests", "payload"],
-          "mainSourceFile": "tests/ut_main.d",
+          "mainSourceFile": "tests/main.d",
           "versions": ["ReggaeTest"],
           "dflags-dmd": ["-check=invariant=off"],
           "excludedSourceFiles": ["payload/reggae/buildgen_main.d",

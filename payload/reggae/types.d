@@ -105,10 +105,17 @@ struct ImportPaths {
 alias IncludePaths = ImportPaths;
 
 struct StringImportPaths {
+    import std.range.primitives: isInputRange;
+
     string[] value;
 
     this(inout(string)[] value) inout pure {
         this.value = value;
+    }
+
+    this(R)(R range) @trusted /*array*/ if(isInputRange!R) {
+        import std.array: array;
+        this.value = range.array;
     }
 
     this(inout(string) value) inout pure {

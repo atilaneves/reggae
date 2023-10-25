@@ -89,7 +89,7 @@ imported!"reggae.build".Target dubDependant(
         ;
 
     auto objs = objectFiles!sourcesFunc(
-        Flags(compilerFlags.value), // FIXME - this conversion is silly
+        Flags(compilerFlags), // FIXME - this conversion is silly
         ImportPaths(allImportPaths),
         StringImportPaths(allStringImportPaths),
     );
@@ -103,7 +103,7 @@ imported!"reggae.build".Target dubDependant(
     return link(
         ExeName(targetName), // FIXME: ExeName doesn't make sense for libraries
         objs ~ dubDepsObjs,
-        Flags(linkerFlags.value), // FIXME: silly translation
+        Flags(linkerFlags), // FIXME: silly translation
     );
 }
 

@@ -44,7 +44,15 @@ struct Flags {
     }
 
     this(inout(string)[] values) inout @safe @nogc pure nothrow {
-        this.value = values;
+        value = values;
+    }
+
+    this(inout(CompilerFlags) other) inout @safe @nogc pure nothrow {
+        value = other.value;
+    }
+
+    this(inout(LinkerFlags) other) inout @safe @nogc pure nothrow {
+        value = other.value;
     }
 }
 

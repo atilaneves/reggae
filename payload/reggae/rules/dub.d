@@ -35,9 +35,9 @@ struct DubPath {
     string value;
 }
 
-// outside of the static if because a project doesn't have to be a dub
-// project in order to use this. There might not be a top-level
-// dub.{sdl,json} but there could be dub dependencies anyway.
+/**
+   A target that depends on dub packages but isn't one itself.
+ */
 imported!"reggae.build".Target dubDependant(
     imported!"reggae.types".TargetName targetName,
     DubDependantTargetType targetType,

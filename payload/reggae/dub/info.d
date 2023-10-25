@@ -279,9 +279,14 @@ struct DubInfo {
        why that'd be a problem.
      */
     TargetName targetName() @safe const pure nothrow {
-        import reggae.rules.common: exeExt;
+        import reggae.rules.common: exeExt, libExt, dynExt;
 
         const fileName = packages[0].targetFileName;
+
+        version(Windows)
+            enum libPrefix = "";
+        else
+            enum libPrefix = "lib";
 
         switch(targetType) with(TargetType) {
             default:
@@ -291,16 +296,11 @@ struct DubInfo {
                 return TargetName(fileName ~ exeExt);
 
             case library:
-                version(Posix)
-                    return TargetName("lib" ~ fileName ~ ".a");
-                else
-                    return TargetName(fileName ~ ".lib");
+            case staticLibrary:
+                return TargetName(libPrefix ~ fileName ~ libExt);
 
             case dynamicLibrary:
-                version(Posix)
-                    return TargetName("lib" ~ fileName ~ ".so");
-                else
-                    return TargetName(fileName ~ ".dll");
+                return TargetName(libPrefix ~ fileName ~ dynExt);
             }
     }
 

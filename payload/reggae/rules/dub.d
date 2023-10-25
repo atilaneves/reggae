@@ -153,23 +153,25 @@ static if(imported!"reggae.config".isDubProject) {
         )
         @safe pure
     {
-        import reggae.rules.common: staticLibraryTarget, link;
+        import reggae.rules.common: link;
         import reggae.dub.info: TargetType;
         import reggae.types: ExeName, Flags;
-
-        const isStaticLibrary =
-            dubInfo.targetType == TargetType.library ||
-            dubInfo.targetType == TargetType.staticLibrary;
-        if(isStaticLibrary)
-            return staticLibraryTarget(name, allObjs);
 
         if(dubInfo.targetType == TargetType.none)
             return Target.phony(name, "", allObjs);
 
+        const isStaticLibrary =
+            dubInfo.targetType == TargetType.library ||
+            dubInfo.targetType == TargetType.staticLibrary;
+
+        const maybeStatic = isStaticLibrary
+            ? ["-lib"]
+            : [];
         const maybeShared = dubInfo.targetType == TargetType.dynamicLibrary
             ? ["-shared"]
             : [];
-        const allLinkerFlags = dubInfo.linkerFlags ~ maybeShared;
+
+        const allLinkerFlags = dubInfo.linkerFlags ~ maybeStatic ~ maybeShared;
 
         return link(ExeName(name), allObjs, const Flags(allLinkerFlags));
     }

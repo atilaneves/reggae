@@ -431,14 +431,12 @@ Target staticLibrary(
 }
 
 Target staticLibraryTarget(in string name, Target[] objects) @safe pure {
-    import std.path: extension;
-    const realName = name.extension == libExt ? name : name ~ libExt;
-    auto target = Target(
-        [buildPath("$builddir", realName)],
+    import std.path: defaultExtension;
+    return Target(
+        [buildPath("$builddir", defaultExtension(name, libExt))],
         staticLibraryShellCommand,
         objects,
     );
-    return target;
 }
 
 version(Windows)
@@ -466,10 +464,12 @@ version(Windows) {
     immutable objExt = ".obj";
     immutable exeExt = ".exe";
     immutable libExt = ".lib";
+    immutable dynExt = ".dll";
 } else {
     immutable objExt = ".o";
     immutable exeExt = "";
     immutable libExt = ".a";
+    immutable dynExt = ".so";
 }
 
 string objFileName(in string srcFileName) @safe pure {

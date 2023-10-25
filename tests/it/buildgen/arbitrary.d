@@ -8,7 +8,7 @@ import tests.it.buildgen;
 
 
 static foreach (backend; ["ninja", "make", "tup", "binary"])
-    @("1st project builds (" ~ backend ~ ")")
+    @("project1.builds." ~ backend)
     @Tags(backend)
     unittest {
         enum project = "project1";
@@ -28,7 +28,7 @@ static foreach (backend; ["ninja", "make", "tup", "binary"])
 
 
 static foreach (backend; ["ninja", "make", "tup", "binary"])
-    @("2nd project builds (" ~ backend ~ ")")
+    @("project1.builds." ~ backend)
     @Tags(backend)
     unittest {
         enum project = "project2";

@@ -15,12 +15,12 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install ninja
         uses: seanmiddleditch/gha-setup-ninja@master
       - name: Install D compiler
         # Remember to change the version further below as well as here
-        uses: dlang-community/setup-dlang@v1.1.1
+        uses: dlang-community/setup-dlang@v1.3.0
         with:
           compiler: ${{ matrix.dc }}
 
@@ -62,12 +62,12 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: "Windows: Install ninja"
         if: runner.os == 'Windows'
         uses: seanmiddleditch/gha-setup-ninja@master
       - name: Install D compiler
-        uses: dlang-community/setup-dlang@v1.1.1
+        uses: dlang-community/setup-dlang@v1.3.0
         with:
           compiler: ${{ matrix.dc }}
       - name: Set OS-specific SCRIPT_CMD environment variable

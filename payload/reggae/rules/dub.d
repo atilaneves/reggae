@@ -39,7 +39,7 @@ struct DubPath {
 // project in order to use this. There might not be a top-level
 // dub.{sdl,json} but there could be dub dependencies anyway.
 imported!"reggae.build".Target dubDependant(
-    string targetName,
+    imported!"reggae.types".TargetName targetName,
     DubDependantTargetType targetType,
     alias sourcesFunc,
     // the other arguments can be:
@@ -101,7 +101,7 @@ imported!"reggae.build".Target dubDependant(
         ;
 
     return link(
-        ExeName(targetName), // FIXME: ExeName doesn't make sense for libraries
+        ExeName(targetName.value), // FIXME: ExeName doesn't make sense for libraries, conversion is silly
         objs ~ dubDepsObjs,
         Flags(linkerFlags), // FIXME: silly translation
     );

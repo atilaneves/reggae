@@ -40,7 +40,7 @@ unittest {
             q{
                 import reggae;
                 alias app = dubDependant!(
-                    "myapp",
+                    TargetName("myapp"),
                     DubDependantTargetType.executable,
                     Sources!(Files("app.d")),
                     CompilerFlags("-m64"),
@@ -83,7 +83,7 @@ unittest {
             q{
                 import reggae;
                 alias app = dubDependant!(
-                    "myapp",
+                    TargetName("myapp"),
                     DubDependantTargetType.executable,
                     Sources!(Files("app.d")),
                     CompilerFlags("-foo", "-bar"),
@@ -125,7 +125,7 @@ unittest {
             q{
                 import reggae;
                 alias app = dubDependant!(
-                    "myapp",
+                    TargetName("myapp"),
                     DubDependantTargetType.executable,
                     Sources!(Files("app.d")),
                     CompilerFlags("-abc", "-def"),
@@ -168,7 +168,7 @@ unittest {
             q{
                 import reggae;
                 alias app = dubDependant!(
-                    "myapp",
+                    TargetName("myapp"),
                     DubDependantTargetType.executable,
                     Sources!(Files("app.d")),
                     ImportPaths("leimports"),
@@ -210,7 +210,7 @@ unittest {
             q{
                 import reggae;
                 alias app = dubDependant!(
-                    "myapp",
+                    TargetName("myapp"),
                     DubDependantTargetType.executable,
                     Sources!(Files("app.d")),
                     StringImportPaths("lestrings"),

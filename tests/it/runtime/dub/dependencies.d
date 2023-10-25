@@ -43,7 +43,7 @@ unittest {
                     TargetName("myapp"),
                     DubDependantTargetType.executable,
                     Sources!(Files("app.d")),
-                    CompilerFlags("-m64"),
+                    CompilerFlags("-m64"), // FIXME - shouldn't be needed
                     DubPath("over/there"),
                 );
                 mixin build!app;

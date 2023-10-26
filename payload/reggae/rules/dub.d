@@ -25,6 +25,8 @@ struct Configuration {
  */
 enum DubDependantTargetType {
     executable,
+    sharedLibrary,
+    staticLibrary,
 }
 
 /**
@@ -52,17 +54,14 @@ imported!"reggae.build".Target dubDependant(
     )
     ()
 {
-    import reggae.rules.common: objectFiles, link;
+    import reggae.rules.d: dlink;
+    import reggae.rules.common: objectFiles;
     import reggae.types: ExeName, CompilerFlags, LinkerFlags, Flags, ImportPaths, StringImportPaths;
     import reggae.config: reggaeOptions = options; // the ones used to run reggae
     import std.meta: Filter;
     import std.algorithm: map, joiner;
     import std.array: array;
     import std.range: chain;
-
-    // FIXME: static and dynamic libraries
-    static assert(targetType == DubDependantTargetType.executable,
-                  "Can only handle executables for now");
 
     alias DubPaths = Filter!(isOfType!DubPath, A);
     static assert(DubPaths.length > 0, "At least one `DubPath` needed");
@@ -101,9 +100,10 @@ imported!"reggae.build".Target dubDependant(
         .array
         ;
 
-    return link(
+    const targetNameWithExt = withExtension(targetName, targetType);
+    return dlink(
          // FIXME: ExeName doesn't make sense for libraries, conversion TargetName -> ExeName is silly
-        ExeName(withExtension(targetName, targetType)),
+        ExeName(targetNameWithExt),
         objs ~ dubDepsObjs,
         Flags(linkerFlags), // FIXME: silly translation
     );
@@ -165,12 +165,16 @@ private string withExtension(
     DubDependantTargetType targetType,
     ) @safe pure
 {
-    import reggae.rules.common: exeExt;
+    import reggae.rules.common: exeExt, dynExt, libExt;
     import std.path: setExtension;
 
     final switch(targetType) with(DubDependantTargetType) {
         case executable:
             return targetName.value.setExtension(exeExt);
+        case sharedLibrary:
+            return targetName.value.setExtension(dynExt);
+        case staticLibrary:
+            return targetName.value.setExtension(libExt);
     }
 }
 
@@ -262,27 +266,27 @@ private imported!"reggae.build".Target objectsToTarget(
     @safe pure
 {
     import reggae.build: Target;
-    import reggae.rules.common: link;
+    import reggae.rules.d: dlink;
+    import reggae.rules.common: link, libExt, dynExt;
     import reggae.dub.info: TargetType;
     import reggae.types: ExeName, Flags;
+    import std.path: extension;
 
-        if(dubInfo.targetType == TargetType.none)
-            return Target.phony(name, "", allObjs);
+    if(dubInfo.targetType == TargetType.none)
+        return Target.phony(name, "", allObjs);
 
     const isStaticLibrary =
         dubInfo.targetType == TargetType.library ||
         dubInfo.targetType == TargetType.staticLibrary;
+    if(isStaticLibrary)
+        assert(name.extension == libExt,
+               "`" ~ name ~ "` does not have a static library extension`");
 
-    const maybeStatic = isStaticLibrary
-        ? ["-lib"]
-        : [];
-    const maybeShared = dubInfo.targetType == TargetType.dynamicLibrary
-        ? ["-shared"]
-        : [];
+    if(dubInfo.targetType == TargetType.dynamicLibrary)
+        assert(name.extension == dynExt,
+               "`" ~ name ~ "` does not have a dynamic library extension`");
 
-    const allLinkerFlags = dubInfo.linkerFlags ~ maybeStatic ~ maybeShared;
-
-    return link(ExeName(name), allObjs, const Flags(allLinkerFlags));
+    return dlink(ExeName(name), allObjs, const Flags(dubInfo.linkerFlags));
 }
 
 private auto dubObjsDir(

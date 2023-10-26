@@ -66,6 +66,114 @@ unittest {
 }
 
 
+// A dub package that isn't at the root of the project directory
+@("dubDependant.path.lib")
+@ArghWindows
+@Tags("dub", "ninja")
+unittest {
+    import reggae.rules.common: libExt;
+    with(immutable ReggaeSandbox()) {
+        // a dub package we're going to depend on by path
+        writeFile(
+            "over/there/dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "library"`
+            ]
+        );
+        // src code for the dub dependency
+        writeFile(
+            "over/there/source/foo.d",
+            q{int twice(int i) { return i * 2; }}
+        );
+        // our main program, which will depend on a dub package by path
+        writeFile(
+            "src/app.d",
+            q{
+                import foo;
+                void main() {
+                    assert(5.twice == 10);
+                }
+            }
+        );
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+                alias app = dubDependant!(
+                    TargetName("myapp"),
+                    DubDependantTargetType.staticLibrary,
+                    Sources!(Files("src/app.d")),
+                    DubPath("over/there"),
+                );
+                mixin build!app;
+            }
+        );
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldExist("myapp" ~ libExt);
+        version(Posix)
+            ["file", inSandboxPath("myapp" ~ libExt)]
+                .shouldExecuteOk
+                .shouldContain("archive");
+    }
+}
+
+// A dub package that isn't at the root of the project directory
+@("dubDependant.path.dll")
+@ArghWindows
+@Tags("dub", "ninja")
+unittest {
+    import reggae.rules.common: dynExt;
+    with(immutable ReggaeSandbox()) {
+        // a dub package we're going to depend on by path
+        writeFile(
+            "over/there/dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "library"`
+            ]
+        );
+        // src code for the dub dependency
+        writeFile(
+            "over/there/source/foo.d",
+            q{int twice(int i) { return i * 2; }}
+        );
+        // our main program, which will depend on a dub package by path
+        writeFile(
+            "src/app.d",
+            q{
+                import foo;
+                void main() {
+                    assert(5.twice == 10);
+                }
+            }
+        );
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+                alias app = dubDependant!(
+                    TargetName("myapp"),
+                    DubDependantTargetType.sharedLibrary,
+                    Sources!(Files("src/app.d")),
+                    DubPath("over/there"),
+                );
+                mixin build!app;
+            }
+        );
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldExist("myapp" ~ dynExt);
+        version(Posix)
+            ["file", inSandboxPath("myapp" ~ dynExt)]
+                .shouldExecuteOk
+                .shouldContain("shared");
+    }
+}
+
 @("dubDependant.flags.compiler")
 @ArghWindows
 @Tags("dub", "ninja")

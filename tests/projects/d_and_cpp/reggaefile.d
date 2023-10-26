@@ -7,9 +7,4 @@ enum mathsObj = objectFile!(SourceFile(`src/maths.cpp`),
 
 version(Windows) version(DigitalMars) version = Windows_DMD;
 
-version(Windows_DMD)
-    enum model = " -m32mscoff";
-else
-    enum string model = null;
-
-mixin build!(Target(`calc`, `dmd` ~ model ~ ` -of$out $in`, [mainObj, mathsObj]));
+mixin build!(Target(`calc`, `dmd -of$out $in`, [mainObj, mathsObj]));

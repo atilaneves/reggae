@@ -67,9 +67,9 @@ imported!"reggae.build".Target dubDependant(
     alias DubPaths = Filter!(isOfType!DubPath, A);
     static assert(DubPaths.length > 0, "At least one `DubPath` needed");
 
-    enum compilerFlags = oneOptionalOf!(CompilerFlags, A);
-    enum linkerFlags = oneOptionalOf!(LinkerFlags, A);
-    enum importPaths = oneOptionalOf!(ImportPaths, A);
+    enum compilerFlags     = oneOptionalOf!(CompilerFlags, A);
+    enum linkerFlags       = oneOptionalOf!(LinkerFlags, A);
+    enum importPaths       = oneOptionalOf!(ImportPaths, A);
     enum stringImportPaths = oneOptionalOf!(StringImportPaths, A);
 
     auto dubPathDependencies = [DubPaths]
@@ -102,7 +102,8 @@ imported!"reggae.build".Target dubDependant(
         ;
 
     return link(
-        ExeName(targetName.value), // FIXME: ExeName doesn't make sense for libraries, conversion is silly
+         // FIXME: ExeName doesn't make sense for libraries, conversion TargetName -> ExeName is silly
+        ExeName(withExtension(targetName, targetType)),
         objs ~ dubDepsObjs,
         Flags(linkerFlags), // FIXME: silly translation
     );
@@ -156,6 +157,20 @@ private struct DubPathDependency {
 
     Target target() {
         return dubTarget(options, dubInfo);
+    }
+}
+
+private string withExtension(
+    in imported!"reggae.types".TargetName targetName,
+    DubDependantTargetType targetType,
+    ) @safe pure
+{
+    import reggae.rules.common: exeExt;
+    import std.path: setExtension;
+
+    final switch(targetType) with(DubDependantTargetType) {
+        case executable:
+            return targetName.value.setExtension(exeExt);
     }
 }
 

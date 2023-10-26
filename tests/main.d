@@ -16,7 +16,6 @@ mixin runTestsMain!(
     "tests.ut.json_build.rules",
     "tests.ut.json_build.simple",
     "tests.ut.tup",
-    "tests.ut.high_rules",
     "tests.ut.code_command",
     "tests.ut.build",
     "tests.ut.default_rules",

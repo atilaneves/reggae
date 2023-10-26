@@ -583,9 +583,8 @@ private Command compileCommandImpl(
         assocEntry("flags", flags.dup),
     ];
 
-    if(stringImportPaths.length)
-        params ~= assocEntry("stringImports",
-                             stringImportPaths.map!(a => "-J" ~ maybeExpand(a)).array);
+    params ~= assocEntry("stringImports",
+                         stringImportPaths.map!(a => "-J" ~ maybeExpand(a)).array);
 
     params ~= assocEntry("DEPFILE", [srcFileName.objFileName ~ ".dep"]);
 

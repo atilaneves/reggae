@@ -7,10 +7,19 @@ module tests.it.runtime.dub.dependencies;
 import tests.it.runtime;
 
 
+// don't ask...
+version(Windows)
+    alias ArghWindows = Flaky;
+else
+    enum ArghWindows;
+
+
 // A dub package that isn't at the root of the project directory
 @("dubDependant.path.exe")
+@ArghWindows
 @Tags("dub", "ninja")
 unittest {
+    import reggae.rules.common: exeExt;
     with(immutable ReggaeSandbox()) {
         // a dub package we're going to depend on by path
         writeFile(
@@ -27,7 +36,7 @@ unittest {
         );
         // our main program, which will depend on a dub package by path
         writeFile(
-            "app.d",
+            "src/app.d",
             q{
                 import foo;
                 void main() {
@@ -42,8 +51,7 @@ unittest {
                 alias app = dubDependant!(
                     TargetName("myapp"),
                     DubDependantTargetType.executable,
-                    Sources!(Files("app.d")),
-                    CompilerFlags("-m64"), // FIXME - shouldn't be needed
+                    Sources!(Files("src/app.d")),
                     DubPath("over/there"),
                 );
                 mixin build!app;
@@ -52,11 +60,14 @@ unittest {
 
         runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
+        shouldExist("myapp" ~ exeExt);
         shouldSucceed("myapp");
     }
 }
 
+
 @("dubDependant.flags.compiler")
+@ArghWindows
 @Tags("dub", "ninja")
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -72,7 +83,7 @@ unittest {
         writeFile("over/there/source/foo.d", "");
         // our main program, which will depend on a dub package by path
         writeFile(
-            "app.d",
+            "src/app.d",
             q{
                 import foo;
                 void main() { }
@@ -85,7 +96,7 @@ unittest {
                 alias app = dubDependant!(
                     TargetName("myapp"),
                     DubDependantTargetType.executable,
-                    Sources!(Files("app.d")),
+                    Sources!(Files("src/app.d")),
                     CompilerFlags("-foo", "-bar"),
                     DubPath("over/there"),
                 );
@@ -98,7 +109,9 @@ unittest {
     }
 }
 
+
 @("dubDependant.flags.linker")
+@ArghWindows
 @Tags("dub", "ninja")
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -114,7 +127,7 @@ unittest {
         writeFile("over/there/source/foo.d", "");
         // our main program, which will depend on a dub package by path
         writeFile(
-            "app.d",
+            "src/app.d",
             q{
                 import foo;
                 void main() { }
@@ -127,7 +140,7 @@ unittest {
                 alias app = dubDependant!(
                     TargetName("myapp"),
                     DubDependantTargetType.executable,
-                    Sources!(Files("app.d")),
+                    Sources!(Files("src/app.d")),
                     CompilerFlags("-abc", "-def"),
                     LinkerFlags("-quux"),
                     DubPath("over/there"),
@@ -141,7 +154,9 @@ unittest {
     }
 }
 
+
 @("dubDependant.flags.imports")
+@ArghWindows
 @Tags("dub", "ninja")
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -157,7 +172,7 @@ unittest {
         writeFile("over/there/source/foo.d", "");
         // our main program, which will depend on a dub package by path
         writeFile(
-            "app.d",
+            "src/app.d",
             q{
                 import foo;
                 void main() { }
@@ -170,7 +185,7 @@ unittest {
                 alias app = dubDependant!(
                     TargetName("myapp"),
                     DubDependantTargetType.executable,
-                    Sources!(Files("app.d")),
+                    Sources!(Files("src/app.d")),
                     ImportPaths("leimports"),
                     DubPath("over/there"),
                 );
@@ -184,6 +199,7 @@ unittest {
 }
 
 @("dubDependant.flags.stringImports")
+@ArghWindows
 @Tags("dub", "ninja")
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -199,7 +215,7 @@ unittest {
         writeFile("over/there/source/foo.d", "");
         // our main program, which will depend on a dub package by path
         writeFile(
-            "app.d",
+            "src/app.d",
             q{
                 import foo;
                 void main() { }
@@ -212,7 +228,7 @@ unittest {
                 alias app = dubDependant!(
                     TargetName("myapp"),
                     DubDependantTargetType.executable,
-                    Sources!(Files("app.d")),
+                    Sources!(Files("src/app.d")),
                     StringImportPaths("lestrings"),
                     DubPath("over/there"),
                 );

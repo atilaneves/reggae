@@ -36,6 +36,20 @@ Target[] objectFiles(alias sourcesFunc = Sources!(),
     return srcFilesToObjectTargets(options, srcFiles, flags, includes, stringImports);
 }
 
+/// ditto
+Target[] objectFiles
+    (alias sourcesFunc = Sources!())
+    (in Flags flags = Flags(),
+     in ImportPaths includes = ImportPaths(),
+     in StringImportPaths stringImports = StringImportPaths(),
+    ) {
+
+    import reggae.config: options;
+    const srcFiles = sourcesToFileNames!sourcesFunc(options);
+    return srcFilesToObjectTargets(options, srcFiles, flags, includes, stringImports);
+}
+
+
 /**
  An object file, typically from one source file in a certain language
  (although for D the default is a whole package). The language is determined
@@ -563,16 +577,14 @@ private Command compileCommandImpl(
     }
 
     auto includeParams = includePaths.map!(a => "-I" ~ maybeExpand(a)). array;
-    immutable language = getLanguage(srcFileName);
 
     auto params = [
         assocEntry("includes", includeParams),
         assocEntry("flags", flags.dup),
     ];
 
-    if(language == Language.D)
-        params ~= assocEntry("stringImports",
-                             stringImportPaths.map!(a => "-J" ~ maybeExpand(a)).array);
+    params ~= assocEntry("stringImports",
+                         stringImportPaths.map!(a => "-J" ~ maybeExpand(a)).array);
 
     params ~= assocEntry("DEPFILE", [srcFileName.objFileName ~ ".dep"]);
 

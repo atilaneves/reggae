@@ -16,7 +16,6 @@ mixin runTestsMain!(
     "tests.ut.json_build.rules",
     "tests.ut.json_build.simple",
     "tests.ut.tup",
-    "tests.ut.high_rules",
     "tests.ut.code_command",
     "tests.ut.build",
     "tests.ut.default_rules",
@@ -51,7 +50,8 @@ mixin runTestsMain!(
     "tests.it.runtime.ruby",
     "tests.it.runtime.python",
     "tests.it.runtime",
-    "tests.it.runtime.dub",
     "tests.it.runtime.issues",
     "tests.it.runtime.dependencies",
+    "tests.it.runtime.dub.proper",
+    "tests.it.runtime.dub.dependencies",
 );

@@ -569,7 +569,14 @@ struct Command {
         version(Windows) {
             import std.path: baseName, stripExtension;
             const isDMD = baseName(stripExtension(options.dCompiler)) == "dmd";
-            return isDMD ? ["-m32mscoff"] : null;
+            if(!isDMD)
+                return null;
+            version(Win32)
+                return ["-m32mscoff"];
+            else version(Win64)
+                return null;
+            else
+                static assert(false, "Unknown Windows system");
         } else {
             return null;
         }
@@ -669,7 +676,10 @@ struct Command {
                 const postfix = deps
                     ? ["$in"]
                     : [output, "$in"];
-                auto meat = options.dCompiler ~ modelArg ~ makeDeps ~ ["$flags", "$includes", "$stringImports", output, colour, "-c"];
+                auto meat = options.dCompiler ~
+                    modelArg ~
+                    makeDeps ~
+                    ["$flags", "$includes", "$stringImports", output, colour, "-c"];
                 return meat ~ postfix;
             }
             case Cplusplus:

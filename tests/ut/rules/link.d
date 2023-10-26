@@ -10,9 +10,12 @@ import unit_threaded;
     import reggae.config: gDefaultOptions, dCompiler;
 
     version(Windows) {
-        version(DigitalMars)
-            enum defaultDCModel = " -m32mscoff";
-        else
+        version(DigitalMars) {
+            version(Win32)
+                enum defaultDCModel = " -m32mscoff";
+            else
+                enum defaultDCModel = null;
+        } else
             enum defaultDCModel = null;
     } else
         enum defaultDCModel = null;

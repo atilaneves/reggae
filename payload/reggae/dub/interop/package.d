@@ -4,13 +4,9 @@
 module reggae.dub.interop;
 
 
-import reggae.from;
-public import reggae.dub.interop.reggaefile;
-
-
 void writeDubConfig(O)(ref O output,
-                       in from!"reggae.options".Options options,
-                       from!"std.stdio".File file) {
+                       in imported!"reggae.options".Options options,
+                       imported!"std.stdio".File file) {
     import reggae.io: log;
     import reggae.dub.info: TargetType;
 
@@ -45,7 +41,7 @@ void writeDubConfig(O)(ref O output,
    is the name of a dub configuration.
  */
 auto dubInfos(O)(ref O output,
-                 in from!"reggae.options".Options options) {
+                 in imported!"reggae.options".Options options) {
     import reggae.io: log;
     import reggae.dub.interop.fetch: dubFetch;
     import reggae.dub.interop.dublib: Dub;
@@ -65,7 +61,7 @@ auto dubInfos(O)(ref O output,
 
 private string ensureDubSelectionsJson
     (O)
-    (ref O output, in from!"reggae.options".Options options)
+    (ref O output, in imported!"reggae.options".Options options)
     @safe
 {
     import reggae.dub.interop.exec: callDub, dubEnvArgs;
@@ -88,10 +84,10 @@ private string ensureDubSelectionsJson
 }
 
 
-private from!"reggae.dub.info".DubInfo[string] getDubInfos
+private imported!"reggae.dub.info".DubInfo[string] getDubInfos
     (O)
     (ref O output,
-     ref from!"reggae.dub.interop.dublib".Dub dub)
+     ref imported!"reggae.dub.interop.dublib".Dub dub)
 {
     import reggae.io: log;
     import reggae.path: buildPath;
@@ -137,11 +133,11 @@ private from!"reggae.dub.info".DubInfo[string] getDubInfos
 }
 
 
-private from!"reggae.dub.interop.configurations".DubConfigurations
+private imported!"reggae.dub.interop.configurations".DubConfigurations
 dubConfigurations
     (O)
     (ref O output,
-     ref from!"reggae.dub.interop.dublib".Dub dub)
+     ref imported!"reggae.dub.interop.dublib".Dub dub)
 {
     import reggae.dub.interop.configurations: DubConfigurations;
     import reggae.io: log;
@@ -157,10 +153,10 @@ dubConfigurations
     return ret;
 }
 
-private from!"reggae.dub.info".DubInfo configToDubInfo
+private imported!"reggae.dub.info".DubInfo configToDubInfo
     (O)
     (ref O output,
-     ref from!"reggae.dub.interop.dublib".Dub dub,
+     ref imported!"reggae.dub.interop.dublib".Dub dub,
      in string config,
      in bool isTestConfig)
 {
@@ -202,7 +198,7 @@ private from!"reggae.dub.info".DubInfo configToDubInfo
 
 private void callPreBuildCommands(O)(ref O output,
                                      in string workDir,
-                                     in from!"reggae.dub.info".DubInfo dubInfo)
+                                     in imported!"reggae.dub.info".DubInfo dubInfo)
     @safe
 {
     import reggae.io: log;

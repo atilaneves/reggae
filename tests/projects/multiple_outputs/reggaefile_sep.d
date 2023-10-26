@@ -1,15 +1,22 @@
 module multiple_outputs.reggaefile_sep;
 
-version(Windows) {
-    enum protoObjCmd = `cl.exe /Fo$out -c $in`;
+// Check out the CI configuration: dmd on Windows uses 32-bit
+version(Windows)
     version(DigitalMars)
-        enum appCmd = `dmd -m32mscoff -of$out $in`;
-    else
-        enum appCmd = `dmd -of$out $in`;
-} else {
+        enum is32bitBuild = true;
+
+static if(is(typeof(is32bitBuild)))
+    enum arch = ` -m32`;
+else
+    enum arch = ``;
+
+enum appCmd = `dmd` ~ arch ~ ` -of$out $in`;
+
+version(Windows)
+    enum protoObjCmd = `cl.exe /Fo$out -c $in`;
+ else
     enum protoObjCmd = `gcc -o $out -c $in`;
-    enum appCmd = `dmd -of$out $in`;
-}
+
 
 import reggae;
 import reggae.path: buildPath;

@@ -1,13 +1,10 @@
-/**
-   Creates (maybe) a default reggaefile for a dub project.
-*/
-module reggae.dub.interop.reggaefile;
+module reggae.dub.interop.default_build;
 
 
-import reggae.from;
+private alias ConfigToDubInfo = imported!"reggae.dub.info".DubInfo[string];
 
 
-auto defaultDubBuild(in from!"reggae.options".Options options) {
+auto defaultDubBuild(in imported!"reggae.options".Options options) {
     import reggae.build: Build;
     import reggae.dub.interop: dubInfos;
     import std.file: exists;
@@ -23,7 +20,7 @@ auto defaultDubBuild(in from!"reggae.options".Options options) {
         : reducedDubBuild(options, configToDubInfo);
 }
 
-private auto standardDubBuild(in from!"reggae.options".Options options, in ConfigToDubInfo configToDubInfo) {
+private auto standardDubBuild(in imported!"reggae.options".Options options, in ConfigToDubInfo configToDubInfo) {
     import reggae.build: Build, Target, optional;
     import reggae.rules.dub: dubTarget, dubTestTarget;
 
@@ -56,7 +53,7 @@ private auto standardDubBuild(in from!"reggae.options".Options options, in Confi
     return Build(buildTarget, optional(testTarget), optional(defaultTarget), optional(utTarget));
 }
 
-private auto reducedDubBuild(in from!"reggae.options".Options options, in ConfigToDubInfo configToDubInfo) {
+private auto reducedDubBuild(in imported!"reggae.options".Options options, in ConfigToDubInfo configToDubInfo) {
     import reggae.build: Build, Target, optional;
     import reggae.rules.dub: dubTarget;
 
@@ -74,5 +71,3 @@ private auto reducedDubBuild(in from!"reggae.options".Options options, in Config
 
     return Build(buildTarget, optional(defaultTarget));
 }
-
-private alias ConfigToDubInfo = from!"reggae.dub.info".DubInfo[string];

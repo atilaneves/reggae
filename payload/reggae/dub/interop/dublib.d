@@ -4,7 +4,6 @@
 module reggae.dub.interop.dublib;
 
 
-import reggae.from;
 import dub.generators.generator: ProjectGenerator;
 
 // to avoid using it in the wrong way

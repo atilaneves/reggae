@@ -565,29 +565,14 @@ struct Command {
         return params.get(key, ifNotFound).map!(a => a.replace(gProjdir, projectPath)).array;
     }
 
-    static private string[] getDefaultDCompilerModelArg(in Options options) @safe pure nothrow {
-        version(Windows) {
-            import std.path: baseName, stripExtension;
-            const isDMD = baseName(stripExtension(options.dCompiler)) == "dmd";
-            if(!isDMD)
-                return null;
-            version(Win32)
-                return ["-m32mscoff"];
-            else version(Win64)
-                return null;
-            else
-                static assert(false, "Unknown Windows system");
-        } else {
-            return null;
-        }
-    }
-
     // public because ninja needs string[] instead of a shell command to execute.
-    static string[] builtinTemplate(in CommandType type,
-                                    in Language language,
-                                    in Options options,
-                                    in Flag!"dependencies" deps = Yes.dependencies) @safe pure {
-
+    static string[] builtinTemplate(
+        in CommandType type,
+        in Language language,
+        in Options options,
+        in Flag!"dependencies" deps = Yes.dependencies)
+        @safe pure
+    {
         import std.algorithm : startsWith, endsWith;
 
         final switch(type) with(CommandType) {
@@ -606,7 +591,9 @@ struct Command {
                 final switch(language) with(Language) {
                     case D:
                     case unknown:
-                        return options.dCompiler ~ getDefaultDCompilerModelArg(options) ~ ["-of$out", "$flags", "$in"];
+                        return options.dCompiler ~
+                            getDefaultDCompilerModelArg(options) ~
+                            ["-of$out", "$flags", "$in"];
                     case Cplusplus:
                         return options.cppCompiler ~ cArgs;
                     case C:
@@ -636,6 +623,23 @@ struct Command {
 
             case compileAndLink:
                 return compileTemplate(type, language, options, deps);
+        }
+    }
+
+    static private string[] getDefaultDCompilerModelArg(in Options options) @safe pure nothrow {
+        version(Windows) {
+            import std.path: baseName, stripExtension;
+            const isDMD = baseName(stripExtension(options.dCompiler)) == "dmd";
+            if(!isDMD)
+                return null;
+            version(Win32)
+                return ["-m32mscoff"];
+            else version(Win64)
+                return null;
+            else
+                static assert(false, "Unknown Windows system");
+        } else {
+            return null;
         }
     }
 

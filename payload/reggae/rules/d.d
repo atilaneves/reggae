@@ -396,3 +396,27 @@ private auto runDCompiler(in imported!"reggae.options".Options options,
             text("scriptlike could not run ", compArgs.join(" "), ":\n", compRes.output));
     return depsFile;
 }
+
+Target dlink(in ExeName exeName, Target[] dependencies, in Flags flags = Flags()) @safe pure {
+    import reggae.rules.common: link;
+    return link(
+        exeName,
+        dependencies,
+        Flags(flags.value ~ maybeLibFlags(exeName.value))
+    );
+}
+
+
+private string[] maybeLibFlags(in string targetName) @safe pure {
+    import reggae.rules.common: libExt, dynExt;
+    import std.path: extension;
+
+    const maybeStatic = targetName.extension == libExt
+        ? ["-lib"]
+        : [];
+    auto maybeShared = targetName.extension == dynExt
+        ? ["-shared"]
+        : [];
+
+    return maybeStatic ~ maybeShared;
+}

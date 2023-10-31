@@ -348,3 +348,39 @@ unittest {
         fileShouldContain("build.ninja", "-J" ~ inSandboxPath("lestrings"));
     }
 }
+
+@("dubDependency.exe")
+@Tags("dub", "ninja")
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile(
+            "over/there/dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "executable"`,
+            ]
+       );
+        writeFile(
+            "over/there/source/app.d",
+            q{
+                int main(string[] args) {
+                    import std.conv: to;
+                    return args[1].to!int;
+                }
+            }
+        );
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+                alias dubDep = dubDependency!(DubPath("over/there"));
+                mixin build!dubDep;
+            }
+        );
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldSucceed("foo", "0");
+        //shouldFail(   "foo", "1");
+    }
+}

@@ -64,11 +64,13 @@ struct ReggaeSandbox {
         }.split("\n").array);
     }
 
-    auto shouldSucceed(in string arg,
-                       in string file = __FILE__,
-                       in size_t line = __LINE__ ) const {
+    auto shouldSucceed(string file = __FILE__, size_t line = __LINE__)(in string[] args...) const
+    {
         import tests.utils;
-        return [buildPath(testPath, arg)].shouldExecuteOk(WorkDir(testPath), file, line);
+        auto rest = args.length > 1
+            ? args[1..$]
+            : [];
+        return shouldExecuteOk([buildPath(testPath, args[0])] ~ rest, WorkDir(testPath), file, line);
     }
 
     auto shouldFail(in string arg, in string file = __FILE__, in size_t line = __LINE__) const {

@@ -37,6 +37,12 @@ struct DubPath {
     string value;
 }
 
+imported!"reggae.build".Target dubDependency(DubPath dubPath)() {
+    import reggae.config: reggaeOptions = options; // the ones used to run reggae
+    return DubPathDependency(reggaeOptions.projectPath, dubPath)
+        .target;
+}
+
 /**
    A target that depends on dub packages but isn't one itself.
  */

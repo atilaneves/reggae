@@ -381,6 +381,43 @@ unittest {
         runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
         shouldSucceed("foo", "0");
-        //shouldFail(   "foo", "1");
+        shouldFail(   "foo", "1");
+    }
+}
+
+@("dubDependency.lib.config")
+@Tags("dub", "ninja")
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile(
+            "over/there/dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "library"`,
+                `configuration "default" {`,
+                `}`,
+                `configuration "unittest" {`,
+                `    targetName "ut"`,
+                `    mainSourceFile "ut_main.d"`,
+                `}`,
+            ]
+       );
+        writeFile("over/there/source/foo.d", "");
+        writeFile("over/there/ut_main.d", "void main() {}");
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+                alias dubDep = dubDependency!(
+                    DubPath("over/there"),
+                    Configuration("unittest"),
+                );
+                mixin build!dubDep;
+            }
+        );
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldSucceed("ut");
     }
 }

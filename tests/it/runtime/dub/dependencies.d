@@ -473,8 +473,7 @@ unittest {
             q{
                 import reggae;
                 alias dubDep = dubDependency!(
-                    DubPath("over/there"),
-                    Configuration("unittest"),
+                    DubPath("over/there", Configuration("unittest")),
                 );
                 mixin build!dubDep;
             }

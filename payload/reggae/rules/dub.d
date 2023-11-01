@@ -35,6 +35,7 @@ enum DubDependantTargetType {
  */
 struct DubPath {
     string value;
+    Configuration config;
 }
 
 imported!"reggae.build".Target dubDependency(
@@ -83,7 +84,7 @@ imported!"reggae.build".Target dubDependant(
     enum stringImportPaths = oneOptionalOf!(StringImportPaths, A);
 
     auto dubPathDependencies = [DubPaths]
-        .map!(p => DubPathDependency(reggaeOptions.projectPath, p, Configuration()));
+        .map!(p => DubPathDependency(reggaeOptions.projectPath, p, p.config));
 
     auto allImportPaths = dubPathDependencies
         .save

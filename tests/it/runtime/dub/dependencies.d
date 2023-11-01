@@ -15,7 +15,7 @@ else
 
 
 // A dub package that isn't at the root of the project directory
-@("dubDependant.path.exe")
+@("dubDependant.path.exe.default")
 @ArghWindows
 @Tags("dub", "ninja")
 unittest {
@@ -53,6 +53,70 @@ unittest {
                     DubDependantTargetType.executable,
                     Sources!(Files("src/app.d")),
                     DubPath("over/there"),
+                );
+                mixin build!app;
+            }
+        );
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldExist("myapp" ~ exeExt);
+        shouldSucceed("myapp");
+    }
+}
+
+// A dub package that isn't at the root of the project directory
+@("dubDependant.path.exe.config")
+@ArghWindows
+@Tags("dub", "ninja")
+unittest {
+    import reggae.rules.common: exeExt;
+    with(immutable ReggaeSandbox()) {
+        // a dub package we're going to depend on by path
+        writeFile(
+            "over/there/dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "library"`,
+                `configuration "default" {`,
+                `}`,
+                `configuration "weirdo" {`,
+                `    versions "weird"`,
+                `}`,
+            ]
+        );
+        // src code for the dub dependency
+        writeFile(
+            "over/there/source/foo.d",
+            q{
+                int result(int i) {
+                    version(weird)
+                        return i * 3;
+                    else
+                        return i * 2;
+                }
+            }
+        );
+        // our main program, which will depend on a dub package by path
+        writeFile(
+            "src/app.d",
+            q{
+                import foo;
+                void main() {
+                    assert(5.result == 15);
+                    assert(6.result == 18);
+                }
+            }
+        );
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+                alias app = dubDependant!(
+                    TargetName("myapp"),
+                    DubDependantTargetType.executable,
+                    Sources!(Files("src/app.d")),
+                    DubPath("over/there", Configuration("weirdo")),
                 );
                 mixin build!app;
             }

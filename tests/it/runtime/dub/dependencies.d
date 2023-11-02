@@ -413,7 +413,7 @@ unittest {
     }
 }
 
-@("dubDependency.exe")
+@("dubDependency.exe.naked")
 @Tags("dub", "ninja")
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -448,6 +448,48 @@ unittest {
         shouldFail(   "over/there/foo", "1");
     }
 }
+
+@ShouldFail
+@("dubDependency.exe.phony")
+@Tags("dub", "ninja")
+unittest {
+    import std.format;
+    with(immutable ReggaeSandbox()) {
+        writeFile(
+            "over/there/dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "executable"`,
+            ]
+       );
+        writeFile(
+            "over/there/source/app.d",
+            q{
+                int main(string[] args) {
+                    import std.conv: to;
+                    return args[1].to!int;
+                }
+            }
+        );
+        const foo = inSandboxPath("over/there/foo");
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+
+                alias dubDep = dubDependency!(DubPath("over/there"));
+                alias yay = phony!("yay", "%s 0", dubDep);
+                alias nay = phony!("nay", "%s 1", dubDep);
+                mixin build!(yay, nay);
+            }.format(foo, foo)
+        );
+
+        runReggae("-b", "ninja");
+        ninja(["yay"]).shouldExecuteOk;
+        ninja(["nay"]).shouldFailToExecute;
+    }
+}
+
 
 @("dubDependency.lib.config")
 @Tags("dub", "ninja")

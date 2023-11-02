@@ -301,7 +301,9 @@ struct DubInfo {
 
     string targetPath(in Options options) @safe const pure {
         import std.path: relativePath;
-
+        // Do NOT use absolute paths here, otherwise the user will
+        // have to type an absolute path such as `/path/to/foo` to
+        // select a specific target instead of just `foo`.
         return options.workingDir == options.projectPath
             ? packages[0].targetPath.relativePath(options.projectPath)
             : "";

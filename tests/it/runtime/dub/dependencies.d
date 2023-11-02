@@ -444,8 +444,8 @@ unittest {
 
         runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
-        shouldSucceed("foo", "0");
-        shouldFail(   "foo", "1");
+        shouldSucceed("over/there/foo", "0");
+        shouldFail(   "over/there/foo", "1");
     }
 }
 
@@ -462,6 +462,7 @@ unittest {
                 `}`,
                 `configuration "unittest" {`,
                 `    targetName "ut"`,
+                `    targetPath "bin"`,
                 `    mainSourceFile "ut_main.d"`,
                 `}`,
             ]
@@ -481,6 +482,6 @@ unittest {
 
         runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
-        shouldSucceed("ut");
+        shouldSucceed("over/there/bin/ut");
     }
 }

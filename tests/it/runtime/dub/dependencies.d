@@ -449,11 +449,9 @@ unittest {
     }
 }
 
-@ShouldFail
 @("dubDependency.exe.phony")
 @Tags("dub", "ninja")
 unittest {
-    import std.format;
     with(immutable ReggaeSandbox()) {
         writeFile(
             "over/there/dub.sdl",
@@ -471,17 +469,16 @@ unittest {
                 }
             }
         );
-        const foo = inSandboxPath("over/there/foo");
         writeFile(
             "reggaefile.d",
             q{
                 import reggae;
 
                 alias dubDep = dubDependency!(DubPath("over/there"));
-                alias yay = phony!("yay", "%s 0", dubDep);
-                alias nay = phony!("nay", "%s 1", dubDep);
+                alias yay = phony!("yay", dubDep, ["0"]);
+                alias nay = phony!("nay", dubDep, ["1"]);
                 mixin build!(yay, nay);
-            }.format(foo, foo)
+            }
         );
 
         runReggae("-b", "ninja");

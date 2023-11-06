@@ -71,12 +71,10 @@ struct Dub {
         import dub.internal.vibecompat.inet.path: NativePath;
         import std.path: baseName, stripExtension;
 
-        const compilerBinName = options.dCompiler.baseName.stripExtension;
-
         GeneratorSettings ret;
 
         ret.cache = NativePath(options.workingDir) ~ "__dub_cache__";
-        ret.compiler = () @trusted { return getCompiler(compilerBinName); }();
+        ret.compiler = () @trusted { return getCompiler(options.compilerBinName); }();
         ret.platform = () @trusted {
             return ret.compiler.determinePlatform(ret.buildSettings,
                 options.dCompiler, options.dubArchOverride);

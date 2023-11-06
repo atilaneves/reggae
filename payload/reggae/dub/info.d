@@ -300,9 +300,14 @@ struct DubInfo {
     }
 
     string targetPath(in Options options) @safe const pure {
-        import std.path: relativePath;
-
-        return options.workingDir == options.projectPath
+        import std.path: relativePath, buildNormalizedPath;
+        // Do NOT use absolute paths here, otherwise the user will
+        // have to type an absolute path such as `/path/to/foo` to
+        // select a specific target instead of just `foo`.
+        // Why `buildNormalizedPath`: on Windows slashes and
+        // backslashes are the same but the strings won't compare
+        // equal.
+        return options.workingDir.buildNormalizedPath == options.projectPath.buildNormalizedPath
             ? packages[0].targetPath.relativePath(options.projectPath)
             : "";
     }

@@ -15,7 +15,7 @@ else
 
 
 // A dub package that isn't at the root of the project directory
-@("dubDependant.path.exe")
+@("dubDependant.path.exe.default")
 @ArghWindows
 @Tags("dub", "ninja")
 unittest {
@@ -53,6 +53,70 @@ unittest {
                     DubDependantTargetType.executable,
                     Sources!(Files("src/app.d")),
                     DubPath("over/there"),
+                );
+                mixin build!app;
+            }
+        );
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldExist("myapp" ~ exeExt);
+        shouldSucceed("myapp");
+    }
+}
+
+// A dub package that isn't at the root of the project directory
+@("dubDependant.path.exe.config")
+@ArghWindows
+@Tags("dub", "ninja")
+unittest {
+    import reggae.rules.common: exeExt;
+    with(immutable ReggaeSandbox()) {
+        // a dub package we're going to depend on by path
+        writeFile(
+            "over/there/dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "library"`,
+                `configuration "default" {`,
+                `}`,
+                `configuration "weirdo" {`,
+                `    versions "weird"`,
+                `}`,
+            ]
+        );
+        // src code for the dub dependency
+        writeFile(
+            "over/there/source/foo.d",
+            q{
+                int result(int i) {
+                    version(weird)
+                        return i * 3;
+                    else
+                        return i * 2;
+                }
+            }
+        );
+        // our main program, which will depend on a dub package by path
+        writeFile(
+            "src/app.d",
+            q{
+                import foo;
+                void main() {
+                    assert(5.result == 15);
+                    assert(6.result == 18);
+                }
+            }
+        );
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+                alias app = dubDependant!(
+                    TargetName("myapp"),
+                    DubDependantTargetType.executable,
+                    Sources!(Files("src/app.d")),
+                    DubPath("over/there", Configuration("weirdo")),
                 );
                 mixin build!app;
             }
@@ -349,7 +413,7 @@ unittest {
     }
 }
 
-@("dubDependency.exe")
+@("dubDependency.exe.naked")
 @Tags("dub", "ninja")
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -380,7 +444,87 @@ unittest {
 
         runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
-        shouldSucceed("foo", "0");
-        //shouldFail(   "foo", "1");
+        shouldSucceed("over/there/foo", "0");
+        shouldFail(   "over/there/foo", "1");
+    }
+}
+
+@ShouldFail
+@("dubDependency.exe.phony")
+@Tags("dub", "ninja")
+unittest {
+    import std.format;
+    with(immutable ReggaeSandbox()) {
+        writeFile(
+            "over/there/dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "executable"`,
+            ]
+       );
+        writeFile(
+            "over/there/source/app.d",
+            q{
+                int main(string[] args) {
+                    import std.conv: to;
+                    return args[1].to!int;
+                }
+            }
+        );
+        const foo = inSandboxPath("over/there/foo");
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+
+                alias dubDep = dubDependency!(DubPath("over/there"));
+                alias yay = phony!("yay", "%s 0", dubDep);
+                alias nay = phony!("nay", "%s 1", dubDep);
+                mixin build!(yay, nay);
+            }.format(foo, foo)
+        );
+
+        runReggae("-b", "ninja");
+        ninja(["yay"]).shouldExecuteOk;
+        ninja(["nay"]).shouldFailToExecute;
+    }
+}
+
+
+@("dubDependency.lib.config")
+@Tags("dub", "ninja")
+unittest {
+    import reggae.rules.common: exeExt;
+    with(immutable ReggaeSandbox()) {
+        writeFile(
+            "over/there/dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "library"`,
+                `configuration "default" {`,
+                `}`,
+                `configuration "unittest" {`,
+                `    targetName "ut"`,
+                `    targetPath "bin"`,
+                `    mainSourceFile "ut_main.d"`,
+                `}`,
+            ]
+       );
+        writeFile("over/there/source/foo.d", "");
+        writeFile("over/there/ut_main.d", "void main() {}");
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+                alias dubDep = dubDependency!(
+                    DubPath("over/there", Configuration("unittest")),
+                );
+                mixin build!dubDep;
+            }
+        );
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldSucceed("over/there/bin/ut" ~ exeExt);
     }
 }

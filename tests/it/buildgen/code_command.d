@@ -7,7 +7,7 @@ mixin build!(Target(`copy.txt`, &func, Target(`original.txt`)));
 
 
 static foreach (backend; ["ninja", "make", "tup"])
-    @("code commands should fail with backends other than binary (" ~ backend ~ ")")
+    @("fail." ~ backend)
     @Tags(backend)
     unittest {
         writelnUt(backend);

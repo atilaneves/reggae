@@ -35,6 +35,7 @@ enum DubDependantTargetType {
  */
 struct DubPath {
     string value;
+    Configuration config;
 }
 
 imported!"reggae.build".Target dubDependency(DubPath dubPath)() {
@@ -137,8 +138,9 @@ private struct DubPathDependency {
     import reggae.options: Options;
     import reggae.build: Target;
 
-    Options options;
+    Options subOptions; // options for the dub dependency
     DubInfo dubInfo;
+    string projectPath;
 
     this(in string projectPath, in DubPath dubPath) {
         import reggae.dub.interop: dubInfos;
@@ -146,23 +148,31 @@ private struct DubPathDependency {
         import std.stdio: stdout;
         import std.path: buildPath;
 
+        this.projectPath = projectPath;
         const path = buildPath(projectPath, dubPath.value);
-        options = getOptions(
+        subOptions = getOptions(
             [
                 "reggae",
                 "-C",
                 path,
-                "--dub-config=default",
+                "--dub-config=" ~ dubPath.config.value,
                 path, // not sure why I need this again with -C above...
             ]
         );
         // dubInfos in this case returns an associative array but there's
         // only really one key.
-        dubInfo = dubInfos(stdout, options)["default"];
+        dubInfo = dubInfos(stdout, subOptions)[dubPath.config.value];
     }
 
     Target target() {
-        return dubTarget(options, dubInfo);
+        import std.path: buildPath, relativePath;
+        // The complicated path manipulation below is so that we can
+        // place the target in its dub directory, but relative to the
+        // reggaefile's project path. The reason we use relative paths
+        // instead of absolute is so the user doesn't have to type the
+        // whole path to a target.
+        return dubTarget(subOptions, dubInfo)
+            .mapOutputs((string o) => buildPath(subOptions.projectPath.relativePath(projectPath), o));
     }
 }
 

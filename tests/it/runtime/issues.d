@@ -133,7 +133,7 @@ unittest {
         }
 
         runReggae("-b", "ninja");
-        ninja(["default", ut]).shouldExecuteOk;
+        ninja(["default", "ut"]).shouldExecuteOk;
 
         shouldExist(bin);
         shouldExist(ut);

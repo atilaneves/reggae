@@ -423,6 +423,17 @@ struct Target {
             sameSet(_implicits, other._implicits);
     }
 
+    Target mapOutputs(string delegate(string) func) {
+        import std.algorithm: map;
+        import std.array: array;
+        return Target(
+            _outputs.map!func.array,
+            Command.fromBytes(_command.toBytes),  //FIXME: poor man's dup (avoids compiler error)
+            _dependencies,
+            _implicits
+        );
+    }
+
 private:
 
     string[] depsInProjectPath(in Target[] deps, in string projectPath) @safe pure const {
@@ -554,8 +565,10 @@ struct Command {
     }
 
     string rawCmdString(in string projectPath) @safe pure const {
-        if(getType != CommandType.shell)
+        // apparently only ninja calls this
+        if(getType == CommandType.code)
             throw new Exception("Command type 'code' not supported for ninja backend");
+
         return command.replace(gProjdir, buildPath(projectPath));
     }
 

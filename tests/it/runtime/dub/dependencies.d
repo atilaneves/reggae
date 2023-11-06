@@ -494,6 +494,7 @@ unittest {
 @("dubDependency.lib.config")
 @Tags("dub", "ninja")
 unittest {
+    import reggae.rules.common: exeExt;
     with(immutable ReggaeSandbox()) {
         writeFile(
             "over/there/dub.sdl",
@@ -524,6 +525,6 @@ unittest {
 
         runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
-        shouldSucceed("over/there/bin/ut");
+        shouldSucceed("over/there/bin/ut" ~ exeExt);
     }
 }

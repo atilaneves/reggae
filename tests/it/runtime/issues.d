@@ -425,7 +425,6 @@ unittest {
 }
 
 
-@ShouldFail
 @Tags("dub", "ninja")
 @("229")
 unittest {
@@ -438,6 +437,7 @@ unittest {
                     Configuration("integration"),
                     CompilerFlags("-unittest"),
                 );
+                mixin build!it;
             }
         );
         writeFile(

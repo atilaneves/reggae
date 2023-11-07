@@ -337,8 +337,8 @@ static if(imported!"reggae.config".isDubProject) {
 
     import reggae.build: Target;
 
-    alias dubConfigurationTarget = dubTarget;
-    alias dubDefaultTarget = dubTarget;
+    deprecated alias dubConfigurationTarget = dubTarget;
+    deprecated alias dubDefaultTarget = dubTarget;
 
     /**
        Builds a particular dub configuration (usually "default")

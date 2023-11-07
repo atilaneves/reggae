@@ -423,3 +423,34 @@ unittest {
         shouldExist("compile_commands.json");
     }
 }
+
+
+@Tags("dub", "ninja")
+@("229")
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+                alias it = dubTarget!(
+                    Configuration("integration"),
+                    CompilerFlags("-unittest"),
+                );
+                mixin build!it;
+            }
+        );
+        writeFile(
+            "dub.sdl",
+            [
+                `name "oops"`,
+                `configuration "default" {`,
+                `}`,
+                `configuration "integration" {`,
+                `}`
+            ]
+        );
+        writeFile("source/app.d", "void main() {}");
+        runReggae;
+    }
+}

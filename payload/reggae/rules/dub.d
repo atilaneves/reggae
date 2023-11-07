@@ -9,10 +9,10 @@ module reggae.rules.dub;
 import reggae.dub.info: DubInfo;
 
 enum CompilationMode {
+    options,  /// whatever the command-line option was
     module_,  /// compile per module
     package_, /// compile per package
     all,      /// compile all source files
-    options,  /// whatever the command-line option was
 }
 
 struct Configuration {
@@ -337,34 +337,32 @@ static if(imported!"reggae.config".isDubProject) {
 
     import reggae.build: Target;
 
-    alias dubConfigurationTarget = dubTarget;
-    alias dubDefaultTarget = dubTarget;
+    deprecated alias dubConfigurationTarget = dubTarget;
+    deprecated alias dubDefaultTarget = dubTarget;
 
     /**
        Builds a particular dub configuration (usually "default")
-     */
-    Target dubTarget(CompilationMode compilationMode)
-        ()
-    {
-        return dubTarget!(
-            Configuration("default"),
+       Optional arguments:
+       * Configuration
+       * CompilationMode
+       * CompilerFlags (to add to the ones from dub)
+    */
+    Target dubTarget(Args...)() {
+        import reggae.config: options, configToDubInfo;
+        import reggae.types: CompilerFlags;
+
+        enum configuration      = oneOptionalOf!(Configuration  , Args);
+        enum compilationMode    = oneOptionalOf!(CompilationMode, Args);
+        enum extraCompilerFlags = oneOptionalOf!(CompilerFlags  , Args);
+
+        return dubTarget(
+            options,
+            configToDubInfo,
+            configuration,
             compilationMode,
+            extraCompilerFlags,
         );
     }
-
-    /**
-       Builds a particular dub configuration (usually "default")
-     */
-    Target dubTarget(
-        Configuration config = Configuration("default"),
-        CompilationMode compilationMode = CompilationMode.options,
-        )
-        ()
-    {
-        import reggae.config: options, configToDubInfo;
-        return dubTarget(options, configToDubInfo, config, compilationMode);
-    }
-
 
     /**
        A target corresponding to `dub test`

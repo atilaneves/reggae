@@ -40,7 +40,7 @@ struct DubPath {
 
 imported!"reggae.build".Target dubDependency(DubPath dubPath)() {
     import reggae.config: reggaeOptions = options; // the ones used to run reggae
-    return DubPathDependency(reggaeOptions.projectPath, dubPath)
+    return DubPathDependency(reggaeOptions, dubPath)
         .target;
 }
 
@@ -79,7 +79,7 @@ imported!"reggae.build".Target dubDependant(
     enum stringImportPaths = oneOptionalOf!(StringImportPaths, A);
 
     auto dubPathDependencies = [DubPaths]
-        .map!(p => DubPathDependency(reggaeOptions.projectPath, p));
+        .map!(p => DubPathDependency(reggaeOptions, p));
 
     auto allImportPaths = dubPathDependencies
         .save
@@ -138,27 +138,21 @@ private struct DubPathDependency {
     import reggae.options: Options;
     import reggae.build: Target;
 
+    string projectPath;
     Options subOptions; // options for the dub dependency
     DubInfo dubInfo;
-    string projectPath;
 
-    this(in string projectPath, in DubPath dubPath) {
+    this(in Options reggaeOptions, in DubPath dubPath) {
         import reggae.dub.interop: dubInfos;
-        import reggae.options: getOptions;
         import std.stdio: stdout;
         import std.path: buildPath;
 
-        this.projectPath = projectPath;
+        projectPath = reggaeOptions.projectPath;
         const path = buildPath(projectPath, dubPath.value);
-        subOptions = getOptions(
-            [
-                "reggae",
-                "-C",
-                path,
-                "--dub-config=" ~ dubPath.config.value,
-                path, // not sure why I need this again with -C above...
-            ]
-        );
+        subOptions = reggaeOptions.dup;
+        subOptions.projectPath = path;
+        subOptions.workingDir = path;
+        subOptions.dubConfig = dubPath.config.value;
         // dubInfos in this case returns an associative array but there's
         // only really one key.
         dubInfo = dubInfos(stdout, subOptions)[dubPath.config.value];

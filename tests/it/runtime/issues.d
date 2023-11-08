@@ -425,8 +425,8 @@ unittest {
 }
 
 
-@Tags("dub", "ninja")
 @("229")
+@Tags("dub", "ninja")
 unittest {
     with(immutable ReggaeSandbox()) {
         writeFile(
@@ -452,5 +452,32 @@ unittest {
         );
         writeFile("source/app.d", "void main() {}");
         runReggae;
+    }
+}
+
+@("232")
+@Tags("dub", "ninja")
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile(
+            "over/there/dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "executable"`,
+            ]
+       );
+        writeFile("over/there/source/app.d", q{void main() {}});
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+                alias dubDep = dubDependency!(DubPath("over/there"));
+                mixin build!dubDep;
+            }
+        );
+
+        runReggae("-b", "ninja", "--dub-objs-dir=" ~ inSandboxPath("dub_objs"));
+        ninja.shouldExecuteOk;
+        shouldExist("dub_objs");
     }
 }

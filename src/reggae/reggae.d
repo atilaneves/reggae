@@ -296,7 +296,7 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
     // `options.reggaeFileDepFile` existing, which means we need to
     // compile the reggaefile separately to get those dependencies
     // *then* add any extra files to the dummy dub.sdl.
-    const dubVersions = ["Have_buildgen", "Have_dub", "DubUseCurl"];
+    const dubVersions = ["Have_dub", "DubUseCurl"];
     const versionFlag = options.isLdc ? "-d-version" : "-version";
     const dubVersionFlags = dubVersions.map!(a => versionFlag ~ "=" ~ a).array;
     auto reggaefileObj = Binary(
@@ -339,7 +339,9 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
 
     auto binary = Binary(
         buildGenName,
-        // FIXME use dcompiler
+        // FIXME - use --compiler
+        // The reason it doesn't work now is due to a test using
+        // a custom compiler
         ["dub", "build"], // since we now depend on dub at buildgen runtime
     );
     buildBinary(output, options, binary);

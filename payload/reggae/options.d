@@ -161,7 +161,13 @@ struct Options {
     //this will usually be empty, but won't be if the reggaefile imports other D files
     string[] getReggaeFileDependenciesDlang() @safe const {
         import reggae.dependencies: parseDepFile;
-        return parseDepFile(reggaeFileDepFile);
+        import std.algorithm: filter, canFind;
+        import std.array: array;
+        import std.path: buildPath, dirSeparator;
+
+        return parseDepFile(reggaeFileDepFile)
+            .filter!(a => !a.canFind(dirSeparator ~ buildPath("dub", "source")))
+            .array;
     }
 
     string reggaeFileDepFile() @safe pure const {

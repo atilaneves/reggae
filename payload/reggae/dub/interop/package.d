@@ -45,9 +45,11 @@ auto dubInfos(O)(ref O output,
     import reggae.io: log;
     import reggae.dub.interop.fetch: dubFetch;
     import reggae.dub.interop.dublib: Dub;
+    import std.file: readText;
 
     // must check for dub.selections.json before creating dub instance
-    const dubSelectionsJson = ensureDubSelectionsJson(output, options);
+    const dubSelectionsJsonPath = ensureDubSelectionsJson(output, options);
+    const dubSelectionsJson = readText(dubSelectionsJsonPath);
 
     dubFetch(output, options, dubSelectionsJson);
 

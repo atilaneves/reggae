@@ -1,7 +1,7 @@
 module reggae.dub.interop.fetch;
 
 
-package void dubFetch(O)(
+void dubFetch(O)(
     auto ref O output,
     in imported!"reggae.options".Options options,
     in string dubSelectionsJson)
@@ -14,12 +14,11 @@ package void dubFetch(O)(
     import dub.packagemanager: PlacementLocation;
     import std.array: replace;
     import std.json: parseJSON, JSONType;
-    import std.file: readText;
     import std.parallelism: parallel;
 
     const(VersionedPackage)[] pkgsToFetch;
 
-    const json = parseJSON(readText(dubSelectionsJson));
+    const json = parseJSON(dubSelectionsJson);
 
     auto dublib = reggae.dub.interop.dublib.Dub(options);
     foreach(dubPackageName, versionJson; json["versions"].object) {
@@ -42,7 +41,7 @@ package void dubFetch(O)(
             dubObj.fetch(
                 pkg.name,
                 Version(pkg.version_),
-                PlacementLocation.user,
+                dubObj.defaultPlacementLocation,
                 FetchOptions.none,
             );
         catch (Exception exc)

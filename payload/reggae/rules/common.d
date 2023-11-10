@@ -297,6 +297,38 @@ Target phony(string name,
     return Target.phony(name, shellCommand, arrayify!dependenciesFunc, arrayify!implicitsFunc);
 }
 
+/**
+   Compile-time version of phony targeted towards running binaries
+   that are dependencies of the phony rule.
+ */
+Target phony(
+    string name,
+    alias dependenciesFunc,
+    string[] args = [],
+    alias implicitsFunc = () { Target[] ts; return ts; },
+    )
+    ()
+    if(isTargets!dependenciesFunc && isTargets!implicitsFunc)
+{
+    import reggae.build: objDirOf;
+    import std.array: join;
+    import std.path: buildPath;
+
+    auto deps = arrayify!dependenciesFunc;
+    if(deps.length > 1)
+        throw new Exception("Only one output allowed for this phony rule");
+    if(deps[0].rawOutputs.length > 1)
+        throw new Exception("Only one output allowed for this phony rule");
+    auto target = deps[0];
+
+    return Target.phony(
+        name,
+        (buildPath(objDirOf(Target(name)), target.rawOutputs[0]) ~ args).join(" "),
+        deps,
+        arrayify!implicitsFunc
+    );
+}
+
 private template isTargets(alias T) {
     import std.traits: Unqual, ReturnType, isCallable;
     import std.range: isInputRange, ElementType;

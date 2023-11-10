@@ -270,7 +270,6 @@ struct Binary {
 }
 
 
-// FIXME: use the same dub version as in dub.selections.json for reggae itself
 private enum dubSdl =
 `
     name "buildgen"
@@ -288,6 +287,7 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
     import std.algorithm: map, joiner;
     import std.range: chain, only;
     import std.string: replace;
+    import std.array: array;
 
     immutable buildGenName = getBuildGenName(options) ~ exeExt;
     if(options.isScriptBuild) return buildGenName;
@@ -296,9 +296,16 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
     // `options.reggaeFileDepFile` existing, which means we need to
     // compile the reggaefile separately to get those dependencies
     // *then* add any extra files to the dummy dub.sdl.
+    const dubVersions = ["Have_dub", "DubUseCurl"];
+    const versionFlag = options.isLdc ? "-d-version" : "-version";
+    const dubVersionFlags = dubVersions.map!(a => versionFlag ~ "=" ~ a).array;
     auto reggaefileObj = Binary(
         "reggaefile" ~ objExt,
-        [options.dCompiler, options.reggaeFilePath, "-o-", "-makedeps=" ~ options.reggaeFileDepFile] ~ importPaths(options),
+        [
+            options.dCompiler,
+            options.reggaeFilePath, "-o-", "-makedeps=" ~ options.reggaeFileDepFile,
+         ]
+        ~ dubVersionFlags ~ importPaths(options) ~ dubImportFlags(options),
     );
     buildBinary(output, options, reggaefileObj);
 
@@ -310,7 +317,10 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
             .joiner(" ");
     }
 
-    auto userFiles = chain(only(options.reggaeFilePath), options.getReggaeFileDependenciesDlang);
+    auto userFiles = chain(
+        options.reggaeFilePath.only,
+        options.getReggaeFileDependenciesDlang
+    );
     auto userSourceFilesForDubSdl = stringsToSdlList(userFiles);
     // [2..$] gets rid of `-I`
     auto importPathsForDubSdl = stringsToSdlList(importPaths(options).map!(i => i[2..$]));
@@ -329,12 +339,35 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
 
     auto binary = Binary(
         buildGenName,
-        // FIXME use dcompiler
+        // FIXME - use --compiler
+        // The reason it doesn't work now is due to a test using
+        // a custom compiler
         ["dub", "build"], // since we now depend on dub at buildgen runtime
     );
     buildBinary(output, options, binary);
 
     return buildGenName;
+}
+
+private string[] dubImportFlags(in imported!"reggae.options".Options options) {
+    import std.json: parseJSON;
+    import dub.dub: Dub, FetchOptions;
+    import dub.dependency: Version;
+    import std.file: exists;
+    import std.path: buildPath;
+    import reggae.path: dubPackagesDir;
+
+    const dubSelectionsJson = import("dub.selections.json");
+    const dubVersion = dubSelectionsJson
+        .parseJSON
+        ["versions"]
+        ["dub"]
+        .str;
+    auto dubObj = new Dub(options.projectPath);
+    dubObj.fetch("dub", Version(dubVersion), dubObj.defaultPlacementLocation, FetchOptions.none);
+    const dubSourcePath = buildPath(dubPackagesDir, "dub", dubVersion, "dub", "source");
+    assert(dubSourcePath.exists, "dub fetch failed: no path '" ~ dubSourcePath ~ "'");
+    return ["-I" ~ dubSourcePath];
 }
 
 private void buildBinary(T)(auto ref T output, in Options options, in Binary bin) {

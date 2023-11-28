@@ -45,6 +45,7 @@ struct Options {
     bool perModule;
     bool allAtOnce;
     bool isDubProject;
+    bool isCmakeProject;
     bool oldNinja;
     bool noCompilationDB;
     bool cacheBuildInfo;
@@ -96,6 +97,8 @@ struct Options {
         setExePath(cppCompiler, "CXX", defaultCXX);
         setExePath(  dCompiler, "DC" , "dmd"     );
 
+        // TODO might need to set different compilers when there's a CMake project
+
         if(backend == Backend.none && !export_)
             backend = Backend.ninja;
 
@@ -111,6 +114,19 @@ struct Options {
         if(isDubProject && backend == Backend.tup) {
             throw new Exception("dub integration not supported with the tup backend");
         }
+
+        isCmakeProject = _cmakeProjectFile != "";
+
+        if (isCmakeProject) {
+            dependencies ~= _cmakeProjectFile;
+            // TODO should also add all the `*.cmake` files as dependencies?
+        }
+    }
+
+    package string _cmakeProjectFile() @safe nothrow {
+        const name = buildPath(projectPath, "CMakeLists.txt");
+        if (name.exists) return name;
+        return "";
     }
 
     package string _dubProjectFile() @safe nothrow {

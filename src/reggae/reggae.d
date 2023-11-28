@@ -70,6 +70,8 @@ void run(T)(auto ref T output, Options options) {
     // if there's no custom reggaefile, execute and exit early
     if(dubBuild(options)) return;
 
+    if(cmakeBuild(options)) return;
+
     // write out the library source files to be compiled/interpreted
     // with the user's build description
     writeSrcFiles(output, options);
@@ -103,6 +105,17 @@ private bool dubBuild(in Options options) {
         return false;
 
     auto build = defaultDubBuild(options);
+    return runtimeBuild(options, build);
+}
+
+private bool cmakeBuild(in Options options) {
+    import reggae.cmake.interop: doCmakeBuild;
+    import std.file : exists;
+
+    if (options.reggaeFilePath.exists)
+        return false;
+
+    auto build = doCmakeBuild(options);
     return runtimeBuild(options, build);
 }
 

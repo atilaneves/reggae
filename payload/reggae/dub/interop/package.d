@@ -126,8 +126,9 @@ private imported!"reggae.dub.info".DubInfo[string] getDubInfos
 
     ret["default"] = ret[configs.default_];
 
-    // (additionally) expose the special `dub test` config as `unittest` config in the DSL (`configToDubInfo`)
-    // (for `dubTestTarget!()`, `dubConfigurationTarget!(Configuration("unittest"))` etc.)
+    // (additionally) expose the special `dub test` config as
+    // `unittest` config in the DSL (`configToDubInfo`) (for
+    // `dubTest!()`, `dubBuild!(Configuration("unittest"))` etc.)
     if(haveTestConfig && configs.test != "unittest" && configs.test in ret)
         ret["unittest"] = ret[configs.test];
 

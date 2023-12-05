@@ -22,10 +22,10 @@ auto defaultDubBuild(in imported!"reggae.options".Options options) {
 
 private auto standardDubBuild(in imported!"reggae.options".Options options, in ConfigToDubInfo configToDubInfo) {
     import reggae.build: Build, Target, optional;
-    import reggae.rules.dub: dubTarget, dubTestTarget;
+    import reggae.rules.dub: dubBuild, dubTest;
 
-    auto buildTarget = dubTarget(options, configToDubInfo); // dub build
-    auto testTarget = dubTestTarget(options, configToDubInfo);     // dub test
+    auto buildTarget = dubBuild(options, configToDubInfo);
+    auto testTarget  = dubTest (options, configToDubInfo);
 
     Target aliasTarget(string aliasName, alias target)() {
         import std.algorithm: canFind, map;
@@ -55,9 +55,9 @@ private auto standardDubBuild(in imported!"reggae.options".Options options, in C
 
 private auto reducedDubBuild(in imported!"reggae.options".Options options, in ConfigToDubInfo configToDubInfo) {
     import reggae.build: Build, Target, optional;
-    import reggae.rules.dub: dubTarget;
+    import reggae.rules.dub: dubBuild;
 
-    auto buildTarget = dubTarget(options, configToDubInfo); // dub build
+    auto buildTarget = dubBuild(options, configToDubInfo);
 
     Target aliasTarget(string aliasName, alias target)() {
         import std.algorithm: map;

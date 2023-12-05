@@ -36,10 +36,10 @@ version(minimal) {
     import std.typecons: Yes;
 
     //the actual reggae binary
-    alias main = dubTarget!();
+    alias main = dubBuild!();
 
     //the unit test binary
-    alias ut = dubTestTarget!(CompilationMode.all, Yes.coverage);
+    alias ut = dubTest!(CompilationMode.all, Yes.coverage);
 
     //the cucumber test target
     //enum cuke = Target.phony("cuke", "cd $project && cucumber", [main]);

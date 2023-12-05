@@ -188,8 +188,9 @@ private string withExtension(
     }
 }
 
+deprecated alias dubTestTarget = dubTest;
 
-imported!"reggae.build".Target dubTestTarget(C)
+imported!"reggae.build".Target dubTest(C)
     (in imported!"reggae.options".Options options,
      in C configToDubInfo,
      in CompilationMode compilationMode = CompilationMode.options,
@@ -361,13 +362,13 @@ static if(imported!"reggae.config".isDubProject) {
     /**
        A target corresponding to `dub test`
      */
-    Target dubTestTarget(
+    Target dubTest(
         CompilationMode compilationMode = CompilationMode.options,
         imported!"std.typecons".Flag!"coverage" coverage = imported!"std.typecons".No.coverage)
         ()
     {
         import reggae.config: options, configToDubInfo;
-        return dubTestTarget(
+        return dubTest(
             options,
             configToDubInfo,
             compilationMode,

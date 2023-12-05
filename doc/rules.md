@@ -246,7 +246,7 @@ flags, an empty parameter list must be added, e.g.:
     mixin build!(dubDefaultTarget!());
 
 
-dubTestTarget
+dubTest
 -------------
 
 The target that would be built by `dub test`.

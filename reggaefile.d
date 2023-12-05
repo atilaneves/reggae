@@ -39,7 +39,7 @@ version(minimal) {
     alias main = dubTarget!();
 
     //the unit test binary
-    alias ut = dubTestTarget!(CompilationMode.all, Yes.coverage);
+    alias ut = dubTest!(CompilationMode.all, Yes.coverage);
 
     //the cucumber test target
     //enum cuke = Target.phony("cuke", "cd $project && cucumber", [main]);

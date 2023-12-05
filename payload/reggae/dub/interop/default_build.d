@@ -22,10 +22,10 @@ auto defaultDubBuild(in imported!"reggae.options".Options options) {
 
 private auto standardDubBuild(in imported!"reggae.options".Options options, in ConfigToDubInfo configToDubInfo) {
     import reggae.build: Build, Target, optional;
-    import reggae.rules.dub: dubTarget, dubTestTarget;
+    import reggae.rules.dub: dubTarget, dubTest;
 
     auto buildTarget = dubTarget(options, configToDubInfo); // dub build
-    auto testTarget = dubTestTarget(options, configToDubInfo);     // dub test
+    auto testTarget = dubTest(options, configToDubInfo);     // dub test
 
     Target aliasTarget(string aliasName, alias target)() {
         import std.algorithm: canFind, map;

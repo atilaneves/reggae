@@ -165,7 +165,7 @@ private struct DubPathDependency {
         // reggaefile's project path. The reason we use relative paths
         // instead of absolute is so the user doesn't have to type the
         // whole path to a target.
-        return dubTarget(subOptions, dubInfo)
+        return dubBuild(subOptions, dubInfo)
             .mapOutputs((string o) => buildPath(subOptions.projectPath.relativePath(projectPath), o));
     }
 }
@@ -205,7 +205,7 @@ imported!"reggae.build".Target dubTest(C)
     if ("unittest" !in configToDubInfo)
         return Target(null);
 
-    return dubTarget(
+    return dubBuild(
         options,
         configToDubInfo,
         Configuration("unittest"),
@@ -214,14 +214,14 @@ imported!"reggae.build".Target dubTest(C)
     );
 }
 
-imported!"reggae.build".Target dubTarget(C)
+imported!"reggae.build".Target dubBuild(C)
     (in imported!"reggae.options".Options options,
      in C configToDubInfo,
      in Configuration config = Configuration("default"),
      in CompilationMode compilationMode = CompilationMode.options,
      in imported!"reggae.types".CompilerFlags extraCompilerFlags = imported!"reggae.types".CompilerFlags())
 {
-    return dubTarget(
+    return dubBuild(
         options,
         configToDubInfo[config.value],
         compilationMode,
@@ -229,7 +229,7 @@ imported!"reggae.build".Target dubTarget(C)
     );
 }
 
-imported!"reggae.build".Target dubTarget(
+imported!"reggae.build".Target dubBuild(
     in imported!"reggae.options".Options options,
     in DubInfo dubInfo,
     in CompilationMode compilationMode = CompilationMode.options,
@@ -332,8 +332,9 @@ static if(imported!"reggae.config".isDubProject) {
 
     import reggae.build: Target;
 
-    deprecated alias dubConfigurationTarget = dubTarget;
-    deprecated alias dubDefaultTarget = dubTarget;
+    deprecated alias dubConfigurationTarget = dubBuild;
+    deprecated alias dubDefaultTarget = dubBuild;
+    deprecated alias dubTarget = dubBuild;
 
     /**
        Builds a particular dub configuration (usually "default")
@@ -342,7 +343,7 @@ static if(imported!"reggae.config".isDubProject) {
        * CompilationMode
        * CompilerFlags (to add to the ones from dub)
     */
-    Target dubTarget(Args...)() {
+    Target dubBuild(Args...)() {
         import reggae.config: options, configToDubInfo;
         import reggae.types: CompilerFlags;
 
@@ -350,7 +351,7 @@ static if(imported!"reggae.config".isDubProject) {
         enum compilationMode    = oneOptionalOf!(CompilationMode, Args);
         enum extraCompilerFlags = oneOptionalOf!(CompilerFlags  , Args);
 
-        return dubTarget(
+        return dubBuild(
             options,
             configToDubInfo,
             configuration,

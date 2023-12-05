@@ -433,7 +433,7 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias it = dubTarget!(
+                alias it = dubBuild!(
                     Configuration("integration"),
                     CompilerFlags("-unittest"),
                 );

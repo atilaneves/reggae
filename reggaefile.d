@@ -36,7 +36,7 @@ version(minimal) {
     import std.typecons: Yes;
 
     //the actual reggae binary
-    alias main = dubTarget!();
+    alias main = dubBuild!();
 
     //the unit test binary
     alias ut = dubTest!(CompilationMode.all, Yes.coverage);

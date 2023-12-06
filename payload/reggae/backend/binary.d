@@ -20,7 +20,7 @@ import std.getopt;
 import std.range.primitives: isInputRange;
 
 
-struct BinaryOptions {
+private struct BinaryOptions {
     bool list;
     bool norerun;
     bool singleThreaded;

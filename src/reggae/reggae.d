@@ -107,10 +107,6 @@ private bool dubBuild(in Options options) {
 }
 
 private bool runtimeBuild(in Options options, imported!"reggae.build".Build build) {
-    import reggae.types: Backend;
-
-    enforce(options.backend != Backend.binary, "Binary backend not supported at runtime");
-
     version(minimal)
         assert(0, "Runtime builds not supported in minimal version");
     else {
@@ -118,7 +114,11 @@ private bool runtimeBuild(in Options options, imported!"reggae.build".Build buil
 
         if(build == build.init) return false;
 
-        doBuild(build, options);
+        // The binary backend requires `args` to not be empty because
+        // the first entry must be the binary name. We also don't want
+        // to rerun ourselves from here.
+        auto args = ["build", "--norerun"];
+        doBuild(build, options, args);
     }
 
     return true;

@@ -3,23 +3,27 @@
   I want to be able to write build descriptions in Python
   So I don't have to compile the build description
  */
-
 module tests.it.runtime.python;
+
 
 import tests.it.runtime;
 
-@("Build description")
-@Tags(["ninja", "json_build", "python"])
-unittest {
-    with(immutable ReggaeSandbox()) {
-        writeFile("reggaefile.py",
-                  [`from reggae import *`,
-                   `b = Build(executable(name='app', src_dirs=['src']))`]);
-        writeHelloWorldApp;
 
-        runReggae("-b", "ninja");
-        ninja.shouldExecuteOk;
-        shouldSucceed("app").shouldEqual(["Hello world!"]);
+static foreach(backend; ["ninja", "binary"]) {
+    @("build.description." ~ backend)
+    @Tags([backend, "json_build", "python"])
+    unittest {
+        with(immutable ReggaeSandbox()) {
+            writeFile("reggaefile.py",
+                      [`from reggae import *`,
+                       `b = Build(executable(name='app', src_dirs=['src']))`]);
+            writeHelloWorldApp;
+
+            runReggae("-b", backend);
+            static if(backend != "binary")
+                mixin(backend).shouldExecuteOk;
+            shouldSucceed("app").shouldEqual(["Hello world!"]);
+        }
     }
 }
 

@@ -23,7 +23,7 @@ struct Configuration {
    The types of binaries that a target that has dub dependencies (but
    isn't a dub package itself) can have.
  */
-enum DubDependantTargetType {
+enum DubPackageTargetType {
     executable,
     sharedLibrary,
     staticLibrary,
@@ -47,9 +47,9 @@ imported!"reggae.build".Target dubDependency(DubPath dubPath)() {
 /**
    A target that depends on dub packages but isn't one itself.
  */
-imported!"reggae.build".Target dubDependant(
+imported!"reggae.build".Target dubPackage(
     imported!"reggae.types".TargetName targetName,
-    DubDependantTargetType targetType,
+    DubPackageTargetType targetType,
     alias sourcesFunc,
     // the other arguments can be:
     // * DubPath
@@ -172,13 +172,13 @@ private struct DubPathDependency {
 
 private string withExtension(
     in imported!"reggae.types".TargetName targetName,
-    DubDependantTargetType targetType,
+    DubPackageTargetType targetType,
     ) @safe pure
 {
     import reggae.rules.common: exeExt, dynExt, libExt;
     import std.path: setExtension;
 
-    final switch(targetType) with(DubDependantTargetType) {
+    final switch(targetType) with(DubPackageTargetType) {
         case executable:
             return targetName.value.setExtension(exeExt);
         case sharedLibrary:

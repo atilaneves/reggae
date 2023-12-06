@@ -15,7 +15,7 @@ else
 
 
 // A dub package that isn't at the root of the project directory
-@("dubDependant.path.exe.default")
+@("dubPackage.path.exe.default")
 @ArghWindows
 @Tags("dub", "ninja")
 unittest {
@@ -48,9 +48,9 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias app = dubDependant!(
+                alias app = dubPackage!(
                     TargetName("myapp"),
-                    DubDependantTargetType.executable,
+                    DubPackageTargetType.executable,
                     Sources!(Files("src/app.d")),
                     DubPath("over/there"),
                 );
@@ -66,7 +66,7 @@ unittest {
 }
 
 // A dub package that isn't at the root of the project directory
-@("dubDependant.path.exe.config")
+@("dubPackage.path.exe.config")
 @ArghWindows
 @Tags("dub", "ninja")
 unittest {
@@ -112,9 +112,9 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias app = dubDependant!(
+                alias app = dubPackage!(
                     TargetName("myapp"),
-                    DubDependantTargetType.executable,
+                    DubPackageTargetType.executable,
                     Sources!(Files("src/app.d")),
                     DubPath("over/there", Configuration("weirdo")),
                 );
@@ -131,7 +131,7 @@ unittest {
 
 
 // A dub package that isn't at the root of the project directory
-@("dubDependant.path.lib")
+@("dubPackage.path.lib")
 @ArghWindows
 @Tags("dub", "ninja")
 unittest {
@@ -164,9 +164,9 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias app = dubDependant!(
+                alias app = dubPackage!(
                     TargetName("myapp"),
-                    DubDependantTargetType.staticLibrary,
+                    DubPackageTargetType.staticLibrary,
                     Sources!(Files("src/app.d")),
                     DubPath("over/there"),
                 );
@@ -185,7 +185,7 @@ unittest {
 }
 
 // A dub package that isn't at the root of the project directory
-@("dubDependant.path.dll")
+@("dubPackage.path.dll")
 @ArghWindows
 @Tags("dub", "ninja")
 unittest {
@@ -218,9 +218,9 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias app = dubDependant!(
+                alias app = dubPackage!(
                     TargetName("myapp"),
-                    DubDependantTargetType.sharedLibrary,
+                    DubPackageTargetType.sharedLibrary,
                     Sources!(Files("src/app.d")),
                     DubPath("over/there"),
                 );
@@ -238,7 +238,7 @@ unittest {
     }
 }
 
-@("dubDependant.flags.compiler")
+@("dubPackage.flags.compiler")
 @ArghWindows
 @Tags("dub", "ninja")
 unittest {
@@ -265,9 +265,9 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias app = dubDependant!(
+                alias app = dubPackage!(
                     TargetName("myapp"),
-                    DubDependantTargetType.executable,
+                    DubPackageTargetType.executable,
                     Sources!(Files("src/app.d")),
                     CompilerFlags("-foo", "-bar"),
                     DubPath("over/there"),
@@ -282,7 +282,7 @@ unittest {
 }
 
 
-@("dubDependant.flags.linker")
+@("dubPackage.flags.linker")
 @ArghWindows
 @Tags("dub", "ninja")
 unittest {
@@ -309,9 +309,9 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias app = dubDependant!(
+                alias app = dubPackage!(
                     TargetName("myapp"),
-                    DubDependantTargetType.executable,
+                    DubPackageTargetType.executable,
                     Sources!(Files("src/app.d")),
                     CompilerFlags("-abc", "-def"),
                     LinkerFlags("-quux"),
@@ -327,7 +327,7 @@ unittest {
 }
 
 
-@("dubDependant.flags.imports")
+@("dubPackage.flags.imports")
 @ArghWindows
 @Tags("dub", "ninja")
 unittest {
@@ -354,9 +354,9 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias app = dubDependant!(
+                alias app = dubPackage!(
                     TargetName("myapp"),
-                    DubDependantTargetType.executable,
+                    DubPackageTargetType.executable,
                     Sources!(Files("src/app.d")),
                     ImportPaths("leimports"),
                     DubPath("over/there"),
@@ -370,7 +370,7 @@ unittest {
     }
 }
 
-@("dubDependant.flags.stringImports")
+@("dubPackage.flags.stringImports")
 @ArghWindows
 @Tags("dub", "ninja")
 unittest {
@@ -397,9 +397,9 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias app = dubDependant!(
+                alias app = dubPackage!(
                     TargetName("myapp"),
-                    DubDependantTargetType.executable,
+                    DubPackageTargetType.executable,
                     Sources!(Files("src/app.d")),
                     StringImportPaths("lestrings"),
                     DubPath("over/there"),

@@ -38,6 +38,8 @@ struct DubPath {
     Configuration config;
 }
 
+version(Have_dub):
+
 imported!"reggae.build".Target dubDependency(DubPath dubPath)() {
     import reggae.config: reggaeOptions = options; // the ones used to run reggae
     return DubPathDependency(reggaeOptions, dubPath)

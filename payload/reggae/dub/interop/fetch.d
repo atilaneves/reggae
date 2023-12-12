@@ -1,6 +1,6 @@
 module reggae.dub.interop.fetch;
 
-
+version(Have_dub):
 void dubFetch(O)(
     auto ref O output,
     in imported!"reggae.options".Options options,

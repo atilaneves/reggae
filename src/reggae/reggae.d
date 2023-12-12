@@ -284,7 +284,7 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
     import std.format: format;
     import std.file: write;
     import std.path: buildPath;
-    import std.algorithm: map, joiner;
+    import std.algorithm: map, joiner, any, canFind;
     import std.range: chain, only;
     import std.string: replace;
     import std.array: array;
@@ -337,13 +337,29 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
         import("dub.selections.json")
     );
 
-    auto binary = Binary(
-        buildGenName,
+    auto binary = () {
+        import std.algorithm;
+        import std.file: readText;
+
         // FIXME - use --compiler
         // The reason it doesn't work now is due to a test using
         // a custom compiler
-        ["dub", "build"], // since we now depend on dub at buildgen runtime
-    );
+        enum dubRules = [ "dubPackage", "dubDependency",
+                          "dubBuild", "dubTest", "dubLink",
+                          "dubTestTarget", "dubDefaultTarget", "dubTarget", "dubConfigurationTarget"];
+        if(dubRules.any!(a => options.reggaeFilePath.readText.canFind(a)))
+            return Binary(
+                buildGenName,
+                ["dub", "build"], // since we now depend on dub at buildgen runtime
+                );
+
+        return Binary(
+            buildGenName,
+            ["dmd", "-of" ~ getBuildGenName(options), "-i", options.reggaeFilePath] ~ importPaths(options)
+            ~ buildPath(hiddenDirAbsPath(options), "src", "reggae", "buildgen_main.d"),
+            );
+    }();
+
     buildBinary(output, options, binary);
 
     return buildGenName;

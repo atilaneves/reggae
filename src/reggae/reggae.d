@@ -212,7 +212,8 @@ private enum otherFiles = [
     "dub/interop/fetch.d",
     "dub/interop/package.d",
     "dub/interop/default_build.d",
-    "dub/info.d", "rules/dub.d",
+    "dub/info.d",
+    "rules/dub/package.d", "rules/dub/runtime.d", "rules/dub/compile.d", "rules/dub/external.d",
     "path.d",
     "io.d",
     ];
@@ -293,13 +294,13 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
     if(options.isScriptBuild) return buildGenName;
 
     enum dubRules = [ "dubPackage", "dubDependency" ];
-    const needsDubAtRuntime = dubRules.any!(a => options.reggaeFilePath.readText.canFind(a));
+    const reggeafileNeedsDubDep = dubRules.any!(a => options.reggaeFilePath.readText.canFind(a));
 
     // `options.getReggaeFileDependenciesDlang` depends on
     // `options.reggaeFileDepFile` existing, which means we need to
     // compile the reggaefile separately to get those dependencies
     // *then* add any extra files to the dummy dub.sdl.
-    const dubVersions = needsDubAtRuntime ? ["Have_dub", "DubUseCurl"] : [];
+    const dubVersions = reggeafileNeedsDubDep ? ["Have_dub", "DubUseCurl"] : [];
     const versionFlag = options.isLdc ? "-d-version" : "-version";
     const dubVersionFlags = dubVersions.map!(a => versionFlag ~ "=" ~ a).array;
     auto reggaefileObj = Binary(
@@ -347,7 +348,7 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
         // FIXME - use --compiler
         // The reason it doesn't work now is due to a test using
         // a custom compiler
-        if(needsDubAtRuntime)
+        if(reggeafileNeedsDubDep)
             return Binary(
                 buildGenName,
                 ["dub", "build"], // since we now depend on dub at buildgen runtime
@@ -440,7 +441,7 @@ private void writeSrcFiles(T)(auto ref T output, in Options options) {
     if(!reggaeSrcDirName.exists) {
         mkdirRecurse(reggaeSrcDirName);
         mkdirRecurse(buildPath(reggaeSrcDirName, "dub/interop"));
-        mkdirRecurse(buildPath(reggaeSrcDirName, "rules"));
+        mkdirRecurse(buildPath(reggaeSrcDirName, "rules/dub"));
         mkdirRecurse(buildPath(reggaeSrcDirName, "backend"));
         mkdirRecurse(buildPath(reggaeSrcDirName, "core/rules"));
     }

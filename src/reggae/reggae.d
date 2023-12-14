@@ -354,9 +354,10 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
                 ["dub", "build"], // since we now depend on dub at buildgen runtime
                 );
 
+        const objectOpt = options.isLdc ? "-o " : "-of";
         return Binary(
             buildGenName,
-            ["dmd", "-of" ~ getBuildGenName(options), "-i", options.reggaeFilePath] ~ importPaths(options)
+            [options.dCompiler, "-of" ~ getBuildGenName(options), "-i", options.reggaeFilePath] ~ importPaths(options)
             ~ buildPath(hiddenDirAbsPath(options), "src", "reggae", "buildgen_main.d"),
             );
     }();

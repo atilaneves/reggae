@@ -38,88 +38,77 @@ struct DubPath {
     Configuration config;
 }
 
-version(Have_dub):
+// these depend on the pre-generated reggae.config with dub information
+static if(imported!"reggae.config".isDubProject) {
 
-imported!"reggae.build".Target dubDependency(DubPath dubPath)() {
-    import reggae.config: reggaeOptions = options; // the ones used to run reggae
-    return DubPathDependency(reggaeOptions, dubPath)
-        .target;
-}
+    import reggae.build: Target;
 
-/**
-   A target that depends on dub packages but isn't one itself.
- */
-imported!"reggae.build".Target dubPackage(
-    imported!"reggae.types".TargetName targetName,
-    DubPackageTargetType targetType,
-    alias sourcesFunc,
-    // the other arguments can be:
-    // * DubPath
-    // * CompilerFlags
-    // * LinkerFlags
-    // * ImportPaths
-    // * StringImportPaths
-    A...
-    )
-    ()
-{
-    import reggae.rules.d: dlink;
-    import reggae.rules.common: objectFiles;
-    import reggae.types: ExeName, CompilerFlags, LinkerFlags, Flags, ImportPaths, StringImportPaths;
-    import reggae.config: reggaeOptions = options; // the ones used to run reggae
-    import std.meta: Filter;
-    import std.algorithm: map, joiner;
-    import std.array: array;
-    import std.range: chain;
+    deprecated alias dubConfigurationTarget = dubBuild;
+    deprecated alias dubDefaultTarget = dubBuild;
+    deprecated alias dubTarget = dubBuild;
 
-    alias DubPaths = Filter!(isOfType!DubPath, A);
-    static assert(DubPaths.length > 0, "At least one `DubPath` needed");
+    /**
+       Builds a particular dub configuration (usually "default")
+       Optional arguments:
+       * Configuration
+       * CompilationMode
+       * CompilerFlags (to add to the ones from dub)
+    */
+    Target dubBuild(Args...)() {
+        import reggae.config: options, configToDubInfo;
+        import reggae.types: CompilerFlags;
 
-    enum compilerFlags     = oneOptionalOf!(CompilerFlags, A);
-    enum linkerFlags       = oneOptionalOf!(LinkerFlags, A);
-    enum importPaths       = oneOptionalOf!(ImportPaths, A);
-    enum stringImportPaths = oneOptionalOf!(StringImportPaths, A);
+        enum configuration      = oneOptionalOf!(Configuration  , Args);
+        enum compilationMode    = oneOptionalOf!(CompilationMode, Args);
+        enum extraCompilerFlags = oneOptionalOf!(CompilerFlags  , Args);
 
-    auto dubPathDependencies = [DubPaths]
-        .map!(p => DubPathDependency(reggaeOptions, p));
+        return dubBuild(
+            options,
+            configToDubInfo,
+            configuration,
+            compilationMode,
+            extraCompilerFlags,
+        );
+    }
 
-    auto allImportPaths = dubPathDependencies
-        .save
-        .map!(d => d.dubInfo.packages.map!(p => p.importPaths).joiner)
-        .joiner
-        .chain(importPaths.value)
-        ;
+    /**
+       A target corresponding to `dub test`
+     */
+    Target dubTest(
+        CompilationMode compilationMode = CompilationMode.options,
+        imported!"std.typecons".Flag!"coverage" coverage = imported!"std.typecons".No.coverage)
+        ()
+    {
+        import reggae.config: options, configToDubInfo;
+        return dubTest(
+            options,
+            configToDubInfo,
+            compilationMode,
+            coverage,
+        );
+    }
 
-    auto allStringImportPaths = dubPathDependencies
-        .save
-        .map!(d => d.dubInfo.packages.map!(p => p.stringImportPaths).joiner)
-        .joiner
-        .chain(stringImportPaths.value)
-        ;
 
-    auto objs = objectFiles!sourcesFunc(
-        Flags(compilerFlags), // FIXME - this conversion is silly
-        ImportPaths(allImportPaths),
-        StringImportPaths(allStringImportPaths),
-    );
+    /**
+       Link a target taking into account the dub linker flags
+     */
+    Target dubLink(imported!"reggae.types".TargetName targetName,
+                   Configuration config = Configuration("default"),
+                   alias objsFunction = () { Target[] t; return t; },
+                   imported!"reggae.types".LinkerFlags linkerFlags = imported!"reggae.types".LinkerFlags()
+        )
+        ()
+    {
+        import reggae.config: configToDubInfo;
+        import reggae.rules.common: link;
+        import reggae.types: ExeName, Flags;
 
-    auto dubDepsObjs = dubPathDependencies
-        .save
-        .map!(d => d.target)
-        .array
-        ;
-
-    const targetNameWithExt = withExtension(targetName, targetType);
-    return dlink(
-         // FIXME: ExeName doesn't make sense for libraries, conversion TargetName -> ExeName is silly
-        ExeName(targetNameWithExt),
-        objs ~ dubDepsObjs,
-        Flags(linkerFlags), // FIXME: silly translation
-    );
-}
-
-private template isOfType(T) {
-    enum isOfType(alias A) = is(typeof(A) == T);
+        return link!(
+            ExeName(targetName.value),
+            objsFunction,
+            Flags(linkerFlags.value ~ configToDubInfo[config.value].linkerFlags)
+        );
+    }
 }
 
 private template oneOptionalOf(T, A...) {
@@ -133,61 +122,10 @@ private template oneOptionalOf(T, A...) {
         enum oneOptionalOf = T();
     else
         enum oneOptionalOf = ofType[0];
-
 }
 
-private struct DubPathDependency {
-    import reggae.options: Options;
-    import reggae.build: Target;
-
-    string projectPath;
-    Options subOptions; // options for the dub dependency
-    DubInfo dubInfo;
-
-    this(in Options reggaeOptions, in DubPath dubPath) {
-        import reggae.dub.interop: dubInfos;
-        import std.stdio: stdout;
-        import std.path: buildPath;
-
-        projectPath = reggaeOptions.projectPath;
-        const path = buildPath(projectPath, dubPath.value);
-        subOptions = reggaeOptions.dup;
-        subOptions.projectPath = path;
-        subOptions.workingDir = path;
-        subOptions.dubConfig = dubPath.config.value;
-        // dubInfos in this case returns an associative array but there's
-        // only really one key.
-        dubInfo = dubInfos(stdout, subOptions)[dubPath.config.value];
-    }
-
-    Target target() {
-        import std.path: buildPath, relativePath;
-        // The complicated path manipulation below is so that we can
-        // place the target in its dub directory, but relative to the
-        // reggaefile's project path. The reason we use relative paths
-        // instead of absolute is so the user doesn't have to type the
-        // whole path to a target.
-        return dubBuild(subOptions, dubInfo)
-            .mapOutputs((string o) => buildPath(subOptions.projectPath.relativePath(projectPath), o));
-    }
-}
-
-private string withExtension(
-    in imported!"reggae.types".TargetName targetName,
-    DubPackageTargetType targetType,
-    ) @safe pure
-{
-    import reggae.rules.common: exeExt, dynExt, libExt;
-    import std.path: setExtension;
-
-    final switch(targetType) with(DubPackageTargetType) {
-        case executable:
-            return targetName.value.setExtension(exeExt);
-        case sharedLibrary:
-            return targetName.value.setExtension(dynExt);
-        case staticLibrary:
-            return targetName.value.setExtension(libExt);
-    }
+private template isOfType(T) {
+    enum isOfType(alias A) = is(typeof(A) == T);
 }
 
 deprecated alias dubTestTarget = dubTest;
@@ -329,75 +267,137 @@ private string fixNameForPostBuild(in string targetName, in DubInfo dubInfo) @sa
 }
 
 
-// these depend on the pre-generated reggae.config with dub information
-static if(imported!"reggae.config".isDubProject) {
+version(Have_dub):
 
+imported!"reggae.build".Target dubDependency(DubPath dubPath)() {
+    import reggae.config: reggaeOptions = options; // the ones used to run reggae
+    return DubPathDependency(reggaeOptions, dubPath)
+        .target;
+}
+
+/**
+   A target that depends on dub packages but isn't one itself.
+ */
+imported!"reggae.build".Target dubPackage(
+    imported!"reggae.types".TargetName targetName,
+    DubPackageTargetType targetType,
+    alias sourcesFunc,
+    // the other arguments can be:
+    // * DubPath
+    // * CompilerFlags
+    // * LinkerFlags
+    // * ImportPaths
+    // * StringImportPaths
+    A...
+    )
+    ()
+{
+    import reggae.rules.d: dlink;
+    import reggae.rules.common: objectFiles;
+    import reggae.types: ExeName, CompilerFlags, LinkerFlags, Flags, ImportPaths, StringImportPaths;
+    import reggae.config: reggaeOptions = options; // the ones used to run reggae
+    import std.meta: Filter;
+    import std.algorithm: map, joiner;
+    import std.array: array;
+    import std.range: chain;
+
+    alias DubPaths = Filter!(isOfType!DubPath, A);
+    static assert(DubPaths.length > 0, "At least one `DubPath` needed");
+
+    enum compilerFlags     = oneOptionalOf!(CompilerFlags, A);
+    enum linkerFlags       = oneOptionalOf!(LinkerFlags, A);
+    enum importPaths       = oneOptionalOf!(ImportPaths, A);
+    enum stringImportPaths = oneOptionalOf!(StringImportPaths, A);
+
+    auto dubPathDependencies = [DubPaths]
+        .map!(p => DubPathDependency(reggaeOptions, p));
+
+    auto allImportPaths = dubPathDependencies
+        .save
+        .map!(d => d.dubInfo.packages.map!(p => p.importPaths).joiner)
+        .joiner
+        .chain(importPaths.value)
+        ;
+
+    auto allStringImportPaths = dubPathDependencies
+        .save
+        .map!(d => d.dubInfo.packages.map!(p => p.stringImportPaths).joiner)
+        .joiner
+        .chain(stringImportPaths.value)
+        ;
+
+    auto objs = objectFiles!sourcesFunc(
+        Flags(compilerFlags), // FIXME - this conversion is silly
+        ImportPaths(allImportPaths),
+        StringImportPaths(allStringImportPaths),
+    );
+
+    auto dubDepsObjs = dubPathDependencies
+        .save
+        .map!(d => d.target)
+        .array
+        ;
+
+    const targetNameWithExt = withExtension(targetName, targetType);
+    return dlink(
+         // FIXME: ExeName doesn't make sense for libraries, conversion TargetName -> ExeName is silly
+        ExeName(targetNameWithExt),
+        objs ~ dubDepsObjs,
+        Flags(linkerFlags), // FIXME: silly translation
+    );
+}
+
+
+private struct DubPathDependency {
+    import reggae.options: Options;
     import reggae.build: Target;
 
-    deprecated alias dubConfigurationTarget = dubBuild;
-    deprecated alias dubDefaultTarget = dubBuild;
-    deprecated alias dubTarget = dubBuild;
+    string projectPath;
+    Options subOptions; // options for the dub dependency
+    DubInfo dubInfo;
 
-    /**
-       Builds a particular dub configuration (usually "default")
-       Optional arguments:
-       * Configuration
-       * CompilationMode
-       * CompilerFlags (to add to the ones from dub)
-    */
-    Target dubBuild(Args...)() {
-        import reggae.config: options, configToDubInfo;
-        import reggae.types: CompilerFlags;
+    this(in Options reggaeOptions, in DubPath dubPath) {
+        import reggae.dub.interop: dubInfos;
+        import std.stdio: stdout;
+        import std.path: buildPath;
 
-        enum configuration      = oneOptionalOf!(Configuration  , Args);
-        enum compilationMode    = oneOptionalOf!(CompilationMode, Args);
-        enum extraCompilerFlags = oneOptionalOf!(CompilerFlags  , Args);
-
-        return dubBuild(
-            options,
-            configToDubInfo,
-            configuration,
-            compilationMode,
-            extraCompilerFlags,
-        );
+        projectPath = reggaeOptions.projectPath;
+        const path = buildPath(projectPath, dubPath.value);
+        subOptions = reggaeOptions.dup;
+        subOptions.projectPath = path;
+        subOptions.workingDir = path;
+        subOptions.dubConfig = dubPath.config.value;
+        // dubInfos in this case returns an associative array but there's
+        // only really one key.
+        dubInfo = dubInfos(stdout, subOptions)[dubPath.config.value];
     }
 
-    /**
-       A target corresponding to `dub test`
-     */
-    Target dubTest(
-        CompilationMode compilationMode = CompilationMode.options,
-        imported!"std.typecons".Flag!"coverage" coverage = imported!"std.typecons".No.coverage)
-        ()
-    {
-        import reggae.config: options, configToDubInfo;
-        return dubTest(
-            options,
-            configToDubInfo,
-            compilationMode,
-            coverage,
-        );
+    Target target() {
+        import std.path: buildPath, relativePath;
+        // The complicated path manipulation below is so that we can
+        // place the target in its dub directory, but relative to the
+        // reggaefile's project path. The reason we use relative paths
+        // instead of absolute is so the user doesn't have to type the
+        // whole path to a target.
+        return dubBuild(subOptions, dubInfo)
+            .mapOutputs((string o) => buildPath(subOptions.projectPath.relativePath(projectPath), o));
     }
+}
 
+private string withExtension(
+    in imported!"reggae.types".TargetName targetName,
+    DubPackageTargetType targetType,
+    ) @safe pure
+{
+    import reggae.rules.common: exeExt, dynExt, libExt;
+    import std.path: setExtension;
 
-    /**
-       Link a target taking into account the dub linker flags
-     */
-    Target dubLink(imported!"reggae.types".TargetName targetName,
-                   Configuration config = Configuration("default"),
-                   alias objsFunction = () { Target[] t; return t; },
-                   imported!"reggae.types".LinkerFlags linkerFlags = imported!"reggae.types".LinkerFlags()
-        )
-        ()
-    {
-        import reggae.config: configToDubInfo;
-        import reggae.rules.common: link;
-        import reggae.types: ExeName, Flags;
-
-        return link!(
-            ExeName(targetName.value),
-            objsFunction,
-            Flags(linkerFlags.value ~ configToDubInfo[config.value].linkerFlags)
-        );
+    final switch(targetType) with(DubPackageTargetType) {
+        case executable:
+            return targetName.value.setExtension(exeExt);
+        case sharedLibrary:
+            return targetName.value.setExtension(dynExt);
+        case staticLibrary:
+            return targetName.value.setExtension(libExt);
     }
 }

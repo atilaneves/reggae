@@ -292,11 +292,14 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
     immutable buildGenName = getBuildGenName(options) ~ exeExt;
     if(options.isScriptBuild) return buildGenName;
 
+    enum dubRules = [ "dubPackage", "dubDependency" ];
+    const needsDubAtRuntime = dubRules.any!(a => options.reggaeFilePath.readText.canFind(a));
+
     // `options.getReggaeFileDependenciesDlang` depends on
     // `options.reggaeFileDepFile` existing, which means we need to
     // compile the reggaefile separately to get those dependencies
     // *then* add any extra files to the dummy dub.sdl.
-    const dubVersions = ["Have_dub", "DubUseCurl"];
+    const dubVersions = needsDubAtRuntime ? ["Have_dub", "DubUseCurl"] : [];
     const versionFlag = options.isLdc ? "-d-version" : "-version";
     const dubVersionFlags = dubVersions.map!(a => versionFlag ~ "=" ~ a).array;
     auto reggaefileObj = Binary(
@@ -344,10 +347,7 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
         // FIXME - use --compiler
         // The reason it doesn't work now is due to a test using
         // a custom compiler
-        enum dubRules = [ "dubPackage", "dubDependency",
-                          "dubBuild", "dubTest", "dubLink",
-                          "dubTestTarget", "dubDefaultTarget", "dubTarget", "dubConfigurationTarget"];
-        if(dubRules.any!(a => options.reggaeFilePath.readText.canFind(a)))
+        if(needsDubAtRuntime)
             return Binary(
                 buildGenName,
                 ["dub", "build"], // since we now depend on dub at buildgen runtime

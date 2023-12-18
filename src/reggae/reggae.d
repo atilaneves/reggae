@@ -277,7 +277,6 @@ private enum dubSdl =
     targetType "executable"
     sourceFiles %s // user files (reggaefile.d + dependencies)
     importPaths %s // to pick up potential reggaefile.d dependencies
-    dflags "-allinst"
     dependency "dub" version="*" // version fixed by dub.selections.json
 `;
 private string compileBuildGenerator(T)(auto ref T output, in Options options) {

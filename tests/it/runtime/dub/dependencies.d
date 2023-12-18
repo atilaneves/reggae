@@ -370,46 +370,48 @@ unittest {
     }
 }
 
-@("dubPackage.flags.stringImports")
-@ArghWindows
-@Tags("dub", "ninja")
-unittest {
-    with(immutable ReggaeSandbox()) {
-        // a dub package we're going to depend on by path
-        writeFile(
-            "over/there/dub.sdl",
-            [
-                `name "foo"`,
-                `targetType "library"`
-            ]
-        );
-        // src code for the dub dependency
-        writeFile("over/there/source/foo.d", "");
-        // our main program, which will depend on a dub package by path
-        writeFile(
-            "src/app.d",
-            q{
-                import foo;
-                void main() { }
-            }
-        );
-        writeFile(
-            "reggaefile.d",
-            q{
-                import reggae;
-                alias app = dubPackage!(
-                    TargetName("myapp"),
-                    DubPackageTargetType.executable,
-                    Sources!(Files("src/app.d")),
-                    StringImportPaths("lestrings"),
-                    DubPath("over/there"),
-                );
-                mixin build!app;
-            }
-        );
+version(DigitalMars) {
+    @("dubPackage.flags.stringImports")
+    @ArghWindows
+    @Tags("dub", "ninja")
+    unittest {
+        with(immutable ReggaeSandbox()) {
+            // a dub package we're going to depend on by path
+            writeFile(
+                "over/there/dub.sdl",
+                [
+                    `name "foo"`,
+                    `targetType "library"`
+                ]
+            );
+            // src code for the dub dependency
+            writeFile("over/there/source/foo.d", "");
+            // our main program, which will depend on a dub package by path
+            writeFile(
+                "src/app.d",
+                q{
+                    import foo;
+                    void main() { }
+                }
+            );
+            writeFile(
+                "reggaefile.d",
+                q{
+                    import reggae;
+                    alias app = dubPackage!(
+                        TargetName("myapp"),
+                        DubPackageTargetType.executable,
+                        Sources!(Files("src/app.d")),
+                        StringImportPaths("lestrings"),
+                        DubPath("over/there"),
+                    );
+                    mixin build!app;
+                }
+            );
 
-        runReggae("-b", "ninja");
-        fileShouldContain("build.ninja", "-J" ~ inSandboxPath("lestrings"));
+            runReggae("-b", "ninja");
+            fileShouldContain("build.ninja", "-J" ~ inSandboxPath("lestrings"));
+        }
     }
 }
 

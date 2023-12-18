@@ -3,9 +3,7 @@
  */
 module reggae.dub.interop.dublib;
 
-
-import dub.generators.generator: ProjectGenerator;
-
+version(Have_dub):
 // to avoid using it in the wrong way
 package:
 
@@ -298,7 +296,7 @@ auto packageManager(in ProjectPath projectPath,
 }
 
 
-class InfoGenerator: ProjectGenerator {
+class InfoGenerator: imported!"dub.generators.generator".ProjectGenerator {
     import reggae.dub.info: DubPackage;
     import dub.project: Project;
     import dub.generators.generator: GeneratorSettings;

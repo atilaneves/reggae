@@ -212,7 +212,8 @@ private enum otherFiles = [
     "dub/interop/fetch.d",
     "dub/interop/package.d",
     "dub/interop/default_build.d",
-    "dub/info.d", "rules/dub.d",
+    "dub/info.d",
+    "rules/dub/package.d", "rules/dub/runtime.d", "rules/dub/compile.d", "rules/dub/external.d",
     "path.d",
     "io.d",
     ];
@@ -280,23 +281,26 @@ private enum dubSdl =
 `;
 private string compileBuildGenerator(T)(auto ref T output, in Options options) {
 
-    import reggae.rules.common: exeExt, objExt;
+    import reggae.rules.common: objExt;
     import std.format: format;
     import std.file: write;
     import std.path: buildPath;
-    import std.algorithm: map, joiner;
+    import std.algorithm: map, joiner, any, canFind;
     import std.range: chain, only;
     import std.string: replace;
     import std.array: array;
 
-    immutable buildGenName = getBuildGenName(options) ~ exeExt;
+    immutable buildGenName = getBuildGenName(options);
     if(options.isScriptBuild) return buildGenName;
+
+    enum dubRules = [ "dubPackage", "dubDependency" ];
+    const reggeafileNeedsDubDep = dubRules.any!(a => options.reggaeFilePath.readText.canFind(a));
 
     // `options.getReggaeFileDependenciesDlang` depends on
     // `options.reggaeFileDepFile` existing, which means we need to
     // compile the reggaefile separately to get those dependencies
     // *then* add any extra files to the dummy dub.sdl.
-    const dubVersions = ["Have_dub", "DubUseCurl"];
+    const dubVersions = reggeafileNeedsDubDep ? ["Have_dub", "DubUseCurl"] : [];
     const versionFlag = options.isLdc ? "-d-version" : "-version";
     const dubVersionFlags = dubVersions.map!(a => versionFlag ~ "=" ~ a).array;
     auto reggaefileObj = Binary(
@@ -337,13 +341,27 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
         import("dub.selections.json")
     );
 
-    auto binary = Binary(
-        buildGenName,
+    auto binary = () {
+        import std.algorithm;
+        import std.file: readText;
+
         // FIXME - use --compiler
         // The reason it doesn't work now is due to a test using
         // a custom compiler
-        ["dub", "build"], // since we now depend on dub at buildgen runtime
-    );
+        if(reggeafileNeedsDubDep)
+            return Binary(
+                buildGenName,
+                ["dub", "build"], // since we now depend on dub at buildgen runtime
+                );
+
+        const objectOpt = options.isLdc ? "-o " : "-of";
+        return Binary(
+            buildGenName,
+            [options.dCompiler, "-of" ~ getBuildGenName(options), "-i", options.reggaeFilePath] ~ importPaths(options)
+            ~ buildPath(hiddenDirAbsPath(options), "src", "reggae", "buildgen_main.d"),
+            );
+    }();
+
     buildBinary(output, options, binary);
 
     return buildGenName;
@@ -411,7 +429,12 @@ private string[] importPaths(in Options options) @safe nothrow {
 }
 
 private string getBuildGenName(in Options options) @safe pure nothrow {
-    return options.backend == Backend.binary ? buildPath("../build") : "buildgen";
+    import reggae.rules.common: exeExt;
+
+    const baseName =  options.backend == Backend.binary
+        ? buildPath("../build")
+        : "buildgen";
+    return baseName ~ exeExt;
 }
 
 private void writeSrcFiles(T)(auto ref T output, in Options options) {
@@ -424,7 +447,7 @@ private void writeSrcFiles(T)(auto ref T output, in Options options) {
     if(!reggaeSrcDirName.exists) {
         mkdirRecurse(reggaeSrcDirName);
         mkdirRecurse(buildPath(reggaeSrcDirName, "dub/interop"));
-        mkdirRecurse(buildPath(reggaeSrcDirName, "rules"));
+        mkdirRecurse(buildPath(reggaeSrcDirName, "rules/dub"));
         mkdirRecurse(buildPath(reggaeSrcDirName, "backend"));
         mkdirRecurse(buildPath(reggaeSrcDirName, "core/rules"));
     }

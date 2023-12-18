@@ -2,7 +2,7 @@
    A module for providing interop between reggae and dub
 */
 module reggae.dub.interop;
-
+version(Have_dub):
 
 void writeDubConfig(O)(ref O output,
                        in imported!"reggae.options".Options options,

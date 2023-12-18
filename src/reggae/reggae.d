@@ -281,7 +281,7 @@ private enum dubSdl =
 `;
 private string compileBuildGenerator(T)(auto ref T output, in Options options) {
 
-    import reggae.rules.common: exeExt, objExt;
+    import reggae.rules.common: objExt;
     import std.format: format;
     import std.file: write;
     import std.path: buildPath;
@@ -290,7 +290,7 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
     import std.string: replace;
     import std.array: array;
 
-    immutable buildGenName = getBuildGenName(options) ~ exeExt;
+    immutable buildGenName = getBuildGenName(options);
     if(options.isScriptBuild) return buildGenName;
 
     enum dubRules = [ "dubPackage", "dubDependency" ];
@@ -429,7 +429,12 @@ private string[] importPaths(in Options options) @safe nothrow {
 }
 
 private string getBuildGenName(in Options options) @safe pure nothrow {
-    return options.backend == Backend.binary ? buildPath("../build") : "buildgen";
+    import reggae.rules.common: exeExt;
+
+    const baseName =  options.backend == Backend.binary
+        ? buildPath("../build")
+        : "buildgen";
+    return baseName ~ exeExt;
 }
 
 private void writeSrcFiles(T)(auto ref T output, in Options options) {

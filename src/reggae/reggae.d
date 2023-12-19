@@ -481,21 +481,23 @@ private string getBuildGenName(in Options options) @safe pure nothrow {
 
 private void writeSrcFiles(T)(auto ref T output, in Options options) {
     import reggae.io: log;
+    import std.file: mkdirRecurse, rmdirRecurse;
 
     output.log("Writing reggae source files");
 
-    import std.file: mkdirRecurse;
     immutable reggaeSrcDirName = reggaeSrcDirName(options);
-    if(!reggaeSrcDirName.exists) {
-        mkdirRecurse(reggaeSrcDirName);
-        mkdirRecurse(buildPath(reggaeSrcDirName, "dub/interop"));
-        mkdirRecurse(buildPath(reggaeSrcDirName, "rules/dub"));
-        mkdirRecurse(buildPath(reggaeSrcDirName, "backend"));
-        mkdirRecurse(buildPath(reggaeSrcDirName, "core/rules"));
+
+    // FIXME: only write what's necessary, delete files that are no
+    // longer needed.
+    if(reggaeSrcDirName.exists)
+        rmdirRecurse(reggaeSrcDirName);
+
+    foreach(path; ["dub/interop", "rules/dub", "backend", "core/rules"]) {
+        mkdirRecurse(buildPath(reggaeSrcDirName, path));
     }
 
-    //this foreach has to happen at compile time due
-    //to the string import below.
+    // this foreach has to happen at compile time due
+    // to the string import below.
     foreach(fileName; aliasSeqOf!(fileNames ~ foreignFiles)) {
         auto file = File(reggaeSrcFileName(options, fileName), "w");
         file.write(import(fileName));

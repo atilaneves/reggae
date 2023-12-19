@@ -46,9 +46,16 @@ mixin template BuildGenMain(string buildModule = "reggaefile") {
     }
 }
 
-void doBuildFor(alias module_ = "reggaefile")(in Options options, string[] args = []) {
+version(unittest) {
+    void doBuildFor(alias module_ = "reggaefile")(in Options options, string[] buildgenArgs) {
+        doBuildForImpl!module_(options, buildgenArgs);
+    }
+} else
+      alias doBuildFor = doBuildForImpl;
+
+private void doBuildForImpl(alias module_ = "reggaefile")(in Options options, string[] buildgenArgs) {
     auto build = getBuildObject!module_(options);
-    doBuild(build, options, args);
+    doBuild(build, options, buildgenArgs);
 }
 
 Build getBuildObject(alias module_)(in Options options) {
@@ -98,13 +105,17 @@ private template getBuildFunc(alias module_) {
 }
 
 // Exports / does the build (binary backend) / produces the build file(s) (make, ninja, tup)
-void doBuild(Build build, in Options options, string[] args = []) {
+// `buildgenArgs` is for the binary build, and only when called by the user, i.e. when there's
+// a `build` binary to ball in the 1st place
+void doBuild(Build build, in Options options, string[] buildgenArgs) {
     if(!options.noCompilationDB) writeCompilationDB(build, options);
-    options.export_ ? exportBuild(build, options) : doOneBuild(build, options, args);
+    options.export_ ? exportBuild(build, options) : doOneBuild(build, options, buildgenArgs);
 }
 
 
-private void doOneBuild(Build build, in Options options, string[] args = []) {
+// `buildgenArgs` is for the binary build, and only when called by the user, i.e. when there's
+// a `build` binary to ball in the 1st place
+private void doOneBuild(Build build, in Options options, string[] buildgenArgs) {
     final switch(options.backend) with(Backend) {
 
         version(minimal) {
@@ -130,7 +141,7 @@ private void doOneBuild(Build build, in Options options, string[] args = []) {
         }
 
         case binary:
-            Binary(build, options).run(args);
+            Binary(build, options).run(buildgenArgs);
             break;
 
         case none:

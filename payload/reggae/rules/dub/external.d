@@ -28,8 +28,11 @@ enum DubPackageTargetType {
 
 imported!"reggae.build".Target dubPackage(DubPath dubPath)() {
     import reggae.config: reggaeOptions = options; // the ones used to run reggae
-    return DubPathDependency(reggaeOptions, dubPath)
-        .target;
+    return dubPackage(reggaeOptions, dubPath);
+}
+
+imported!"reggae.build".Target dubPackage(in imported!"reggae.options".Options options, in DubPath dubPath) {
+    return DubPathDependency(options, dubPath).target;
 }
 
 /**
@@ -128,7 +131,8 @@ private struct DubPathDependency {
         subOptions.dubConfig = dubPath.config.value;
         // dubInfos in this case returns an associative array but there's
         // only really one key.
-        dubInfo = dubInfos(stdout, subOptions)[dubPath.config.value];
+        auto output = () @trusted { return stdout; }();
+        dubInfo = dubInfos(output, subOptions)[dubPath.config.value];
     }
 
     Target target() {

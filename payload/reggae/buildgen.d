@@ -98,12 +98,16 @@ private template getBuildFunc(alias module_) {
 }
 
 // Exports / does the build (binary backend) / produces the build file(s) (make, ninja, tup)
+// `args` is for the binary build, and only when called by the user, i.e. when there's
+// a `build` binary to ball in the 1st place
 void doBuild(Build build, in Options options, string[] args = []) {
     if(!options.noCompilationDB) writeCompilationDB(build, options);
     options.export_ ? exportBuild(build, options) : doOneBuild(build, options, args);
 }
 
 
+// `args` is for the binary build, and only when called by the user, i.e. when there's
+// a `build` binary to ball in the 1st place
 private void doOneBuild(Build build, in Options options, string[] args = []) {
     final switch(options.backend) with(Backend) {
 

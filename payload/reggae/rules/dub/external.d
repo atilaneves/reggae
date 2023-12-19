@@ -38,7 +38,7 @@ imported!"reggae.build".Target dubPackage(in imported!"reggae.options".Options o
 /**
    A target that depends on dub packages but isn't one itself.
  */
-imported!"reggae.build".Target targetWithDubDependencies(
+imported!"reggae.build".Target dubDependant(
     imported!"reggae.types".TargetName targetName,
     DubPackageTargetType targetType,
     alias sourcesFunc,

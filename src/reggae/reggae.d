@@ -279,28 +279,45 @@ private enum dubSdl =
     importPaths %s // to pick up potential reggaefile.d dependencies
     dependency "dub" version="*" // version fixed by dub.selections.json
 `;
+
 private string compileBuildGenerator(T)(auto ref T output, in Options options) {
 
-    import reggae.rules.common: objExt;
-    import std.format: format;
-    import std.file: write;
-    import std.path: buildPath;
-    import std.algorithm: map, joiner, any, canFind;
-    import std.range: chain, only;
-    import std.string: replace;
-    import std.array: array;
+    import std.algorithm: any, canFind;
 
     immutable buildGenName = getBuildGenName(options);
     if(options.isScriptBuild) return buildGenName;
 
     enum dubRules = [ "dubPackage", "targetWithDubDependencies" ];
-    const reggeafileNeedsDubDep = dubRules.any!(a => options.reggaeFilePath.readText.canFind(a));
+    const reggaefileNeedsDubDep = dubRules.any!(a => options.reggaeFilePath.readText.canFind(a));
+
+    const binary = reggaefileNeedsDubDep
+        ? buildReggaefileDub(output, options)
+        : buildReggaefileNoDub(options);
+
+    buildBinary(output, options, binary);
+
+    return buildGenName;
+}
+
+// dub support is needed at runtime, build and link with dub-as-a-library
+private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
+
+    import reggae.rules.common: objExt;
+    import std.format: format;
+    import std.file: write;
+    import std.path: buildPath;
+    import std.algorithm: map, joiner;
+    import std.range: chain, only;
+    import std.string: replace;
+    import std.array: array;
+
+    immutable buildGenName = getBuildGenName(options);
 
     // `options.getReggaeFileDependenciesDlang` depends on
     // `options.reggaeFileDepFile` existing, which means we need to
     // compile the reggaefile separately to get those dependencies
     // *then* add any extra files to the dummy dub.sdl.
-    const dubVersions = reggeafileNeedsDubDep ? ["Have_dub", "DubUseCurl"] : [];
+    const dubVersions = ["Have_dub", "DubUseCurl"];
     const versionFlag = options.isLdc ? "-d-version" : "-version";
     const dubVersionFlags = dubVersions.map!(a => versionFlag ~ "=" ~ a).array;
     auto reggaefileObj = Binary(
@@ -343,45 +360,53 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
         import("dub.selections.json")
     );
 
-    // // FIXME - use --compiler
-    // // The reason it doesn't work now is due to a test using
-    // // a custom compiler
-    // if(reggeafileNeedsDubDep) {
-    //     import reggae.rules.dub: dubPackage, DubPath;
-    //     import reggae.backend: Binary;
-    //     import reggae.build: Build;
+    // FIXME - use --compiler
+    // The reason it doesn't work now is due to a test using
+    // a custom compiler
+    return Binary(
+        buildGenName,
+        ["dub", "build"], // since we now depend on dub at buildgen runtime
+    );
+}
 
-    //     auto newOptions = options.dup;
-    //     newOptions.backend = Backend.binary;
-    //     //newOptions.allAtOnce = true; // one test is failing with linker errors
-    //     auto build = Build(dubPackage(newOptions, DubPath(dubRecipeDir)));
-    //     runtimeBuild(newOptions, build);
 
-    //     return buildGenName;
-    // }
+// no dub support needed at runtime, build by calling the compiler directly
+private Binary buildReggaefileNoDub(in imported!"reggae.options".Options options) {
+    const buildGenName = getBuildGenName(options);
+    const objectOpt = options.isLdc ? "-o " : "-of";
 
-    auto binary = () {
-        // FIXME - use --compiler
-        // The reason it doesn't work now is due to a test using
-        // a custom compiler
-        if(reggeafileNeedsDubDep) {
-            return Binary(
-                buildGenName,
-                ["dub", "build"], // since we now depend on dub at buildgen runtime
-            );
-        }
+    // `options.getReggaeFileDependenciesDlang` depends on
+    // `options.reggaeFileDepFile` existing, which means we need to
+    // compile with -makedeps
+    return Binary(
+        buildGenName,
+        [options.dCompiler, "-of" ~ buildGenName, "-i", options.reggaeFilePath, "-makedeps=" ~ options.reggaeFileDepFile,]
+        ~ importPaths(options)
+        ~ buildPath(hiddenDirAbsPath(options), "src", "reggae", "buildgen_main.d"),
+    );
+}
 
-        const objectOpt = options.isLdc ? "-o " : "-of";
-        return Binary(
-            buildGenName,
-            [options.dCompiler, "-of" ~ getBuildGenName(options), "-i", options.reggaeFilePath] ~ importPaths(options)
-            ~ buildPath(hiddenDirAbsPath(options), "src", "reggae", "buildgen_main.d"),
-            );
-    }();
+// builds the reggaefile custom dub project using reggae itself.
+// I put a build system in the build system so it can build system while it build systems.
+// Currently slower than using dub because of multiple thread scheduling but also because
+// building per package is causing linker errors.
+private string buildReggaefileWithReggae(in imported!"reggae.options".Options options, in string dubRecipeDir) {
 
-    buildBinary(output, options, binary);
+    import reggae.rules.dub: dubPackage, DubPath;
+    import reggae.build: Build;
 
-    return buildGenName;
+    // FIXME - use correct D compiler.
+    // The reason it doesn't work now is due to a test using
+    // a custom compiler
+    // It's not clear that the reggaefile build should inherit the options for
+    // the actual build at all.
+    auto newOptions = options.dup;
+    newOptions.backend = Backend.binary;
+    newOptions.allAtOnce = true; // one test is failing with linker errors
+    auto build = Build(dubPackage(newOptions, DubPath(dubRecipeDir)));
+    runtimeBuild(newOptions, build);
+
+    return getBuildGenName(options);
 }
 
 private string[] dubImportFlags(in imported!"reggae.options".Options options) {

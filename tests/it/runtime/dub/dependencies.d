@@ -15,7 +15,7 @@ else
 
 
 // A dub package that isn't at the root of the project directory
-@("dubPackage.path.exe.default")
+@("targetWithDubDependencies.path.exe.default")
 @ArghWindows
 @Tags("dub", "ninja")
 unittest {
@@ -48,7 +48,7 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias app = dubPackage!(
+                alias app = targetWithDubDependencies!(
                     TargetName("myapp"),
                     DubPackageTargetType.executable,
                     Sources!(Files("src/app.d")),
@@ -66,7 +66,7 @@ unittest {
 }
 
 // A dub package that isn't at the root of the project directory
-@("dubPackage.path.exe.config")
+@("targetWithDubDependencies.path.exe.config")
 @ArghWindows
 @Tags("dub", "ninja")
 unittest {
@@ -112,7 +112,7 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias app = dubPackage!(
+                alias app = targetWithDubDependencies!(
                     TargetName("myapp"),
                     DubPackageTargetType.executable,
                     Sources!(Files("src/app.d")),
@@ -131,7 +131,7 @@ unittest {
 
 
 // A dub package that isn't at the root of the project directory
-@("dubPackage.path.lib")
+@("targetWithDubDependencies.path.lib")
 @ArghWindows
 @Tags("dub", "ninja")
 unittest {
@@ -164,7 +164,7 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias app = dubPackage!(
+                alias app = targetWithDubDependencies!(
                     TargetName("myapp"),
                     DubPackageTargetType.staticLibrary,
                     Sources!(Files("src/app.d")),
@@ -185,7 +185,7 @@ unittest {
 }
 
 // A dub package that isn't at the root of the project directory
-@("dubPackage.path.dll")
+@("targetWithDubDependencies.path.dll")
 @ArghWindows
 @Tags("dub", "ninja")
 unittest {
@@ -218,7 +218,7 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias app = dubPackage!(
+                alias app = targetWithDubDependencies!(
                     TargetName("myapp"),
                     DubPackageTargetType.sharedLibrary,
                     Sources!(Files("src/app.d")),
@@ -238,7 +238,7 @@ unittest {
     }
 }
 
-@("dubPackage.flags.compiler")
+@("targetWithDubDependencies.flags.compiler")
 @ArghWindows
 @Tags("dub", "ninja")
 unittest {
@@ -265,7 +265,7 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias app = dubPackage!(
+                alias app = targetWithDubDependencies!(
                     TargetName("myapp"),
                     DubPackageTargetType.executable,
                     Sources!(Files("src/app.d")),
@@ -282,7 +282,7 @@ unittest {
 }
 
 
-@("dubPackage.flags.linker")
+@("targetWithDubDependencies.flags.linker")
 @ArghWindows
 @Tags("dub", "ninja")
 unittest {
@@ -309,7 +309,7 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias app = dubPackage!(
+                alias app = targetWithDubDependencies!(
                     TargetName("myapp"),
                     DubPackageTargetType.executable,
                     Sources!(Files("src/app.d")),
@@ -327,7 +327,7 @@ unittest {
 }
 
 
-@("dubPackage.flags.imports")
+@("targetWithDubDependencies.flags.imports")
 @ArghWindows
 @Tags("dub", "ninja")
 unittest {
@@ -354,7 +354,7 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias app = dubPackage!(
+                alias app = targetWithDubDependencies!(
                     TargetName("myapp"),
                     DubPackageTargetType.executable,
                     Sources!(Files("src/app.d")),
@@ -371,7 +371,7 @@ unittest {
 }
 
 version(DigitalMars) {
-    @("dubPackage.flags.stringImports")
+    @("targetWithDubDependencies.flags.stringImports")
     @ArghWindows
     @Tags("dub", "ninja")
     unittest {
@@ -398,7 +398,7 @@ version(DigitalMars) {
                 "reggaefile.d",
                 q{
                     import reggae;
-                    alias app = dubPackage!(
+                    alias app = targetWithDubDependencies!(
                         TargetName("myapp"),
                         DubPackageTargetType.executable,
                         Sources!(Files("src/app.d")),

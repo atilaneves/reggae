@@ -293,7 +293,7 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
     immutable buildGenName = getBuildGenName(options);
     if(options.isScriptBuild) return buildGenName;
 
-    enum dubRules = [ "dubPackage", "dubDependency" ];
+    enum dubRules = [ "targetWithDubDependencies", "dubDependency" ];
     const reggeafileNeedsDubDep = dubRules.any!(a => options.reggaeFilePath.readText.canFind(a));
 
     // `options.getReggaeFileDependenciesDlang` depends on

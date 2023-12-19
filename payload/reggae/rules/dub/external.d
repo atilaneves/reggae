@@ -26,7 +26,7 @@ enum DubPackageTargetType {
 }
 
 
-imported!"reggae.build".Target dubDependency(DubPath dubPath)() {
+imported!"reggae.build".Target dubPackage(DubPath dubPath)() {
     import reggae.config: reggaeOptions = options; // the ones used to run reggae
     return DubPathDependency(reggaeOptions, dubPath)
         .target;

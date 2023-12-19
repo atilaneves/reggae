@@ -415,7 +415,7 @@ version(DigitalMars) {
     }
 }
 
-@("dubDependency.exe.naked")
+@("dubPackage.exe.naked")
 @Tags("dub", "ninja")
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -439,7 +439,7 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias dubDep = dubDependency!(DubPath("over/there"));
+                alias dubDep = dubPackage!(DubPath("over/there"));
                 mixin build!dubDep;
             }
         );
@@ -451,7 +451,7 @@ unittest {
     }
 }
 
-@("dubDependency.exe.phony")
+@("dubPackage.exe.phony")
 @Tags("dub", "ninja")
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -476,7 +476,7 @@ unittest {
             q{
                 import reggae;
 
-                alias dubDep = dubDependency!(DubPath("over/there"));
+                alias dubDep = dubPackage!(DubPath("over/there"));
                 alias yay = phony!("yay", dubDep, ["0"]);
                 alias nay = phony!("nay", dubDep, ["1"]);
                 mixin build!(yay, nay);
@@ -490,7 +490,7 @@ unittest {
 }
 
 
-@("dubDependency.lib.config")
+@("dubPackage.lib.config")
 @Tags("dub", "ninja")
 unittest {
     import reggae.rules.common: exeExt;
@@ -515,7 +515,7 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias dubDep = dubDependency!(
+                alias dubDep = dubPackage!(
                     DubPath("over/there", Configuration("unittest")),
                 );
                 mixin build!dubDep;

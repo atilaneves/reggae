@@ -471,7 +471,7 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias dubDep = dubDependency!(DubPath("over/there"));
+                alias dubDep = dubPackage!(DubPath("over/there"));
                 mixin build!dubDep;
             }
         );

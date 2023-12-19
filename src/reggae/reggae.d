@@ -329,8 +329,10 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
     // [2..$] gets rid of `-I`
     auto importPathsForDubSdl = stringsToSdlList(importPaths(options).map!(i => i[2..$]));
 
+    const dubRecipeDir = hiddenDirAbsPath(options);
+    const dubRecipePath = buildPath(dubRecipeDir, "dub.sdl");
     write(
-        buildPath(hiddenDirAbsPath(options), "dub.sdl"),
+        dubRecipePath,
         dubSdl.format(
             userSourceFilesForDubSdl,
             importPathsForDubSdl,
@@ -341,18 +343,33 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
         import("dub.selections.json")
     );
 
-    auto binary = () {
-        import std.algorithm;
-        import std.file: readText;
+    // // FIXME - use --compiler
+    // // The reason it doesn't work now is due to a test using
+    // // a custom compiler
+    // if(reggeafileNeedsDubDep) {
+    //     import reggae.rules.dub: dubPackage, DubPath;
+    //     import reggae.backend: Binary;
+    //     import reggae.build: Build;
 
+    //     auto newOptions = options.dup;
+    //     newOptions.backend = Backend.binary;
+    //     //newOptions.allAtOnce = true; // one test is failing with linker errors
+    //     auto build = Build(dubPackage(newOptions, DubPath(dubRecipeDir)));
+    //     runtimeBuild(newOptions, build);
+
+    //     return buildGenName;
+    // }
+
+    auto binary = () {
         // FIXME - use --compiler
         // The reason it doesn't work now is due to a test using
         // a custom compiler
-        if(reggeafileNeedsDubDep)
+        if(reggeafileNeedsDubDep) {
             return Binary(
                 buildGenName,
                 ["dub", "build"], // since we now depend on dub at buildgen runtime
-                );
+            );
+        }
 
         const objectOpt = options.isLdc ? "-o " : "-of";
         return Binary(

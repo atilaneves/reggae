@@ -290,6 +290,12 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
     enum dubRules = [ "dubPackage", "dubDependant" ];
     const reggaefileNeedsDubDep = dubRules.any!(a => options.reggaeFilePath.readText.canFind(a));
 
+    version(ReggaefileDubWithReggae)
+    {
+        if(reggaefileNeedsDubDep)
+            return buildReggaefileWithReggae(options);
+    }
+
     const binary = reggaefileNeedsDubDep
         ? buildReggaefileDub(output, options)
         : buildReggaefileNoDub(options);
@@ -390,10 +396,17 @@ private Binary buildReggaefileNoDub(in imported!"reggae.options".Options options
 // I put a build system in the build system so it can build system while it build systems.
 // Currently slower than using dub because of multiple thread scheduling but also because
 // building per package is causing linker errors.
-private string buildReggaefileWithReggae(in imported!"reggae.options".Options options, in string dubRecipeDir) {
+private string buildReggaefileWithReggae(in imported!"reggae.options".Options options) {
 
     import reggae.rules.dub: dubPackage, DubPath;
     import reggae.build: Build;
+
+    const dubRecipeDir = hiddenDirAbsPath(options);
+
+    // HACK: needs refactoring, calling this just to create the phony dub package
+    // for the reggaefile build
+    import std.stdio: stdout;
+    buildReggaefileDub(stdout, options);
 
     // FIXME - use correct D compiler.
     // The reason it doesn't work now is due to a test using
@@ -402,7 +415,7 @@ private string buildReggaefileWithReggae(in imported!"reggae.options".Options op
     // the actual build at all.
     auto newOptions = options.dup;
     newOptions.backend = Backend.binary;
-    newOptions.allAtOnce = true; // one test is failing with linker errors
+    //newOptions.allAtOnce = true; // one test is failing with linker errors
     auto build = Build(dubPackage(newOptions, DubPath(dubRecipeDir)));
     runtimeBuild(newOptions, build);
 

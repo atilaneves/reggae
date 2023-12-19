@@ -7,16 +7,17 @@ module tests.it.runtime.dub.dependencies;
 import tests.it.runtime;
 
 
-// don't ask...
 version(Windows)
-    alias ArghWindows = Flaky;
+    alias MaybeFlaky = Flaky;
+else version(LDC)
+    alias MaybeFlaky = Flaky;
 else
-    enum ArghWindows;
+    enum MaybeFlaky;
 
 
 // A dub package that isn't at the root of the project directory
-@("dubPackage.path.exe.default")
-@ArghWindows
+@("targetWithDubDependencies.path.exe.default")
+@MaybeFlaky
 @Tags("dub", "ninja")
 unittest {
     import reggae.rules.common: exeExt;
@@ -48,7 +49,7 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias app = dubPackage!(
+                alias app = targetWithDubDependencies!(
                     TargetName("myapp"),
                     DubPackageTargetType.executable,
                     Sources!(Files("src/app.d")),
@@ -66,8 +67,8 @@ unittest {
 }
 
 // A dub package that isn't at the root of the project directory
-@("dubPackage.path.exe.config")
-@ArghWindows
+@("targetWithDubDependencies.path.exe.config")
+@MaybeFlaky
 @Tags("dub", "ninja")
 unittest {
     import reggae.rules.common: exeExt;
@@ -112,7 +113,7 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias app = dubPackage!(
+                alias app = targetWithDubDependencies!(
                     TargetName("myapp"),
                     DubPackageTargetType.executable,
                     Sources!(Files("src/app.d")),
@@ -131,8 +132,8 @@ unittest {
 
 
 // A dub package that isn't at the root of the project directory
-@("dubPackage.path.lib")
-@ArghWindows
+@("targetWithDubDependencies.path.lib")
+@MaybeFlaky
 @Tags("dub", "ninja")
 unittest {
     import reggae.rules.common: libExt;
@@ -164,7 +165,7 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias app = dubPackage!(
+                alias app = targetWithDubDependencies!(
                     TargetName("myapp"),
                     DubPackageTargetType.staticLibrary,
                     Sources!(Files("src/app.d")),
@@ -185,8 +186,8 @@ unittest {
 }
 
 // A dub package that isn't at the root of the project directory
-@("dubPackage.path.dll")
-@ArghWindows
+@("targetWithDubDependencies.path.dll")
+@MaybeFlaky
 @Tags("dub", "ninja")
 unittest {
     import reggae.rules.common: dynExt;
@@ -218,7 +219,7 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias app = dubPackage!(
+                alias app = targetWithDubDependencies!(
                     TargetName("myapp"),
                     DubPackageTargetType.sharedLibrary,
                     Sources!(Files("src/app.d")),
@@ -238,8 +239,8 @@ unittest {
     }
 }
 
-@("dubPackage.flags.compiler")
-@ArghWindows
+@("targetWithDubDependencies.flags.compiler")
+@MaybeFlaky
 @Tags("dub", "ninja")
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -265,7 +266,7 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias app = dubPackage!(
+                alias app = targetWithDubDependencies!(
                     TargetName("myapp"),
                     DubPackageTargetType.executable,
                     Sources!(Files("src/app.d")),
@@ -282,8 +283,8 @@ unittest {
 }
 
 
-@("dubPackage.flags.linker")
-@ArghWindows
+@("targetWithDubDependencies.flags.linker")
+@MaybeFlaky
 @Tags("dub", "ninja")
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -309,7 +310,7 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias app = dubPackage!(
+                alias app = targetWithDubDependencies!(
                     TargetName("myapp"),
                     DubPackageTargetType.executable,
                     Sources!(Files("src/app.d")),
@@ -327,8 +328,8 @@ unittest {
 }
 
 
-@("dubPackage.flags.imports")
-@ArghWindows
+@("targetWithDubDependencies.flags.imports")
+@MaybeFlaky
 @Tags("dub", "ninja")
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -354,7 +355,7 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias app = dubPackage!(
+                alias app = targetWithDubDependencies!(
                     TargetName("myapp"),
                     DubPackageTargetType.executable,
                     Sources!(Files("src/app.d")),
@@ -370,52 +371,51 @@ unittest {
     }
 }
 
-version(DigitalMars) {
-    @("dubPackage.flags.stringImports")
-    @ArghWindows
-    @Tags("dub", "ninja")
-    unittest {
-        with(immutable ReggaeSandbox()) {
-            // a dub package we're going to depend on by path
-            writeFile(
-                "over/there/dub.sdl",
-                [
-                    `name "foo"`,
-                    `targetType "library"`
-                ]
-            );
-            // src code for the dub dependency
-            writeFile("over/there/source/foo.d", "");
-            // our main program, which will depend on a dub package by path
-            writeFile(
-                "src/app.d",
-                q{
-                    import foo;
-                    void main() { }
-                }
-            );
-            writeFile(
-                "reggaefile.d",
-                q{
-                    import reggae;
-                    alias app = dubPackage!(
-                        TargetName("myapp"),
-                        DubPackageTargetType.executable,
-                        Sources!(Files("src/app.d")),
-                        StringImportPaths("lestrings"),
-                        DubPath("over/there"),
-                    );
-                    mixin build!app;
-                }
-            );
 
-            runReggae("-b", "ninja");
-            fileShouldContain("build.ninja", "-J" ~ inSandboxPath("lestrings"));
-        }
+@("targetWithDubDependencies.flags.stringImports")
+@MaybeFlaky
+@Tags("dub", "ninja")
+unittest {
+    with(immutable ReggaeSandbox()) {
+        // a dub package we're going to depend on by path
+        writeFile(
+            "over/there/dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "library"`
+            ]
+        );
+        // src code for the dub dependency
+        writeFile("over/there/source/foo.d", "");
+        // our main program, which will depend on a dub package by path
+        writeFile(
+            "src/app.d",
+            q{
+                import foo;
+                void main() { }
+            }
+        );
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+                alias app = targetWithDubDependencies!(
+                    TargetName("myapp"),
+                    DubPackageTargetType.executable,
+                    Sources!(Files("src/app.d")),
+                    StringImportPaths("lestrings"),
+                    DubPath("over/there"),
+                );
+                mixin build!app;
+            }
+        );
+
+        runReggae("-b", "ninja");
+        fileShouldContain("build.ninja", "-J" ~ inSandboxPath("lestrings"));
     }
 }
 
-@("dubDependency.exe.naked")
+@("dubPackage.exe.naked")
 @Tags("dub", "ninja")
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -439,7 +439,7 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias dubDep = dubDependency!(DubPath("over/there"));
+                alias dubDep = dubPackage!(DubPath("over/there"));
                 mixin build!dubDep;
             }
         );
@@ -451,7 +451,7 @@ unittest {
     }
 }
 
-@("dubDependency.exe.phony")
+@("dubPackage.exe.phony")
 @Tags("dub", "ninja")
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -476,7 +476,7 @@ unittest {
             q{
                 import reggae;
 
-                alias dubDep = dubDependency!(DubPath("over/there"));
+                alias dubDep = dubPackage!(DubPath("over/there"));
                 alias yay = phony!("yay", dubDep, ["0"]);
                 alias nay = phony!("nay", dubDep, ["1"]);
                 mixin build!(yay, nay);
@@ -490,7 +490,7 @@ unittest {
 }
 
 
-@("dubDependency.lib.config")
+@("dubPackage.lib.config")
 @Tags("dub", "ninja")
 unittest {
     import reggae.rules.common: exeExt;
@@ -515,7 +515,7 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias dubDep = dubDependency!(
+                alias dubDep = dubPackage!(
                     DubPath("over/there", Configuration("unittest")),
                 );
                 mixin build!dubDep;

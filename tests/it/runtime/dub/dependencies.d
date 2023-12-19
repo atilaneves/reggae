@@ -7,17 +7,17 @@ module tests.it.runtime.dub.dependencies;
 import tests.it.runtime;
 
 
-// don't ask...
 version(Windows)
-    alias ArghWindows = Flaky;
+    alias MaybeFlaky = Flaky;
+else version(LDC)
+    alias MaybeFlaky = Flaky;
 else
-    enum ArghWindows;
+    enum MaybeFlaky;
 
-version(DigitalMars):
 
 // A dub package that isn't at the root of the project directory
 @("targetWithDubDependencies.path.exe.default")
-@ArghWindows
+@MaybeFlaky
 @Tags("dub", "ninja")
 unittest {
     import reggae.rules.common: exeExt;
@@ -68,7 +68,7 @@ unittest {
 
 // A dub package that isn't at the root of the project directory
 @("targetWithDubDependencies.path.exe.config")
-@ArghWindows
+@MaybeFlaky
 @Tags("dub", "ninja")
 unittest {
     import reggae.rules.common: exeExt;
@@ -133,7 +133,7 @@ unittest {
 
 // A dub package that isn't at the root of the project directory
 @("targetWithDubDependencies.path.lib")
-@ArghWindows
+@MaybeFlaky
 @Tags("dub", "ninja")
 unittest {
     import reggae.rules.common: libExt;
@@ -187,7 +187,7 @@ unittest {
 
 // A dub package that isn't at the root of the project directory
 @("targetWithDubDependencies.path.dll")
-@ArghWindows
+@MaybeFlaky
 @Tags("dub", "ninja")
 unittest {
     import reggae.rules.common: dynExt;
@@ -240,7 +240,7 @@ unittest {
 }
 
 @("targetWithDubDependencies.flags.compiler")
-@ArghWindows
+@MaybeFlaky
 @Tags("dub", "ninja")
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -284,7 +284,7 @@ unittest {
 
 
 @("targetWithDubDependencies.flags.linker")
-@ArghWindows
+@MaybeFlaky
 @Tags("dub", "ninja")
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -329,7 +329,7 @@ unittest {
 
 
 @("targetWithDubDependencies.flags.imports")
-@ArghWindows
+@MaybeFlaky
 @Tags("dub", "ninja")
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -373,7 +373,7 @@ unittest {
 
 
 @("targetWithDubDependencies.flags.stringImports")
-@ArghWindows
+@MaybeFlaky
 @Tags("dub", "ninja")
 unittest {
     with(immutable ReggaeSandbox()) {

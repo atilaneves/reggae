@@ -208,8 +208,6 @@ private enum otherFiles = [
     "backend/ninja.d", "backend/make.d", "backend/tup.d",
     "dub/interop/configurations.d",
     "dub/interop/dublib.d",
-    "dub/interop/exec.d",
-    "dub/interop/fetch.d",
     "dub/interop/package.d",
     "dub/interop/default_build.d",
     "dub/info.d",
@@ -317,6 +315,39 @@ private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
     import std.string: replace;
     import std.array: array;
 
+    // quote and separate with spaces for .sdl
+    static stringsToSdlList(R)(R strings) {
+        return strings
+            .map!(s => s.replace(`\`, `/`))
+            .map!(s => `"` ~ s ~ `"`)
+            .joiner(" ");
+    }
+
+    auto userFiles = chain(
+        options.reggaeFilePath.only,
+        options.getReggaeFileDependenciesDlang
+    );
+    auto userSourceFilesForDubSdl = stringsToSdlList(userFiles);
+    // [2..$] gets rid of `-I`
+    auto importPathsForDubSdl = stringsToSdlList(importPaths(options).map!(i => i[2..$]));
+
+    // write these first so that trying to get import paths for dub
+    // and its transitive dependencies works in `dubImportPaths`
+    // below.
+    const dubRecipeDir = hiddenDirAbsPath(options);
+    const dubRecipePath = buildPath(dubRecipeDir, "dub.sdl");
+    write(
+        dubRecipePath,
+        dubSdl.format(
+            userSourceFilesForDubSdl,
+            importPathsForDubSdl,
+        ),
+    );
+    write(
+        buildPath(hiddenDirAbsPath(options), "dub.selections.json"),
+        import("dub.selections.json")
+    );
+
     immutable buildGenName = getBuildGenName(options);
 
     // `options.getReggaeFileDependenciesDlang` depends on
@@ -336,35 +367,6 @@ private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
     );
     buildBinary(output, options, reggaefileObj);
 
-    // quote and separate with spaces for .sdl
-    static stringsToSdlList(R)(R strings) {
-        return strings
-            .map!(s => s.replace(`\`, `/`))
-            .map!(s => `"` ~ s ~ `"`)
-            .joiner(" ");
-    }
-
-    auto userFiles = chain(
-        options.reggaeFilePath.only,
-        options.getReggaeFileDependenciesDlang
-    );
-    auto userSourceFilesForDubSdl = stringsToSdlList(userFiles);
-    // [2..$] gets rid of `-I`
-    auto importPathsForDubSdl = stringsToSdlList(importPaths(options).map!(i => i[2..$]));
-
-    const dubRecipeDir = hiddenDirAbsPath(options);
-    const dubRecipePath = buildPath(dubRecipeDir, "dub.sdl");
-    write(
-        dubRecipePath,
-        dubSdl.format(
-            userSourceFilesForDubSdl,
-            importPathsForDubSdl,
-        ),
-    );
-    write(
-        buildPath(hiddenDirAbsPath(options), "dub.selections.json"),
-        import("dub.selections.json")
-    );
 
     // FIXME - use --compiler
     // The reason it doesn't work now is due to a test using
@@ -373,6 +375,25 @@ private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
         buildGenName,
         ["dub", "build"], // since we now depend on dub at buildgen runtime
     );
+}
+
+private string[] dubImportFlags(in imported!"reggae.options".Options options) {
+    import std.json: parseJSON;
+    import std.file: exists;
+    import std.path: buildPath;
+    import reggae.path: dubPackagesDir;
+    import reggae.dub.interop.dublib: fetchDubDeps;
+
+    const dubSelectionsJson = import("dub.selections.json");
+    const dubVersion = dubSelectionsJson
+        .parseJSON
+        ["versions"]
+        ["dub"]
+        .str;
+    fetchDubDeps(hiddenDirAbsPath(options));
+    const dubSourcePath = buildPath(dubPackagesDir, "dub", dubVersion, "dub", "source");
+    assert(dubSourcePath.exists, "dub fetch failed: no path '" ~ dubSourcePath ~ "'");
+    return ["-I" ~ dubSourcePath];
 }
 
 
@@ -422,26 +443,6 @@ private string buildReggaefileWithReggae(in imported!"reggae.options".Options op
     return getBuildGenName(options);
 }
 
-private string[] dubImportFlags(in imported!"reggae.options".Options options) {
-    import std.json: parseJSON;
-    import dub.dub: Dub, FetchOptions;
-    import dub.dependency: Version;
-    import std.file: exists;
-    import std.path: buildPath;
-    import reggae.path: dubPackagesDir;
-
-    const dubSelectionsJson = import("dub.selections.json");
-    const dubVersion = dubSelectionsJson
-        .parseJSON
-        ["versions"]
-        ["dub"]
-        .str;
-    auto dubObj = new Dub(options.projectPath);
-    dubObj.fetch("dub", Version(dubVersion), dubObj.defaultPlacementLocation, FetchOptions.none);
-    const dubSourcePath = buildPath(dubPackagesDir, "dub", dubVersion, "dub", "source");
-    assert(dubSourcePath.exists, "dub fetch failed: no path '" ~ dubSourcePath ~ "'");
-    return ["-I" ~ dubSourcePath];
-}
 
 private void buildBinary(T)(auto ref T output, in Options options, in Binary bin) {
     import reggae.io: log;

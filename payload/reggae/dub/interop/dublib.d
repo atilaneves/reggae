@@ -5,7 +5,7 @@ module reggae.dub.interop.dublib;
 
 version(Have_dub):
 // to avoid using it in the wrong way
-package:
+private:
 
 // Not shared because, for unknown reasons, dub registers compilers
 // in thread-local storage so we register the compilers in all
@@ -30,7 +30,7 @@ static this() nothrow {
 }
 
 
-struct Dub {
+package struct Dub {
     import reggae.dub.interop.configurations: DubConfigurations;
     import reggae.dub.info: DubInfo;
     import reggae.options: Options;
@@ -56,11 +56,6 @@ struct Dub {
 
     const(Options) options() @safe @nogc pure nothrow const return scope {
         return _options;
-    }
-
-    auto getPackage(in string dubPackage, in string version_) @trusted /*dub*/ {
-        import dub.dependency: Version;
-        return _project.packageManager.getPackage(dubPackage, Version(version_));
     }
 
     private static auto getGeneratorSettings(in Options options) {
@@ -160,6 +155,16 @@ struct Dub {
 }
 
 
+public void fetchDubDeps(in string projectPath) @trusted {
+    import dub.dub: Dub, UpgradeOptions;
+    import dub.internal.vibecompat.inet.path: NativePath;
+
+    auto dub = new Dub(projectPath);
+    dub.loadPackage();
+    dub.upgrade(UpgradeOptions.select);
+}
+
+
 /// What it says on the tin
 struct ProjectPath {
     string value;
@@ -219,20 +224,22 @@ struct JSONString {
 }
 
 
-auto project(in ProjectPath projectPath) @safe {
-    return project(projectPath, systemPackagesPath, userPackagesPath);
-}
-
-
-auto project(in ProjectPath projectPath,
-             in SystemPackagesPath systemPackagesPath,
-             in UserPackagesPath userPackagesPath)
-    @trusted
-{
+private auto project(in ProjectPath projectPath) @trusted {
     import dub.project: Project;
+    import dub.packagemanager: PackageManager;
     import dub.internal.vibecompat.inet.path: NativePath;
 
-    auto pkgManager = packageManager(projectPath, systemPackagesPath, userPackagesPath);
+    const packagePath = NativePath(projectPath.value);
+    const userPath = NativePath(userPackagesPath.value);
+    const systemPath = NativePath(systemPackagesPath.value);
+    const refreshPackages = false;
+
+    auto pkgManager = new PackageManager(packagePath, userPath, systemPath, refreshPackages);
+    // In dub proper, this initialisation is done in commandline.d
+    // in the function runDubCommandLine. If not not, subpackages
+    // won't work.
+    pkgManager.getOrLoadPackage(packagePath);
+
 
     return new Project(pkgManager, NativePath(projectPath.value));
 }
@@ -271,30 +278,6 @@ private auto recipe(in ProjectPath projectPath) @safe {
     } else
         throw new Exception("Could not find dub.sdl or dub.json in " ~ projectPath.value);
 }
-
-
-auto packageManager(in ProjectPath projectPath,
-                    in SystemPackagesPath systemPackagesPath,
-                    in UserPackagesPath userPackagesPath)
-    @trusted
-{
-    import dub.internal.vibecompat.inet.path: NativePath;
-    import dub.packagemanager: PackageManager;
-
-    const packagePath = NativePath(projectPath.value);
-    const userPath = NativePath(userPackagesPath.value);
-    const systemPath = NativePath(systemPackagesPath.value);
-    const refreshPackages = false;
-
-    auto pkgManager = new PackageManager(packagePath, userPath, systemPath, refreshPackages);
-    // In dub proper, this initialisation is done in commandline.d
-    // in the function runDubCommandLine. If not not, subpackages
-    // won't work.
-    pkgManager.getOrLoadPackage(packagePath);
-
-    return pkgManager;
-}
-
 
 class InfoGenerator: imported!"dub.generators.generator".ProjectGenerator {
     import reggae.dub.info: DubPackage;

@@ -5,7 +5,7 @@ module reggae.dub.interop.dublib;
 
 version(Have_dub):
 // to avoid using it in the wrong way
-package:
+private:
 
 // Not shared because, for unknown reasons, dub registers compilers
 // in thread-local storage so we register the compilers in all
@@ -30,7 +30,7 @@ static this() nothrow {
 }
 
 
-struct Dub {
+package struct Dub {
     import reggae.dub.interop.configurations: DubConfigurations;
     import reggae.dub.info: DubInfo;
     import reggae.options: Options;
@@ -219,12 +219,12 @@ struct JSONString {
 }
 
 
-auto project(in ProjectPath projectPath) @safe {
+private auto project(in ProjectPath projectPath) @safe {
     return project(projectPath, systemPackagesPath, userPackagesPath);
 }
 
 
-auto project(in ProjectPath projectPath,
+private auto project(in ProjectPath projectPath,
              in SystemPackagesPath systemPackagesPath,
              in UserPackagesPath userPackagesPath)
     @trusted

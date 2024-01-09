@@ -58,11 +58,6 @@ package struct Dub {
         return _options;
     }
 
-    auto getPackage(in string dubPackage, in string version_) @trusted /*dub*/ {
-        import dub.dependency: Version;
-        return _project.packageManager.getPackage(dubPackage, Version(version_));
-    }
-
     private static auto getGeneratorSettings(in Options options) {
         import dub.compilers.compiler: getCompiler;
         import dub.generators.generator: GeneratorSettings;
@@ -157,6 +152,16 @@ package struct Dub {
         generator.generate(settings);
         return DubInfo(generator.dubPackages, _options.dup);
     }
+}
+
+
+package void fetchDubDeps(in string projectPath) @trusted {
+    import dub.dub: Dub, UpgradeOptions;
+    import dub.internal.vibecompat.inet.path: NativePath;
+
+    auto dub = new Dub(projectPath);
+    dub.loadPackage();
+    dub.upgrade(UpgradeOptions.select);
 }
 
 

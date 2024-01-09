@@ -208,8 +208,6 @@ private enum otherFiles = [
     "backend/ninja.d", "backend/make.d", "backend/tup.d",
     "dub/interop/configurations.d",
     "dub/interop/dublib.d",
-    "dub/interop/exec.d",
-    "dub/interop/fetch.d",
     "dub/interop/package.d",
     "dub/interop/default_build.d",
     "dub/info.d",

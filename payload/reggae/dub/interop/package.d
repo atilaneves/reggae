@@ -43,48 +43,20 @@ void writeDubConfig(O)(ref O output,
 auto dubInfos(O)(ref O output,
                  in imported!"reggae.options".Options options) {
     import reggae.io: log;
-    import reggae.dub.interop.fetch: dubFetch;
-    import reggae.dub.interop.dublib: Dub;
+    import reggae.dub.interop.dublib: Dub, fetchDubDeps;
     import std.file: readText;
 
-    // must check for dub.selections.json before creating dub instance
-    const dubSelectionsJsonPath = ensureDubSelectionsJson(output, options);
-    const dubSelectionsJson = readText(dubSelectionsJsonPath);
+    output.log("Getting dub dependencies");
+    fetchDubDeps(options.projectPath);
+    output.log("Dub dependencies fetched");
 
-    dubFetch(output, options, dubSelectionsJson);
-
-    output.log("    Getting dub build information");
     auto dub = Dub(options);
+
     auto ret = getDubInfos(output, dub);
-    output.log("    Got     dub build information");
+    output.log("Got dub build information");
 
     return ret;
 }
-
-private string ensureDubSelectionsJson
-    (O)
-    (ref O output, in imported!"reggae.options".Options options)
-    @safe
-{
-    import reggae.dub.interop.exec: callDub, dubEnvArgs;
-    import reggae.io: log;
-    import reggae.path: buildPath;
-    import std.file: exists;
-    import std.exception: enforce;
-
-    const path = buildPath(options.projectPath, "dub.selections.json");
-
-    if(!path.exists) {
-        output.log("Creating dub.selections.json");
-        const cmd = ["dub", "upgrade"] ~ dubEnvArgs;
-        callDub(output, options, cmd);
-    }
-
-    enforce(path.exists, "Could not create dub.selections.json");
-
-    return path;
-}
-
 
 private imported!"reggae.dub.info".DubInfo[string] getDubInfos
     (O)

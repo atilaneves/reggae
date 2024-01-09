@@ -155,7 +155,7 @@ package struct Dub {
 }
 
 
-package void fetchDubDeps(in string projectPath) @trusted {
+public void fetchDubDeps(in string projectPath) @trusted {
     import dub.dub: Dub, UpgradeOptions;
     import dub.internal.vibecompat.inet.path: NativePath;
 

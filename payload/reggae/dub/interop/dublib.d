@@ -221,9 +221,20 @@ struct JSONString {
 
 private auto project(in ProjectPath projectPath) @trusted {
     import dub.project: Project;
+    import dub.packagemanager: PackageManager;
     import dub.internal.vibecompat.inet.path: NativePath;
 
-    auto pkgManager = packageManager(projectPath, systemPackagesPath, userPackagesPath);
+    const packagePath = NativePath(projectPath.value);
+    const userPath = NativePath(userPackagesPath.value);
+    const systemPath = NativePath(systemPackagesPath.value);
+    const refreshPackages = false;
+
+    auto pkgManager = new PackageManager(packagePath, userPath, systemPath, refreshPackages);
+    // In dub proper, this initialisation is done in commandline.d
+    // in the function runDubCommandLine. If not not, subpackages
+    // won't work.
+    pkgManager.getOrLoadPackage(packagePath);
+
 
     return new Project(pkgManager, NativePath(projectPath.value));
 }
@@ -262,30 +273,6 @@ private auto recipe(in ProjectPath projectPath) @safe {
     } else
         throw new Exception("Could not find dub.sdl or dub.json in " ~ projectPath.value);
 }
-
-
-auto packageManager(in ProjectPath projectPath,
-                    in SystemPackagesPath systemPackagesPath,
-                    in UserPackagesPath userPackagesPath)
-    @trusted
-{
-    import dub.internal.vibecompat.inet.path: NativePath;
-    import dub.packagemanager: PackageManager;
-
-    const packagePath = NativePath(projectPath.value);
-    const userPath = NativePath(userPackagesPath.value);
-    const systemPath = NativePath(systemPackagesPath.value);
-    const refreshPackages = false;
-
-    auto pkgManager = new PackageManager(packagePath, userPath, systemPath, refreshPackages);
-    // In dub proper, this initialisation is done in commandline.d
-    // in the function runDubCommandLine. If not not, subpackages
-    // won't work.
-    pkgManager.getOrLoadPackage(packagePath);
-
-    return pkgManager;
-}
-
 
 class InfoGenerator: imported!"dub.generators.generator".ProjectGenerator {
     import reggae.dub.info: DubPackage;

@@ -219,16 +219,7 @@ struct JSONString {
 }
 
 
-private auto project(in ProjectPath projectPath) @safe {
-    return project(projectPath, systemPackagesPath, userPackagesPath);
-}
-
-
-private auto project(in ProjectPath projectPath,
-             in SystemPackagesPath systemPackagesPath,
-             in UserPackagesPath userPackagesPath)
-    @trusted
-{
+private auto project(in ProjectPath projectPath) @trusted {
     import dub.project: Project;
     import dub.internal.vibecompat.inet.path: NativePath;
 

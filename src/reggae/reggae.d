@@ -373,6 +373,27 @@ private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
     );
 }
 
+private string[] dubImportFlags(in imported!"reggae.options".Options options) {
+    import std.json: parseJSON;
+    import dub.dub: Dub, FetchOptions;
+    import dub.dependency: Version;
+    import std.file: exists;
+    import std.path: buildPath;
+    import reggae.path: dubPackagesDir;
+
+    const dubSelectionsJson = import("dub.selections.json");
+    const dubVersion = dubSelectionsJson
+        .parseJSON
+        ["versions"]
+        ["dub"]
+        .str;
+    auto dubObj = new Dub(options.projectPath);
+    dubObj.fetch("dub", Version(dubVersion), dubObj.defaultPlacementLocation, FetchOptions.none);
+    const dubSourcePath = buildPath(dubPackagesDir, "dub", dubVersion, "dub", "source");
+    assert(dubSourcePath.exists, "dub fetch failed: no path '" ~ dubSourcePath ~ "'");
+    return ["-I" ~ dubSourcePath];
+}
+
 
 // no dub support needed at runtime, build by calling the compiler directly
 private Binary buildReggaefileNoDub(in imported!"reggae.options".Options options) {
@@ -420,26 +441,6 @@ private string buildReggaefileWithReggae(in imported!"reggae.options".Options op
     return getBuildGenName(options);
 }
 
-private string[] dubImportFlags(in imported!"reggae.options".Options options) {
-    import std.json: parseJSON;
-    import dub.dub: Dub, FetchOptions;
-    import dub.dependency: Version;
-    import std.file: exists;
-    import std.path: buildPath;
-    import reggae.path: dubPackagesDir;
-
-    const dubSelectionsJson = import("dub.selections.json");
-    const dubVersion = dubSelectionsJson
-        .parseJSON
-        ["versions"]
-        ["dub"]
-        .str;
-    auto dubObj = new Dub(options.projectPath);
-    dubObj.fetch("dub", Version(dubVersion), dubObj.defaultPlacementLocation, FetchOptions.none);
-    const dubSourcePath = buildPath(dubPackagesDir, "dub", dubVersion, "dub", "source");
-    assert(dubSourcePath.exists, "dub fetch failed: no path '" ~ dubSourcePath ~ "'");
-    return ["-I" ~ dubSourcePath];
-}
 
 private void buildBinary(T)(auto ref T output, in Options options, in Binary bin) {
     import reggae.io: log;

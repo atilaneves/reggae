@@ -80,7 +80,6 @@ unittest {
 unittest {
 
     import std.file: exists, rmdirRecurse;
-    import std.process: environment;
 
     const cerealedDir = buildPath(dubPackagesDir(), "cerealed-0.6.8");
     if(cerealedDir.exists)

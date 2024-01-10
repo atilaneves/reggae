@@ -133,9 +133,6 @@ package struct Dub {
             return DubConfigurations([actualConfig], actualConfig, testConfig);
         }
 
-        // A violation of the Law of Demeter caused by a dub bug.
-        // Otherwise _project.configurations would do, but it fails for one
-        // projet and no reduced test case was found.
         auto configurations = allConfigurationsAsStrings
             .save
             // exclude unittest config if there's a derived special one

@@ -337,8 +337,6 @@ unittest {
 @Tags("dub", "ninja", "dubObjsDir")
 unittest {
 
-    import reggae.path: dubPackagesDir, deabsolutePath;
-
     with(immutable ReggaeSandbox()) {
 
         writeFile("reggaefile.d", q{

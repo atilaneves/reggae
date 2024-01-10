@@ -212,7 +212,6 @@ private auto project(in string projectPath) @trusted {
     // won't work.
     pkgManager.getOrLoadPackage(packagePath);
 
-
     return new Project(pkgManager, NativePath(projectPath));
 }
 

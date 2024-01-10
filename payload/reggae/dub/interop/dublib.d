@@ -50,7 +50,7 @@ package struct Dub {
         const path = buildPath(options.projectPath, "dub.selections.json");
         enforce(path.exists, "Cannot create dub instance without dub.selections.json");
 
-        _project = project(ProjectPath(options.projectPath));
+        _project = project(options.projectPath);
         _extraDFlags = options.dflags.dup;
     }
 
@@ -133,9 +133,6 @@ package struct Dub {
             return DubConfigurations([actualConfig], actualConfig, testConfig);
         }
 
-        // A violation of the Law of Demeter caused by a dub bug.
-        // Otherwise _project.configurations would do, but it fails for one
-        // projet and no reduced test case was found.
         auto configurations = allConfigurationsAsStrings
             .save
             // exclude unittest config if there's a derived special one
@@ -159,24 +156,14 @@ public void fetchDubDeps(in string projectPath) @trusted {
     import dub.dub: Dub, UpgradeOptions;
     import dub.internal.vibecompat.inet.path: NativePath;
 
-    auto dub = new Dub(projectPath);
+    scope dub = new Dub(projectPath);
     dub.loadPackage();
     dub.upgrade(UpgradeOptions.select);
 }
 
 
-/// What it says on the tin
-struct ProjectPath {
-    string value;
-}
-
 /// Normally ~/.dub
-struct UserPackagesPath {
-    string value = "/dev/null";
-}
-
-/// Normally ~/.dub
-UserPackagesPath userPackagesPath() @safe {
+string userPackagesPath() @safe {
     import reggae.path: buildPath;
     import std.process: environment;
     import std.path: isAbsolute;
@@ -192,15 +179,10 @@ UserPackagesPath userPackagesPath() @safe {
     } else
           static assert(false, "Unknown system");
 
-    return UserPackagesPath(path);
+    return path;
 }
 
-struct SystemPackagesPath {
-    string value = "/dev/null";
-}
-
-
-SystemPackagesPath systemPackagesPath() @safe {
+string systemPackagesPath() @safe {
     import reggae.path: buildPath;
     import std.process: environment;
 
@@ -211,27 +193,17 @@ SystemPackagesPath systemPackagesPath() @safe {
     else
         static assert(false, "Unknown system");
 
-    return SystemPackagesPath(path);
+    return path;
 }
 
-
-struct Path {
-    string value;
-}
-
-struct JSONString {
-    string value;
-}
-
-
-private auto project(in ProjectPath projectPath) @trusted {
+private auto project(in string projectPath) @trusted {
     import dub.project: Project;
     import dub.packagemanager: PackageManager;
     import dub.internal.vibecompat.inet.path: NativePath;
 
-    const packagePath = NativePath(projectPath.value);
-    const userPath = NativePath(userPackagesPath.value);
-    const systemPath = NativePath(systemPackagesPath.value);
+    const packagePath = NativePath(projectPath);
+    const userPath = NativePath(userPackagesPath);
+    const systemPath = NativePath(systemPackagesPath);
     const refreshPackages = false;
 
     auto pkgManager = new PackageManager(packagePath, userPath, systemPath, refreshPackages);
@@ -240,19 +212,18 @@ private auto project(in ProjectPath projectPath) @trusted {
     // won't work.
     pkgManager.getOrLoadPackage(packagePath);
 
-
-    return new Project(pkgManager, NativePath(projectPath.value));
+    return new Project(pkgManager, NativePath(projectPath));
 }
 
 
-private auto dubPackage(in ProjectPath projectPath) @trusted {
+private auto dubPackage(in string projectPath) @trusted {
     import dub.internal.vibecompat.inet.path: NativePath;
     import dub.package_: Package;
-    return new Package(recipe(projectPath), NativePath(projectPath.value));
+    return new Package(recipe(projectPath), NativePath(projectPath));
 }
 
 
-private auto recipe(in ProjectPath projectPath) @safe {
+private auto recipe(in string projectPath) @safe {
     import dub.recipe.packagerecipe: PackageRecipe;
     import dub.recipe.json: parseJson;
     import dub.recipe.sdl: parseSDL;
@@ -263,7 +234,7 @@ private auto recipe(in ProjectPath projectPath) @safe {
 
     string inProjectPath(in string path) {
         import reggae.path: buildPath;
-        return buildPath(projectPath.value, path);
+        return buildPath(projectPath, path);
     }
 
     if(inProjectPath("dub.sdl").exists) {
@@ -276,7 +247,7 @@ private auto recipe(in ProjectPath projectPath) @safe {
         () @trusted { parseJson(recipe, json, "" /*parent*/); }();
         return recipe;
     } else
-        throw new Exception("Could not find dub.sdl or dub.json in " ~ projectPath.value);
+        throw new Exception("Could not find dub.sdl or dub.json in " ~ projectPath);
 }
 
 class InfoGenerator: imported!"dub.generators.generator".ProjectGenerator {

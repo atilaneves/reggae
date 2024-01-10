@@ -156,7 +156,7 @@ public void fetchDubDeps(in string projectPath) @trusted {
     import dub.dub: Dub, UpgradeOptions;
     import dub.internal.vibecompat.inet.path: NativePath;
 
-    auto dub = new Dub(projectPath);
+    scope dub = new Dub(projectPath);
     dub.loadPackage();
     dub.upgrade(UpgradeOptions.select);
 }

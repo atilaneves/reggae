@@ -19,15 +19,3 @@ string deabsolutePath(in string path) @safe pure nothrow {
         ? path.stripDrive[1..$]
         : path;
 }
-
-
-string dubPackagesDir() @safe {
-
-    import std.process: environment;
-
-    version(Windows)
-        return buildPath(environment["LOCALAPPDATA"], "dub", "packages");
-    else
-        return buildPath(environment["HOME"], ".dub", "packages");
-
-}

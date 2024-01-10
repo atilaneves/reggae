@@ -40,7 +40,7 @@ package struct Dub {
     private const string[] _extraDFlags;
     private const(Options) _options;
 
-    this(in Options options) @safe {
+    this(in Options options) @trusted {
         import reggae.path: buildPath;
         import std.exception: enforce;
         import std.file: exists;
@@ -50,7 +50,12 @@ package struct Dub {
         const path = buildPath(options.projectPath, "dub.selections.json");
         enforce(path.exists, "Cannot create dub instance without dub.selections.json");
 
-        _project = project(options.projectPath);
+        import dub.dub: DubClass = Dub;
+        import dub.internal.vibecompat.inet.path: NativePath;
+
+        auto dub = fullDub(options.projectPath); // store as a member variable?
+        _project = dub.project;
+
         _extraDFlags = options.dflags.dup;
     }
 
@@ -162,66 +167,40 @@ public void fetchDubDeps(in string projectPath) @trusted {
 }
 
 
-/// Normally ~/.dub
-string userPackagesPath() @safe {
-    import reggae.path: buildPath;
-    import std.process: environment;
-    import std.path: isAbsolute;
-    import std.file: getcwd;
+public string dubPackagePath(in string packageName, in string version_) @trusted {
+    import dub.dub: Dub;
+    import dub.dependency: Version;
+    import dub.packagemanager: PlacementLocation;
+    import std.exception: enforce;
+    import std.conv: text;
 
-    version(Windows) {
-        immutable appDataDir = environment.get("APPDATA");
-        const path = buildPath(environment.get("LOCALAPPDATA", appDataDir), "dub");
-    } else version(Posix) {
-        string path = buildPath(environment.get("HOME"), ".dub/");
-        if(!path.isAbsolute)
-            path = buildPath(getcwd(), path);
-    } else
-          static assert(false, "Unknown system");
+    auto dub = new Dub(".");
+    auto pkg = dub.packageManager.getPackage("dub", Version("1.34.0"), PlacementLocation.user);
 
-    return path;
+    enforce(
+        pkg !is null,
+        text("Could not get location of package '", packageName, "@", version_, "'")
+    );
+
+    return pkg.path.toString;
 }
 
-string systemPackagesPath() @safe {
-    import reggae.path: buildPath;
-    import std.process: environment;
-
-    version(Windows)
-        const path = buildPath(environment.get("ProgramData"), "dub/");
-    else version(Posix)
-        const path = "/var/lib/dub/";
-    else
-        static assert(false, "Unknown system");
-
-    return path;
-}
-
-private auto project(in string projectPath) @trusted {
-    import dub.project: Project;
-    import dub.packagemanager: PackageManager;
+// only exists because the dub API is "challenging" Only use this
+// function if a "full dub" is needed, since it will cause the package
+// recipe to be parsed, as well as all recipes for all packages
+// already downloaded. See other usages of the `Dub` class in this
+// module that don't do that on purpose for speed reasons.
+auto fullDub(in string projectPath) @trusted {
+    import dub.dub: DubClass = Dub;
     import dub.internal.vibecompat.inet.path: NativePath;
 
-    const packagePath = NativePath(projectPath);
-    const userPath = NativePath(userPackagesPath);
-    const systemPath = NativePath(systemPackagesPath);
-    const refreshPackages = false;
+    auto dub = new DubClass(projectPath);
+    dub.packageManager.getOrLoadPackage(NativePath(projectPath));
+    dub.loadPackage();
+    dub.project.validate();
 
-    auto pkgManager = new PackageManager(packagePath, userPath, systemPath, refreshPackages);
-    // In dub proper, this initialisation is done in commandline.d
-    // in the function runDubCommandLine. If not not, subpackages
-    // won't work.
-    pkgManager.getOrLoadPackage(packagePath);
-
-    return new Project(pkgManager, NativePath(projectPath));
+    return dub;
 }
-
-
-private auto dubPackage(in string projectPath) @trusted {
-    import dub.internal.vibecompat.inet.path: NativePath;
-    import dub.package_: Package;
-    return new Package(recipe(projectPath), NativePath(projectPath));
-}
-
 
 private auto recipe(in string projectPath) @safe {
     import dub.recipe.packagerecipe: PackageRecipe;

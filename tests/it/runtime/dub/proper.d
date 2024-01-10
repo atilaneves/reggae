@@ -6,7 +6,7 @@ module tests.it.runtime.dub.proper;
 
 import tests.it.runtime;
 import reggae.reggae;
-import reggae.path: buildPath, deabsolutePath, dubPackagesDir;
+import reggae.path: buildPath;
 
 
 @("noreggaefile.ninja")
@@ -78,13 +78,6 @@ unittest {
 @Flaky
 @Tags("dub", "ninja", "online")
 unittest {
-
-    import std.file: exists, rmdirRecurse;
-    import std.process: environment;
-
-    const cerealedDir = buildPath(dubPackagesDir(), "cerealed-0.6.8");
-    if(cerealedDir.exists)
-        rmdirRecurse(cerealedDir);
 
     with(immutable ReggaeSandbox()) {
         writeFile("dub.json", `
@@ -336,8 +329,6 @@ unittest {
 @("dub objs option registry dependency")
 @Tags("dub", "ninja", "dubObjsDir")
 unittest {
-
-    import reggae.path: dubPackagesDir, deabsolutePath;
 
     with(immutable ReggaeSandbox()) {
 

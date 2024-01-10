@@ -180,12 +180,32 @@ public string dubPackagePath(in string packageName, in string version_) @trusted
     return pkg.path.toString;
 }
 
+private auto project(in string projectPath) @trusted {
+    import dub.project: Project;
+    import dub.packagemanager: PackageManager;
+    import dub.internal.vibecompat.inet.path: NativePath;
+
+    auto pkgManager = new PackageManager(
+        NativePath(projectPath),
+        NativePath(userPackagesPath),
+        NativePath(systemPackagesPath),
+        false, // refreshPackages
+    );
+    // In dub proper, this initialisation is done in commandline.d
+    // in the function runDubCommandLine. If not not, subpackages
+    // won't work.
+    pkgManager.getOrLoadPackage(NativePath(projectPath));
+
+    return new Project(pkgManager, NativePath(projectPath));
+}
 
 // Normally ~/.dub on posix. The reason this function exists instead
 // of asking reggae is that the information is hidden behind the `Dub`
 // class which uses a private function called `SpecialDirs.make`.  It
 // is possible to tease this information out, however, look at
 // `dubPackagePath` in this module to see how.
+// Maybe this needs to be deleted and `new Dub(options.projectPath)`
+// used instead to get the defaults.
 string userPackagesPath() @safe {
     import reggae.path: buildPath;
     import std.process: environment;
@@ -205,6 +225,7 @@ string userPackagesPath() @safe {
     return path;
 }
 
+// See `userPackagesPath`
 string systemPackagesPath() @safe {
     import reggae.path: buildPath;
     import std.process: environment;
@@ -218,26 +239,6 @@ string systemPackagesPath() @safe {
 
     return path;
 }
-
-private auto project(in string projectPath) @trusted {
-    import dub.project: Project;
-    import dub.packagemanager: PackageManager;
-    import dub.internal.vibecompat.inet.path: NativePath;
-
-    const packagePath = NativePath(projectPath);
-    const userPath = NativePath(userPackagesPath);
-    const systemPath = NativePath(systemPackagesPath);
-    const refreshPackages = false;
-
-    auto pkgManager = new PackageManager(packagePath, userPath, systemPath, refreshPackages);
-    // In dub proper, this initialisation is done in commandline.d
-    // in the function runDubCommandLine. If not not, subpackages
-    // won't work.
-    pkgManager.getOrLoadPackage(packagePath);
-
-    return new Project(pkgManager, NativePath(projectPath));
-}
-
 
 private auto dubPackage(in string projectPath) @trusted {
     import dub.internal.vibecompat.inet.path: NativePath;

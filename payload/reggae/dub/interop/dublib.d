@@ -162,7 +162,9 @@ public void fetchDubDeps(in string projectPath) @trusted {
 }
 
 
-/// Normally ~/.dub
+// Normally ~/.dub on posix. The reason this function exists instead of asking
+// reggae is that the information is hidden behind the `Dub` class which uses
+// a private function called `SpecialDirs.make`
 string userPackagesPath() @safe {
     import reggae.path: buildPath;
     import std.process: environment;

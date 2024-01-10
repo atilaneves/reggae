@@ -380,19 +380,20 @@ private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
 private string[] dubImportFlags(in imported!"reggae.options".Options options) {
     import std.json: parseJSON;
     import std.file: exists;
+    import reggae.dub.interop.dublib: fetchDubDeps, dubPackagePath;
     import std.path: buildPath;
-    import reggae.path: dubPackagesDir;
-    import reggae.dub.interop.dublib: fetchDubDeps;
 
+    fetchDubDeps(hiddenDirAbsPath(options));
     const dubSelectionsJson = import("dub.selections.json");
     const dubVersion = dubSelectionsJson
         .parseJSON
         ["versions"]
         ["dub"]
         .str;
-    fetchDubDeps(hiddenDirAbsPath(options));
-    const dubSourcePath = buildPath(dubPackagesDir, "dub", dubVersion, "dub", "source");
+
+    const dubSourcePath = buildPath(dubPackagePath("dub", dubVersion), "source");
     assert(dubSourcePath.exists, "dub fetch failed: no path '" ~ dubSourcePath ~ "'");
+
     return ["-I" ~ dubSourcePath];
 }
 

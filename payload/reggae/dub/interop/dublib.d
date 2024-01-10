@@ -162,6 +162,25 @@ public void fetchDubDeps(in string projectPath) @trusted {
 }
 
 
+public string dubPackagePath(in string packageName, in string version_) @trusted {
+    import dub.dub: Dub;
+    import dub.dependency: Version;
+    import dub.packagemanager: PlacementLocation;
+    import std.exception: enforce;
+    import std.conv: text;
+
+    auto dub = new Dub(".");
+    auto pkg = dub.packageManager.getPackage("dub", Version("1.34.0"), PlacementLocation.user);
+
+    enforce(
+        pkg !is null,
+        text("Could not get location of package '", packageName, "@", version_, "'")
+    );
+
+    return pkg.path.toString;
+}
+
+
 // Normally ~/.dub on posix. The reason this function exists instead of asking
 // reggae is that the information is hidden behind the `Dub` class which uses
 // a private function called `SpecialDirs.make`

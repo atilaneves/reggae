@@ -181,9 +181,11 @@ public string dubPackagePath(in string packageName, in string version_) @trusted
 }
 
 
-// Normally ~/.dub on posix. The reason this function exists instead of asking
-// reggae is that the information is hidden behind the `Dub` class which uses
-// a private function called `SpecialDirs.make`
+// Normally ~/.dub on posix. The reason this function exists instead
+// of asking reggae is that the information is hidden behind the `Dub`
+// class which uses a private function called `SpecialDirs.make`.  It
+// is possible to tease this information out, however, look at
+// `dubPackagePath` in this module to see how.
 string userPackagesPath() @safe {
     import reggae.path: buildPath;
     import std.process: environment;

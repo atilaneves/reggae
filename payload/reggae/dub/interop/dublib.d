@@ -170,12 +170,11 @@ public void fetchDubDeps(in string projectPath) @trusted {
 public string dubPackagePath(in string packageName, in string version_) @trusted {
     import dub.dub: Dub;
     import dub.dependency: Version;
-    import dub.packagemanager: PlacementLocation;
     import std.exception: enforce;
     import std.conv: text;
 
     auto dub = new Dub(".");
-    auto pkg = dub.packageManager.getPackage("dub", Version("1.34.0"), PlacementLocation.user);
+    auto pkg = dub.packageManager.getPackage("dub", Version(version_));
 
     enforce(
         pkg !is null,

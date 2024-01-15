@@ -465,6 +465,7 @@ private void writeSrcFiles(T)(auto ref T output, in Options options) {
         mkdirRecurse(buildPath(reggaeSrcDirName, path));
     }
 
+    enum fileNames = mixin(import("payload.txt"));
     // this foreach has to happen at compile time due
     // to the string import below.
     foreach(fileName; aliasSeqOf!fileNames) {
@@ -474,45 +475,6 @@ private void writeSrcFiles(T)(auto ref T output, in Options options) {
 
     writeConfig(output, options);
 }
-
-version(minimal)
-    private enum fileNames = coreFiles;
-else
-    private enum fileNames = coreFiles ~ otherFiles ~ foreignFiles;
-
-private enum coreFiles = [
-    "options.d",
-    "buildgen_main.d", "buildgen.d",
-    "build.d",
-    "backend/package.d", "backend/binary.d",
-    "package.d", "range.d",
-    "dependencies.d", "types.d",
-    "ctaa.d", "sorting.d", "file.d",
-    "rules/package.d",
-    "rules/common.d",
-    "rules/d.d",
-    "rules/c_and_cpp.d",
-    "core/package.d", "core/rules/package.d",
-    ];
-private enum otherFiles = [
-    "backend/ninja.d", "backend/make.d", "backend/tup.d",
-    "dub/interop/configurations.d",
-    "dub/interop/dublib.d",
-    "dub/interop/package.d",
-    "dub/interop/default_build.d",
-    "dub/info.d",
-    "rules/dub/package.d", "rules/dub/runtime.d", "rules/dub/compile.d", "rules/dub/external.d",
-    "path.d",
-    "io.d",
-    ];
-
-private enum foreignFiles = [
-    "__init__.py", "build.py", "reflect.py", "rules.py", "reggae_json_build.py",
-    "reggae.rb", "reggae_json_build.rb",
-    "reggae-js.js", "reggae_json_build.js",
-    "JSON.lua", "reggae.lua", "reggae_json_build.lua",
-];
-
 
 private string reggaeSrcDirName(in Options options) @safe pure nothrow {
     import std.path: buildPath;

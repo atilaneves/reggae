@@ -17,6 +17,7 @@ rm -rf bin
 
 echo "Compiling reggae with dub"
 dub build --compiler="$DC"
+rm payload.txt
 
 cd bin || exit 1
 

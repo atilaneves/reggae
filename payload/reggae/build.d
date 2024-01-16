@@ -598,7 +598,7 @@ struct Command {
 
             case link: {
                 version(Windows)
-                    auto cArgs = ["/nologo", "/Fo$out", "$flags", "$in"];
+                    auto cArgs = ["/nologo", "/Fe$out", "$flags", "$in"];
                 else
                     auto cArgs = ["-o", "$out", "$flags", "$in"];
 

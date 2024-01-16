@@ -42,6 +42,7 @@ mixin runTestsMain!(
     "tests.it",
     "tests.it.rules.scriptlike",
     "tests.it.rules.json_build",
+    "tests.it.rules.cmake",
     "tests.it.runtime.lua",
     "tests.it.runtime.javascript",
     "tests.it.runtime.user_vars",

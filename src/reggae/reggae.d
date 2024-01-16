@@ -28,13 +28,6 @@ import reggae.file;
 import reggae.path: buildPath;
 
 
-version(minimal) {
-    //empty stubs for minimal version of reggae
-    void writeDubConfig(T...)(T) {}
-} else {
-    import reggae.dub.interop: writeDubConfig;
-}
-
 mixin template reggaeGen(targets...) {
     mixin buildImpl!targets;
     mixin ReggaeMain;
@@ -73,6 +66,9 @@ void run(T)(auto ref T output, Options options) {
     // write out the library source files to be compiled/interpreted
     // with the user's build description
     writeSrcFiles(output, options);
+
+    // Write out the config.d file
+    writeConfig(output, options);
 
     if(options.isJsonBuild) {
         immutable haveToReturn = jsonBuild(options);
@@ -452,6 +448,9 @@ private void writeSrcFiles(T)(auto ref T output, in Options options) {
     import reggae.io: log;
     import std.file: mkdirRecurse, rmdirRecurse;
 
+    if(!haveToWriteSrcFiles(options))
+        return;
+
     output.log("Writing reggae source files");
 
     immutable reggaeSrcDirName = reggaeSrcDirName(options);
@@ -472,8 +471,37 @@ private void writeSrcFiles(T)(auto ref T output, in Options options) {
         auto file = File(reggaeSrcFileName(options, fileName), "w");
         file.write(import(fileName));
     }
+}
 
-    writeConfig(output, options);
+private bool haveToWriteSrcFiles(in Options options) {
+    import std.file: readText, dirEntries, SpanMode, exists;
+    import std.algorithm: map, filter, sort, endsWith;
+    import std.array: join, array, replace;
+    import std.meta: staticMap, aliasSeqOf;
+
+    immutable reggaeSrcDirName = reggaeSrcDirName(options);
+
+    if(!reggaeSrcDirName.exists)
+        return true;
+
+    enum read(string fileName) = import(fileName);
+    enum fileNames = mixin(import("payload.txt"))
+        .filter!(a => !a.endsWith("config.d"))
+        .array
+        .sort
+        .array;
+    enum whatIHaves = staticMap!(read, aliasSeqOf!(fileNames));
+    enum whatIHave = [whatIHaves].join; // concat of all files
+
+    const whatsThere = dirEntries(reggaeSrcDirName, SpanMode.breadth)
+        .filter!(de => !de.isDir)
+        .filter!(a => !a.name.endsWith("config.d"))
+        .array
+        .sort
+        .map!(de => readText(de.name).replace("\r\n", "\n"))
+        .join;
+
+    return whatIHave != whatsThere;
 }
 
 private string reggaeSrcDirName(in Options options) @safe pure nothrow {
@@ -485,34 +513,58 @@ private string reggaeSrcDirName(in Options options) @safe pure nothrow {
 private void writeConfig(T)(auto ref T output, in Options options) {
 
     import reggae.io: log;
+    import std.file: readText;
+    import std.array: replace;
+
+    version(minimal) {
+        static void dubConfigSource(A...)(auto ref A args) { return ""; }
+    } else {
+        import reggae.dub.interop: dubConfigSource;
+    }
+
+    const reggaeSrc = reggaeConfigSource(options);
+    const dubSrc = dubConfigSource(output, options);
+    const src = reggaeSrc ~ dubSrc;
+    const fileName = reggaeSrcFileName(options, "config.d");
+
+    if(fileName.readText.replace("\r\n", "\n") == src)
+        return;
 
     output.log("Writing reggae configuration");
 
-    auto file = File(reggaeSrcFileName(options, "config.d"), "w");
+    auto file = File(fileName, "w");
+    file.write(src);
+}
 
-    file.writeln(q{
+// the text of the config.d file to be written
+private string reggaeConfigSource(in Options options) @safe {
+
+    string ret;
+
+    void append(A...)(auto ref A args) {
+        import std.conv: text;
+        ret ~= text(args, "\n");
+    }
+
+    append(q{
 module reggae.config;
 import reggae.ctaa;
 import reggae.types;
 import reggae.options;
     });
 
-    version(minimal) file.writeln("enum isDubProject = false;");
-    file.writeln("immutable options = ", options, ";");
+    version(minimal) append("enum isDubProject = false;");
+    append("immutable options = ", options, ";");
 
-    file.writeln("enum userVars = AssocList!(string, string)([");
+    append("enum userVars = AssocList!(string, string)([");
     foreach(key, value; options.userVars) {
-        file.writeln("assocEntry(`", key, "`, `", value, "`), ");
+        append("assocEntry(`", key, "`, `", value, "`), ");
     }
-    file.writeln("]);");
+    append("]);");
 
-    try {
-        writeDubConfig(output, options, file);
-    } catch(Exception ex) {
-        stderr.writeln("Could not write dub configuration: ", ex.msg);
-        throw ex;
-    }
+    return ret;
 }
+
 
 
 private string reggaeSrcFileName(in Options options, in string fileName) @safe pure nothrow {

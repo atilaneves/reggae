@@ -126,7 +126,7 @@ private string getJsonOutput(in Options options) @safe {
     const pythonPaths = environment.get("PYTHONPATH", "").split(":");
     const nodePaths = environment.get("NODE_PATH", "").split(":");
     const luaPaths = environment.get("LUA_PATH", "").split(";");
-    const srcDir = buildPath(hiddenDirAbsPath(options), "src");
+    const srcDir = reggaeSrcDirName(options);
     const binDir = buildPath(srcDir, "reggae");
     auto env = ["PATH": (path ~ binDir).join(":"),
                 "PYTHONPATH": (pythonPaths ~ srcDir).join(":"),
@@ -175,14 +175,14 @@ private string[] getJsonOutputArgs(in Options options) @safe {
     case BuildLanguage.Ruby:
         return ["ruby", "-S",
                 "-I" ~ options.projectPath,
-                "-I" ~ buildPath(hiddenDirAbsPath(options), "src/reggae"),
+                "-I" ~ reggaePkgDirName(options),
                 "reggae_json_build.rb"];
 
     case BuildLanguage.Lua:
-        return ["lua", buildPath(hiddenDirAbsPath(options), "src/reggae/reggae_json_build.lua")];
+        return ["lua", reggaeSrcFileName(options, "reggae_json_build.lua")];
 
     case BuildLanguage.JavaScript:
-        return ["node", buildPath(hiddenDirAbsPath(options), "src/reggae/reggae_json_build.js")];
+        return ["node", reggaeSrcFileName(options, "reggae_json_build.js")];
     }
 }
 
@@ -219,15 +219,6 @@ struct Binary {
 }
 
 
-private enum dubSdl =
-`
-    name "buildgen"
-    targetType "executable"
-    sourceFiles %s // user files (reggaefile.d + dependencies)
-    importPaths %s // to pick up potential reggaefile.d dependencies
-    dependency "dub" version="*" // version fixed by dub.selections.json
-`;
-
 private string compileBuildGenerator(T)(auto ref T output, in Options options) {
 
     import std.algorithm: any, canFind;
@@ -252,6 +243,15 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
 
     return buildGenName;
 }
+
+private enum dubSdl =
+`
+    name "buildgen"
+    targetType "executable"
+    sourceFiles %s // user files (reggaefile.d + dependencies)
+    importPaths %s // to pick up potential reggaefile.d dependencies
+    dependency "dub" version="*" // version fixed by dub.selections.json
+`;
 
 // dub support is needed at runtime, build and link with dub-as-a-library
 private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
@@ -298,8 +298,6 @@ private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
         import("dub.selections.json")
     );
 
-    immutable buildGenName = getBuildGenName(options);
-
     // `options.getReggaeFileDependenciesDlang` depends on
     // `options.reggaeFileDepFile` existing, which means we need to
     // compile the reggaefile separately to get those dependencies
@@ -322,7 +320,7 @@ private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
     // The reason it doesn't work now is due to a test using
     // a custom compiler
     return Binary(
-        buildGenName,
+        getBuildGenName(options),
         ["dub", "build"], // since we now depend on dub at buildgen runtime
     );
 }
@@ -360,7 +358,7 @@ private Binary buildReggaefileNoDub(in imported!"reggae.options".Options options
         buildGenName,
         [options.dCompiler, "-of" ~ buildGenName, "-i", options.reggaeFilePath, "-makedeps=" ~ options.reggaeFileDepFile,]
         ~ importPaths(options)
-        ~ buildPath(hiddenDirAbsPath(options), "src", "reggae", "buildgen_main.d"),
+        ~ reggaeSrcFileName(options, "buildgen_main.d"),
     );
 }
 
@@ -426,7 +424,7 @@ private string[] importPaths(in Options options) @safe nothrow {
     import std.range: chain, only;
     import std.path: buildPath;
 
-    auto imports = chain(only(buildPath(hiddenDirAbsPath(options), "src")), options.reggaefileImportPaths)
+    auto imports = chain(only(reggaeSrcDirName(options)), options.reggaefileImportPaths)
         .map!(p => "-I" ~ p)
         .array;
     auto projPathImport = "-I" ~ options.projectPath;
@@ -453,15 +451,15 @@ private void writeSrcFiles(T)(auto ref T output, in Options options) {
 
     output.log("Writing reggae source files");
 
-    immutable reggaeSrcDirName = reggaeSrcDirName(options);
+    immutable reggaePkgDirName = reggaePkgDirName(options);
 
     // FIXME: only write what's necessary, delete files that are no
     // longer needed.
-    if(reggaeSrcDirName.exists)
-        rmdirRecurse(reggaeSrcDirName);
+    if(reggaePkgDirName.exists)
+        rmdirRecurse(reggaePkgDirName);
 
     foreach(path; ["dub/interop", "rules/dub", "backend", "core/rules"]) {
-        mkdirRecurse(buildPath(reggaeSrcDirName, path));
+        mkdirRecurse(buildPath(reggaePkgDirName, path));
     }
 
     enum fileNames = mixin(import("payload.txt"));
@@ -479,9 +477,9 @@ private bool haveToWriteSrcFiles(in Options options) {
     import std.array: join, array, replace;
     import std.meta: staticMap, aliasSeqOf;
 
-    immutable reggaeSrcDirName = reggaeSrcDirName(options);
+    immutable reggaePkgDirName = reggaePkgDirName(options);
 
-    if(!reggaeSrcDirName.exists)
+    if(!reggaePkgDirName.exists)
         return true;
 
     enum read(string fileName) = import(fileName);
@@ -493,7 +491,7 @@ private bool haveToWriteSrcFiles(in Options options) {
     enum whatIHaves = staticMap!(read, aliasSeqOf!(fileNames));
     enum whatIHave = [whatIHaves].join; // concat of all files
 
-    const whatsThere = dirEntries(reggaeSrcDirName, SpanMode.breadth)
+    const whatsThere = dirEntries(reggaePkgDirName, SpanMode.breadth)
         .filter!(de => !de.isDir)
         .filter!(a => !a.name.endsWith("config.d"))
         .array
@@ -502,12 +500,6 @@ private bool haveToWriteSrcFiles(in Options options) {
         .join;
 
     return whatIHave != whatsThere;
-}
-
-private string reggaeSrcDirName(in Options options) @safe pure nothrow {
-    import std.path: buildPath;
-    static immutable reggaeSrcRelDirName = buildPath("src/reggae");
-    return buildPath(hiddenDirAbsPath(options), reggaeSrcRelDirName);
 }
 
 private void writeConfig(T)(auto ref T output, in Options options) {
@@ -565,13 +557,24 @@ import reggae.options;
     return ret;
 }
 
-
-
 private string reggaeSrcFileName(in Options options, in string fileName) @safe pure nothrow {
-    return buildPath(reggaeSrcDirName(options), fileName);
+    import std.path: buildPath;
+    return buildPath(reggaePkgDirName(options), fileName);
+}
+
+private string reggaePkgDirName(in Options options) @safe pure nothrow {
+    import std.path: buildPath;
+    return buildPath(reggaeSrcDirName(options), "reggae");
+}
+
+private string reggaeSrcDirName(in Options options) @safe pure nothrow {
+    import std.path: buildPath;
+    return buildPath(hiddenDirAbsPath(options), "src");
 }
 
 private string hiddenDirAbsPath(in Options options) @safe pure nothrow {
+    import reggae.options: hiddenDir;
     import std.path: buildPath;
+
     return buildPath(options.workingDir, hiddenDir);
 }

@@ -356,7 +356,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
 }
 
 
-immutable hiddenDir = ".reggae";
+enum hiddenDir = ".reggae";
 
 
 Options withProjectPath(in Options options, in string projectPath) @safe pure nothrow {

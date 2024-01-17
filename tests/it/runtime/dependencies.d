@@ -148,3 +148,86 @@ unittest {
         runReggae("-b", "ninja", "--reggaefile-import-path=" ~ inSandboxPath("other"));
     }
 }
+
+
+@("payload")
+@Tags("ninja", "dub")
+unittest {
+    import std.algorithm: map, countUntil;
+
+    with(immutable ReggaeSandbox()) {
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+                mixin build!(dubBuild!());
+            }
+        );
+        writeFile(
+            "dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "executable"`,
+            ]
+        );
+        writeFile(
+            "source/app.d",
+            q{void main() {}}
+        );
+
+        static chomp(in string s) {
+            // count until the time in seconds and jump the spaces
+            return s[s.countUntil('s') + 3 .. $];
+        }
+
+        auto runIt(A...)(auto ref A args) {
+            return runReggae(args).lines.map!chomp;
+        }
+
+        enum srcLine = "Writing reggae source files";
+        enum cfgLine = "Writing reggae configuration";
+
+        {
+            auto lines = runIt;
+            srcLine.should.be in lines;
+            cfgLine.should.be in lines;
+        }
+
+        {
+            // do not write files if nothing has changed
+            auto lines = runIt;
+            srcLine.should.not.be in lines;
+            cfgLine.should.not.be in lines;
+        }
+
+        {
+            // but do write configuration if reggae cfg has changed
+            auto lines = runIt("-d myvar=foo");
+            srcLine.should.not.be in lines;
+            cfgLine.should.be in lines;
+        }
+
+        {
+            // do not write files if nothing has changed
+            // still using `myvar` cos otherwise that change would trigger writing
+            auto lines = runIt("-d myvar=foo");
+            srcLine.should.not.be in lines;
+            cfgLine.should.not.be in lines;
+        }
+
+        {
+            writeFile(
+                "dub.sdl",
+                [
+                    `name "bar"`,
+                    `targetType "executable"`,
+                ]
+            );
+
+            // but do write configuration if dub cfg has changed
+            auto lines = runIt("-d myvar=foo");
+            srcLine.should.not.be in lines;
+            cfgLine.should.be in lines;
+        }
+    }
+}

@@ -4,18 +4,19 @@
 module reggae.dub.interop;
 version(Have_dub):
 
-void writeDubConfig(O)(ref O output,
-                       in imported!"reggae.options".Options options,
-                       imported!"std.stdio".File file) {
-    import reggae.io: log;
+string dubConfigSource(O)(ref O output, in imported!"reggae.options".Options options) {
     import reggae.dub.info: TargetType;
 
-    output.log("Writing dub configuration");
-    scope(exit) output.log("Finished writing dub configuration");
+    string ret;
+
+    void append(A...)(auto ref A args) {
+        import std.conv: text;
+        ret ~= text(args, "\n");
+    }
 
     if(!options.isDubProject) {
-        file.writeln("enum isDubProject = false;");
-        return;
+        append("enum isDubProject = false;");
+        return ret;
     }
 
     auto dubInfos = dubInfos(output, options);
@@ -24,17 +25,20 @@ void writeDubConfig(O)(ref O output,
         ? dubInfos["default"].packages[0].targetType
         : TargetType.sourceLibrary;
 
-    file.writeln("import reggae.dub.info;");
-    file.writeln("enum isDubProject = true;");
-    file.writeln(`const configToDubInfo = assocList([`);
+    append("import reggae.dub.info;");
+    append("enum isDubProject = true;");
+    append(`const configToDubInfo = assocList([`);
 
     foreach(k, v; dubInfos) {
-        file.writeln(`    assocEntry("`, k, `", `, v, `),`);
+        append(`    assocEntry("`, k, `", `, v, `),`);
     }
-    file.writeln(`]);`);
+    append(`]);`);
 
-    file.writeln;
+    append;
+
+    return ret;
 }
+
 
 /**
    Returns an associative array of string -> DubInfo, where the string
@@ -46,12 +50,13 @@ auto dubInfos(O)(ref O output,
     import reggae.dub.interop.dublib: Dub, fetchDubDeps;
     import std.file: readText;
 
-    output.log("Getting dub dependencies");
+    output.log("Fetching dub dependencies");
     fetchDubDeps(options.projectPath);
     output.log("Dub dependencies fetched");
 
+    output.log("Creating dub instance");
     auto dub = Dub(options);
-
+    output.log("Getting dub information");
     auto ret = getDubInfos(output, dub);
     output.log("Got dub build information");
 

@@ -1,7 +1,7 @@
 module reggae.rules.cmake;
 
 imported!"reggae.build".Target[] cmakeBuild(imported!"reggae.types".ProjectPath projectPath,
-                                            imported!"reggae.rules.dub".Configuration cmakeConfig = imported!"reggae.rules.dub".Configuration("Release"),
+                                            imported!"reggae.types".Configuration cmakeConfig = imported!"reggae.types".Configuration("Release"),
                                             imported!"reggae.types".TargetName[] targetNames = [],
                                             imported!"reggae.types".CMakeFlags cmakeFlags = imported!"reggae.types".CMakeFlags())() {
     import reggae.types : TargetName;

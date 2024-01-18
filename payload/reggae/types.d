@@ -171,6 +171,10 @@ struct ExcludeFiles {
 
 }
 
+struct Configuration {
+    string value = "default";
+}
+
 struct ProjectPath {
     string value;
 }

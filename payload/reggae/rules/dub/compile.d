@@ -7,7 +7,8 @@ module reggae.rules.dub.compile;
 // these depend on the pre-generated reggae.config with dub information
 static if(imported!"reggae.config".isDubProject) {
     import reggae.build: Target;
-    import reggae.rules.dub: CompilationMode, oneOptionalOf, Configuration;
+    import reggae.rules.dub: CompilationMode, oneOptionalOf;
+    import reggae.types : Configuration;
 
     deprecated alias dubConfigurationTarget = dubBuild;
     deprecated alias dubDefaultTarget = dubBuild;

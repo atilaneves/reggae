@@ -82,7 +82,24 @@ package struct Dub {
         return ret;
     }
 
-    DubConfigurations getConfigs() {
+    imported!"reggae.dub.interop.configurations".DubConfigurations
+    dubConfigurations(O)(ref O output)
+    {
+        import reggae.dub.interop.configurations: DubConfigurations;
+        import reggae.io: log;
+
+        output.log("Getting dub configurations");
+        auto ret = getConfigs;
+        output.log("Number of dub configurations: ", ret.configurations.length);
+
+        // this happens e.g. the targetType is "none"
+        if(ret.configurations.length == 0)
+            return DubConfigurations([""], "", null);
+
+        return ret;
+    }
+
+    private DubConfigurations getConfigs() {
         import std.algorithm: filter, map, canFind;
         import std.array: array;
         import std.conv: text;

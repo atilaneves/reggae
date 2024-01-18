@@ -81,7 +81,7 @@ private imported!"reggae.dub.info".DubInfo[string] getDubInfos
     enforce(buildPath(dub.options.projectPath, "dub.selections.json").exists,
             "Cannot find dub.selections.json");
 
-    const configs = dubConfigurations(output, dub);
+    const configs = dub.dubConfigurations(output);
     const haveTestConfig = configs.test != "";
     bool atLeastOneConfigOk;
     Exception dubInfoFailure;
@@ -110,27 +110,6 @@ private imported!"reggae.dub.info".DubInfo[string] getDubInfos
     // `dubTest!()`, `dubBuild!(Configuration("unittest"))` etc.)
     if(haveTestConfig && configs.test != "unittest" && configs.test in ret)
         ret["unittest"] = ret[configs.test];
-
-    return ret;
-}
-
-
-private imported!"reggae.dub.interop.configurations".DubConfigurations
-dubConfigurations
-    (O)
-    (ref O output,
-     ref imported!"reggae.dub.interop.dublib".Dub dub)
-{
-    import reggae.dub.interop.configurations: DubConfigurations;
-    import reggae.io: log;
-
-    output.log("Getting dub configurations");
-    auto ret = dub.getConfigs;
-    output.log("Number of dub configurations: ", ret.configurations.length);
-
-    // this happens e.g. the targetType is "none"
-    if(ret.configurations.length == 0)
-        return DubConfigurations([""], "", null);
 
     return ret;
 }

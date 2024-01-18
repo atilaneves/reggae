@@ -246,11 +246,32 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
 
 private enum dubSdl =
 `
-    name "buildgen"
-    targetType "executable"
-    sourceFiles %s // user files (reggaefile.d + dependencies)
-    importPaths %s // to pick up potential reggaefile.d dependencies
-    dependency "dub" version="*" // version fixed by dub.selections.json
+name "buildgen"
+targetType "executable"
+sourceFiles %s // user files (reggaefile.d + dependencies)
+importPaths %s // to pick up potential reggaefile.d dependencies
+dependency "reggae" path="packages/reggae"
+dependency "dub" version="*" // version fixed by dub.selections.json
+`;
+
+private enum libReggaeDubSdl =
+`
+name "reggae"
+targetType "staticLibrary"
+importPaths "../../.." // to be able to import the reggaefile
+dependency "dub" version="*" // version fixed by dub.selections.json
+`;
+
+private enum reggaeFileDubSelectionsJson =
+`
+{
+        "fileVersion": 1,
+        "versions": {
+                "dub": "%s",
+                "reggae": {"path":"packages/reggae"},
+                "unit-threaded": "%s"
+        }
+}
 `;
 
 // dub support is needed at runtime, build and link with dub-as-a-library
@@ -258,12 +279,12 @@ private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
 
     import reggae.rules.common: objExt;
     import std.format: format;
-    import std.file: write;
+    import std.file: write, exists, readText;
     import std.path: buildPath;
     import std.algorithm: map, joiner;
     import std.range: chain, only;
     import std.string: replace;
-    import std.array: array;
+    import std.array: array, replace;
 
     // quote and separate with spaces for .sdl
     static stringsToSdlList(R)(R strings) {
@@ -286,16 +307,26 @@ private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
     // below.
     const dubRecipeDir = hiddenDirAbsPath(options);
     const dubRecipePath = buildPath(dubRecipeDir, "dub.sdl");
-    write(
+    writeIfDiffers(
+        output,
         dubRecipePath,
         dubSdl.format(
             userSourceFilesForDubSdl,
             importPathsForDubSdl,
         ),
     );
-    write(
-        buildPath(hiddenDirAbsPath(options), "dub.selections.json"),
-        import("dub.selections.json")
+
+    writeIfDiffers(
+        output,
+        buildPath(dubRecipeDir, "dub.selections.json"),
+        reggaeFileDubSelectionsJson.format(selectionsPkgVersion("dub"), selectionsPkgVersion("unit-threaded")),
+    );
+
+    const reggaeRecipePath = buildPath(reggaeSrcDirName(options), "..", "dub.sdl");
+    writeIfDiffers(
+        output,
+        reggaeRecipePath,
+        libReggaeDubSdl,
     );
 
     // `options.getReggaeFileDependenciesDlang` depends on
@@ -321,29 +352,46 @@ private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
     // a custom compiler
     return Binary(
         getBuildGenName(options),
-        ["dub", "build"], // since we now depend on dub at buildgen runtime
+        ["dub", "build", "--nodeps", "--skip-registry=all"], // since we now depend on dub at buildgen runtime
     );
 }
 
+private void writeIfDiffers(O)(auto ref O output, in string path, in string contents) @safe {
+    import reggae.io: log;
+    import std.file: exists, readText, write;
+    import std.array: replace;
+
+    if(!path.exists || path.readText.replace("\r\n", "\n") != contents) {
+        output.log("Writing ", path);
+        write(path, contents);
+    }
+}
+
+
 private string[] dubImportFlags(in imported!"reggae.options".Options options) {
-    import std.json: parseJSON;
-    import std.file: exists;
     import reggae.dub.interop.dublib: fetchDubDeps, dubPackagePath;
+    import std.file: exists;
     import std.path: buildPath;
 
     fetchDubDeps(hiddenDirAbsPath(options));
-    const dubSelectionsJson = import("dub.selections.json");
-    const dubVersion = dubSelectionsJson
-        .parseJSON
-        ["versions"]
-        ["dub"]
-        .str;
 
-    const dubSourcePath = buildPath(dubPackagePath("dub", dubVersion), "source");
+    const dubSourcePath = buildPath(dubPackagePath("dub", selectionsPkgVersion("dub")), "source");
     assert(dubSourcePath.exists, "dub fetch failed: no path '" ~ dubSourcePath ~ "'");
 
     return ["-I" ~ dubSourcePath];
 }
+
+// the unit-threaded version we depend on
+private string selectionsPkgVersion(in string pkg) @safe pure {
+    import std.json: parseJSON;
+
+    return import("dub.selections.json")
+        .parseJSON
+        ["versions"]
+        [pkg]
+        .str;
+}
+
 
 
 // no dub support needed at runtime, build by calling the compiler directly
@@ -569,7 +617,7 @@ private string reggaePkgDirName(in Options options) @safe pure nothrow {
 
 private string reggaeSrcDirName(in Options options) @safe pure nothrow {
     import std.path: buildPath;
-    return buildPath(hiddenDirAbsPath(options), "src");
+    return buildPath(hiddenDirAbsPath(options), "packages", "reggae", "source");
 }
 
 private string hiddenDirAbsPath(in Options options) @safe pure nothrow {

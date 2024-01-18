@@ -308,6 +308,7 @@ private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
     // below.
     const dubRecipeDir = hiddenDirAbsPath(options);
     const dubRecipePath = buildPath(dubRecipeDir, "dub.sdl");
+
     writeIfDiffers(
         output,
         dubRecipePath,
@@ -334,16 +335,13 @@ private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
     // `options.reggaeFileDepFile` existing, which means we need to
     // compile the reggaefile separately to get those dependencies
     // *then* add any extra files to the dummy dub.sdl.
-    const dubVersions = ["Have_dub", "DubUseCurl"];
-    const versionFlag = options.isLdc ? "-d-version" : "-version";
-    const dubVersionFlags = dubVersions.map!(a => versionFlag ~ "=" ~ a).array;
     auto reggaefileObj = Binary(
-        "reggaefile" ~ objExt,
+        "reggaefile" ~ objExt, // dummy name that doesn't matter
         [
             options.dCompiler,
             options.reggaeFilePath, "-o-", "-makedeps=" ~ options.reggaeFileDepFile,
          ]
-        ~ dubVersionFlags ~ importPaths(options) ~ dubImportFlags(options),
+        ~ importPaths(options),
     );
     buildBinary(output, options, reggaefileObj);
 

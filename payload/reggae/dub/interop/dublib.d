@@ -63,6 +63,52 @@ package struct Dub {
         return _options;
     }
 
+    imported!"reggae.dub.info".DubInfo[string] getDubInfos(O)(ref O output)
+    {
+        import reggae.io: log;
+        import reggae.path: buildPath;
+        import reggae.dub.info: DubInfo;
+        import std.file: exists;
+        import std.exception: enforce;
+
+        DubInfo[string] ret;
+
+        enforce(buildPath(options.projectPath, "dub.selections.json").exists,
+                "Cannot find dub.selections.json");
+
+        const configs = dubConfigurations(output);
+        const haveTestConfig = configs.test != "";
+        bool atLeastOneConfigOk;
+        Exception dubInfoFailure;
+
+        foreach(config; configs.configurations) {
+            const isTestConfig = haveTestConfig && config == configs.test;
+            try {
+                ret[config] = configToDubInfo(output, config, isTestConfig);
+                atLeastOneConfigOk = true;
+            } catch(Exception ex) {
+                output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);
+                if(dubInfoFailure is null) dubInfoFailure = ex;
+            }
+        }
+
+        if(!atLeastOneConfigOk) {
+            assert(dubInfoFailure !is null,
+                   "Internal error: no configurations worked and no exception to throw");
+            throw dubInfoFailure;
+        }
+
+        ret["default"] = ret[configs.default_];
+
+        // (additionally) expose the special `dub test` config as
+        // `unittest` config in the DSL (`configToDubInfo`) (for
+        // `dubTest!()`, `dubBuild!(Configuration("unittest"))` etc.)
+        if(haveTestConfig && configs.test != "unittest" && configs.test in ret)
+            ret["unittest"] = ret[configs.test];
+
+        return ret;
+    }
+
     private static auto getGeneratorSettings(in Options options) {
         import dub.compilers.compiler: getCompiler;
         import dub.generators.generator: GeneratorSettings;
@@ -164,7 +210,7 @@ package struct Dub {
         return DubConfigurations(configurations, defaultConfig, testConfig);
     }
 
-    imported!"reggae.dub.info".DubInfo configToDubInfo
+    private imported!"reggae.dub.info".DubInfo configToDubInfo
         (O)
         (ref O output,
          in string config,

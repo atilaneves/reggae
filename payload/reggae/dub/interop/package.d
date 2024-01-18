@@ -59,57 +59,8 @@ imported!"reggae.dub.info".DubInfo[string] dubInfos(O)
     output.log("Creating dub instance");
     auto dub = Dub(options);
     output.log("Getting dub information");
-    auto ret = getDubInfos(output, dub);
+    auto ret = dub.getDubInfos(output);
     output.log("Got dub build information");
-
-    return ret;
-}
-
-private imported!"reggae.dub.info".DubInfo[string] getDubInfos
-    (O)
-    (ref O output,
-     ref imported!"reggae.dub.interop.dublib".Dub dub)
-{
-    import reggae.io: log;
-    import reggae.path: buildPath;
-    import reggae.dub.info: DubInfo;
-    import std.file: exists;
-    import std.exception: enforce;
-
-    DubInfo[string] ret;
-
-    enforce(buildPath(dub.options.projectPath, "dub.selections.json").exists,
-            "Cannot find dub.selections.json");
-
-    const configs = dub.dubConfigurations(output);
-    const haveTestConfig = configs.test != "";
-    bool atLeastOneConfigOk;
-    Exception dubInfoFailure;
-
-    foreach(config; configs.configurations) {
-        const isTestConfig = haveTestConfig && config == configs.test;
-        try {
-            ret[config] = dub.configToDubInfo(output, config, isTestConfig);
-            atLeastOneConfigOk = true;
-        } catch(Exception ex) {
-            output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);
-            if(dubInfoFailure is null) dubInfoFailure = ex;
-        }
-    }
-
-    if(!atLeastOneConfigOk) {
-        assert(dubInfoFailure !is null,
-               "Internal error: no configurations worked and no exception to throw");
-        throw dubInfoFailure;
-    }
-
-    ret["default"] = ret[configs.default_];
-
-    // (additionally) expose the special `dub test` config as
-    // `unittest` config in the DSL (`configToDubInfo`) (for
-    // `dubTest!()`, `dubBuild!(Configuration("unittest"))` etc.)
-    if(haveTestConfig && configs.test != "unittest" && configs.test in ret)
-        ret["unittest"] = ret[configs.test];
 
     return ret;
 }

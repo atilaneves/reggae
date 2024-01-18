@@ -231,7 +231,7 @@ Target staticLibrary(string name,
                      Flags compilerFlags = Flags(),
                      ImportPaths includes = ImportPaths(),
                      StringImportPaths stringImports = StringImportPaths(),
-                     alias dependenciesFunc = () { Target[] ts; return ts; })
+                     alias dependenciesFunc = emptyTargets)
     ()
 {
     return staticLibraryTarget(
@@ -247,8 +247,8 @@ Target staticLibrary(string name,
  */
 Target target(alias outputs,
               alias command = "",
-              alias dependenciesFunc = () { Target[] ts; return ts; },
-              alias implicitsFunc = () { Target[] ts; return ts; })() @trusted {
+              alias dependenciesFunc = emptyTargets,
+              alias implicitsFunc = emptyTargets)() @trusted {
 
     auto depsRes = dependenciesFunc();
     auto impsRes = implicitsFunc();
@@ -289,8 +289,8 @@ Target[] targetConcat(T...)() {
  */
 Target phony(string name,
              string shellCommand,
-             alias dependenciesFunc = () { Target[] ts; return ts; },
-             alias implicitsFunc = () { Target[] ts; return ts; })
+             alias dependenciesFunc = emptyTargets,
+             alias implicitsFunc = emptyTargets)
     ()
     if(isTargets!dependenciesFunc && isTargets!implicitsFunc)
 {
@@ -305,7 +305,7 @@ Target phony(
     string name,
     alias dependenciesFunc,
     string[] args = [],
-    alias implicitsFunc = () { Target[] ts; return ts; },
+    alias implicitsFunc = emptyTargets,
     )
     ()
     if(isTargets!dependenciesFunc && isTargets!implicitsFunc)
@@ -325,7 +325,7 @@ Target phony(
         name,
         (buildPath(objDirOf(Target(name)), target.rawOutputs[0]) ~ args).join(" "),
         deps,
-        arrayify!implicitsFunc
+        arrayify!implicitsFunc()
     );
 }
 
@@ -652,4 +652,8 @@ Language getLanguage(in string srcFileName) @safe pure nothrow {
     default:
         return unknown;
     }
+}
+
+private Target[] emptyTargets() @safe @nogc pure nothrow {
+    return null;
 }

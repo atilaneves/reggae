@@ -89,7 +89,7 @@ private imported!"reggae.dub.info".DubInfo[string] getDubInfos
     foreach(config; configs.configurations) {
         const isTestConfig = haveTestConfig && config == configs.test;
         try {
-            ret[config] = configToDubInfo(output, dub, config, isTestConfig);
+            ret[config] = dub.configToDubInfo(output, config, isTestConfig);
             atLeastOneConfigOk = true;
         } catch(Exception ex) {
             output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);
@@ -133,74 +133,4 @@ dubConfigurations
         return DubConfigurations([""], "", null);
 
     return ret;
-}
-
-private imported!"reggae.dub.info".DubInfo configToDubInfo
-    (O)
-    (ref O output,
-     ref imported!"reggae.dub.interop.dublib".Dub dub,
-     in string config,
-     in bool isTestConfig)
-{
-    import reggae.io: log;
-    import std.conv: text;
-
-    output.log("Querying dub configuration '", config, "'");
-
-    auto dubInfo = dub.configToDubInfo(config);
-
-    /**
-     For the `dub test` config, add `-unittest` (only for the main package, hence [0]).
-     [Similarly, `dub test` implies `--build=unittest`, with the unittest build type
-     being the debug one + `-unittest`.]
-
-     This enables (assuming no custom reggaefile.d):
-     * `reggae && ninja default ut`
-       => default `debug` build type for default config, extra `-unittest` for test config
-     * `reggae --dub-config=unittest && ninja`
-       => no need for extra `--dub-build-type=unittest`
-     */
-    if(isTestConfig) {
-        if(dubInfo.packages.length == 0)
-            throw new Exception(
-                text("No main package in `", config, "` configuration"));
-        dubInfo.packages[0].dflags ~= "-unittest";
-    }
-
-    try
-        callPreBuildCommands(output, dub.options.projectPath, dubInfo);
-    catch(Exception e) {
-        output.log("Error calling prebuild commands: ", e.msg);
-        throw e;
-    }
-
-    return dubInfo;
-}
-
-
-private void callPreBuildCommands(O)(ref O output,
-                                     in string workDir,
-                                     in imported!"reggae.dub.info".DubInfo dubInfo)
-    @safe
-{
-    import reggae.io: log;
-    import std.process: executeShell, Config;
-    import std.string: replace;
-    import std.exception: enforce;
-    import std.conv: text;
-
-    const string[string] env = null;
-    Config config = Config.none;
-    size_t maxOutput = size_t.max;
-
-    if(dubInfo.packages.length == 0) return;
-
-    foreach(const package_; dubInfo.packages) {
-        foreach(const dubCommandString; package_.preBuildCommands) {
-            auto cmd = dubCommandString.replace("$project", workDir);
-            output.log("Executing pre-build command `", cmd, "`");
-            const ret = executeShell(cmd, env, config, maxOutput, workDir);
-            enforce(ret.status == 0, text("Error calling ", cmd, ":\n", ret.output));
-        }
-    }
 }

@@ -192,6 +192,7 @@ unittest {
  */
 version(reggaelib) {
     mixin template build(targets...) if(allSatisfy!(isTarget, targets)) {
+        import reggae.reggae: reggaeGen;
         mixin reggaeGen!(targets);
     }
 } else {

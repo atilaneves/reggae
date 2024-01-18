@@ -8,43 +8,9 @@
  */
 module reggae.buildgen;
 
-import reggae.build;
-import reggae.options;
-import reggae.types;
-import reggae.backend;
-import reggae.path: buildPath;
+import reggae.build: Build;
+import reggae.options: Options;
 
-import std.stdio;
-import std.file: timeLastModified;
-
-/**
- Creates a build generator out of a module and a list of top-level targets.
- This will define a function with the signature $(D Build buildFunc()) in
- the calling module and a $(D main) entry point function for a command-line
- executable.
- */
-mixin template buildGen(string buildModule, targets...) {
-    mixin buildImpl!targets;
-    mixin BuildGenMain!buildModule;
-}
-
-mixin template BuildGenMain(string buildModule = "reggaefile") {
-    import std.stdio;
-
-    // args is empty except for the binary backend,
-    // in which case it's used for runtime options
-    int main(string[] args) {
-        try {
-            import reggae.config: options;
-            doBuildFor!(buildModule)(options, args); //the user's build description
-        } catch(Exception ex) {
-            stderr.writeln(ex.msg);
-            return 1;
-        }
-
-        return 0;
-    }
-}
 
 version(unittest) {
     void doBuildFor(alias module_ = "reggaefile")(in Options options, string[] buildgenArgs) {
@@ -69,7 +35,9 @@ Build getBuildObject(alias module_)(in Options options) {
 // calls the build function or loads it from the cache and returns
 // the Build object
 private Build getBuildObjectImpl(alias module_)(in Options options) {
-    import std.file;
+    import reggae.path: buildPath;
+    import std.file: exists, timeLastModified, thisExePath;
+    import std.stdio: File;
 
     immutable cacheFileName = buildPath(".reggae", "cache");
     if(!options.cacheBuildInfo ||
@@ -116,6 +84,9 @@ void doBuild(Build build, in Options options, string[] buildgenArgs) {
 // `buildgenArgs` is for the binary build, and only when called by the user, i.e. when there's
 // a `build` binary to ball in the 1st place
 private void doOneBuild(Build build, in Options options, string[] buildgenArgs) {
+    import reggae.types: Backend;
+    import reggae.backend;
+
     final switch(options.backend) with(Backend) {
 
         version(minimal) {
@@ -150,6 +121,8 @@ private void doOneBuild(Build build, in Options options, string[] buildgenArgs) 
 }
 
 private void exportBuild(Build build, in Options options) {
+    import reggae.types: Backend;
+    import reggae.backend;
     import std.exception;
     import std.meta;
 
@@ -164,11 +137,14 @@ private void exportBuild(Build build, in Options options) {
 
 
 private void writeCompilationDB(Build build, in Options options) {
+    import reggae.path: buildPath;
+    import reggae.build: Target;
     import std.file;
     import std.conv;
     import std.algorithm;
     import std.string;
     import std.path: dirSeparator;
+    import std.stdio: File;
 
     auto file = File(buildPath(options.workingDir, "compile_commands.json"), "w");
     file.writeln("[");

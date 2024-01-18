@@ -244,7 +244,7 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
     return buildGenName;
 }
 
-private enum dubSdl =
+private enum reggaeFileDubSdl =
 `
 name "buildgen"
 targetType "executable"
@@ -258,7 +258,6 @@ private enum libReggaeDubSdl =
 `
 name "reggae"
 targetType "staticLibrary"
-importPaths "../../.." // to be able to import the reggaefile
 dependency "dub" version="*" // version fixed by dub.selections.json
 `;
 
@@ -273,6 +272,7 @@ private enum reggaeFileDubSelectionsJson =
         }
 }
 `;
+
 
 // dub support is needed at runtime, build and link with dub-as-a-library
 private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
@@ -295,6 +295,7 @@ private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
     }
 
     auto userFiles = chain(
+        buildGenMainSrcPath(options).only,
         options.reggaeFilePath.only,
         options.getReggaeFileDependenciesDlang
     );
@@ -310,7 +311,7 @@ private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
     writeIfDiffers(
         output,
         dubRecipePath,
-        dubSdl.format(
+        reggaeFileDubSdl.format(
             userSourceFilesForDubSdl,
             importPathsForDubSdl,
         ),
@@ -358,11 +359,14 @@ private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
 
 private void writeIfDiffers(O)(auto ref O output, in string path, in string contents) @safe {
     import reggae.io: log;
-    import std.file: exists, readText, write;
+    import std.file: exists, readText, write, mkdirRecurse;
     import std.array: replace;
+    import std.path: dirName;
 
     if(!path.exists || path.readText.replace("\r\n", "\n") != contents) {
         output.log("Writing ", path);
+        if(!path.dirName.exists)
+            mkdirRecurse(path.dirName);
         write(path, contents);
     }
 }
@@ -405,8 +409,7 @@ private Binary buildReggaefileNoDub(in imported!"reggae.options".Options options
     return Binary(
         buildGenName,
         [options.dCompiler, "-of" ~ buildGenName, "-i", options.reggaeFilePath, "-makedeps=" ~ options.reggaeFileDepFile,]
-        ~ importPaths(options)
-        ~ reggaeSrcFileName(options, "buildgen_main.d"),
+        ~ importPaths(options) ~ buildGenMainSrcPath(options),
     );
 }
 
@@ -490,9 +493,36 @@ private string getBuildGenName(in Options options) @safe pure nothrow {
     return baseName ~ exeExt;
 }
 
+// On Windows we're apparently not allowed to have a main function in
+// a static library so we have to build the main function with the
+// reggaefile
+private enum buildGenMainSrc =
+q{
+    // args is empty except for the binary backend,
+    // in which case it's used for runtime options
+    int main(string[] args) {
+        try {
+            import reggae.config: options;
+            import reggae.buildgen: doBuildFor;
+            doBuildFor!("reggaefile")(options, args); //the user's build description
+            return 0;
+        } catch(Exception ex) {
+            import std.stdio: stderr;
+            stderr.writeln(ex.msg);
+            return 1;
+        }
+    }
+};
+
 private void writeSrcFiles(T)(auto ref T output, in Options options) {
     import reggae.io: log;
     import std.file: mkdirRecurse, rmdirRecurse;
+
+    writeIfDiffers(
+        output,
+        buildGenMainSrcPath(options),
+        buildGenMainSrc,
+    );
 
     if(!haveToWriteSrcFiles(options))
         return;
@@ -625,4 +655,9 @@ private string hiddenDirAbsPath(in Options options) @safe pure nothrow {
     import std.path: buildPath;
 
     return buildPath(options.workingDir, hiddenDir);
+}
+
+private string buildGenMainSrcPath(in Options options) @safe pure nothrow {
+    import std.path: buildPath;
+    return buildPath(hiddenDirAbsPath(options), "buildgen_main.d");
 }

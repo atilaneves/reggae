@@ -3,8 +3,6 @@
  */
 module reggae.rules.dub.external;
 
-version(Have_dub):
-
 /**
    A dub path-based dependency. The value should be a path to a dub
    package on the filesystem.

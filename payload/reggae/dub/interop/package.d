@@ -2,7 +2,7 @@
    A module for providing interop between reggae and dub
 */
 module reggae.dub.interop;
-version(Have_dub):
+
 
 string dubConfigSource(O)(ref O output, in imported!"reggae.options".Options options) {
     import reggae.dub.info: TargetType;
@@ -48,19 +48,22 @@ imported!"reggae.dub.info".DubInfo[string] dubInfos(O)
     (ref O output,
      in imported!"reggae.options".Options options)
 {
-    import reggae.io: log;
-    import reggae.dub.interop.dublib: Dub, fetchDubDeps;
-    import std.file: readText;
+    version(Have_dub) {
+        import reggae.io: log;
+        import reggae.dub.interop.dublib: Dub, fetchDubDeps;
+        import std.file: readText;
 
-    output.log("Fetching dub dependencies");
-    fetchDubDeps(options.projectPath);
-    output.log("Dub dependencies fetched");
+        output.log("Fetching dub dependencies");
+        fetchDubDeps(options.projectPath);
+        output.log("Dub dependencies fetched");
 
-    output.log("Creating dub instance");
-    auto dub = Dub(options);
-    output.log("Getting dub information");
-    auto ret = dub.getDubInfos(output);
-    output.log("Got dub build information");
+        output.log("Creating dub instance");
+        auto dub = Dub(options);
+        output.log("Getting dub information");
+        auto ret = dub.getDubInfos(output);
+        output.log("Got dub build information");
 
-    return ret;
+        return ret;
+    } else
+          throw new Exception("Dub not available, can't get dub information");
 }

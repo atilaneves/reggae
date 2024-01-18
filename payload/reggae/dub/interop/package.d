@@ -44,8 +44,10 @@ string dubConfigSource(O)(ref O output, in imported!"reggae.options".Options opt
    Returns an associative array of string -> DubInfo, where the string
    is the name of a dub configuration.
  */
-auto dubInfos(O)(ref O output,
-                 in imported!"reggae.options".Options options) {
+imported!"reggae.dub.info".DubInfo[string] dubInfos(O)
+    (ref O output,
+     in imported!"reggae.options".Options options)
+{
     import reggae.io: log;
     import reggae.dub.interop.dublib: Dub, fetchDubDeps;
     import std.file: readText;

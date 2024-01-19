@@ -52,12 +52,14 @@ private struct BinaryOptions {
 
 auto Binary(Build build, in Options options) @system {
     version(unittest) {
-        import tests.utils;
+        import tests.utils: FakeFile;
         auto file = new FakeFile;
         return Binary(build, options, *file);
     }
-    else
+    else {
+        import std.stdio: stdout;
         return Binary(build, options, stdout);
+    }
 }
 
 auto Binary(T)(Build build, in Options options, ref T output) {

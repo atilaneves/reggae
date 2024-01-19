@@ -167,6 +167,7 @@ struct Options {
 
         return parseDepFile(reggaeFileDepFile)
             .filter!(a => !a.canFind(dirSeparator ~ buildPath("dub", "source")))
+            .filter!(a => !a.canFind(dirSeparator ~ buildPath("reggae", "source")))
             .array;
     }
 

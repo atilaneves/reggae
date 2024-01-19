@@ -527,3 +527,40 @@ unittest {
         shouldSucceed("over/there/bin/ut" ~ exeExt);
     }
 }
+
+@("dubPackage.lib.timing")
+@Tags("dub", "ninja")
+unittest {
+    import reggae.rules.common: exeExt;
+    import std.datetime.stopwatch;
+
+    with(immutable ReggaeSandbox()) {
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+                alias dubDep = dubPackage!(DubPath("over/there"));
+                mixin build!dubDep;
+            }
+        );
+        writeFile(
+            "over/there/dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "library"`,
+            ]
+       );
+        writeFile("over/there/source/foo.d", "");
+
+        auto sw = StopWatch(AutoStart.yes);
+        runReggae("-b", "ninja");
+        auto dur1 = cast(Duration) sw.peek;
+        sw.reset;
+
+        runReggae("-b", "ninja");
+        auto dur2 = cast(Duration) sw.peek;
+
+        // should take far less time the 2nd time around (no compiling)
+        dur2.shouldBeSmallerThan(dur1 / 2);
+    }
+}

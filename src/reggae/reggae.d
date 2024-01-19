@@ -278,40 +278,14 @@ private enum reggaeFileDubSelectionsJson =
 
 // dub support is needed at runtime, build and link with dub-as-a-library
 private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
-    import reggae.io: log;
-    import reggae.build: Target, Command;
     import std.format: format;
     import std.path: buildPath;
     import std.algorithm: map, joiner;
     import std.range: chain, only;
     import std.array: replace;
 
-    // `options.getReggaeFileDependenciesDlang` depends on
-    // `options.reggaeFileDepFile` existing, which means we need to
-    // compile the reggaefile separately to get those dependencies
-    // *then* add any extra files to the dummy dub.sdl.
-    // *Must* be done before attempting
-    // options.getReggaeFileDependenciesDlang below.
-    auto reggaefileObj = Binary(
-        "_", // dummy name that doesn't matter
-        [
-            options.dCompiler,
-            options.reggaeFilePath, "-o-", "-makedeps=" ~ options.reggaeFileDepFile,
-            ]
-        ~ importPaths(options),
-        );
-    auto target = Target(
-        options.reggaeFileDepFile,
-        Command(
-            (in string[] inputs, in string[] outputs) {
-                import reggae.io;
-                output.log("Calculating reggaefile dependencies");
-                buildBinary(output, options, reggaefileObj);
-            }
-        ),
-        options.reggaeFilePath,
-    );
-    buildTarget(options, target);
+     // calculates .dep so getReggaeFileDependenciesDlang works below
+    calculateReggaeFileDeps(output, options);
 
     // quote and separate with spaces for .sdl
     static stringsToSdlList(R)(R strings) {
@@ -365,6 +339,41 @@ private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
         getBuildGenName(options),
         ["dub", "build", "--nodeps", "--skip-registry=all"], // since we now depend on dub at buildgen runtime
     );
+}
+
+// create a .dep file with the dependencies of the reggaefile so we
+// can compile them
+private void calculateReggaeFileDeps(O)(auto ref O output, in Options options) {
+    import reggae.io: log;
+    import reggae.build: Target, Command;
+
+    // `options.getReggaeFileDependenciesDlang` depends on
+    // `options.reggaeFileDepFile` existing, which means we need to
+    // compile the reggaefile separately to get those dependencies
+    // *then* add any extra files to the dummy dub.sdl.
+    // *Must* be done before attempting
+    // options.getReggaeFileDependenciesDlang.
+    auto target = Target(
+        options.reggaeFileDepFile,
+        Command(
+            (in string[] inputs, in string[] outputs) {
+                auto reggaefileObj = Binary(
+                    "_", // dummy name that doesn't matter
+                    [
+                        options.dCompiler,
+                        options.reggaeFilePath, "-o-", "-makedeps=" ~ options.reggaeFileDepFile,
+                        ]
+                    ~ importPaths(options),
+                );
+
+                output.log("Calculating reggaefile dependencies");
+                buildBinary(output, options, reggaefileObj);
+            }
+        ),
+        options.reggaeFilePath,
+    );
+
+    buildTarget(options, target); // run the command
 }
 
 // build a target using reggae as a build system

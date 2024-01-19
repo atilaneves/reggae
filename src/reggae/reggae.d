@@ -248,8 +248,10 @@ private enum reggaeFileDubSdl =
 `
 name "buildgen"
 targetType "executable"
-sourceFiles %s // user files (reggaefile.d + dependencies)
-importPaths %s // to pick up potential reggaefile.d dependencies
+ // user files (reggaefile.d, buildgen_main.d, dependencies imported by the reggaefile)
+sourceFiles %s
+ // to pick up potential reggaefile.d dependencies
+importPaths %s
 dependency "reggae" path="packages/reggae"
 dependency "dub" version="*" // version fixed by dub.selections.json
 `;
@@ -286,6 +288,22 @@ private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
     import std.string: replace;
     import std.array: array, replace;
 
+    // `options.getReggaeFileDependenciesDlang` depends on
+    // `options.reggaeFileDepFile` existing, which means we need to
+    // compile the reggaefile separately to get those dependencies
+    // *then* add any extra files to the dummy dub.sdl.  *Must* be
+    // done before attempting options.getReggaeFileDependenciesDlang
+    // below.
+    auto reggaefileObj = Binary(
+        "reggaefile" ~ objExt, // dummy name that doesn't matter
+        [
+            options.dCompiler,
+            options.reggaeFilePath, "-o-", "-makedeps=" ~ options.reggaeFileDepFile,
+            ]
+        ~ importPaths(options),
+        );
+    buildBinary(output, options, reggaefileObj);
+
     // quote and separate with spaces for .sdl
     static stringsToSdlList(R)(R strings) {
         return strings
@@ -297,7 +315,7 @@ private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
     auto userFiles = chain(
         buildGenMainSrcPath(options).only,
         options.reggaeFilePath.only,
-        options.getReggaeFileDependenciesDlang
+        options.getReggaeFileDependenciesDlang // must be called after .dep file created
     );
     auto userSourceFilesForDubSdl = stringsToSdlList(userFiles);
     // [2..$] gets rid of `-I`
@@ -331,19 +349,6 @@ private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
         libReggaeDubSdl,
     );
 
-    // `options.getReggaeFileDependenciesDlang` depends on
-    // `options.reggaeFileDepFile` existing, which means we need to
-    // compile the reggaefile separately to get those dependencies
-    // *then* add any extra files to the dummy dub.sdl.
-    auto reggaefileObj = Binary(
-        "reggaefile" ~ objExt, // dummy name that doesn't matter
-        [
-            options.dCompiler,
-            options.reggaeFilePath, "-o-", "-makedeps=" ~ options.reggaeFileDepFile,
-         ]
-        ~ importPaths(options),
-    );
-    buildBinary(output, options, reggaefileObj);
 
 
     // FIXME - use --compiler
@@ -514,7 +519,8 @@ q{
 
 private void writeSrcFiles(T)(auto ref T output, in Options options) {
     import reggae.io: log;
-    import std.file: mkdirRecurse, rmdirRecurse;
+    import std.file: mkdirRecurse, rmdirRecurse, exists;
+    import std.path: dirName;
 
     writeIfDiffers(
         output,
@@ -534,15 +540,16 @@ private void writeSrcFiles(T)(auto ref T output, in Options options) {
     if(reggaePkgDirName.exists)
         rmdirRecurse(reggaePkgDirName);
 
-    foreach(path; ["dub/interop", "rules/dub", "backend", "core/rules"]) {
-        mkdirRecurse(buildPath(reggaePkgDirName, path));
-    }
-
     enum fileNames = mixin(import("payload.txt"));
     // this foreach has to happen at compile time due
     // to the string import below.
     foreach(fileName; aliasSeqOf!fileNames) {
-        auto file = File(reggaeSrcFileName(options, fileName), "w");
+        const filePath = reggaeSrcFileName(options, fileName);
+
+        if(!filePath.dirName.exists)
+            mkdirRecurse(filePath.dirName);
+
+        auto file = File(filePath, "w");
         file.write(import(fileName));
     }
 }

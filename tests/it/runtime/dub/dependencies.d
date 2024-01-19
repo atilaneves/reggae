@@ -528,7 +528,6 @@ unittest {
     }
 }
 
-@HiddenTest
 @("dubPackage.lib.timing")
 @Tags("dub", "ninja")
 unittest {

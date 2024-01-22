@@ -278,7 +278,7 @@ public string dubPackagePath(in string packageName, in string version_) @trusted
     import std.conv: text;
 
     auto dub = new Dub(".");
-    auto pkg = dub.packageManager.getPackage("dub", Version(version_));
+    auto pkg = dub.packageManager.getPackage(packageName, Version(version_));
 
     enforce(
         pkg !is null,

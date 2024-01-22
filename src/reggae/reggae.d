@@ -268,9 +268,9 @@ private enum reggaeFileDubSelectionsJson =
 {
         "fileVersion": 1,
         "versions": {
-                "dub": "%s",
+                "dub": %s,
                 "reggae": {"path":"packages/reggae"},
-                "unit-threaded": "%s"
+                "unit-threaded": %s
         }
 }
 `;
@@ -322,7 +322,7 @@ private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
     writeIfDiffers(
         output,
         buildPath(dubRecipeDir, "dub.selections.json"),
-        reggaeFileDubSelectionsJson.format(selectionsPkgVersion("dub"), selectionsPkgVersion("unit-threaded")),
+        reggaeFileDubSelectionsJson.format(selectionsPkgVersion!"dub", selectionsPkgVersion!"unit-threaded"),
     );
 
     const reggaeRecipePath = buildPath(reggaeSrcDirName(options), "..", "dub.sdl");
@@ -404,25 +404,34 @@ private void writeIfDiffers(O)(auto ref O output, in string path, in string cont
 private string[] dubImportFlags(in imported!"reggae.options".Options options) {
     import reggae.dub.interop.dublib: fetchDubDeps, dubPackagePath;
     import std.file: exists;
+    import std.json: JSONType;
     import std.path: buildPath;
 
     fetchDubDeps(hiddenDirAbsPath(options));
 
-    const dubSourcePath = buildPath(dubPackagePath("dub", selectionsPkgVersion("dub")), "source");
+    // CTFE to check the JSON at compile-time
+    enum dubSelection = selectionsPkgVersion!"dub";
+    enum dubVersion = dubSelection.type == JSONType.string
+        ? dubSelection.str
+        : dubSelection["version"].str; // commit SHA
+
+    const dubSourcePath = buildPath(dubPackagePath("dub", dubVersion), "source");
     assert(dubSourcePath.exists, "dub fetch failed: no path '" ~ dubSourcePath ~ "'");
 
     return ["-I" ~ dubSourcePath];
 }
 
-// the unit-threaded version we depend on
-private string selectionsPkgVersion(in string pkg) @safe pure {
+// the dub/unit-threaded version we depend on
+private imported!"std.json".JSONValue selectionsPkgVersion(string pkg)() @safe pure {
     import std.json: parseJSON;
 
-    return import("dub.selections.json")
+    // enforce CTFE, checking the JSON at compile-time
+    enum selection = import("dub.selections.json")
         .parseJSON
         ["versions"]
-        [pkg]
-        .str;
+        [pkg];
+
+    return selection;
 }
 
 

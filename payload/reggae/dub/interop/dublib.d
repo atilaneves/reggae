@@ -271,23 +271,6 @@ public void fetchDubDeps(in string projectPath) @trusted {
 }
 
 
-public string dubPackagePath(in string packageName, in string version_) @trusted {
-    import dub.dub: Dub;
-    import dub.dependency: Version;
-    import std.exception: enforce;
-    import std.conv: text;
-
-    auto dub = new Dub(".");
-    auto pkg = dub.packageManager.getPackage("dub", Version(version_));
-
-    enforce(
-        pkg !is null,
-        text("Could not get location of package '", packageName, "@", version_, "'")
-    );
-
-    return pkg.path.toString;
-}
-
 // only exists because the dub API is "challenging" Only use this
 // function if a "full dub" is needed, since it will cause the package
 // recipe to be parsed, as well as all recipes for all packages

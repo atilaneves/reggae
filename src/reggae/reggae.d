@@ -392,7 +392,7 @@ private void writeIfDiffers(O)(auto ref O output, in string path, in string cont
     import std.array: replace;
     import std.path: dirName;
 
-    if(!path.exists || path.readText.replace("\r\n", "\n") != contents) {
+    if(!path.exists || path.readText.replace("\r\n", "\n") != contents.replace("\r\n", "\n")) {
         output.log("Writing ", path);
         if(!path.dirName.exists)
             mkdirRecurse(path.dirName);

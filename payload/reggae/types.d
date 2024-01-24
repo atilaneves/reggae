@@ -171,6 +171,18 @@ struct ExcludeFiles {
 
 }
 
+struct Configuration {
+    string value = "default";
+}
+
+struct ProjectPath {
+    string value;
+}
+
+struct CMakeFlags {
+    string value;
+}
+
 struct ExeName {
     string value;
 }

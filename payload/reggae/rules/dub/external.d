@@ -8,7 +8,7 @@ module reggae.rules.dub.external;
    package on the filesystem.
  */
 struct DubPath {
-    import reggae.rules.dub: Configuration;
+    import reggae.types: Configuration;
     string value;
     Configuration config;
 }

@@ -27,7 +27,7 @@ import unit_threaded;
     auto cppTarget = link(ExeName("cppapp"), [Target("foo.o", "", Target("foo.cpp"))], Flags("--sillyflag"));
     //since foo.o is not a leaf target, the path should not appear (it's created in the build dir)
     version(Windows)
-        enum expectedCpp = "cl.exe /nologo /Focppapp --sillyflag foo.o";
+        enum expectedCpp = "cl.exe /nologo /Fecppapp --sillyflag foo.o";
     else
         enum expectedCpp = "g++ -o cppapp --sillyflag foo.o";
     cppTarget.shellCommand(gDefaultOptions.withProjectPath("/foo/bar")).shouldEqual(expectedCpp);
@@ -35,7 +35,7 @@ import unit_threaded;
     auto cTarget = link(ExeName("capp"), [Target("bar.o", "", Target("bar.c"))]);
     //since foo.o is not a leaf target, the path should not appear (it's created in the build dir)
     version(Windows)
-        enum expectedC = "cl.exe /nologo /Focapp bar.o";
+        enum expectedC = "cl.exe /nologo /Fecapp bar.o";
     else
         enum expectedC = "gcc -o capp bar.o";
     cTarget.shellCommand(gDefaultOptions.withProjectPath("/foo/bar")).shouldEqual(expectedC);

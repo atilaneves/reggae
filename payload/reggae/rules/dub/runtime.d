@@ -4,7 +4,8 @@
 module reggae.rules.dub.runtime;
 
 
-import reggae.rules.dub: CompilationMode, Configuration;
+import reggae.rules.dub: CompilationMode;
+import reggae.types : Configuration;
 import reggae.dub.info: DubInfo;
 
 

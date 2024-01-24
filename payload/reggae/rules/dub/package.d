@@ -14,10 +14,6 @@ enum CompilationMode {
     all,      /// compile all source files
 }
 
-struct Configuration {
-    string value = "default";
-}
-
 package template oneOptionalOf(T, A...) {
     import std.meta: Filter;
 

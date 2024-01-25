@@ -253,7 +253,6 @@ sourceFiles %s
  // to pick up potential reggaefile.d dependencies
 importPaths %s
 dependency "reggae" path="packages/reggae"
-dependency "dub" version="*" // version fixed by dub.selections.json
 `;
 
 private enum libReggaeDubSdl =
@@ -261,6 +260,7 @@ private enum libReggaeDubSdl =
 name "reggae"
 targetType "staticLibrary"
 dependency "dub" version="*" // version fixed by dub.selections.json
+subConfiguration "dub" "library"
 `;
 
 private enum reggaeFileDubSelectionsJson =

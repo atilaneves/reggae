@@ -260,6 +260,7 @@ private enum libReggaeDubSdl =
 name "reggae"
 targetType "staticLibrary"
 dependency "dub" version="*" // version fixed by dub.selections.json
+subConfiguration "dub" "library"
 `;
 
 private enum reggaeFileDubSelectionsJson =

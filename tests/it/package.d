@@ -40,13 +40,6 @@ shared static this() nothrow {
     }
 }
 
-private void writeFile(string fileName)() {
-    import std.stdio;
-    auto file = File(buildPath(testsPath, fileName), "w");
-    file.write(import(fileName));
-}
-
-
 string testsPath() @safe {
     import std.path: buildNormalizedPath;
     return buildNormalizedPath(origPath, "tmp");

@@ -222,6 +222,7 @@ struct Binary {
 private string compileBuildGenerator(T)(auto ref T output, in Options options) {
 
     import std.algorithm: any, canFind;
+    import std.typecons: Yes, No;
 
     immutable buildGenName = getBuildGenName(options);
     if(options.isScriptBuild) return buildGenName;
@@ -235,9 +236,8 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
             return buildReggaefileWithReggae(options);
     }
 
-    const binary = reggaefileNeedsDubDep
-        ? buildReggaefileDub(output, options)
-        : buildReggaefileNoDub(options);
+    const needsDubFlag = reggaefileNeedsDubDep ? Yes.needDub : No.needDub;
+    const binary = buildReggaefileDub(output, options, needsDubFlag);
 
     buildBinary(output, options, binary);
 
@@ -255,10 +255,14 @@ importPaths %s
 dependency "reggae" path="packages/reggae"
 `;
 
-private enum libReggaeDubSdl =
+private enum libReggaeRecipeNoDub =
 `
 name "reggae"
 targetType "staticLibrary"
+`;
+
+private enum libReggaeRecipeDub = libReggaeRecipeNoDub ~
+`
 dependency "dub" version="*" // version fixed by dub.selections.json
 subConfiguration "dub" "library"
 `;
@@ -277,7 +281,12 @@ private enum reggaeFileDubSelectionsJson =
 
 
 // dub support is needed at runtime, build and link with dub-as-a-library
-private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
+private Binary buildReggaefileDub(O)(
+    auto ref O output,
+    in Options options,
+    imported!"std.typecons".Flag!"needDub" needDub,
+    )
+{
     import std.format: format;
     import std.path: buildPath;
     import std.algorithm: map, joiner;
@@ -326,10 +335,11 @@ private Binary buildReggaefileDub(O)(auto ref O output, in Options options) {
     );
 
     const reggaeRecipePath = buildPath(reggaeSrcDirName(options), "..", "dub.sdl");
+    const libReggaeRecipe = needDub ? libReggaeRecipeDub : libReggaeRecipeNoDub;
     writeIfDiffers(
         output,
         reggaeRecipePath,
-        libReggaeDubSdl,
+        libReggaeRecipe,
     );
 
     // FIXME - use --compiler
@@ -415,22 +425,6 @@ private imported!"std.json".JSONValue selectionsPkgVersion(string pkg)() @safe p
 }
 
 
-
-// no dub support needed at runtime, build by calling the compiler directly
-private Binary buildReggaefileNoDub(in imported!"reggae.options".Options options) {
-    const buildGenName = getBuildGenName(options);
-    const objectOpt = options.isLdc ? "-o " : "-of";
-
-    // `options.getReggaeFileDependenciesDlang` depends on
-    // `options.reggaeFileDepFile` existing, which means we need to
-    // compile with -makedeps
-    return Binary(
-        buildGenName,
-        [options.dCompiler, "-of" ~ buildGenName, "-i", options.reggaeFilePath, "-makedeps=" ~ options.reggaeFileDepFile,]
-        ~ importPaths(options) ~ buildGenMainSrcPath(options),
-    );
-}
-
 // builds the reggaefile custom dub project using reggae itself.
 // I put a build system in the build system so it can build system while it build systems.
 // Currently slower than using dub because of multiple thread scheduling but also because
@@ -439,13 +433,14 @@ private string buildReggaefileWithReggae(in imported!"reggae.options".Options op
 
     import reggae.rules.dub: dubPackage, DubPath;
     import reggae.build: Build;
+    import std.typecons: Yes;
 
     const dubRecipeDir = hiddenDirAbsPath(options);
 
     // HACK: needs refactoring, calling this just to create the phony dub package
     // for the reggaefile build
     import std.stdio: stdout;
-    buildReggaefileDub(stdout, options);
+    buildReggaefileDub(stdout, options, Yes.needDub);
 
     // FIXME - use correct D compiler.
     // The reason it doesn't work now is due to a test using

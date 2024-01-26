@@ -316,7 +316,7 @@ Target scriptlike(App app,
                   Flags flags = Flags(),
                   ImportPaths importPaths = ImportPaths(),
                   StringImportPaths stringImportPaths = StringImportPaths(),
-                  alias linkWithFunction = () { return cast(Target[])[];})
+                  alias linkWithFunction = imported!"reggae.rules.common".emptyTargets)
     () @trusted
 {
     auto linkWith = linkWithFunction();

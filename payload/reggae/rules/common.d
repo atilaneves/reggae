@@ -654,6 +654,6 @@ Language getLanguage(in string srcFileName) @safe pure nothrow {
     }
 }
 
-private Target[] emptyTargets() @safe @nogc pure nothrow {
+package Target[] emptyTargets() @safe @nogc pure nothrow {
     return null;
 }

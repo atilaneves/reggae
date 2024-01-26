@@ -263,8 +263,16 @@ targetType "staticLibrary"
 
 private enum libReggaeRecipeDub = libReggaeRecipeNoDub ~
 `
-dependency "dub" version="*" // version fixed by dub.selections.json
+dependency "dub" path="../dub"
 subConfiguration "dub" "library"
+`;
+
+private enum libDubRecipe =
+`
+name "dub"
+targetType "staticLibrary"
+versions "DubUseCurl"
+dependency "vibe-d:http" version=">=0.9.0 <0.10.0" optional=true
 `;
 
 private enum reggaeFileDubSelectionsJson =
@@ -316,30 +324,36 @@ private Binary buildReggaefileDub(O)(
     // write these first so that trying to get import paths for dub
     // and its transitive dependencies works in `dubImportPaths`
     // below.
-    const dubRecipeDir = hiddenDirAbsPath(options);
-    const dubRecipePath = buildPath(dubRecipeDir, "dub.sdl");
+    const recipeDir = hiddenDirAbsPath(options);
+    const recipePath = buildPath(recipeDir, "dub.sdl");
 
     writeIfDiffers(
         output,
-        dubRecipePath,
+        recipePath,
         reggaeFileDubSdl.format(
             userSourceFilesForDubSdl,
             importPathsForDubSdl,
         ),
     );
 
-    writeIfDiffers(
-        output,
-        buildPath(dubRecipeDir, "dub.selections.json"),
-        reggaeFileDubSelectionsJson.format(selectionsPkgVersion!"dub", selectionsPkgVersion!"unit-threaded"),
-    );
+    // if there's not at least an empty selections file, it always rebuilds
+    writeIfDiffers(output, buildPath(recipeDir, "dub.selections.json"), "");
 
     const reggaeRecipePath = buildPath(reggaeSrcDirName(options), "..", "dub.sdl");
-    const libReggaeRecipe = needDub ? libReggaeRecipeDub : libReggaeRecipeNoDub;
+    const libReggaeRecipe = needDub
+        ? libReggaeRecipeDub
+        : libReggaeRecipeNoDub;
     writeIfDiffers(
         output,
         reggaeRecipePath,
         libReggaeRecipe,
+    );
+
+    const dubRecipePath = buildPath(dubSrcDirName(options), "..", "dub.sdl");
+    writeIfDiffers(
+        output,
+        dubRecipePath,
+        libDubRecipe,
     );
 
     // FIXME - use --compiler
@@ -408,20 +422,6 @@ private void writeIfDiffers(O)(auto ref O output, in string path, in string cont
             mkdirRecurse(path.dirName);
         write(path, contents);
     }
-}
-
-
-// the dub/unit-threaded version we depend on
-private imported!"std.json".JSONValue selectionsPkgVersion(string pkg)() @safe pure {
-    import std.json: parseJSON;
-
-    // enforce CTFE, checking the JSON at compile-time
-    enum selection = import("dub.selections.json")
-        .parseJSON
-        ["versions"]
-        [pkg];
-
-    return selection;
 }
 
 

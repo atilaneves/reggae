@@ -550,10 +550,9 @@ private void writeSrcFiles(T)(auto ref T output, in Options options) {
     if(reggaePkgDirName.exists)
         rmdirRecurse(reggaePkgDirName);
 
-    enum fileNames = mixin(import("payload.txt"));
-    // this foreach has to happen at compile time due
-    // to the string import below.
-    foreach(fileName; aliasSeqOf!fileNames) {
+    // this foreach has to happen at compile time due to the string
+    // import.
+    foreach(fileName; aliasSeqOf!(mixin(import("reggae-payload.txt")))) {
         const filePath = reggaeSrcFileName(options, fileName);
 
         if(!filePath.dirName.exists)
@@ -562,6 +561,17 @@ private void writeSrcFiles(T)(auto ref T output, in Options options) {
         auto file = File(filePath, "w");
         file.write(import(fileName));
     }
+
+    foreach(fileName; aliasSeqOf!(mixin(import("dub-payload.txt")))) {
+        const filePath = dubSrcFileName(options, fileName);
+
+        if(!filePath.dirName.exists)
+            mkdirRecurse(filePath.dirName);
+
+        auto file = File(filePath, "w");
+        file.write(import(fileName));
+    }
+
 }
 
 private bool haveToWriteSrcFiles(in Options options) {
@@ -576,7 +586,7 @@ private bool haveToWriteSrcFiles(in Options options) {
         return true;
 
     enum read(string fileName) = import(fileName);
-    enum fileNames = mixin(import("payload.txt"))
+    enum fileNames = mixin(import("reggae-payload.txt"))
         .filter!(a => !a.endsWith("config.d"))
         .array
         .sort
@@ -675,4 +685,19 @@ private string hiddenDirAbsPath(in Options options) @safe pure nothrow {
 private string buildGenMainSrcPath(in Options options) @safe pure nothrow {
     import std.path: buildPath;
     return buildPath(hiddenDirAbsPath(options), "buildgen_main.d");
+}
+
+private string dubSrcFileName(in Options options, in string fileName) @safe pure nothrow {
+    import std.path: buildPath;
+    return buildPath(dubPkgDirName(options), fileName);
+}
+
+private string dubPkgDirName(in Options options) @safe pure nothrow {
+    import std.path: buildPath;
+    return buildPath(dubSrcDirName(options), "dub");
+}
+
+private string dubSrcDirName(in Options options) @safe pure nothrow {
+    import std.path: buildPath;
+    return buildPath(hiddenDirAbsPath(options), "packages", "dub", "source");
 }

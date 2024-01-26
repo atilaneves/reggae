@@ -86,7 +86,7 @@ private struct CompileOptions {
     SourceLanguage language;
 }
 
-private CompileOptions getCompileOptions(in imported!"std.json".JSONValue targetJsonObj, ulong compileGroupIndex) {
+private CompileOptions getCompileOptions(in imported!"std.json".JSONValue targetJsonObj, size_t compileGroupIndex) {
     import std.format : format;
     import std.exception : enforce;
     import std.array : join, array;
@@ -104,10 +104,10 @@ private CompileOptions getCompileOptions(in imported!"std.json".JSONValue target
         enforce(feature !in compileGroup, "The '" ~ feature ~ "' is not supported.");
     }
 
-    static CompileOptions getCompileOptionsImpl(in imported!"std.json".JSONValue compileGroup, ulong groupIndex) {
+    static CompileOptions getCompileOptionsImpl(in imported!"std.json".JSONValue compileGroup, size_t groupIndex) {
         import reggae.types : IncludePaths, Flags;
 
-        static CompileOptions[ulong] groupIndexToOptions;
+        static CompileOptions[size_t] groupIndexToOptions;
 
         if (auto opt = groupIndex in groupIndexToOptions) {
             return *opt;
@@ -237,7 +237,7 @@ private imported!"reggae.build".Target toReggaeTarget(in imported!"std.json".JSO
             continue;
         }
 
-        const compileGroupIndex = sourceJsonObj["compileGroupIndex"].integer;
+        const compileGroupIndex = sourceJsonObj["compileGroupIndex"].get!size_t;
         auto compileOptions = target.getCompileOptions(compileGroupIndex);
 
         intermediateTargets ~= objectFile(options,

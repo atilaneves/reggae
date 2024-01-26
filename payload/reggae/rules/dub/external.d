@@ -69,17 +69,17 @@ imported!"reggae.build".Target dubDependant(
     enum stringImportPaths = oneOptionalOf!(StringImportPaths, A);
 
     auto dubPathDependencies = [DubPaths]
-        .map!(p => DubPathDependency(reggaeOptions, p));
+        .map!(p => DubPathDependency(reggaeOptions, p))
+        .array
+        ;
 
     auto allImportPaths = dubPathDependencies
-        .save
         .map!(d => d.dubInfo.packages.map!(p => p.importPaths).joiner)
         .joiner
         .chain(importPaths.value)
         ;
 
     auto allStringImportPaths = dubPathDependencies
-        .save
         .map!(d => d.dubInfo.packages.map!(p => p.stringImportPaths).joiner)
         .joiner
         .chain(stringImportPaths.value)
@@ -92,7 +92,6 @@ imported!"reggae.build".Target dubDependant(
     );
 
     auto dubDepsObjs = dubPathDependencies
-        .save
         .map!(d => d.target)
         .array
         ;

@@ -14,10 +14,10 @@ int main(string[] args) {
 }
 
 void run(string[] args) {
-    import std.file: dirEntries, SpanMode;
+    import std.file: dirEntries, SpanMode, mkdirRecurse, exists;
     import std.stdio: File;
     import std.algorithm: filter, map;
-    import std.path: buildPath, pathSeparator;
+    import std.path: buildPath, pathSeparator, dirName;
 
     import std.stdio;
     args[0].writeln;
@@ -32,6 +32,10 @@ void run(string[] args) {
         .filter!(de => !de.isDir)
         .map!(de => de.name[prefix.length .. $]);
 
-    auto file = File(buildPath(outputDir, "payload.txt"), "w");
+    const fileName = buildPath(outputDir, "string-imports", "payload.txt");
+    if(!fileName.dirName.exists)
+        fileName.dirName.mkdirRecurse;
+
+    auto file = File(fileName, "w");
     file.writeln(entries);
 }

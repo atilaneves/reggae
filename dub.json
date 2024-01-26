@@ -8,7 +8,7 @@
     "targetType": "executable",
     "targetPath": "bin",
     "importPaths": ["src", "payload"],
-    "stringImportPaths": ["payload/reggae", "."],
+    "stringImportPaths": ["payload/reggae", ".", "string-imports"],
     "sourcePaths": ["src", "payload"],
     "mainSourceFile": "src/reggae/reggae_main.d",
     "preGenerateCommands": ["rdmd $PACKAGE_DIR/list_payload.d $PACKAGE_DIR"],

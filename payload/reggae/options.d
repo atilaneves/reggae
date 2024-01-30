@@ -101,19 +101,12 @@ struct Options {
 
         isDubProject = _dubProjectFile != "";
 
-        // if there's a dub package file, add it to the list of dependencies so the project
-        // is rebuilt if it changes
-        if(isDubProject) {
-            dependencies ~= _dubProjectFile;
-            dependencies ~= buildPath(projectPath, "dub.selections.json");
-        }
-
         if(isDubProject && backend == Backend.tup) {
             throw new Exception("dub integration not supported with the tup backend");
         }
     }
 
-    package string _dubProjectFile() @safe nothrow {
+    package string _dubProjectFile() const @safe nothrow {
         foreach(fileName; ["dub.sdl", "dub.json", "package.json"]) {
             const name = buildPath(projectPath, fileName);
             if(name.exists) return name;
@@ -231,7 +224,19 @@ struct Options {
         auto maybeReggaeFileDeps = hasReggaeFile
             ? getReggaeFileDependenciesDlang
             : [];
-        return ranFromPath ~ maybeReggaeFile ~ maybeReggaeFileDeps ~ dependencies;
+
+        // if there's a dub package file, add it to the list of dependencies so the project
+        // is rebuilt if it changes
+        string[] maybeDubDeps;
+        if(isDubProject) {
+            maybeDubDeps ~= _dubProjectFile;
+
+            const selectionsJsonPath = buildPath(projectPath, "dub.selections.json");
+            if (selectionsJsonPath.exists)
+                maybeDubDeps ~= selectionsJsonPath;
+        }
+
+        return ranFromPath ~ maybeReggaeFile ~ maybeReggaeFileDeps ~ maybeDubDeps ~ dependencies;
     }
 
     bool isJsonBuild() @safe const {

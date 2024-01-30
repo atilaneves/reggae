@@ -47,9 +47,6 @@ package struct Dub {
 
         _options = options;
 
-        const path = buildPath(options.projectPath, "dub.selections.json");
-        enforce(path.exists, "Cannot create dub instance without dub.selections.json");
-
         import dub.dub: DubClass = Dub;
         import dub.internal.vibecompat.inet.path: NativePath;
 
@@ -72,9 +69,6 @@ package struct Dub {
         import std.exception: enforce;
 
         DubInfo[string] ret;
-
-        enforce(buildPath(options.projectPath, "dub.selections.json").exists,
-                "Cannot find dub.selections.json");
 
         const configs = dubConfigurations(output);
         const haveTestConfig = configs.test != "";
@@ -267,7 +261,8 @@ public void fetchDubDeps(in string projectPath) @trusted {
 
     scope dub = new Dub(projectPath);
     dub.loadPackage();
-    dub.upgrade(UpgradeOptions.select);
+    if (!dub.project.hasAllDependencies)
+        dub.upgrade(UpgradeOptions.select);
 }
 
 

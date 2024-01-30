@@ -130,7 +130,7 @@ unittest {
 
     import std.process: execute;
 
-    with(immutable ReggaeSandbox("dub")) {
+    with(immutable ReggaeSandbox("dub_prebuild")) {
         runReggae("-b", "make");
         make(["VERBOSE=1"]).shouldExecuteOk.shouldContain("-debug -g");
         {

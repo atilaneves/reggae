@@ -273,8 +273,7 @@ private enum reggaeFileDubSelectionsJson =
         "fileVersion": 1,
         "versions": {
                 "dub": %s,
-                "reggae": {"path":"packages/reggae"},
-                "unit-threaded": %s
+                "reggae": {"path":"packages/reggae"}
         }
 }
 `;
@@ -331,7 +330,7 @@ private Binary buildReggaefileDub(O)(
     writeIfDiffers(
         output,
         buildPath(dubRecipeDir, "dub.selections.json"),
-        reggaeFileDubSelectionsJson.format(selectionsPkgVersion!"dub", selectionsPkgVersion!"unit-threaded"),
+        reggaeFileDubSelectionsJson.format(selectionsPkgVersion!"dub"),
     );
 
     const reggaeRecipePath = buildPath(reggaeSrcDirName(options), "..", "dub.sdl");

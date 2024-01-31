@@ -87,3 +87,32 @@ unittest {
         [binaryPath("CalculatorAppShared"), "3", "4"].shouldExecuteOk.shouldEqual(["7", "-1", "12"]);
     }
 }
+
+@("targets with dependencies - static library")
+unittest {
+    import std.format : format;
+
+    with(immutable ReggaeSandbox("cmake-static")) {
+
+        writeFile("reggaefile.d",
+                q{
+                    import reggae;
+                    Build reggaeBuild() {
+                        auto cmakeTargets = cmakeBuild!(ProjectPath(`%s`), Configuration("Release"), [],
+                                                        CMakeFlags("-G Ninja -D CMAKE_BUILD_TYPE=Release"));
+                        return Build(cmakeTargets);
+                    }
+                }.format(currentTestPath)
+        );
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+
+        version(Windows) {
+            shouldExist(binaryPath("CalculatorStatic.lib"));
+        } else {
+            shouldExist(binaryPath("libCalculatorStatic.a"));
+        }
+        [binaryPath("CalculatorAppStatic"), "3", "4"].shouldExecuteOk.shouldEqual(["7", "-1", "12"]);
+    }
+}

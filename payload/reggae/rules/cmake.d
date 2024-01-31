@@ -320,7 +320,7 @@ private imported!"reggae.build".Target toReggaeTarget(in imported!"std.json".JSO
                         implicits, cmakeLinkerFlags.libraryFlags);
 
         case StaticLib:
-            return staticLibraryTarget(reggaeArtifactPath, intermediateTargets);
+            return staticLibraryTarget(reggaeArtifactPath, intermediateTargets, implicits);
     }
 }
 

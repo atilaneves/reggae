@@ -496,6 +496,16 @@ Target staticLibraryTarget(in string name, Target[] objects) @safe pure {
     );
 }
 
+Target staticLibraryTarget(in string name, Target[] objects, Target[] implicits) @safe pure {
+    import std.path: defaultExtension;
+    return Target(
+        [buildPath("$builddir", defaultExtension(name, libExt))],
+        staticLibraryShellCommand,
+        objects,
+        implicits
+    );
+}
+
 version(Windows)
     private enum staticLibraryShellCommand = "lib.exe /OUT:$out $in";
 else

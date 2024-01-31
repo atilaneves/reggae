@@ -222,6 +222,13 @@ Target link(in ExeName exeName, Target[] dependencies, in Flags flags = Flags())
     return Target(exeName.value, command, dependencies);
 }
 
+Target link(in ExeName exeName, Target[] dependencies, in Flags flags, Target[] implicits) @safe pure {
+    auto command = Command(
+        CommandType.link,
+        assocList([assocEntry("flags", flags.value.dup)]),
+    );
+    return Target(exeName.value, command, dependencies, implicits);
+}
 
 /**
  Convenience rule for creating static libraries

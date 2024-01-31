@@ -29,7 +29,7 @@ import unit_threaded;
     version(Windows)
         enum expectedCpp = "cl.exe /nologo /Fecppapp --sillyflag foo.o";
     else
-        enum expectedCpp = "g++ -o cppapp --sillyflag foo.o";
+        enum expectedCpp = "g++ --sillyflag foo.o -o cppapp";
     cppTarget.shellCommand(gDefaultOptions.withProjectPath("/foo/bar")).shouldEqual(expectedCpp);
 
     auto cTarget = link(ExeName("capp"), [Target("bar.o", "", Target("bar.c"))]);
@@ -37,7 +37,7 @@ import unit_threaded;
     version(Windows)
         enum expectedC = "cl.exe /nologo /Fecapp bar.o";
     else
-        enum expectedC = "gcc -o capp bar.o";
+        enum expectedC = "gcc bar.o -o capp";
     cTarget.shellCommand(gDefaultOptions.withProjectPath("/foo/bar")).shouldEqual(expectedC);
 }
 
@@ -63,6 +63,6 @@ import unit_threaded;
     string[] flags;
     link!(ExeName("app"), () => [Target("foo.o"), Target("bar.o")]).shouldEqual(
         Target("app",
-               Command(CommandType.link, assocListT("flags", flags)),
+               Command(CommandType.link, assocListT("flags", flags, "link_libraries", flags)),
                [Target("foo.o"), Target("bar.o")]));
 }

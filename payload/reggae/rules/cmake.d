@@ -173,15 +173,22 @@ private bool isHeaderFile(in string file) {
     return isCHeader(file) || isCppHeader(file);
 }
 
-private string getLinkerFlags(in imported!"std.json".JSONValue target, ref CMakeInfo cmakeInfo) {
-    import reggae.types : Flags;
+private struct CMakeLinkerFlags {
+    import reggae.types : Flags, LibraryFlags;
+    Flags flags;
+    LibraryFlags libraryFlags;
+    Flags libraryPathFlags;
+}
+
+private CMakeLinkerFlags getLinkerFlags(in imported!"std.json".JSONValue target, ref CMakeInfo cmakeInfo) {
+    import reggae.types : Flags, LibraryFlags;
     import std.array : join;
     import std.algorithm : each;
 
     string flags, libraries, libraryPath;
 
     if ("link" !in target) {
-        return null;
+        return CMakeLinkerFlags();
     }
 
     version(Windows) {
@@ -214,7 +221,7 @@ private string getLinkerFlags(in imported!"std.json".JSONValue target, ref CMake
         }
     });
 
-    return [flags, libraries, libraryPath].join(" ");
+    return CMakeLinkerFlags(Flags(flags), LibraryFlags(libraries), Flags(libraryPath));
 }
 
 private enum TargetType : string {
@@ -295,6 +302,7 @@ private imported!"reggae.build".Target toReggaeTarget(in imported!"std.json".JSO
     cmakeInfo.markTargetAsGen(target);
 
     auto cmakeLinkerFlags = target.getLinkerFlags(cmakeInfo);
+    auto linkAndLibrarySearchPathFlags = cmakeLinkerFlags.flags.value ~ cmakeLinkerFlags.libraryPathFlags.value;
 
     const targetType = cast(TargetType) target["type"].str;
     final switch (targetType) with (TargetType) {
@@ -304,10 +312,12 @@ private imported!"reggae.build".Target toReggaeTarget(in imported!"std.json".JSO
             } else {
                 enum sharedLibFlag = "-shared";
             }
-            return link(ExeName(reggaeArtifactPath), intermediateTargets, Flags(sharedLibFlag ~ " " ~ cmakeLinkerFlags), implicits);
+            return link(ExeName(reggaeArtifactPath), intermediateTargets, Flags(sharedLibFlag ~ linkAndLibrarySearchPathFlags),
+                        implicits, cmakeLinkerFlags.libraryFlags);
 
         case Executable:
-            return link(ExeName(reggaeArtifactPath), intermediateTargets, Flags(cmakeLinkerFlags), implicits);
+            return link(ExeName(reggaeArtifactPath), intermediateTargets, Flags(linkAndLibrarySearchPathFlags),
+                        implicits, cmakeLinkerFlags.libraryFlags);
 
         case StaticLib:
             return staticLibraryTarget(reggaeArtifactPath, intermediateTargets);

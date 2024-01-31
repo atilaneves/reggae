@@ -59,33 +59,31 @@ unittest {
     }
 }
 
-version(Windows) {
-    @("targets with dependencies - shared library")
-    unittest {
-        import std.format : format;
+@("targets with dependencies - shared library")
+unittest {
+    import std.format : format;
 
-        with(immutable ReggaeSandbox("cmake-shared")) {
+    with(immutable ReggaeSandbox("cmake-shared")) {
 
-            writeFile("reggaefile.d",
-                    q{
-                        import reggae;
-                        Build reggaeBuild() {
-                            auto cmakeTargets = cmakeBuild!(ProjectPath(`%s`), Configuration("Release"), [],
-                                                            CMakeFlags("-G Ninja -D CMAKE_BUILD_TYPE=Release"));
-                            return Build(cmakeTargets);
-                        }
-                    }.format(currentTestPath)
-            );
+        writeFile("reggaefile.d",
+                q{
+                    import reggae;
+                    Build reggaeBuild() {
+                        auto cmakeTargets = cmakeBuild!(ProjectPath(`%s`), Configuration("Release"), [],
+                                                        CMakeFlags("-G Ninja -D CMAKE_BUILD_TYPE=Release"));
+                        return Build(cmakeTargets);
+                    }
+                }.format(currentTestPath)
+        );
 
-            runReggae("-b", "ninja");
-            ninja.shouldExecuteOk;
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
 
-            version(Windows) {
-                shouldExist(binaryPath("CalculatorShared.dll"));
-            } else {
-                shouldExist(binaryPath("libCalculatorShared.so"));
-            }
-            [binaryPath("CalculatorAppShared"), "3", "4"].shouldExecuteOk.shouldEqual(["7", "-1", "12"]);
+        version(Windows) {
+            shouldExist(binaryPath("CalculatorShared.dll"));
+        } else {
+            shouldExist(binaryPath("libCalculatorShared.so"));
         }
+        [binaryPath("CalculatorAppShared"), "3", "4"].shouldExecuteOk.shouldEqual(["7", "-1", "12"]);
     }
 }

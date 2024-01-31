@@ -169,8 +169,13 @@ private Command jsonToCommand(in JSONValue json) pure {
         case shell:
             return Command(json.object["cmd"].str);
         case link:
+            string[] linkLibraryFlags;
+            if (auto p = "link_libraries" in json) {
+                linkLibraryFlags = (*p).array.map!(a => a.str).array;
+            }
             return Command(CommandType.link,
-                           assocList([assocEntry("flags", json.object["flags"].array.map!(a => a.str).array)]));
+                           assocList([assocEntry("flags", json.object["flags"].array.map!(a => a.str).array),
+                                      assocEntry("link_libraries", linkLibraryFlags)]));
     }
 }
 

@@ -33,8 +33,9 @@ unittest {
     const testPath = newTestDir;
     mkdir(buildPath(testPath, "src"));
 
+    string[] linkLibrariesFlags;
     jsonToBuild(options, testPath, linkJsonStr).shouldEqual(
         Build(Target("myapp",
-                     Command(CommandType.link, assocListT("flags", ["-L-M"]))))
+                     Command(CommandType.link, assocListT("flags", ["-L-M"], "link_libraries", linkLibrariesFlags))))
     );
 }

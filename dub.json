@@ -46,7 +46,11 @@
                                   "tests/projects/export_proj/hello.d",
                                   "tests/projects/dub_postbuild/source/app.d",
                                   "tests/projects/dub_postbuild/reggaefile.d",
-                                  "tests/projects/dub_depends_on_prebuild/source/app.d"
+                                  "tests/projects/dub_depends_on_prebuild/source/app.d",
+                                  "tests/projects/d_cmake_shared/source/app.d",
+                                  "tests/projects/d_cmake_shared/reggaefile.d",
+                                  "tests/projects/d_cmake_static/source/app.d",
+                                  "tests/projects/d_cmake_static/reggaefile.d",
                                  ],
           "dependencies": {
               "unit-threaded": "*"

@@ -347,9 +347,13 @@ private CMakeInfo queryFileApi(in string projectPath, imported!"reggae.types".CM
     import reggae.config: options;
     import std.process : executeShell;
     import std.exception : enforce;
-    import std.path : buildNormalizedPath;
+    import std.path : buildNormalizedPath, isAbsolute;
     import std.file : exists, mkdirRecurse;
     import std.stdio : File;
+
+    const cmakeProjectPath = projectPath.isAbsolute
+                                ? projectPath
+                                : buildNormalizedPath(options.workingDir, projectPath);
 
     const buildDir = buildNormalizedPath(options.workingDir, ".reggae");
     if (!buildDir.exists)
@@ -370,7 +374,7 @@ private CMakeInfo queryFileApi(in string projectPath, imported!"reggae.types".CM
 
     // Run CMake to generate the reply files
     const cmakeCommand = "cmake -B " ~ buildDir ~ " " ~ cmakeFlags.value;
-    auto process = executeShell(cmakeCommand, workDir : projectPath);
+    auto process = executeShell(cmakeCommand, workDir : cmakeProjectPath);
     enforce(process.status == 0, "Couldn't run CMake to query File API.");
 
     // Look for the reply index file in the reply directory

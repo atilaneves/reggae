@@ -588,7 +588,7 @@ private bool haveToWriteSrcFiles(in Options options) {
         .filter!(a => !a.name.endsWith("config.d"))
         .array
         .sort
-        .map!(de => readText(de.name).dos2unix)
+        .map!(de => de.name.readText.dos2unix)
         .join;
 
     return whatIHave != whatsThere;

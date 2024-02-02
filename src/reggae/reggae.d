@@ -401,7 +401,7 @@ private void writeIfDiffers(O)(auto ref O output, in string path, in string cont
     import std.file: exists, readText, write, mkdirRecurse;
     import std.path: dirName;
 
-    if(!path.exists || path.readText.dos2unix != contents.dos2unix) {
+    if(!path.exists || !strEqModNewLine(path.readText, contents)) {
         output.log("Writing ", path);
         if(!path.dirName.exists)
             mkdirRecurse(path.dirName);
@@ -675,6 +675,9 @@ private string buildGenMainSrcPath(in Options options) @safe pure nothrow {
     return buildPath(hiddenDirAbsPath(options), "buildgen_main.d");
 }
 
+private bool strEqModNewLine(in string lhs, in string rhs) @safe pure nothrow {
+    return lhs.dos2unix == rhs.dos2unix;
+}
 
 private string dos2unix(in string str) @safe pure nothrow {
     import std.array: replace;

@@ -50,15 +50,14 @@ imported!"reggae.dub.info".DubInfo[string] dubInfos(O)
 {
     version(Have_dub) {
         import reggae.io: log;
-        import reggae.dub.interop.dublib: Dub, fetchDubDeps;
+        import reggae.dub.interop.dublib: Dub;
         import std.file: readText;
-
-        output.log("Fetching dub dependencies");
-        fetchDubDeps(options.projectPath);
-        output.log("Dub dependencies fetched");
 
         output.log("Creating dub instance");
         auto dub = Dub(options);
+
+        dub.fetchDeps(output);
+
         output.log("Getting dub information");
         auto ret = dub.getDubInfos(output);
         output.log("Got dub build information");

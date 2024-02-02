@@ -4,10 +4,14 @@ import tests.it.runtime;
 import tests.utils;
 import reggae.reggae;
 
-@("cmake")
+string binaryPath(in string binary) {
+    import std.path : buildNormalizedPath;
+    return buildNormalizedPath(ReggaeSandbox.currentTestPath, ".reggae", binary);
+}
+
+@("single target")
 unittest {
     import std.format : format;
-    import std.path : buildNormalizedPath;
 
     with(immutable ReggaeSandbox()) {
         writeFile("calculator.cpp", `
@@ -51,6 +55,64 @@ unittest {
 
         runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
-        [buildNormalizedPath(currentTestPath, "add_two_numbers_inc"), "3", "4"].shouldExecuteOk.shouldEqual(["8"]);
+        [binaryPath("add_two_numbers_inc"), "3", "4"].shouldExecuteOk.shouldEqual(["8"]);
+    }
+}
+
+@("targets with dependencies - shared library")
+unittest {
+    import std.format : format;
+
+    with(immutable ReggaeSandbox("cmake-shared")) {
+
+        writeFile("reggaefile.d",
+                q{
+                    import reggae;
+                    Build reggaeBuild() {
+                        auto cmakeTargets = cmakeBuild!(ProjectPath(`%s`), Configuration("Release"), [],
+                                                        CMakeFlags("-G Ninja -D CMAKE_BUILD_TYPE=Release"));
+                        return Build(cmakeTargets);
+                    }
+                }.format(currentTestPath)
+        );
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+
+        version(Windows) {
+            shouldExist(binaryPath("CalculatorShared.dll"));
+        } else {
+            shouldExist(binaryPath("libCalculatorShared.so"));
+        }
+        [binaryPath("CalculatorAppShared"), "3", "4"].shouldExecuteOk.shouldEqual(["7", "-1", "12"]);
+    }
+}
+
+@("targets with dependencies - static library")
+unittest {
+    import std.format : format;
+
+    with(immutable ReggaeSandbox("cmake-static")) {
+
+        writeFile("reggaefile.d",
+                q{
+                    import reggae;
+                    Build reggaeBuild() {
+                        auto cmakeTargets = cmakeBuild!(ProjectPath(`%s`), Configuration("Release"), [],
+                                                        CMakeFlags("-G Ninja -D CMAKE_BUILD_TYPE=Release"));
+                        return Build(cmakeTargets);
+                    }
+                }.format(currentTestPath)
+        );
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+
+        version(Windows) {
+            shouldExist(binaryPath("CalculatorStatic.lib"));
+        } else {
+            shouldExist(binaryPath("libCalculatorStatic.a"));
+        }
+        [binaryPath("CalculatorAppStatic"), "3", "4"].shouldExecuteOk.shouldEqual(["7", "-1", "12"]);
     }
 }

@@ -5,11 +5,11 @@ imported!"reggae.build".Target[] cmakeBuild(imported!"reggae.types".ProjectPath 
                                             imported!"reggae.types".TargetName[] targetNames = [],
                                             imported!"reggae.types".CMakeFlags cmakeFlags = imported!"reggae.types".CMakeFlags())() {
     import reggae.types : TargetName;
+    import reggae.build : Target;
     import std.exception : enforce;
     import std.algorithm : filter, map, canFind;
     import std.array : array;
     import std.range : empty, walkLength;
-    import std.json : JSONValue;
     import std.path : buildNormalizedPath;
     import std.stdio : stderr, writeln;
 
@@ -26,24 +26,36 @@ imported!"reggae.build".Target[] cmakeBuild(imported!"reggae.types".ProjectPath 
     const configuration = configurations.front;
 
     const cmakeTargetEntries = configuration["targets"].array;
+    foreach (targetEntry; cmakeTargetEntries) {
+        const id = targetEntry["id"].str;
+        const jsonFile = targetEntry["jsonFile"].str;
+        cmakeInfo.idToTarget[id] = buildNormalizedPath(cmakeInfo.apiReplyDir, jsonFile).readJson;
+    }
+
     const selectedCMakeTargetEntries = targetNames.empty
         ? cmakeTargetEntries
         : cmakeTargetEntries.filter!(target => targetNames.canFind(TargetName(target["name"].str)))
                             .array;
 
-    auto selectedCMakeTargets = selectedCMakeTargetEntries.map!((targetEntry) {
-        const targetJsonFile = targetEntry["jsonFile"].str;
-        return readJson(buildNormalizedPath(cmakeInfo.apiReplyDir, targetJsonFile));
-    });
+    auto selectedCMakeTargets = selectedCMakeTargetEntries.map!(targetEntry => cmakeInfo.idToTarget[targetEntry["id"].str]);
 
-    return selectedCMakeTargets.filter!((target) {
+    auto supportedCMakeTargets = selectedCMakeTargets.filter!((target) {
         if (target["type"].str.isSupportedTarget) {
             return true;
         }
         stderr.writeln("[WARNING] Skipping unsupported target '" ~ target["name"].str ~
                        "' of type '" ~ target["type"].str ~ "'");
         return false;
-    }).map!(t => t.toReggaeTarget(cmakeInfo)).array;
+    }).array;
+
+    Target[] reggaeTargets;
+    foreach(cmakeTarget; supportedCMakeTargets) {
+        if (cmakeInfo.targetHasBeenGen(cmakeTarget)) {
+            continue;
+        }
+        reggaeTargets ~= cmakeTarget.toReggaeTarget(cmakeInfo);
+    }
+    return reggaeTargets;
 }
 
 private imported!"std.json".JSONValue readJson(in string path) {
@@ -161,14 +173,22 @@ private bool isHeaderFile(in string file) {
     return isCHeader(file) || isCppHeader(file);
 }
 
-private string getLinkerFlags(in imported!"std.json".JSONValue target) {
+private struct CMakeLinkerFlags {
+    import reggae.types : Flags, LibraryFlags;
+    Flags flags;
+    LibraryFlags libraryFlags;
+    Flags libraryPathFlags;
+}
+
+private CMakeLinkerFlags getLinkerFlags(in imported!"std.json".JSONValue target, ref CMakeInfo cmakeInfo) {
+    import reggae.types : Flags, LibraryFlags;
     import std.array : join;
     import std.algorithm : each;
 
     string flags, libraries, libraryPath;
 
     if ("link" !in target) {
-        return null;
+        return CMakeLinkerFlags();
     }
 
     version(Windows) {
@@ -184,7 +204,14 @@ private string getLinkerFlags(in imported!"std.json".JSONValue target) {
                 flags ~= cf["fragment"].str ~ " ";
                 break;
             case "libraries":
-                libraries ~= cf["fragment"].str ~ " ";
+                const libName = cf["fragment"].str;
+                const libPath = () {
+                    if (auto p = libName in cmakeInfo.cmakeToReggaeArtifactPath) {
+                        return *p;
+                    }
+                    return libName;
+                }();
+                libraries ~= libPath ~ " ";
                 break;
             case "libraryPath":
                 libraryPath ~= libPathFlag ~ cf["fragment"].str ~ " ";
@@ -194,7 +221,7 @@ private string getLinkerFlags(in imported!"std.json".JSONValue target) {
         }
     });
 
-    return [flags, libraries, libraryPath].join(" ");
+    return CMakeLinkerFlags(Flags(flags), LibraryFlags(libraries), Flags(libraryPath));
 }
 
 private enum TargetType : string {
@@ -210,21 +237,27 @@ private bool isSupportedTarget(in string target) {
 }
 
 private imported!"reggae.build".Target toReggaeTarget(in imported!"std.json".JSONValue target,
-                                                      CMakeInfo cmakeInfo) {
+                                                      ref CMakeInfo cmakeInfo) {
     import reggae.config: options;
     import reggae.rules.common : objectFile, link, staticLibraryTarget;
     import reggae.build : Target;
     import reggae.types : SourceFile, ExeName, Flags;
     import std.format : format;
     import std.exception : enforce;
-    import std.path : buildNormalizedPath, isAbsolute, baseName;
-    import std.algorithm : filter;
-    import std.range : walkLength;
+    import std.path : buildNormalizedPath, isAbsolute, baseName, extension;
     import std.stdio : writeln, stderr;
+    import std.algorithm : map, filter;
+    import std.range : walkLength;
+    import std.array : array, replace;
+
+    Target[] implicits, intermediateTargets;
+    if ("dependencies" in target) {
+        implicits = target["dependencies"].array.map!(dep => cmakeInfo.idToTarget[dep["id"].str]
+                                                                      .toReggaeTarget(cmakeInfo))
+                                                                      .array;
+    }
 
     const sourceDir = cmakeInfo.codeModel["paths"]["source"].str;
-
-    Target[] intermediateTargets;
 
     foreach (sourceJsonObj; target["sources"].array) {
         const filePath = sourceJsonObj["path"].str;
@@ -254,18 +287,40 @@ private imported!"reggae.build".Target toReggaeTarget(in imported!"std.json".JSO
     if (artifacts.length > 1) {
         stderr.writeln("[Warning] Target '" ~ target["name"].str ~ "' generates multiple artifacts.");
     }
-    const artifactPath = buildNormalizedPath(options.workingDir, target["nameOnDisk"].str);
+    auto artifactFilePaths = artifacts.filter!(a => a["path"].str.baseName == target["nameOnDisk"].str);
+    enforce(artifactFilePaths.walkLength == 1, "Could not find the expected artifact path.");
+
+    const cmakeArtifactPath = artifactFilePaths.front()["path"].str;
+    const reggaeArtifactPath = buildNormalizedPath(options.workingDir, ".reggae", target["nameOnDisk"].str);
+    cmakeInfo.cmakeToReggaeArtifactPath[cmakeArtifactPath] = reggaeArtifactPath;
+
+    if (cmakeArtifactPath.extension == ".dll") {
+        const secondaryArtifactPath = cmakeArtifactPath.replace(".dll", ".lib");
+        cmakeInfo.cmakeToReggaeArtifactPath[secondaryArtifactPath] = reggaeArtifactPath.replace(".dll", ".lib");
+    }
+
+    cmakeInfo.markTargetAsGen(target);
+
+    auto cmakeLinkerFlags = target.getLinkerFlags(cmakeInfo);
+    auto linkAndLibrarySearchPathFlags = cmakeLinkerFlags.flags.value ~ cmakeLinkerFlags.libraryPathFlags.value;
 
     const targetType = cast(TargetType) target["type"].str;
     final switch (targetType) with (TargetType) {
         case SharedLib:
-            goto case Executable;
+            version(Windows) {
+                enum sharedLibFlag = "/LD";
+            } else {
+                enum sharedLibFlag = "-shared";
+            }
+            return link(ExeName(reggaeArtifactPath), intermediateTargets, Flags(sharedLibFlag ~ linkAndLibrarySearchPathFlags),
+                        implicits, cmakeLinkerFlags.libraryFlags);
 
         case Executable:
-            return link(ExeName(artifactPath), intermediateTargets, Flags(target.getLinkerFlags));
+            return link(ExeName(reggaeArtifactPath), intermediateTargets, Flags(linkAndLibrarySearchPathFlags),
+                        implicits, cmakeLinkerFlags.libraryFlags);
 
         case StaticLib:
-            return staticLibraryTarget(artifactPath, intermediateTargets);
+            return staticLibraryTarget(reggaeArtifactPath, intermediateTargets, implicits);
     }
 }
 
@@ -274,19 +329,31 @@ private struct CMakeInfo {
     JSONValue codeModel;
     string apiReplyDir;
     JSONValue toolchain;
+    JSONValue[string] idToTarget;
+    string[] generatedTargetIds;
+    string[string] cmakeToReggaeArtifactPath;
+
+    void markTargetAsGen(JSONValue target) {
+        generatedTargetIds ~= target["id"].str;
+    }
+
+    bool targetHasBeenGen(JSONValue target) const {
+        import std.algorithm : canFind;
+        return generatedTargetIds.canFind(target["id"].str);
+    }
 }
 
 private CMakeInfo queryFileApi(in string projectPath, imported!"reggae.types".CMakeFlags cmakeFlags) {
+    import reggae.config: options;
     import std.process : executeShell;
     import std.exception : enforce;
-    import std.path : extension, buildNormalizedPath, baseName;
-    import std.file : tempDir, exists, mkdirRecurse, rmdirRecurse;
+    import std.path : buildNormalizedPath;
+    import std.file : exists, mkdirRecurse;
     import std.stdio : File;
 
-    const buildDir = buildNormalizedPath(tempDir, projectPath.baseName ~ "-build");
-    if (buildDir.exists)
-        buildDir.rmdirRecurse;
-    buildDir.mkdirRecurse;
+    const buildDir = buildNormalizedPath(options.workingDir, ".reggae");
+    if (!buildDir.exists)
+        buildDir.mkdirRecurse;
 
     // Specify the path to the CMake File API v1 directory
     const apiDir = buildNormalizedPath(buildDir, ".cmake/api/v1/");

@@ -214,14 +214,23 @@ Target link(ExeName exeName, alias dependenciesFunc, Flags flags = Flags())() {
  If any D files are found, the linker is the D compiler, and so on with
  C++ and C. If none of those apply, the D compiler is used.
  */
-Target link(in ExeName exeName, Target[] dependencies, in Flags flags = Flags()) @safe pure {
+Target link(in ExeName exeName, Target[] dependencies, in Flags flags = Flags(),
+            in LibraryFlags linkLibraryFlags = LibraryFlags()) @safe pure {
     auto command = Command(
         CommandType.link,
-        assocList([assocEntry("flags", flags.value.dup)]),
+        assocList([assocEntry("flags", flags.value.dup), assocEntry("link_libraries", linkLibraryFlags.value.dup)]),
     );
     return Target(exeName.value, command, dependencies);
 }
 
+Target link(in ExeName exeName, Target[] dependencies, in Flags flags, Target[] implicits,
+            in LibraryFlags linkLibraryFlags = LibraryFlags()) @safe pure {
+    auto command = Command(
+        CommandType.link,
+        assocList([assocEntry("flags", flags.value.dup), assocEntry("link_libraries", linkLibraryFlags.value.dup)]),
+    );
+    return Target(exeName.value, command, dependencies, implicits);
+}
 
 /**
  Convenience rule for creating static libraries
@@ -484,6 +493,16 @@ Target staticLibraryTarget(in string name, Target[] objects) @safe pure {
         [buildPath("$builddir", defaultExtension(name, libExt))],
         staticLibraryShellCommand,
         objects,
+    );
+}
+
+Target staticLibraryTarget(in string name, Target[] objects, Target[] implicits) @safe pure {
+    import std.path: defaultExtension;
+    return Target(
+        [buildPath("$builddir", defaultExtension(name, libExt))],
+        staticLibraryShellCommand,
+        objects,
+        implicits
     );
 }
 

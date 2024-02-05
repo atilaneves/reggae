@@ -9,20 +9,9 @@ import unit_threaded;
 @("shell commands") unittest {
     import reggae.config: gDefaultOptions, dCompiler;
 
-    version(Windows) {
-        version(DigitalMars) {
-            version(Win32)
-                enum defaultDCModel = " -m32mscoff";
-            else
-                enum defaultDCModel = null;
-        } else
-            enum defaultDCModel = null;
-    } else
-        enum defaultDCModel = null;
-
     auto objTarget = link(ExeName("myapp"), [Target("foo.o"), Target("bar.o")], Flags("-L-L"));
     objTarget.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
-        dCompiler ~ defaultDCModel ~ " -ofmyapp -L-L " ~ buildPath("/path/to/foo.o") ~ " " ~ buildPath("/path/to/bar.o"));
+        dCompiler ~ " -ofmyapp -L-L " ~ buildPath("/path/to/foo.o") ~ " " ~ buildPath("/path/to/bar.o"));
 
     auto cppTarget = link(ExeName("cppapp"), [Target("foo.o", "", Target("foo.cpp"))], Flags("--sillyflag"));
     //since foo.o is not a leaf target, the path should not appear (it's created in the build dir)

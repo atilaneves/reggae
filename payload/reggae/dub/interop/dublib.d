@@ -34,9 +34,9 @@ package struct Dub {
     import reggae.dub.interop.configurations: DubConfigurations;
     import reggae.dub.info: DubInfo;
     import reggae.options: Options;
-    import dub.project: Project;
+    import dub.dub: DubClass = Dub;
 
-    private Project _project;
+    private DubClass _dub;
     private const string[] _extraDFlags;
     private const(Options) _options;
 
@@ -46,18 +46,23 @@ package struct Dub {
         import std.file: exists;
 
         _options = options;
-
-        import dub.dub: DubClass = Dub;
-        import dub.internal.vibecompat.inet.path: NativePath;
-
-        auto dub = fullDub(options.projectPath); // store as a member variable?
-        _project = dub.project;
-
+        _dub = fullDub(options.projectPath);
         _extraDFlags = options.dflags.dup;
     }
 
     const(Options) options() @safe @nogc pure nothrow const return scope {
         return _options;
+    }
+
+    void fetchDeps(O)(ref O output) {
+        import reggae.io: log;
+        import dub.dub: UpgradeOptions;
+
+        if (!_dub.project.hasAllDependencies) {
+            output.log("Fetching dub dependencies");
+            _dub.upgrade(UpgradeOptions.select);
+            output.log("Dub dependencies fetched");
+        }
     }
 
     imported!"reggae.dub.info".DubInfo[string] getDubInfos(O)(ref O output)
@@ -150,7 +155,7 @@ package struct Dub {
         // add the special `dub test` configuration (which doesn't require an existing `unittest` config)
         const lookingForUnitTestsConfig = allConfigs || singleConfig == "unittest";
         const testConfig = lookingForUnitTestsConfig
-            ? _project.addTestRunnerConfiguration(settings)
+            ? _dub.project.addTestRunnerConfiguration(settings)
             : null; // skip when requesting a single non-unittest config
 
         // error out if the test config is explicitly requested but not available
@@ -159,13 +164,13 @@ package struct Dub {
         }
 
         const haveSpecialTestConfig = testConfig.length && testConfig != "unittest";
-        const defaultConfig = _project.getDefaultConfiguration(settings.platform);
+        const defaultConfig = _dub.project.getDefaultConfiguration(settings.platform);
 
         // A violation of the Law of Demeter caused by a dub bug.
-        // Otherwise _project.configurations would do, but it fails for one
+        // Otherwise _dub.project.configurations would do, but it fails for one
         // projet and no reduced test case was found.
         auto allConfigurationsAsStrings =
-            _project
+            _dub.project
             .rootPackage
             .recipe
             .configurations
@@ -246,23 +251,12 @@ package struct Dub {
     }
 
     private DubInfo configToDubInfo(in string config = "") @trusted /*dub*/ {
-        auto generator = new InfoGenerator(_project, _extraDFlags);
+        auto generator = new InfoGenerator(_dub.project, _extraDFlags);
         auto settings = getGeneratorSettings(_options);
         settings.config = config;
         generator.generate(settings);
         return DubInfo(generator.dubPackages, _options.dup);
     }
-}
-
-
-public void fetchDubDeps(in string projectPath) @trusted {
-    import dub.dub: Dub, UpgradeOptions;
-    import dub.internal.vibecompat.inet.path: NativePath;
-
-    scope dub = new Dub(projectPath);
-    dub.loadPackage();
-    if (!dub.project.hasAllDependencies)
-        dub.upgrade(UpgradeOptions.select);
 }
 
 

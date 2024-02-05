@@ -399,10 +399,9 @@ private void buildTarget(in Options options, imported!"reggae.build".Target targ
 private void writeIfDiffers(O)(auto ref O output, in string path, in string contents) @safe {
     import reggae.io: log;
     import std.file: exists, readText, write, mkdirRecurse;
-    import std.array: replace;
     import std.path: dirName;
 
-    if(!path.exists || path.readText.replace("\r\n", "\n") != contents.replace("\r\n", "\n")) {
+    if(!path.exists || !strEqModNewLine(path.readText, contents)) {
         output.log("Writing ", path);
         if(!path.dirName.exists)
             mkdirRecurse(path.dirName);
@@ -567,7 +566,7 @@ private void writeSrcFiles(T)(auto ref T output, in Options options) {
 private bool haveToWriteSrcFiles(in Options options) {
     import std.file: readText, dirEntries, SpanMode, exists;
     import std.algorithm: map, filter, sort, endsWith;
-    import std.array: join, array, replace;
+    import std.array: join, array;
     import std.meta: staticMap, aliasSeqOf;
 
     immutable reggaePkgDirName = reggaePkgDirName(options);
@@ -589,7 +588,7 @@ private bool haveToWriteSrcFiles(in Options options) {
         .filter!(a => !a.name.endsWith("config.d"))
         .array
         .sort
-        .map!(de => readText(de.name).replace("\r\n", "\n"))
+        .map!(de => de.name.readText.dos2unix)
         .join;
 
     return whatIHave != whatsThere;
@@ -599,7 +598,6 @@ private void writeConfig(T)(auto ref T output, in Options options) {
 
     import reggae.io: log;
     import std.file: readText;
-    import std.array: replace;
 
     version(minimal) {
         static void dubConfigSource(A...)(auto ref A args) { return ""; }
@@ -612,7 +610,8 @@ private void writeConfig(T)(auto ref T output, in Options options) {
     const src = reggaeSrc ~ dubSrc;
     const fileName = reggaeSrcFileName(options, "config.d");
 
-    if(fileName.readText.replace("\r\n", "\n") == src)
+    // for "reasons", using strEqModNewLine breaks on Windows
+    if(fileName.readText.dos2unix == src)
         return;
 
     output.log("Writing reggae configuration");
@@ -675,4 +674,13 @@ private string hiddenDirAbsPath(in Options options) @safe pure nothrow {
 private string buildGenMainSrcPath(in Options options) @safe pure nothrow {
     import std.path: buildPath;
     return buildPath(hiddenDirAbsPath(options), "buildgen_main.d");
+}
+
+private bool strEqModNewLine(in string lhs, in string rhs) @safe pure nothrow {
+    return lhs.dos2unix == rhs.dos2unix;
+}
+
+private string dos2unix(in string str) @safe pure nothrow {
+    import std.array: replace;
+    return str.replace("\r\n", "\n");
 }

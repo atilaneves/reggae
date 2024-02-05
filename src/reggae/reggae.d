@@ -610,7 +610,7 @@ private void writeConfig(T)(auto ref T output, in Options options) {
     const src = reggaeSrc ~ dubSrc;
     const fileName = reggaeSrcFileName(options, "config.d");
 
-    if(strEqModNewLine(fileName.readText, src))
+    if(fileName.readText.dos2unix == src)
         return;
 
     output.log("Writing reggae configuration");

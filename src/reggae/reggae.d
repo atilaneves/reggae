@@ -610,6 +610,7 @@ private void writeConfig(T)(auto ref T output, in Options options) {
     const src = reggaeSrc ~ dubSrc;
     const fileName = reggaeSrcFileName(options, "config.d");
 
+    // for "reasons", using strEqModNewLine breaks on Windows
     if(fileName.readText.dos2unix == src)
         return;
 

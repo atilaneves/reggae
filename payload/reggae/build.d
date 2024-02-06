@@ -606,7 +606,6 @@ struct Command {
                     case D:
                     case unknown:
                         return options.dCompiler ~
-                            getDefaultDCompilerModelArg(options) ~
                             ["-of$out", "$flags", "$in"];
                     case Cplusplus:
                         return options.cppCompiler ~ cArgs;
@@ -640,23 +639,6 @@ struct Command {
         }
     }
 
-    static private string[] getDefaultDCompilerModelArg(in Options options) @safe pure nothrow {
-        version(Windows) {
-            import std.path: baseName, stripExtension;
-            const isDMD = baseName(stripExtension(options.dCompiler)) == "dmd";
-            if(!isDMD)
-                return null;
-            version(Win32)
-                return ["-m32mscoff"];
-            else version(Win64)
-                return null;
-            else
-                static assert(false, "Unknown Windows system");
-        } else {
-            return null;
-        }
-    }
-
     // The `deps` flag is whether or not to automatically compute dependencies for D files.
     // The reason for its existence is that tup does it itself.
     private static string[] compileTemplate(in CommandType type,
@@ -686,7 +668,6 @@ struct Command {
                 const output = options.isGdc
                     ? "-o$out"
                     : "-of$out";
-                const modelArg = getDefaultDCompilerModelArg(options);
                 const makeDeps =
                     deps
                     ? ["-makedeps=$out.dep"]
@@ -695,7 +676,6 @@ struct Command {
                     ? ["$in"]
                     : [output, "$in"];
                 auto meat = options.dCompiler ~
-                    modelArg ~
                     makeDeps ~
                     ["$flags", "$includes", "$stringImports", output, colour, "-c"];
                 return meat ~ postfix;

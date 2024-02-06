@@ -1,17 +1,6 @@
 module multiple_outputs.reggaefile_tog;
 
-// Check out the CI configuration: dmd on Windows uses 32-bit
-version(Windows)
-    version(DigitalMars)
-        enum is32bitBuild = true;
-
-
-static if(is(typeof(is32bitBuild)))
-    enum arch = ` -m32`;
-else
-    enum arch = ``;
-
-enum appCmd = `dmd` ~ arch ~ ` -of$out $in`;
+enum appCmd = `dmd -of$out $in`;
 
 version(Windows)
     enum protoObjCmd = `cl.exe /Fo$out -c $builddir/protocol.d`;

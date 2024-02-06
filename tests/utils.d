@@ -111,8 +111,3 @@ struct FakeFile {
 
     void flush() @safe @nogc pure nothrow const {}
 }
-
-// stupid template emission
-version (DigitalMars)
-pragma(mangle, "_D3std7sumtype__T7SumTypeTS3dub10dependency12VersionRangeTSQBg8internal10vibecompat4inet4path10NativePathTSQDcQDb10RepositoryZQEf11__invariantMxFNaNbNiNfZv")
-void dummySumtypeInvariant(void*) {}

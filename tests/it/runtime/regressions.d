@@ -106,3 +106,23 @@ unittest {
         ninja.shouldFailToExecute(testPath);
     }
 }
+
+@("buildgen.binary")
+@Tags("binary")
+unittest {
+    import reggae.rules.common: exeExt;
+    with(immutable ReggaeSandbox()) {
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+                alias lib = staticLibrary!("mylib", Sources!("src"));
+                mixin build!lib;
+            }
+        );
+
+        writeFile("src/foo.d", "void foo() {}");
+        runReggae("-b", "binary");
+        shouldExist("build" ~ exeExt);
+    }
+}

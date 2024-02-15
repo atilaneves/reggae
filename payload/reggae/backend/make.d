@@ -75,8 +75,9 @@ struct Makefile {
     //includes rerunning reggae
     string output() @safe {
 
-        import std.array: join;
+        import std.array: join, replace;
         import std.range: chain;
+        import std.algorithm: sort, uniq, map;
 
         auto ret = simpleOutput;
 
@@ -85,8 +86,12 @@ struct Makefile {
         } else {
             // add a dependency on the Makefile to reggae itself and the build description,
             // but only if not exporting a build
-            ret ~= fileName() ~ ": " ~ chain(options.reggaeFileDependencies, _srcDirs).join(" ") ~ "\n";
-            ret ~= "\t" ~ options.rerunArgs.join(" ") ~ "\n";
+            auto srcDirs = _srcDirs.sort.uniq;
+            const rerunLine = "\t" ~ options.rerunArgs.join(" ") ~ "\n";
+
+            ret ~= fileName() ~ ": " ~ chain(options.reggaeFileDependencies, srcDirs.save).join(" ") ~ "\n";
+            ret ~= rerunLine;
+            ret ~= "\n" ~ srcDirs.save.map!(d => d ~ ":" ~ "\n" ~ rerunLine).join("\n");
         }
 
         return replaceEnvVars(ret);

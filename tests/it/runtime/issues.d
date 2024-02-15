@@ -481,3 +481,46 @@ unittest {
         shouldExist("dub_objs");
     }
 }
+
+version(DigitalMars) {
+    static foreach(backend; ["ninja", "make"]) {
+        @("rerun.deleted.dir." ~ backend)
+        @Tags(backend)
+        unittest {
+            import std.file: rmdirRecurse;
+
+            with(immutable ReggaeSandbox()) {
+
+                writeFile(
+                    "reggaefile.d",
+                    q{
+                        import reggae;
+                        alias lib = staticLibrary!(
+                            "mylib",
+                            Sources!("source")
+                        );
+                        mixin build!lib;
+                    }
+                );
+                writeFile("source/maths/foo.d", "int twice (int i) { return i * 2; }");
+                writeFile("source/maths/bar.d", "int thrice(int i) { return i * 3; }");
+                writeFile("source/util/baz.d", "void baz() {}");
+
+                runReggae("-b", backend, "--verbose");
+                mixin(backend).shouldExecuteOk;
+
+                // delete the source directory and make sure reggae gets rerun
+                rmdirRecurse(inSandboxPath("source/util"));
+
+                static if(backend == "ninja")
+                    enum msg = "missing and no known rule";
+                else static if(backend == "make")
+                    enum msg = "No rule to make target";
+                else
+                    static assert(false, "unknown backend");
+
+                mixin(backend).shouldFailToExecute.shouldNotContain(msg);
+            }
+        }
+    }
+}

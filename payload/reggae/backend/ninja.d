@@ -38,20 +38,33 @@ struct Ninja {
 
     //includes rerunning reggae
     const(NinjaEntry)[] allBuildEntries() @safe {
-        import std.array: array;
-        import std.algorithm: sort, uniq;
-        import std.range: chain;
+        import std.array: array, replace;
+        import std.algorithm: sort, uniq, map;
+        import std.range: chain, only;
 
+        auto srcDirs = _srcDirs.sort.uniq;
         const files = flattenEntriesInBuildLine(
-            chain(_options.reggaeFileDependencies, _srcDirs.sort.uniq).array
+            chain(_options.reggaeFileDependencies, srcDirs).array
         );
         auto paramLines = _options.oldNinja ? [] : ["pool = console"];
 
         const(NinjaEntry)[] rerunEntries() {
             // if exporting the build system, don't include rerunning reggae
-            return _options.export_
-                ? []
-                : [NinjaEntry("build build.ninja: _rerun | " ~ files, paramLines)];
+            if(_options.export_)
+                return [];
+            auto rerun = NinjaEntry("build build.ninja: _rerun | " ~ files, paramLines);
+            // the reason this is needed is because source directories
+            // can be deleted or renamed. If they are, ninja will
+            // complain about the missing directories since they are a
+            // dependency of the build.ninja file for rerunning
+            // reggae.  So we consider them phony targets with no
+            // dependencies to make that not happen and ninja will
+            // rerun reggae and change the list of source directories
+            // accordingly.
+            auto phonySrcDirs = srcDirs
+                .map!(a => NinjaEntry("build " ~ a.escapeBuildLine ~ ": phony"))
+                ;
+            return chain(rerun.only, phonySrcDirs).array;
         }
 
         const defaultOutputs = _build.defaultTargetsOutputs(_projectPath);
@@ -364,7 +377,7 @@ private:
         import std.algorithm: map;
         import std.array: join, replace;
         return entries
-            .map!(e => e.replace(":", "$:").replace(" ", "$ "))
+            .map!escapeBuildLine
             .join(" ");
     }
 
@@ -392,6 +405,10 @@ private:
     }
 }
 
+private string escapeBuildLine(in string line) @safe pure {
+    import std.array: replace;
+    return line.replace(":", "$:").replace(" ", "$ ");
+}
 
 struct NinjaEntry {
     string mainLine;

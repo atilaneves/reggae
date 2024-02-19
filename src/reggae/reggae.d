@@ -189,6 +189,7 @@ private string[] getJsonOutputArgs(in Options options) @safe {
 private void createBuild(T)(auto ref T output, in Options options) {
 
     import reggae.io: log;
+    import std.process: spawnProcess, wait;
 
     enforce(options.reggaeFilePath.exists, text("Could not find ", options.reggaeFilePath));
 
@@ -204,12 +205,10 @@ private void createBuild(T)(auto ref T output, in Options options) {
 
     //actually run the build generator
     output.log("Running the created binary to generate the build");
-    immutable retRunBuildgen = execute([buildPath(hiddenDirAbsPath(options), buildGenName)]);
-    enforce(retRunBuildgen.status == 0,
-            text("Couldn't execute the produced ", buildGenName, " binary:\n", retRunBuildgen.output));
+    immutable buildgenStatus = spawnProcess([buildPath(hiddenDirAbsPath(options), buildGenName)]).wait();
+    enforce(buildgenStatus == 0,
+            text("Executing the produced ", buildGenName, " binary failed"));
     output.log("Build generated");
-
-    if(retRunBuildgen.output.length) output.log(retRunBuildgen.output);
 }
 
 

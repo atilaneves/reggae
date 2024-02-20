@@ -329,9 +329,7 @@ version(Posix) {
                       ]
             );
             runReggae("-b", "ninja").shouldThrowWithMessage(
-                "Couldn't execute the produced buildgen binary:\n" ~
-                "Cannot have a custom rule with no $in or $out: " ~
-                "use `phony` or explicit $in/$out instead.\n");
+                "Executing the produced buildgen binary failed");
         }
     }
 }

@@ -224,10 +224,14 @@ unittest {
                 ]
             );
 
-            // but do write configuration if dub cfg has changed
-            auto lines = runIt("-d myvar=foo");
-            srcLine.should.not.be in lines;
-            cfgLine.should.be in lines;
+            // we cache dub's PackageManager per-thread; use a new thread to make sure the changed .sdl is reloaded
+            import core.thread: Thread;
+            new Thread(() {
+                // but do write configuration if dub cfg has changed
+                auto lines = runIt("-d myvar=foo");
+                srcLine.should.not.be in lines;
+                cfgLine.should.be in lines;
+            }).start().join();
         }
     }
 }

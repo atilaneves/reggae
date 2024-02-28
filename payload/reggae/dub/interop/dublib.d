@@ -37,6 +37,10 @@ private struct DubConfigurations {
     bool haveTestConfig() @safe @nogc pure nothrow scope const {
         return test != "";
     }
+
+    bool isTestConfig(in string config) @safe @nogc pure nothrow scope const {
+        return haveTestConfig && config == test;
+    }
 }
 
 package struct Dub {
@@ -91,9 +95,8 @@ package struct Dub {
         Exception dubInfoFailure;
 
         foreach(config; configs.configurations) {
-            const isTestConfig = configs.haveTestConfig && config == configs.test;
             try {
-                ret[config] = configToDubInfo(output, config, isTestConfig);
+                ret[config] = configToDubInfo(output, config, configs.isTestConfig(config));
                 atLeastOneConfigOk = true;
             } catch(Exception ex) {
                 output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);

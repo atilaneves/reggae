@@ -20,7 +20,8 @@ void log(O, T...)(auto ref O output, auto ref T args) {
 private string secondsSinceStartString() @safe {
     import std.string: rightJustify;
     import std.conv: to;
-    return ("+" ~ (sinceStart / 1000.0).to!string).rightJustify(8, ' ');
+    import std.format: format;
+    return ("+" ~ (sinceStart / 1000.0).format!"%03.3f"()).rightJustify(8, ' ');
 }
 
 

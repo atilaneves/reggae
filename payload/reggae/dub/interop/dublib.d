@@ -35,10 +35,12 @@ package struct Dub {
     import reggae.dub.info: DubInfo;
     import reggae.options: Options;
     import dub.dub: DubClass = Dub;
+    import dub.generators.generator: GeneratorSettings;
 
     private DubClass _dub;
     private const string[] _extraDFlags;
     private const(Options) _options;
+    private GeneratorSettings _generatorSettings;
 
     this(in Options options) @trusted {
         import reggae.path: buildPath;
@@ -48,6 +50,7 @@ package struct Dub {
         _options = options;
         _dub = fullDub(options.projectPath);
         _extraDFlags = options.dflags.dup;
+        _generatorSettings = getGeneratorSettings(options);
     }
 
     const(Options) options() @safe @nogc pure nothrow const return scope {
@@ -150,12 +153,11 @@ package struct Dub {
         import std.conv: text;
 
         auto singleConfig = _options.dubConfig;
-        auto settings = getGeneratorSettings(_options);
         const allConfigs = singleConfig == "";
         // add the special `dub test` configuration (which doesn't require an existing `unittest` config)
         const lookingForUnitTestsConfig = allConfigs || singleConfig == "unittest";
         const testConfig = lookingForUnitTestsConfig
-            ? _dub.project.addTestRunnerConfiguration(settings)
+            ? _dub.project.addTestRunnerConfiguration(_generatorSettings)
             : null; // skip when requesting a single non-unittest config
 
         // error out if the test config is explicitly requested but not available
@@ -164,7 +166,7 @@ package struct Dub {
         }
 
         const haveSpecialTestConfig = testConfig.length && testConfig != "unittest";
-        const defaultConfig = _dub.project.getDefaultConfiguration(settings.platform);
+        const defaultConfig = _dub.project.getDefaultConfiguration(_generatorSettings.platform);
 
         // A violation of the Law of Demeter caused by a dub bug.
         // Otherwise _dub.project.configurations would do, but it fails for one
@@ -174,7 +176,7 @@ package struct Dub {
             .rootPackage
             .recipe
             .configurations
-            .filter!(c => c.matchesPlatform(settings.platform))
+            .filter!(c => c.matchesPlatform(_generatorSettings.platform))
             .map!(c => c.name)
             ;
 
@@ -252,7 +254,7 @@ package struct Dub {
 
     private DubInfo configToDubInfo(in string config = "") @trusted /*dub*/ {
         auto generator = new InfoGenerator(_dub.project, _extraDFlags);
-        auto settings = getGeneratorSettings(_options);
+        auto settings = _generatorSettings;
         settings.config = config;
         generator.generate(settings);
         return DubInfo(generator.dubPackages, _options.dup);

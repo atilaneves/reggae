@@ -29,9 +29,13 @@ static this() nothrow {
     }
 }
 
+private struct DubConfigurations {
+    string[] configurations;
+    string default_;
+    string test; // special `dub test` config
+}
 
 package struct Dub {
-    import reggae.dub.interop.configurations: DubConfigurations;
     import reggae.dub.info: DubInfo;
     import reggae.options: Options;
     import dub.dub: DubClass = Dub;
@@ -130,10 +134,7 @@ package struct Dub {
         return ret;
     }
 
-    imported!"reggae.dub.interop.configurations".DubConfigurations
-    dubConfigurations(O)(ref O output)
-    {
-        import reggae.dub.interop.configurations: DubConfigurations;
+    DubConfigurations dubConfigurations(O)(ref O output) {
         import reggae.io: log;
 
         output.log("Getting dub configurations");

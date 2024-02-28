@@ -29,9 +29,21 @@ static this() nothrow {
     }
 }
 
+private struct DubConfigurations {
+    string[] configurations;
+    string default_;
+    string test; // special `dub test` config
+
+    bool haveTestConfig() @safe @nogc pure nothrow scope const {
+        return test != "";
+    }
+
+    bool isTestConfig(in string config) @safe @nogc pure nothrow scope const {
+        return haveTestConfig && config == test;
+    }
+}
 
 package struct Dub {
-    import reggae.dub.interop.configurations: DubConfigurations;
     import reggae.dub.info: DubInfo;
     import reggae.options: Options;
     import dub.dub: DubClass = Dub;
@@ -79,14 +91,12 @@ package struct Dub {
         DubInfo[string] ret;
 
         const configs = dubConfigurations(output);
-        const haveTestConfig = configs.test != "";
         bool atLeastOneConfigOk;
         Exception dubInfoFailure;
 
         foreach(config; configs.configurations) {
-            const isTestConfig = haveTestConfig && config == configs.test;
             try {
-                ret[config] = configToDubInfo(output, config, isTestConfig);
+                ret[config] = configToDubInfo(output, config, configs.isTestConfig(config));
                 atLeastOneConfigOk = true;
             } catch(Exception ex) {
                 output.log("ERROR: Could not get info for configuration ", config, ": ", ex.msg);
@@ -105,7 +115,7 @@ package struct Dub {
         // (additionally) expose the special `dub test` config as
         // `unittest` config in the DSL (`configToDubInfo`) (for
         // `dubTest!()`, `dubBuild!(Configuration("unittest"))` etc.)
-        if(haveTestConfig && configs.test != "unittest" && configs.test in ret)
+        if(configs.haveTestConfig && configs.test != "unittest" && configs.test in ret)
             ret["unittest"] = ret[configs.test];
 
         return ret;
@@ -130,10 +140,7 @@ package struct Dub {
         return ret;
     }
 
-    imported!"reggae.dub.interop.configurations".DubConfigurations
-    dubConfigurations(O)(ref O output)
-    {
-        import reggae.dub.interop.configurations: DubConfigurations;
+    DubConfigurations dubConfigurations(O)(ref O output) {
         import reggae.io: log;
 
         output.log("Getting dub configurations");

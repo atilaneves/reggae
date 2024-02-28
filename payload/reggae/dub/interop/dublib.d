@@ -33,6 +33,10 @@ private struct DubConfigurations {
     string[] configurations;
     string default_;
     string test; // special `dub test` config
+
+    bool haveTestConfig() @safe @nogc pure nothrow scope const {
+        return test != "";
+    }
 }
 
 package struct Dub {
@@ -83,12 +87,11 @@ package struct Dub {
         DubInfo[string] ret;
 
         const configs = dubConfigurations(output);
-        const haveTestConfig = configs.test != "";
         bool atLeastOneConfigOk;
         Exception dubInfoFailure;
 
         foreach(config; configs.configurations) {
-            const isTestConfig = haveTestConfig && config == configs.test;
+            const isTestConfig = configs.haveTestConfig && config == configs.test;
             try {
                 ret[config] = configToDubInfo(output, config, isTestConfig);
                 atLeastOneConfigOk = true;
@@ -109,7 +112,7 @@ package struct Dub {
         // (additionally) expose the special `dub test` config as
         // `unittest` config in the DSL (`configToDubInfo`) (for
         // `dubTest!()`, `dubBuild!(Configuration("unittest"))` etc.)
-        if(haveTestConfig && configs.test != "unittest" && configs.test in ret)
+        if(configs.haveTestConfig && configs.test != "unittest" && configs.test in ret)
             ret["unittest"] = ret[configs.test];
 
         return ret;

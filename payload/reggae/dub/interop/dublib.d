@@ -276,9 +276,33 @@ package struct Dub {
 // module that don't do that on purpose for speed reasons.
 auto fullDub(in string projectPath) @trusted {
     import dub.dub: DubClass = Dub;
+    import dub.packagemanager: PackageManager;
     import dub.internal.vibecompat.inet.path: NativePath;
 
-    auto dub = new DubClass(projectPath);
+    // Cache the PackageManager.
+    // A reggaefile.d with lots of dub{Package,Dependant} targets benefits from
+    // this, also depending on the size of the dub packages cache.
+    static class DubWithCachedPackageManager : DubClass {
+        this(string rootPath) {
+            super(rootPath);
+        }
+
+        override PackageManager makePackageManager() const {
+            static PackageManager cachedPM = null;
+            if (!cachedPM) {
+                // The PackageManager wants a path to a local directory, for an
+                // implicit `<local>/.dub/packages` repo. The base
+                // implementation uses the dub root project directory; use the
+                // reggae project directory as our local root.
+                import reggae.config: options;
+                auto localRoot = NativePath(options.projectPath);
+                cachedPM = new PackageManager(localRoot, m_dirs.userPackages, m_dirs.systemSettings, false);
+            }
+            return cachedPM;
+        }
+    }
+
+    auto dub = new DubWithCachedPackageManager(projectPath);
     dub.packageManager.getOrLoadPackage(NativePath(projectPath));
     dub.loadPackage();
     dub.project.validate();

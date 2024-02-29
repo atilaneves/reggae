@@ -75,9 +75,9 @@ struct Makefile {
     //includes rerunning reggae
     string output() @safe {
 
-        import std.array: join, replace;
+        import std.array: join;
         import std.range: chain;
-        import std.algorithm: sort, uniq, map;
+        import std.algorithm: sort, uniq;
 
         auto ret = simpleOutput;
 
@@ -87,11 +87,15 @@ struct Makefile {
             // add a dependency on the Makefile to reggae itself and the build description,
             // but only if not exporting a build
             auto srcDirs = _srcDirs.sort.uniq;
+            const flattenedInputs = chain(options.reggaeFileDependencies, srcDirs).join(" ");
             const rerunLine = "\t" ~ options.rerunArgs.join(" ") ~ "\n";
 
-            ret ~= fileName() ~ ": " ~ chain(options.reggaeFileDependencies, srcDirs.save).join(" ") ~ "\n";
+            ret ~= fileName() ~ ": " ~ flattenedInputs ~ "\n";
             ret ~= rerunLine;
-            ret ~= "\n" ~ srcDirs.save.map!(d => d ~ ":" ~ "\n" ~ rerunLine).join("\n");
+            // Add a dummy target for all Makefile inputs, with an empty recipe, just so
+            // that re-generating the Makefile isn't blocked by removed/renamed inputs.
+            // See ninja.d for more details.
+            ret ~= "\n" ~ flattenedInputs ~ ": ;\n";
         }
 
         return replaceEnvVars(ret);

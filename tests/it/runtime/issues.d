@@ -520,5 +520,44 @@ version(DigitalMars) {
                 mixin(backend).shouldFailToExecute.shouldNotContain(msg);
             }
         }
+
+        @("rerun.deleted.file." ~ backend)
+        @Tags(backend)
+        unittest {
+            import std.file: remove;
+
+            with(immutable ReggaeSandbox()) {
+
+                writeFile(
+                    "imported.d",
+                    q{
+                        import reggae;
+                        enum myTarget = Target.phony("dummy", "");
+                    }
+                );
+                writeFile(
+                    "reggaefile.d",
+                    q{
+                        import imported, reggae;
+                        mixin build!myTarget;
+                    }
+                );
+
+                runReggae("-b", backend, "--verbose");
+                mixin(backend).shouldExecuteOk;
+
+                // delete imported.d and make sure reggae gets rerun
+                remove(inSandboxPath("imported.d"));
+
+                static if(backend == "ninja")
+                    enum msg = "missing and no known rule";
+                else static if(backend == "make")
+                    enum msg = "No rule to make target";
+                else
+                    static assert(false, "unknown backend");
+
+                mixin(backend).shouldFailToExecute.shouldNotContain(msg);
+            }
+        }
     }
 }

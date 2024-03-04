@@ -88,6 +88,14 @@ struct BinaryT(T) {
     }
 
     void run(string[] args) @system { //@system due to parallel
+
+        version(unittest) {
+            scope(exit) {
+                import unit_threaded;
+                writelnUt(*output);
+            }
+        }
+
         auto binaryOptions = BinaryOptions(args);
 
         handleOptions(binaryOptions);
@@ -103,7 +111,6 @@ struct BinaryT(T) {
             didAnything = mainLoop(topTargets, binaryOptions, didAnything);
         else
             didAnything = mainLoop(topTargets.parallel, binaryOptions, didAnything);
-
 
         if(!didAnything) output.writeln("[build] Nothing to do");
     }

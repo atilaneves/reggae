@@ -502,16 +502,14 @@ private string[] initializeRuleParamLines(in Language language, in string[] comm
 
         // On Windows, the max command line length is ~32K.
         // Make ninja use a response file for all D/C[++] rules.
-        if (language.among(Language.D, Language.C, Language.Cplusplus)) {
-            if (command.length > 1) {
-                const program = command[0];
-                const args = command[1 .. $];
-                return [
-                    "command = " ~ program ~ " @$out.rsp",
-                    "rspfile = $out.rsp",
-                    "rspfile_content = " ~ args.join(" "),
-                ];
-            }
+        if (language.among(Language.D, Language.C, Language.Cplusplus) && command.length > 1) {
+            const program = command[0];
+            const args = command[1 .. $];
+            return [
+                "command = " ~ program ~ " @$out.rsp",
+                "rspfile = $out.rsp",
+                "rspfile_content = " ~ args.join(" "),
+            ];
         }
     }
 

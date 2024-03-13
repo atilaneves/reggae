@@ -564,6 +564,40 @@ struct Command {
         return params.get(key, ifNotFound).map!(a => a.replace(gProjdir, projectPath)).array;
     }
 
+    // Caution: never trust comments in code.
+    //
+    // At the time of writing this is only ever called indirectly
+    // through `Target` by the binary backend, which is the only one
+    // that can support commands that D code instead of strings
+    // representing shell commands.
+    const(string)[] execute(in Options options, in Language language,
+                            in string[] outputs, in string[] inputs) const @trusted {
+        import std.process;
+
+        final switch(type) with(CommandType) {
+            case shell:
+            case compile:
+            case link:
+            case compileAndLink:
+            case phony:
+                immutable cmd = shellCommand(options, language, outputs, inputs);
+                if(cmd == "") return outputs;
+
+                const string[string] env = null;
+                Config config = Config.none;
+                size_t maxOutput = size_t.max;
+
+                immutable res = executeShell(cmd, env, config, maxOutput, options.workingDir);
+                enforce(res.status == 0, "Could not execute phony " ~ cmd ~ ":\n" ~ res.output);
+                return [res.output];
+            case code:
+                assert(function_ !is null || delegate_ !is null,
+                       "Command of type code with null function");
+                function_ !is null ? function_(inputs, outputs) : delegate_(inputs, outputs);
+                return ["code"];
+        }
+    }
+
     ///returns a command string to be run by the shell
     string shellCommand(in Options options,
                         in Language language,
@@ -743,40 +777,6 @@ struct Command {
                 return options.cCompiler ~ ccParams;
             case unknown:
                 throw new Exception("Unsupported language for compiling");
-        }
-    }
-
-    // Caution: never trust comments in code.
-    //
-    // At the time of writing this is only ever called indirectly
-    // through `Target` by the binary backend, which is the only one
-    // that can support commands that D code instead of strings
-    // representing shell commands.
-    const(string)[] execute(in Options options, in Language language,
-                            in string[] outputs, in string[] inputs) const @trusted {
-        import std.process;
-
-        final switch(type) with(CommandType) {
-            case shell:
-            case compile:
-            case link:
-            case compileAndLink:
-            case phony:
-                immutable cmd = shellCommand(options, language, outputs, inputs);
-                if(cmd == "") return outputs;
-
-                const string[string] env = null;
-                Config config = Config.none;
-                size_t maxOutput = size_t.max;
-
-                immutable res = executeShell(cmd, env, config, maxOutput, options.workingDir);
-                enforce(res.status == 0, "Could not execute phony " ~ cmd ~ ":\n" ~ res.output);
-                return [res.output];
-            case code:
-                assert(function_ !is null || delegate_ !is null,
-                       "Command of type code with null function");
-                function_ !is null ? function_(inputs, outputs) : delegate_(inputs, outputs);
-                return ["code"];
         }
     }
 

@@ -484,12 +484,11 @@ NinjaEntry[] defaultRules(in Options options) @safe pure {
         }
     }
 
-    string[] phonyParamLines;
-    version(Windows) {
-        phonyParamLines = [`command = cmd.exe /c "$cmd"`, "description = $cmd"];
-    } else {
-        phonyParamLines = ["command = $cmd"];
-    }
+    version(Windows)
+        enum phonyParamLines = [`command = cmd.exe /c "$cmd"`, "description = $cmd"];
+    else
+        enum phonyParamLines = ["command = $cmd"];
+
     entries ~= NinjaEntry("rule _phony", phonyParamLines);
 
     return entries;

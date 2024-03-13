@@ -427,30 +427,6 @@ private bool hasDepFile(in CommandType type) @safe pure nothrow {
     return type == CommandType.compile || type == CommandType.compileAndLink;
 }
 
-private string[] initializeRuleParamLines(in Language language, in string[] command) @safe pure {
-    import std.string : join;
-
-    version(Windows) {
-        import std.algorithm: among;
-
-        // On Windows, the max command line length is ~32K.
-        // Make ninja use a response file for all D/C[++] rules.
-        if (language.among(Language.D, Language.C, Language.Cplusplus)) {
-            if (command.length > 1) {
-                const program = command[0];
-                const args = command[1 .. $];
-                return [
-                    "command = " ~ program ~ " @$out.rsp",
-                    "rspfile = $out.rsp",
-                    "rspfile_content = " ~ args.join(" "),
-                ];
-            }
-        }
-    }
-
-    return ["command = " ~ command.join(" ")];
-}
-
 /**
  * Pre-built rules
  */
@@ -517,6 +493,30 @@ NinjaEntry[] defaultRules(in Options options) @safe pure {
     entries ~= NinjaEntry("rule _phony", phonyParamLines);
 
     return entries;
+}
+
+private string[] initializeRuleParamLines(in Language language, in string[] command) @safe pure {
+    import std.string : join;
+
+    version(Windows) {
+        import std.algorithm: among;
+
+        // On Windows, the max command line length is ~32K.
+        // Make ninja use a response file for all D/C[++] rules.
+        if (language.among(Language.D, Language.C, Language.Cplusplus)) {
+            if (command.length > 1) {
+                const program = command[0];
+                const args = command[1 .. $];
+                return [
+                    "command = " ~ program ~ " @$out.rsp",
+                    "rspfile = $out.rsp",
+                    "rspfile_content = " ~ args.join(" "),
+                ];
+            }
+        }
+    }
+
+    return ["command = " ~ command.join(" ")];
 }
 
 private string cmdTypeToNinjaRuleName(CommandType commandType, Language language) @safe pure {

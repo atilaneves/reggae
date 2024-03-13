@@ -564,6 +564,17 @@ struct Command {
         return params.get(key, ifNotFound).map!(a => a.replace(gProjdir, projectPath)).array;
     }
 
+    ///returns a command string to be run by the shell
+    string shellCommand(in Options options,
+                        in Language language,
+                        in string[] outputs,
+                        in string[] inputs,
+                        Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
+        return isDefaultCommand
+            ? defaultCommand(options, language, outputs, inputs, deps)
+            : expandCmd(command, options.projectPath, outputs, inputs);
+    }
+
     private string defaultCommand(
         in Options options,
         in Language language,
@@ -733,17 +744,6 @@ struct Command {
             case unknown:
                 throw new Exception("Unsupported language for compiling");
         }
-    }
-
-    ///returns a command string to be run by the shell
-    string shellCommand(in Options options,
-                        in Language language,
-                        in string[] outputs,
-                        in string[] inputs,
-                        Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
-        return isDefaultCommand
-            ? defaultCommand(options, language, outputs, inputs, deps)
-            : expandCmd(command, options.projectPath, outputs, inputs);
     }
 
     // Caution: never trust comments in code.

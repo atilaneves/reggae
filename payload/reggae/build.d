@@ -579,6 +579,46 @@ struct Command {
         return params.get(key, ifNotFound).map!(a => a.replace(gProjdir, projectPath)).array;
     }
 
+    private string defaultCommand(
+        in Options options,
+        in Language language,
+        in string[] outputs,
+        in string[] inputs,
+        Flag!"dependencies" deps = Yes.dependencies)
+        @safe pure const
+    {
+
+        import std.conv: text;
+        import std.string: join;
+        import std.process : escapeShellCommand;
+        import std.algorithm : map, canFind;
+        import std.array : array;
+
+        assert(isDefaultCommand, text("This command is not a default command: ", this));
+
+        auto cmd = () {
+            try
+                return
+                    builtinTemplate(type, language, options, deps)
+                    .array;
+            catch(Exception ex)
+                throw new Exception(text(ex.msg, "\noutputs: ", outputs, "\ninputs: ", inputs));
+        }();
+
+        foreach(key; params.keys) {
+            const var = "$" ~ key;
+            const value = getParams(options.projectPath, key, []);
+            cmd = cmd.replace(var, value);
+        }
+
+        auto cmdString = cmd
+            .map!(e => e.canFind(" ") ? escapeShellCommand(e) : e)
+            .join(" ");
+
+        // FIXME: expandCmd should take string[]
+        return expandCmd(cmdString, options.projectPath, outputs, inputs);
+    }
+
     // Caution: never trust comments.
     //
     // At the time of writing it's public because of one client: the
@@ -693,46 +733,6 @@ struct Command {
             case unknown:
                 throw new Exception("Unsupported language for compiling");
         }
-    }
-
-    private string defaultCommand(
-        in Options options,
-        in Language language,
-        in string[] outputs,
-        in string[] inputs,
-        Flag!"dependencies" deps = Yes.dependencies)
-        @safe pure const
-    {
-
-        import std.conv: text;
-        import std.string: join;
-        import std.process : escapeShellCommand;
-        import std.algorithm : map, canFind;
-        import std.array : array;
-
-        assert(isDefaultCommand, text("This command is not a default command: ", this));
-
-        auto cmd = () {
-            try
-                return
-                    builtinTemplate(type, language, options, deps)
-                    .array;
-            catch(Exception ex)
-                throw new Exception(text(ex.msg, "\noutputs: ", outputs, "\ninputs: ", inputs));
-        }();
-
-        foreach(key; params.keys) {
-            const var = "$" ~ key;
-            const value = getParams(options.projectPath, key, []);
-            cmd = cmd.replace(var, value);
-        }
-
-        auto cmdString = cmd
-            .map!(e => e.canFind(" ") ? escapeShellCommand(e) : e)
-            .join(" ");
-
-        // FIXME: expandCmd should take string[]
-        return expandCmd(cmdString, options.projectPath, outputs, inputs);
     }
 
     ///returns a command string to be run by the shell

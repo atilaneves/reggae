@@ -508,7 +508,7 @@ unittest {
                 `    mainSourceFile "ut_main.d"`,
                 `}`,
             ]
-       );
+        );
         writeFile("over/there/source/foo.d", "");
         writeFile("over/there/ut_main.d", "void main() {}");
         writeFile(

@@ -579,7 +579,13 @@ struct Command {
         return params.get(key, ifNotFound).map!(a => a.replace(gProjdir, projectPath)).array;
     }
 
-    // public because ninja needs string[] instead of a shell command to execute.
+    // Caution: never trust comments.
+    //
+    // At the time of writing it's public because of one client: the
+    // ninja backend.  The reason ninja needs this is to support .rsp
+    // files for Windows, getting an array of strings that are the
+    // command so that it can easily discern what the "real" command
+    // is (the 1st element), and stuff the rest in the response file.
     static string[] builtinTemplate(
         in CommandType type,
         in Language language,
@@ -740,6 +746,12 @@ struct Command {
             : expandCmd(command, options.projectPath, outputs, inputs);
     }
 
+    // Caution: never trust comments in code.
+    //
+    // At the time of writing this is only ever called indirectly
+    // through `Target` by the binary backend, which is the only one
+    // that can support commands that D code instead of strings
+    // representing shell commands.
     const(string)[] execute(in Options options, in Language language,
                             in string[] outputs, in string[] inputs) const @trusted {
         import std.process;

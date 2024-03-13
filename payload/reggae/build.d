@@ -550,21 +550,6 @@ struct Command {
         }
     }
 
-    ///Replace $in, $out, $project with values and remove $builddir
-    private static string expandCmd(in string cmd, in string projectPath,
-                                    in string[] outputs, in string[] inputs) @safe pure {
-        auto outs = outputs.map!buildPath;
-        auto ins = inputs.map!buildPath;
-        auto replaceIn = cmd.dup.replace("$in", ins.join(" "));
-        auto replaceOut = replaceIn.replace("$out", outs.join(" "));
-        auto r = replaceOut.replace(gProjdir, buildPath(projectPath));
-        r = r.replace(gBuilddir ~ dirSeparator, "");
-        version(Windows)
-            r = r.replace(gBuilddir ~ "/", "");
-        r = r.replace(gBuilddir, ".");
-        return r;
-    }
-
     string rawCmdString(in string projectPath) @safe pure const {
         // apparently only ninja calls this
         if(getType == CommandType.code)
@@ -617,6 +602,21 @@ struct Command {
 
         // FIXME: expandCmd should take string[]
         return expandCmd(cmdString, options.projectPath, outputs, inputs);
+    }
+
+    ///Replace $in, $out, $project with values and remove $builddir
+    private static string expandCmd(in string cmd, in string projectPath,
+                                    in string[] outputs, in string[] inputs) @safe pure {
+        auto outs = outputs.map!buildPath;
+        auto ins = inputs.map!buildPath;
+        auto replaceIn = cmd.dup.replace("$in", ins.join(" "));
+        auto replaceOut = replaceIn.replace("$out", outs.join(" "));
+        auto r = replaceOut.replace(gProjdir, buildPath(projectPath));
+        r = r.replace(gBuilddir ~ dirSeparator, "");
+        version(Windows)
+            r = r.replace(gBuilddir ~ "/", "");
+        r = r.replace(gBuilddir, ".");
+        return r;
     }
 
     // Caution: never trust comments.

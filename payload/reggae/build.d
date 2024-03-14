@@ -527,7 +527,9 @@ struct Command {
     }
 
     bool isDefaultCommand() @safe pure const {
-        return type == CommandType.compile || type == CommandType.link || type == CommandType.compileAndLink;
+        import std.algorithm: among;
+        with(CommandType)
+            return cast(bool) type.among(compile, link, compileAndLink);
     }
 
     string[] getParams(in string projectPath, in string key, string[] ifNotFound) @safe pure const {

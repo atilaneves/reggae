@@ -607,11 +607,11 @@ struct Command {
                         in string[] inputs,
                         Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
         return isDefaultCommand
-            ? defaultCommand(options, language, outputs, inputs, deps)
+            ? defaultCommandStr(options, language, outputs, inputs, deps)
             : expandCmd(command, options.projectPath, outputs, inputs);
     }
 
-    private string defaultCommand(
+    private string defaultCommandStr(
         in Options options,
         in Language language,
         in string[] outputs,
@@ -681,16 +681,13 @@ struct Command {
         @safe pure
     {
         import std.algorithm : startsWith, endsWith;
+        import std.conv: text;
 
         final switch(type) with(CommandType) {
             case phony:
-                assert(0, "builtinTemplate cannot be phony");
-
             case shell:
-                assert(0, "builtinTemplate cannot be shell");
-
             case code:
-                throw new Exception("Command type 'code' has no built-in template");
+                assert(0, text("builtinTemplate cannot be ", type));
 
             case link: {
                 version(Windows)

@@ -435,6 +435,7 @@ NinjaEntry[] defaultRules(in Options options) @safe pure {
     import reggae.build: Command;
 
     NinjaEntry createNinjaEntry(in CommandType type, in Language language) @safe pure {
+
         const command = Command.builtinTemplate(type, language, options);
 
         string[] paramLines = initializeRuleParamLines(language, command);

@@ -683,10 +683,17 @@ struct Command {
     // Caution: never trust comments.
     //
     // At the time of writing it's public because of one client: the
-    // ninja backend.  The reason ninja needs this is to support .rsp
+    // ninja backend. The reason ninja needs this is to support .rsp
     // files for Windows, getting an array of strings that are the
     // command so that it can easily discern what the "real" command
     // is (the 1st element), and stuff the rest in the response file.
+    //
+    // The reason ninja calls this and not `defaultCommand` above, and
+    // the same reason that this is a static function, is that it
+    // doesn't need to expand anything. Things like $in, $out,
+    // etc. are not only fine but expected for the ninja
+    // rules. They're generic and don't depend on any one particular
+    // Target/Command.
     static string[] builtinTemplate(
         in CommandType type,
         in Language language,

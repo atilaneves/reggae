@@ -687,6 +687,9 @@ struct Command {
             case shell:
                 assert(0, "builtinTemplate cannot be shell");
 
+            case code:
+                throw new Exception("Command type 'code' has no built-in template");
+
             case link: {
                 version(Windows)
                     auto cArgs = ["/nologo", "/Fe$out", "$flags", "$link_libraries", "$in"];
@@ -704,9 +707,6 @@ struct Command {
                         return options.cCompiler ~ cArgs;
                 }
             }
-
-            case code:
-                throw new Exception("Command type 'code' has no built-in template");
 
             case compile:
 

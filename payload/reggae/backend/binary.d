@@ -278,14 +278,10 @@ private:
 }
 
 
-
 bool anyNewer(in string projectPath, in string[] dependencies, in Target target) @safe {
     return cartesianProduct(dependencies, target.expandOutputs(projectPath)).
         any!(a => a[0].newerThan(a[1]));
 }
-
-
-
 
 string[] dependenciesFromFile(R)(R lines) if(isInputRange!R) {
     import std.algorithm: map, filter, find;

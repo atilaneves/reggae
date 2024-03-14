@@ -572,9 +572,19 @@ struct Command {
     // through `Target` by the binary backend, which is the only one
     // that can support commands that D code instead of strings
     // representing shell commands.
-    const(string)[] execute(in Options options, in Language language,
-                            in string[] outputs, in string[] inputs) const @trusted {
+    const(string)[] execute(
+        in Options options,
+        in Language language,
+        in string[] outputs,
+        in string[] inputs
+        )
+        const @trusted
+    {
         import std.process;
+        import std.array: join, replace;
+        import std.file: remove, exists, write, mkdirRecurse;
+        import std.range: walkLength;
+        import std.path: buildPath, dirName;
 
         final switch(type) with(CommandType) {
             case shell:
@@ -582,20 +592,60 @@ struct Command {
             case link:
             case compileAndLink:
             case phony:
-                immutable cmd = shellCommand(options, language, outputs, inputs);
-                if(cmd == "") return outputs;
+
+                auto cmd = shellCommandRange(options, language, outputs, inputs);
+                if(cmd.empty) return outputs;
+
+                version(Windows)
+                    enum useRsp = true;
+                else
+                    enum useRsp = false;
+
+                static if(useRsp) {
+                    const rspFileName = outputs
+                        .map!(e => e.replace(" ", "_"))
+                        .join("_")
+                        ~ ".rsp";
+                    const rspFilePath = buildPath(options.workingDir, expandOutput(rspFileName, options.projectPath));
+                    scope(exit)
+                        if(rspFilePath.exists)
+                            rspFilePath.remove;
+                }
+
+                const cmdStr = () {
+                    static if(useRsp) {
+                        if(isDefaultCommand && cmd.save.walkLength > 1) {
+                            const program = cmd.front;
+                            cmd.popFront;
+
+                            if(!rspFilePath.dirName.exists)
+                                mkdirRecurse(rspFilePath.dirName);
+                            write(rspFilePath, cmd.join(" "));
+
+                            return program ~ " @" ~ rspFilePath;
+                        }
+                    }
+
+                    return cmd.join(" ");
+                }();
 
                 const string[string] env = null;
-                Config config = Config.none;
-                size_t maxOutput = size_t.max;
+                const config = Config.none;
+                const maxOutput = size_t.max;
+                immutable res = executeShell(cmdStr, env, config, maxOutput, options.workingDir);
+                enforce(res.status == 0, "Could not execute " ~ cmdStr ~ ":\n" ~ res.output);
 
-                immutable res = executeShell(cmd, env, config, maxOutput, options.workingDir);
-                enforce(res.status == 0, "Could not execute phony " ~ cmd ~ ":\n" ~ res.output);
                 return [res.output];
+
             case code:
+
                 assert(function_ !is null || delegate_ !is null,
                        "Command of type code with null function");
-                function_ !is null ? function_(inputs, outputs) : delegate_(inputs, outputs);
+
+                function_ !is null
+                    ? function_(inputs, outputs)
+                    : delegate_(inputs, outputs);
+
                 return ["code"];
         }
     }
@@ -608,14 +658,33 @@ struct Command {
                         Flag!"dependencies" deps = Yes.dependencies)
         @safe pure const
     {
-        import std.array: split, join;
+        import std.array: join;
 
-        // FIXME: the fact that we're splitting and joining indicates
+        // FIXME: the fact that we're joining indicates
         // that `command` should probably be `string[]` instead of
         // `string`.
+        return shellCommandRange(options, language, outputs, inputs, deps)
+            .join(" ");
+    }
+
+    ///returns a command string to be run by the shell
+    private auto shellCommandRange(
+        in Options options,
+        in Language language,
+        in string[] outputs,
+        in string[] inputs,
+        Flag!"dependencies" deps = Yes.dependencies,
+        )
+        @safe pure const
+    {
+        import std.array: split;
+
+        // FIXME: the fact that we're splitting indicates that
+        // `command` should probably be `string[]` instead of
+        // `string`.
         return isDefaultCommand
-            ? defaultCommand(options, language, outputs, inputs, deps).join(" ")
-            : expandCmd(command.split(" "), options.projectPath, outputs, inputs).join(" ");
+            ? defaultCommand(options, language, outputs, inputs, deps)
+            : expandCmd(command.split(" "), options.projectPath, outputs, inputs);
     }
 
     private auto defaultCommand(

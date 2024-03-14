@@ -605,13 +605,20 @@ struct Command {
                         in Language language,
                         in string[] outputs,
                         in string[] inputs,
-                        Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
+                        Flag!"dependencies" deps = Yes.dependencies)
+        @safe pure const
+    {
+        import std.array: split, join;
+
+        // FIXME: the fact that we're splitting and joining indicates
+        // that `command` should probably be `string[]` instead of
+        // `string`.
         return isDefaultCommand
-            ? defaultCommandStr(options, language, outputs, inputs, deps)
-            : expandCmd(command, options.projectPath, outputs, inputs);
+            ? defaultCommand(options, language, outputs, inputs, deps).join(" ")
+            : expandCmd(command.split(" "), options.projectPath, outputs, inputs).join(" ");
     }
 
-    private string defaultCommandStr(
+    private auto defaultCommand(
         in Options options,
         in Language language,
         in string[] outputs,
@@ -621,7 +628,6 @@ struct Command {
     {
 
         import std.conv: text;
-        import std.string: join;
         import std.process : escapeShellCommand;
         import std.algorithm : map, canFind;
         import std.array : array;
@@ -643,27 +649,35 @@ struct Command {
             cmd = cmd.replace(var, value);
         }
 
-        auto cmdString = cmd
+        cmd = cmd
             .map!(e => e.canFind(" ") ? escapeShellCommand(e) : e)
-            .join(" ");
+            .array;
 
-        // FIXME: expandCmd should take string[]
-        return expandCmd(cmdString, options.projectPath, outputs, inputs);
+        return expandCmd(cmd, options.projectPath, outputs, inputs);
     }
 
     ///Replace $in, $out, $project with values and remove $builddir
-    private static string expandCmd(in string cmd, in string projectPath,
-                                    in string[] outputs, in string[] inputs) @safe pure {
+    private static auto expandCmd(in string[] cmd, in string projectPath,
+                                  in string[] outputs, in string[] inputs)
+        @safe pure
+    {
+        import std.array: replace;
+        import std.path: buildPath;
+        import std.algorithm: map;
+
         auto outs = outputs.map!buildPath;
         auto ins = inputs.map!buildPath;
-        auto replaceIn = cmd.dup.replace("$in", ins.join(" "));
-        auto replaceOut = replaceIn.replace("$out", outs.join(" "));
-        auto r = replaceOut.replace(gProjdir, buildPath(projectPath));
-        r = r.replace(gBuilddir ~ dirSeparator, "");
+        auto replaceIn = cmd.map!(e => e.replace("$in", ins.join(" ")));
+        auto replaceOut = replaceIn.map!(e => e.replace("$out", outs.join(" ")));
+        auto r1 = replaceOut.map!(e => e.replace(gProjdir, buildPath(projectPath)));
+        auto r2 = r1.map!(e => e.replace(gBuilddir ~ dirSeparator, ""));
+
         version(Windows)
-            r = r.replace(gBuilddir ~ "/", "");
-        r = r.replace(gBuilddir, ".");
-        return r;
+            auto r3 = r2.map!(e => e.replace(gBuilddir ~ "/", ""));
+        else
+            alias r3 = r2;
+
+        return r3.map!(e => e.replace(gBuilddir, "."));
     }
 
     // Caution: never trust comments.

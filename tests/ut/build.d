@@ -61,8 +61,8 @@ import std.format;
     auto target = Target("foo",
                           "makefoo -i $in -o $out -p $project",
                           [Target("bar"), Target("baz")]);
-    target.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
-        "makefoo -i " ~ buildPath("/path/to/bar") ~ " " ~ buildPath("/path/to/baz") ~ " -o foo -p " ~ buildPath("/path/to"));
+    target.shellCommand(gDefaultOptions.withProjectPath("/path/to")).should ==
+        "makefoo -i " ~ buildPath("/path/to/bar") ~ " " ~ buildPath("/path/to/baz") ~ " -o foo -p " ~ "/path/to";
 }
 
 
@@ -229,7 +229,7 @@ import std.format;
 @("Cmd with $project") unittest {
     auto target = Target("output", "cmd -I$project/include $in $out", [Target("foo.d"), Target("bar.d")]);
     target.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
-        "cmd -I" ~ buildPath("/path/to") ~ "/include" ~ " " ~ buildPath("/path/to/foo.d") ~ " " ~ buildPath("/path/to/bar.d") ~ " output");
+        "cmd -I" ~ "/path/to/include" ~ " " ~ buildPath("/path/to/foo.d") ~ " " ~ buildPath("/path/to/bar.d") ~ " output");
 }
 
 @("Deps in $builddir") unittest {

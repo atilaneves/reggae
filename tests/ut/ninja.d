@@ -297,10 +297,10 @@ else
     auto foo = Target("foo.o", "$project/../dmd/src/dmd -of$out -c $in", Target("foo.d"));
     auto app = Target("app", "$project/../dmd/src/dmd -of$out -c $in", Target("foo.d"));
     auto ninja = Ninja(Build(app), "/path/to/proj");
-    ninja.ruleEntries.shouldEqual(
+    ninja.ruleEntries.should ==
         [NinjaEntry("rule dmd",
-                    ["command = " ~ buildPath("/path/to/proj") ~ "/../dmd/src/dmd $before$out $between $in"]),
-            ]);
+                    ["command = " ~ "/path/to/proj/../dmd/src/dmd $before$out $between $in"]),
+            ];
 }
 
 

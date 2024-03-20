@@ -64,11 +64,12 @@ int main(string[] args) {
 }
 
 private void primeDubBuild() {
+    import reggae.reggae: dubObjsDir;
     import tests.it.runtime: testRun;
-    import std.file: tempDir, write, exists, mkdirRecurse;
+    import std.file: write, exists, mkdirRecurse;
     import std.path: buildPath, dirName;
 
-    const reggaefile = buildPath(tempDir, "reggae", "prime", "reggaefile.d");
+    const reggaefile = buildPath(dubObjsDir, "prime", "reggaefile.d");
     if(!reggaefile.dirName.exists)
         mkdirRecurse(reggaefile.dirName);
 
@@ -83,7 +84,7 @@ private void primeDubBuild() {
     testRun(
         [
             "reggae",
-            "--dub-objs-dir=" ~ buildPath(tempDir, "reggae"),
+            "--dub-objs-dir=" ~ dubObjsDir,
             "-C" ~ reggaefile.dirName,
             reggaefile.dirName,
         ]

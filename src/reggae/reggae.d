@@ -439,8 +439,6 @@ private string buildReggaefileWithReggae(
     import reggae.rules.dub: dubPackage, DubPath;
     import reggae.build: Build;
     import std.typecons: Yes;
-    import std.path: buildPath;
-    import std.file: tempDir;
 
     // HACK: needs refactoring, calling this just to create the phony dub package
     // for the reggaefile build
@@ -454,7 +452,7 @@ private string buildReggaefileWithReggae(
     // the actual build at all.
     auto newOptions = options.dup;
     newOptions.backend = Backend.binary;
-    newOptions.dubObjsDir = buildPath(tempDir, "reggae");
+    newOptions.dubObjsDir = dubObjsDir;
 
     const dubRecipeDir = hiddenDirAbsPath(options);
     auto build = Build(dubPackage(newOptions, DubPath(dubRecipeDir)));
@@ -462,6 +460,18 @@ private string buildReggaefileWithReggae(
     runtimeBuild(newOptions, build);
 
     return getBuildGenName(options);
+}
+
+public string dubObjsDir() @safe {
+    import std.path: buildPath;
+
+    version(Windows) {
+        import std.process: environment;
+        return buildPath(environment["LOCALAPPDATA"], "reggae");
+    } else {
+        import std.file: tempDir;
+        return buildPath(tempDir, "reggae");
+    }
 }
 
 

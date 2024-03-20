@@ -227,7 +227,7 @@ package struct Dub {
         import reggae.io: log;
         import std.conv: text;
 
-        output.log("Querying dub configuration '", config, "'");
+        output.log("Querying dub configuration '", config, "' of ", _options.projectPath);
 
         auto dubInfo = configToDubInfo(config);
 

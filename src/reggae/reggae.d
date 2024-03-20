@@ -439,6 +439,8 @@ private string buildReggaefileWithReggae(
     import reggae.rules.dub: dubPackage, DubPath;
     import reggae.build: Build;
     import std.typecons: Yes;
+    import std.path: buildPath;
+    import std.file: tempDir;
 
     // HACK: needs refactoring, calling this just to create the phony dub package
     // for the reggaefile build
@@ -452,7 +454,8 @@ private string buildReggaefileWithReggae(
     // the actual build at all.
     auto newOptions = options.dup;
     newOptions.backend = Backend.binary;
-    //newOptions.allAtOnce = true; // one test is failing with linker errors
+    newOptions.dubObjsDir = buildPath(tempDir, "reggae");
+
     const dubRecipeDir = hiddenDirAbsPath(options);
     auto build = Build(dubPackage(newOptions, DubPath(dubRecipeDir)));
 

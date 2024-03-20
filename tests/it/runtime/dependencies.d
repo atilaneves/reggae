@@ -98,7 +98,7 @@ version(DigitalMars) {
                         void foo() {}
                     });
 
-                    runReggae("-b", backend, "--dc=" ~ fakeCompiler);
+                    runReggae("-b", backend, "--dc=" ~ fakeCompiler, "--build-reggaefile-with-dub");
                     mixin(backend).shouldExecuteOk;
                     mixin(backend).shouldExecuteOk; // no-op build
 

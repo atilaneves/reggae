@@ -232,16 +232,13 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
     const reggaefileNeedsDubDep = dubRules.any!(a => options.reggaeFilePath.readText.canFind(a));
     const needsDub = reggaefileNeedsDubDep ? Yes.needDub : No.needDub;
 
-    // FIXME: there's no reason to use the binary backend only if dub
-    // is needed at reggaetime
-    if(reggaefileNeedsDubDep)
-        return buildReggaefileWithReggae(options, needsDub);
+    if(options.buildReggaefileWithDub) {
+        const binary = buildReggaefileDub(output, options, needsDub);
+        buildBinary(output, options, binary);
+        return buildGenName;
+    }
 
-    const binary = buildReggaefileDub(output, options, needsDub);
-
-    buildBinary(output, options, binary);
-
-    return buildGenName;
+    return buildReggaefileWithReggae(options, needsDub);
 }
 
 private enum reggaeFileDubSdl =
@@ -443,8 +440,6 @@ private string buildReggaefileWithReggae(
     import reggae.build: Build;
     import std.typecons: Yes;
 
-    const dubRecipeDir = hiddenDirAbsPath(options);
-
     // HACK: needs refactoring, calling this just to create the phony dub package
     // for the reggaefile build
     import std.stdio: stdout;
@@ -458,6 +453,7 @@ private string buildReggaefileWithReggae(
     auto newOptions = options.dup;
     newOptions.backend = Backend.binary;
     //newOptions.allAtOnce = true; // one test is failing with linker errors
+    const dubRecipeDir = hiddenDirAbsPath(options);
     auto build = Build(dubPackage(newOptions, DubPath(dubRecipeDir)));
 
     runtimeBuild(newOptions, build);

@@ -60,6 +60,7 @@ struct Options {
     string dubArchOverride;
     string dubConfig;
     string[] reggaefileImportPaths;
+    bool buildReggaefileWithDub;
     string[string] userVars; // must be last
 
     Options dup() @safe pure const nothrow {
@@ -316,6 +317,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             "dub-build-type", "Dub build type (debug, release, ...)", &options.dubBuildType,
             "dub-config", "Only use this dub configuration", &options.dubConfig,
             "reggaefile-import-path", "Import paths for the reggaefile itself", &options.reggaefileImportPaths,
+            "build-reggaefile-with-dub", "Build the reggaefile with dub instead of the binary backend", &options.buildReggaefileWithDub,
         );
 
         if(helpInfo.helpWanted) {

@@ -464,14 +464,12 @@ private string buildReggaefileWithReggae(
 
 public string dubObjsDir() @safe {
     import std.path: buildPath;
-
-    version(Windows) {
-        import std.process: environment;
-        return buildPath(environment["LOCALAPPDATA"], "reggae");
-    } else {
-        import std.file: tempDir;
-        return buildPath(tempDir, "reggae");
-    }
+    import std.file: tempDir;
+    // don't ask
+    static string ret;
+    if(ret == ret.init)
+        ret = buildPath(tempDir, "reggae");
+    return ret;
 }
 
 

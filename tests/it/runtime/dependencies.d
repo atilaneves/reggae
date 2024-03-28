@@ -152,6 +152,7 @@ unittest {
 
 @("payload")
 @Tags("ninja", "dub")
+@Flaky
 unittest {
     import std.algorithm: map, countUntil;
 

@@ -81,6 +81,7 @@ private void primeDubBuild() {
         reggaefile,
         q{
             import reggae;
+            // mention dubPackage to trigger a runtime dub dependency
             mixin build!(Target.phony("foo", ""));
         }
     );

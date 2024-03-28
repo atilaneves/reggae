@@ -249,9 +249,14 @@ private:
 
     //Checks dependencies listed in the .dep file created by the compiler
     bool checkDeps(Target target, in string depFileName) @trusted {
+        import std.array: array;
+
         // byLine splits at `\n`, so open Windows text files with CRLF line terminators in non-binary mode
-        auto file = File(depFileName, "r");
-        auto lines = file.byLine.map!(a => a.to!string);
+        auto lines = File(depFileName, "r")
+            .byLine
+            .map!(a => a.to!string)
+            .array
+            ;
         auto dependencies = dependenciesFromFile(lines);
 
         if(anyNewer(options.projectPath, dependencies, target)) {

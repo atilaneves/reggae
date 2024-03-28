@@ -28,7 +28,7 @@ static foreach (backend; ["ninja", "make", "tup", "binary"])
 
 
 static foreach (backend; ["ninja", "make", "tup", "binary"])
-    @("project1.builds." ~ backend)
+    @("project2.builds." ~ backend)
     @Tags(backend)
     unittest {
         enum project = "project2";

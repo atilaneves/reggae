@@ -462,17 +462,6 @@ private string buildReggaefileWithReggae(
     return getBuildGenName(options);
 }
 
-public string dubObjsDir() @safe {
-    import std.path: buildPath;
-    import std.file: tempDir;
-    // don't ask
-    static string ret;
-    if(ret == ret.init)
-        ret = buildPath(tempDir, "reggae");
-    return ret;
-}
-
-
 private void buildBinary(T)(auto ref T output, in Options options, in Binary bin) {
     import reggae.io: log;
     import std.process;
@@ -666,6 +655,16 @@ import reggae.options;
     }
     append("]);");
 
+    return ret;
+}
+
+public string dubObjsDir() @safe {
+    import std.path: buildPath;
+    import std.file: tempDir;
+    // don't ask
+    static string ret;
+    if(ret == ret.init)
+        ret = buildPath(tempDir, "reggae");
     return ret;
 }
 

@@ -3,6 +3,7 @@ module tests.it.backend.binary;
 
 import reggae;
 import unit_threaded;
+import tests.utils: FakeFile;
 import std.file;
 import std.string;
 
@@ -26,15 +27,6 @@ private void writeOrigFile() {
     auto file = File(origFileName, "w");
     file.writeln("See the little goblin");
 }
-
-private struct FakeFile {
-    string[] lines;
-    void writeln(T...)(T args) {
-        import std.conv;
-        lines ~= text(args);
-    }
-}
-
 
 @("Do nothing after build") unittest {
     scope(exit) {
@@ -129,4 +121,36 @@ else {
             "- " ~ buildPath(getcwd(), "../druntime/copy.txt") ~ " (optional)",
         ]
     );
+}
+
+@("command.code")
+unittest {
+    import std.algorithm: filter, canFind;
+    import std.array: array;
+
+    with(immutable Sandbox()) {
+        auto build = Build(
+            Target(
+                "bar.txt",
+                (in string[] inputs, in string[] outputs){ writeFile(outputs[0], "bar"); },
+                Target(inSandboxPath("foo.txt"))
+            ),
+            Target(
+                "baz.txt",
+                (in string[] inputs, in string[] outputs){ writeFile(outputs[0], "baz"); },
+                Target(inSandboxPath("foo.txt"))
+            ),
+        );
+        writeFile("foo.txt");
+        auto file = FakeFile();
+        auto binary = Binary(
+            build,
+            getOptions(["reggae", "-b", "binary"]),
+            file,
+        );
+        binary.run(["./build"]);
+        writelnUt(file);
+        shouldExist("bar.txt");
+        shouldExist("baz.txt");
+    }
 }

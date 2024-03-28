@@ -190,6 +190,7 @@ private void createBuild(T)(auto ref T output, in Options options) {
 
     import reggae.io: log;
     import std.process: spawnProcess, wait;
+    import std.path: baseName;
 
     enforce(options.reggaeFilePath.exists, text("Could not find ", options.reggaeFilePath));
 
@@ -202,12 +203,11 @@ private void createBuild(T)(auto ref T output, in Options options) {
     //binary backend has no build generator, it _is_ the build
     if(options.backend == Backend.binary) return;
 
-
     //actually run the build generator
     output.log("Running the created binary to generate the build");
-    immutable buildgenStatus = spawnProcess([buildPath(hiddenDirAbsPath(options), buildGenName)]).wait();
+    immutable buildgenStatus = spawnProcess([buildGenName]).wait();
     enforce(buildgenStatus == 0,
-            text("Executing the produced ", buildGenName, " binary failed"));
+            text("Executing the produced ", buildGenName.baseName, " binary failed"));
     output.log("Build generated");
 }
 
@@ -226,21 +226,19 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
     immutable buildGenName = getBuildGenName(options);
     if(options.isScriptBuild) return buildGenName;
 
+    // Only depend on dub if needed to. Right now there's only two rules that require
+    // the dependency.
     enum dubRules = [ "dubPackage", "dubDependant" ];
     const reggaefileNeedsDubDep = dubRules.any!(a => options.reggaeFilePath.readText.canFind(a));
+    const needsDub = reggaefileNeedsDubDep ? Yes.needDub : No.needDub;
 
-    version(ReggaefileDubWithReggae)
-    {
-        if(reggaefileNeedsDubDep)
-            return buildReggaefileWithReggae(options);
+    if(options.buildReggaefileWithDub) {
+        const binary = buildReggaefileDub(output, options, needsDub);
+        buildBinary(output, options, binary);
+        return buildGenName;
     }
 
-    const needsDubFlag = reggaefileNeedsDubDep ? Yes.needDub : No.needDub;
-    const binary = buildReggaefileDub(output, options, needsDubFlag);
-
-    buildBinary(output, options, binary);
-
-    return buildGenName;
+    return buildReggaefileWithReggae(options, needsDub);
 }
 
 private enum reggaeFileDubSdl =
@@ -374,7 +372,7 @@ private void calculateReggaeFileDeps(O)(auto ref O output, in Options options) {
         Command(
             (in string[] inputs, in string[] outputs) {
                 auto reggaefileObj = Binary(
-                    "_", // dummy name that doesn't matter
+                    options.reggaeFileDepFile, // the name doesn't really matter
                     [
                         options.dCompiler,
                         options.reggaeFilePath, "-o-", "-makedeps=" ~ options.reggaeFileDepFile,
@@ -434,13 +432,13 @@ private imported!"std.json".JSONValue selectionsPkgVersion(string pkg)() @safe p
 // I put a build system in the build system so it can build system while it build systems.
 // Currently slower than using dub because of multiple thread scheduling but also because
 // building per package is causing linker errors.
-private string buildReggaefileWithReggae(in imported!"reggae.options".Options options) {
-
+private string buildReggaefileWithReggae(
+    in imported!"reggae.options".Options options,
+    imported!"std.typecons".Flag!"needDub" needDub,)
+{
     import reggae.rules.dub: dubPackage, DubPath;
     import reggae.build: Build;
     import std.typecons: Yes;
-
-    const dubRecipeDir = hiddenDirAbsPath(options);
 
     // HACK: needs refactoring, calling this just to create the phony dub package
     // for the reggaefile build
@@ -454,13 +452,15 @@ private string buildReggaefileWithReggae(in imported!"reggae.options".Options op
     // the actual build at all.
     auto newOptions = options.dup;
     newOptions.backend = Backend.binary;
-    //newOptions.allAtOnce = true; // one test is failing with linker errors
+    newOptions.dubObjsDir = dubObjsDir;
+
+    const dubRecipeDir = hiddenDirAbsPath(options);
     auto build = Build(dubPackage(newOptions, DubPath(dubRecipeDir)));
+
     runtimeBuild(newOptions, build);
 
     return getBuildGenName(options);
 }
-
 
 private void buildBinary(T)(auto ref T output, in Options options, in Binary bin) {
     import reggae.io: log;
@@ -483,7 +483,8 @@ private void buildBinary(T)(auto ref T output, in Options options, in Binary bin
         text("Couldn't execute ", bin.cmd.join(" "), "\nin ", workDir,
              ":\n", res.output,
              "\n", "bin.name: ", bin.name, ", bin.cmd: ", bin.cmd.join(" ")));
-
+    if(options.verbose)
+        output.log(res.output);
 }
 
 private string[] importPaths(in Options options) @safe nothrow {
@@ -504,11 +505,13 @@ private string[] importPaths(in Options options) @safe nothrow {
 
 private string getBuildGenName(in Options options) @safe pure nothrow {
     import reggae.rules.common: exeExt;
+    import std.path: buildPath;
 
     const baseName =  options.backend == Backend.binary
         ? "../build"
         : "buildgen";
-    return baseName ~ exeExt;
+
+    return buildPath(hiddenDirAbsPath(options), baseName) ~ exeExt;
 }
 
 // On Windows we're apparently not allowed to have a main function in
@@ -652,6 +655,16 @@ import reggae.options;
     }
     append("]);");
 
+    return ret;
+}
+
+public string dubObjsDir() @safe {
+    import std.path: buildPath;
+    import std.file: tempDir;
+    // don't ask
+    static string ret;
+    if(ret == ret.init)
+        ret = buildPath(tempDir, "reggae");
     return ret;
 }
 

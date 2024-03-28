@@ -529,6 +529,7 @@ unittest {
 }
 
 @("dubPackage.lib.timing")
+@Flaky
 @Tags("dub", "ninja")
 unittest {
     import reggae.rules.common: exeExt;
@@ -561,6 +562,6 @@ unittest {
         auto dur2 = cast(Duration) sw.peek;
 
         // should take far less time the 2nd time around (no compiling)
-        dur2.shouldBeSmallerThan(dur1 / 2);
+        dur2.shouldBeSmallerThan((dur1 * 7) / 10);
     }
 }

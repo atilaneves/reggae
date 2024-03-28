@@ -659,6 +659,10 @@ struct Command {
         @safe pure const
     {
         import std.array: join;
+        import std.conv: text;
+
+        if(type == CommandType.code)
+            return text("<D code ", inputs, " -> ", outputs, " >");
 
         // FIXME: the fact that we're joining indicates
         // that `command` should probably be `string[]` instead of

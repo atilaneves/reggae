@@ -134,14 +134,17 @@ private struct DubPathDependency {
 
     Target target() {
         import reggae.rules.dub.runtime: dubBuild;
-        import std.path: buildPath, relativePath;
+        import std.path: buildNormalizedPath, relativePath;
         // The complicated path manipulation below is so that we can
         // place the target in its dub directory, but relative to the
         // reggaefile's project path. The reason we use relative paths
         // instead of absolute is so the user doesn't have to type the
         // whole path to a target.
+
         return dubBuild(subOptions, dubInfo)
-            .mapOutputs((string o) => buildPath(subOptions.projectPath.relativePath(projectPath), o));
+            .mapOutputs((string o) => buildNormalizedPath(projectPath,
+                                                          subOptions.projectPath.relativePath(projectPath),
+                                                          o));
     }
 }
 

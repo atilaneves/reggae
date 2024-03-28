@@ -94,6 +94,8 @@ private:
     auto runImpl(string[] args, string project = "") const {
 
         import std.algorithm: canFind;
+        import std.path: buildPath;
+        import std.file: tempDir;
 
         if(project == "") project = testPath;
 
@@ -109,7 +111,8 @@ private:
         else
             static assert(false, "Unknown D compiler");
 
-        return testRun(["reggae"] ~ fromWhereArgs ~ args ~ project);
+        const dubObjsDir = buildPath(tempDir, "reggae", "test");
+        return testRun(["reggae", "--dub-objs-dir=" ~ dubObjsDir] ~ fromWhereArgs ~ args ~ project);
     }
 }
 

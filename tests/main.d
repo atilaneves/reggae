@@ -60,6 +60,7 @@ int main(string[] args) {
         "tests.it.runtime.dependencies",
         "tests.it.runtime.dub.proper",
         "tests.it.runtime.dub.dependencies",
+        "tests.it.runtime.backend.binary",
     );
 }
 

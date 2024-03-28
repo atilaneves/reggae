@@ -68,6 +68,10 @@ private void primeDubBuild() {
     import tests.it.runtime: testRun;
     import std.file: write, exists, mkdirRecurse;
     import std.path: buildPath, dirName;
+    import std.stdio: writeln;
+
+    writeln("Priming...");
+    scope(exit) writeln("Primed\n");
 
     const reggaefile = buildPath(dubObjsDir, "prime", "reggaefile.d");
     if(!reggaefile.dirName.exists)

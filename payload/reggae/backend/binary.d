@@ -296,13 +296,19 @@ bool anyNewer(in string projectPath, in string[] dependencies, in Target target)
 }
 
 string[] dependenciesFromFile(R)(R lines) if(isInputRange!R) {
-    import std.algorithm: map, filter, find;
-    import std.string: strip;
-    import std.array: empty, join, array, replace, split;
+    import std.algorithm: map, filter, find, endsWith;
+    import std.array: empty, join, array, split;
 
     if(lines.empty) return [];
+
+    static removeBackslash(in string str) {
+        return str.endsWith(` \`)
+            ? str[0 .. $-2]
+            : str;
+    }
+
     return lines
-        .map!(a => a.replace(`\`, ``).strip)
+        .map!removeBackslash
         .join(" ")
         .find(":")
         .split(" ")

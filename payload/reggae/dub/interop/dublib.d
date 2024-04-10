@@ -185,6 +185,7 @@ package struct Dub {
             .configurations
             .filter!(c => c.matchesPlatform(_generatorSettings.platform))
             .map!(c => c.name)
+            .array
             ;
 
         if (!allConfigs) { // i.e. one single config specified by the user
@@ -192,11 +193,11 @@ package struct Dub {
             const requestedConfig = haveSpecialTestConfig ? testConfig : singleConfig;
 
 
-            const canFindConfig = allConfigurationsAsStrings.save.canFind(requestedConfig);
+            const canFindConfig = allConfigurationsAsStrings.canFind(requestedConfig);
             if (!canFindConfig && requestedConfig != "default")
                 throw new Exception(
                     text("Unknown dub configuration `", requestedConfig, "` - known configurations:\n    ",
-                         allConfigurationsAsStrings.save)
+                         allConfigurationsAsStrings)
                 );
             // if the user requests "default", then give them the
             // first available configuration, whether or not it's
@@ -210,7 +211,6 @@ package struct Dub {
         }
 
         auto configurations = allConfigurationsAsStrings
-            .save
             // exclude unittest config if there's a derived special one
             .filter!(n => !haveSpecialTestConfig || n != "unittest")
             .array;

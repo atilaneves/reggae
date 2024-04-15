@@ -445,6 +445,8 @@ private string buildReggaefileWithReggae(
     import std.stdio: stdout;
     buildReggaefileDub(stdout, options, Yes.needDub);
 
+    const dubRecipeDir = hiddenDirAbsPath(options);
+
     // FIXME - use correct D compiler.
     // The reason it doesn't work now is due to a test using
     // a custom compiler
@@ -453,8 +455,9 @@ private string buildReggaefileWithReggae(
     auto newOptions = options.dup;
     newOptions.backend = Backend.binary;
     newOptions.dubObjsDir = dubObjsDir;
+    newOptions.projectPath = dubRecipeDir;
+    newOptions.workingDir = dubRecipeDir;
 
-    const dubRecipeDir = hiddenDirAbsPath(options);
     auto build = Build(dubPackage(newOptions, DubPath(dubRecipeDir)));
 
     runtimeBuild(newOptions, build);

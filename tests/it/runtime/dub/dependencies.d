@@ -522,9 +522,14 @@ unittest {
             }
         );
 
+        enum relativeOutputPath = "over/there/bin/ut" ~ exeExt;
+
         runReggae("-b", "ninja");
         ninja.shouldExecuteOk;
-        shouldSucceed("over/there/bin/ut" ~ exeExt);
+        shouldSucceed(relativeOutputPath);
+
+        // make sure the ninja target is relative, not absolute
+        ninja([relativeOutputPath]).shouldExecuteOk;
     }
 }
 

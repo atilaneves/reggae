@@ -142,9 +142,8 @@ private struct DubPathDependency {
         // whole path to a target.
 
         return dubBuild(subOptions, dubInfo)
-            .mapOutputs((string o) => buildNormalizedPath(projectPath,
-                                                          subOptions.projectPath.relativePath(projectPath),
-                                                          o));
+            .mapOutputs((string o) => buildNormalizedPath(
+                subOptions.projectPath.relativePath(projectPath), o));
     }
 }
 

@@ -148,7 +148,7 @@ private struct DubPathDependency {
 }
 
 private string withExtension(
-    in imported!"reggae.types".TargetName targetName,
+    const imported!"reggae.types".TargetName targetName,
     DubPackageTargetType targetType,
     ) @safe pure
 {

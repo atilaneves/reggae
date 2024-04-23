@@ -117,7 +117,7 @@ Target objectFile(
     auto incompleteTarget = Target(
         srcFile.value.objFileName,
         "", // filled in below by compileTarget
-        [Target(srcFile.value)],
+        [Target(srcFile.value.dup)],
         implicits ~ compilerBinary(options, srcFile.value)
     );
 
@@ -223,7 +223,7 @@ Target link(in ExeName exeName, Target[] dependencies, in Flags flags = Flags(),
     return Target(exeName.value, command, dependencies);
 }
 
-Target link(in ExeName exeName, Target[] dependencies, in Flags flags, Target[] implicits,
+Target link(const ExeName exeName, Target[] dependencies, in Flags flags, Target[] implicits,
             in LibraryFlags linkLibraryFlags = LibraryFlags()) @safe pure {
     auto command = Command(
         CommandType.link,
@@ -563,7 +563,7 @@ string extFileName(in string srcFileName, in string extension) @safe pure {
 }
 
 
-string removeProjectPath(in string projectPath, in string path) @safe pure {
+string removeProjectPath(in string projectPath, const string path) @safe pure {
     import std.path: relativePath, absolutePath;
     return path.absolutePath.relativePath(projectPath.absolutePath);
 }
@@ -629,15 +629,17 @@ private Command compileCommandImpl(
         return expandOutput(path, projDir, projDir);
     }
 
-    auto includeParams = includePaths.map!(a => "-I" ~ maybeExpand(a)). array;
+    auto includeParams = includePaths
+        .map!(a => "-I" ~ maybeExpand(a))
+        .array;
 
     auto params = [
-        assocEntry("includes", includeParams),
+        assocEntry("includes", includeParams.dup),
         assocEntry("flags", flags.dup),
     ];
 
     params ~= assocEntry("stringImports",
-                         stringImportPaths.map!(a => "-J" ~ maybeExpand(a)).array);
+                         stringImportPaths.map!(a => "-J" ~ maybeExpand(a)).array.dup);
 
     params ~= assocEntry("DEPFILE", [srcFileName.objFileName ~ ".dep"]);
 

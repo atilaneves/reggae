@@ -164,7 +164,7 @@ Target[] dlangObjectFilesPerModule(
     in string[] stringImportPaths = [],
     Target[] implicits = [],
     in string projDir = "$project")
-    @safe pure
+    @trusted /*TODO: std.array.array*/ pure
 {
     return srcFiles
         .map!(a => objectFile(options,
@@ -386,10 +386,10 @@ private auto runDCompiler(in imported!"reggae.options".Options options,
     const depsFile = buildPath(tempDir, "scriptlike.dep");
     const makeDepsFlag = "-makedeps=" ~ depsFile;
 
-    const compArgs = [compiler] ~ flags ~
+    const compArgs = [compiler.idup] ~ flags ~
         importPaths.map!(a => "-I" ~ buildPath(projectPath, a)).array ~
         stringImportPaths.map!(a => "-J" ~ buildPath(projectPath, a)).array ~
-        ["-o-", makeDepsFlag, "-c", srcFileName];
+        ["-o-", makeDepsFlag, "-c", srcFileName.idup];
 
     const compRes = execute(compArgs);
     enforce(compRes.status == 0,

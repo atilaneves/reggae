@@ -108,7 +108,7 @@ struct ByDepthLevel {
 }
 
 struct Leaves {
-    this(in Target target) pure nothrow {
+    this(const Target target) pure nothrow {
         recurse(target);
     }
 
@@ -129,7 +129,7 @@ private:
 
     const(Target)[] targets;
 
-    void recurse(in Target target) pure nothrow {
+    void recurse(const Target target) pure nothrow {
         if(target.isLeaf) {
             targets ~= target;
             return;

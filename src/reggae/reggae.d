@@ -130,8 +130,8 @@ private string getJsonOutput(in Options options) @safe {
     const binDir = buildPath(srcDir, "reggae");
     auto env = ["PATH": (path ~ binDir).join(":"),
                 "PYTHONPATH": (pythonPaths ~ srcDir).join(":"),
-                "NODE_PATH": (nodePaths ~ options.projectPath ~ binDir).join(":"),
-                "LUA_PATH": (luaPaths ~ buildPath(options.projectPath, "?.lua") ~ buildPath(binDir, "?.lua")).join(";")];
+                "NODE_PATH": (nodePaths ~ options.projectPath.idup ~ binDir).join(":"),
+                "LUA_PATH": (luaPaths ~ buildPath(options.projectPath.idup, "?.lua") ~ buildPath(binDir, "?.lua")).join(";")];
     immutable res = execute(args, env);
     enforce(res.status == 0, text("Could not execute ", args.join(" "), ":\n", res.output));
     return res.output;
@@ -170,7 +170,7 @@ private string[] getJsonOutputArgs(in Options options) @safe {
             : ["/usr/bin/env", "python"];
         return pythonParts ~ ["-B", "-m", "reggae.reggae_json_build",
                 "--options", optionsString,
-                options.projectPath];
+                options.projectPath.idup];
 
     case BuildLanguage.Ruby:
         return ["ruby", "-S",
@@ -400,7 +400,7 @@ private void buildTarget(in Options options, imported!"reggae.build".Target targ
     runtimeBuild(newOptions, Build(target));
 }
 
-private void writeIfDiffers(O)(auto ref O output, in string path, in string contents) @safe {
+private void writeIfDiffers(O)(auto ref O output, const string path, in string contents) @safe {
     import reggae.io: log;
     import std.file: exists, readText, write, mkdirRecurse;
     import std.path: dirName;
@@ -490,7 +490,7 @@ private void buildBinary(T)(auto ref T output, in Options options, in Binary bin
         output.log(res.output);
 }
 
-private string[] importPaths(in Options options) @safe nothrow {
+private string[] importPaths(const Options options) @safe nothrow {
     import std.file: exists;
     import std.algorithm: map;
     import std.array: array;
@@ -633,7 +633,7 @@ private void writeConfig(T)(auto ref T output, in Options options) {
 }
 
 // the text of the config.d file to be written
-private string reggaeConfigSource(in Options options) @safe {
+private string reggaeConfigSource(const Options options) @safe {
 
     string ret;
 
@@ -702,7 +702,7 @@ private bool strEqModNewLine(in string lhs, in string rhs) @safe pure nothrow {
     return lhs.dos2unix == rhs.dos2unix;
 }
 
-private string dos2unix(in string str) @safe pure nothrow {
+private string dos2unix(const string str) @safe pure nothrow {
     import std.array: replace;
     return str.replace("\r\n", "\n");
 }

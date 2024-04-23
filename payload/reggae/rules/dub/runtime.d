@@ -50,7 +50,7 @@ imported!"reggae.build".Target dubBuild(C)
 
 imported!"reggae.build".Target dubBuild(
     in imported!"reggae.options".Options options,
-    in DubInfo dubInfo,
+    const DubInfo dubInfo,
     in CompilationMode compilationMode = CompilationMode.options,
     in imported!"reggae.types".CompilerFlags extraCompilerFlags = imported!"reggae.types".CompilerFlags(),
     )
@@ -89,7 +89,7 @@ imported!"reggae.build".Target dubBuild(
 // be multiple object files. Instead of asking dub what it does,
 // we generate our own object files then link/archive.
 private imported!"reggae.build".Target objectsToTarget(
-    in DubInfo dubInfo,
+    const DubInfo dubInfo,
     in string name,
     imported!"reggae.build".Target[] allObjs,
     )
@@ -121,7 +121,7 @@ private imported!"reggae.build".Target objectsToTarget(
 
 private auto dubObjsDir(
     in imported!"reggae.options".Options options,
-    in DubInfo dubInfo)
+    const DubInfo dubInfo)
     @safe pure
 {
     import reggae.dub.info: DubObjsDir;
@@ -133,7 +133,7 @@ private auto dubObjsDir(
 }
 
 // fixes postBuildCommands, somehow
-private string fixNameForPostBuild(in string targetName, in DubInfo dubInfo) @safe pure {
+private string fixNameForPostBuild(const string targetName, const DubInfo dubInfo) @safe pure {
 
     import std.path: buildPath;
 

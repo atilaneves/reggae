@@ -104,7 +104,7 @@ private struct Version0 {
         return Build(targets);
     }
 
-    static const(Options) jsonToOptions(in Options options, in JSONValue json) {
+    static const(Options) jsonToOptions(const Options options, in JSONValue json) {
         //first, find the JSON object we want
         auto defaultOptionsRange = json.array.filter!(a => a.object["type"].str == "defaultOptions");
         return defaultOptionsRange.empty

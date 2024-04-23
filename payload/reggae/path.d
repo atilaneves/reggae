@@ -13,7 +13,7 @@ string buildPath(scope string[] segments...) @safe pure nothrow {
     return r;
 }
 
-string deabsolutePath(in string path) @safe pure nothrow {
+string deabsolutePath(in return string path) @safe pure nothrow {
     import std.path: isRooted, stripDrive;
     return path.isRooted
         ? path.stripDrive[1..$]

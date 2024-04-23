@@ -63,7 +63,7 @@ struct Options {
     bool buildReggaefileWithDub;
     string[string] userVars; // must be last
 
-    Options dup() @safe pure const nothrow {
+    Options dup() @safe pure const nothrow scope {
         import std.traits: isAssociativeArray;
 
         Options ret;
@@ -116,7 +116,7 @@ struct Options {
     }
 
     // The path to reggaefile.{d,py,rb,js,lua}
-    string reggaeFilePath() @safe const {
+    string reggaeFilePath() @safe const scope {
         import std.algorithm, std.array, std.exception, std.conv;
 
         auto langFiles = [dlangFile, pythonFile, rubyFile, jsFile, luaFile];
@@ -131,23 +131,23 @@ struct Options {
         return buildPath(projectPath, "reggaefile.d").absolutePath;
     }
 
-    string dlangFile() @safe const pure nothrow {
+    string dlangFile() @safe const pure nothrow scope {
         return buildPath(projectPath, "reggaefile.d");
     }
 
-    string pythonFile() @safe const pure nothrow {
+    string pythonFile() @safe const pure nothrow scope {
         return buildPath(projectPath, "reggaefile.py");
     }
 
-    string rubyFile() @safe const pure nothrow {
+    string rubyFile() @safe const pure nothrow scope {
         return buildPath(projectPath, "reggaefile.rb");
     }
 
-    string jsFile() @safe const pure nothrow {
+    string jsFile() @safe const pure nothrow scope {
         return buildPath(projectPath, "reggaefile.js");
     }
 
-    string luaFile() @safe const pure nothrow {
+    string luaFile() @safe const pure nothrow scope {
         return buildPath(projectPath, "reggaefile.lua");
     }
 
@@ -201,7 +201,7 @@ struct Options {
         return getLanguage(reggaeFilePath) != Language.D;
     }
 
-    BuildLanguage reggaeFileLanguage(in string fileName) @safe const {
+    BuildLanguage reggaeFileLanguage(const string fileName) @safe const scope {
         import std.exception;
         import std.path: extension;
 
@@ -212,7 +212,7 @@ struct Options {
         }
     }
 
-    BuildLanguage reggaeFileLanguage() @safe const {
+    BuildLanguage reggaeFileLanguage() @safe const scope {
         return reggaeFileLanguage(reggaeFilePath);
     }
 
@@ -252,7 +252,7 @@ struct Options {
         return ["CC = " ~ cCompiler, "CXX = " ~ cppCompiler, "DC = " ~ dCompiler];
     }
 
-    string eraseProjectPath(in string str) @safe pure nothrow const {
+    string eraseProjectPath(const string str) @safe pure nothrow const {
         import std.string;
         import std.path: dirSeparator;
         return str.replace(projectPath ~ dirSeparator, "");
@@ -367,7 +367,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
 enum hiddenDir = ".reggae";
 
 
-Options withProjectPath(in Options options, in string projectPath) @safe pure nothrow {
+Options withProjectPath(in Options options, const string projectPath) @safe pure nothrow {
     auto modOptions = options.dup;
     modOptions.projectPath = projectPath;
     return modOptions;
@@ -380,7 +380,7 @@ string banner() @safe pure nothrow {
     return ret;
 }
 
-private void setExePath(ref string executable, in string envVar, in string default_) @safe {
+private void setExePath(ref string executable, in string envVar, const string default_) @safe {
     import std.process : environment, executeShell;
     import std.string : splitLines;
 

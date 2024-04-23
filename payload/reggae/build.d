@@ -249,7 +249,7 @@ struct Target {
 
     enum Target[] noTargets = [];
 
-    this(string output) @safe pure nothrow {
+    this(in string output) @safe pure nothrow {
         this(output, "", noTargets, noTargets);
     }
 
@@ -277,11 +277,11 @@ struct Target {
     /**
        The outputs without expanding special variables
      */
-    @property inout(string)[] rawOutputs(in string projectPath = "") @safe pure inout {
+    @property inout(string)[] rawOutputs(in string projectPath = "") @safe pure inout return scope {
         return _outputs;
     }
 
-    @property inout(Target)[] dependencyTargets(in string projectPath = "") @safe pure nothrow inout {
+    @property inout(Target)[] dependencyTargets(in string projectPath = "") @safe pure nothrow inout return scope {
         return _dependencies;
     }
 
@@ -289,7 +289,7 @@ struct Target {
         return _implicits;
     }
 
-    @property string[] dependenciesInProjectPath(in string projectPath) @safe pure const {
+    @property string[] dependenciesInProjectPath(in string projectPath) @safe pure const scope {
         return depsInProjectPath(_dependencies, projectPath);
     }
 
@@ -317,7 +317,7 @@ struct Target {
     }
 
     ///Replace special variables and return a list of outputs thus modified
-    string[] expandOutputs(in string projectPath) @safe pure const {
+    string[] expandOutputs(in string projectPath) @safe pure return scope const {
         return _outputs.map!(o => expandOutput(o, projectPath)).array;
     }
 
@@ -340,11 +340,11 @@ struct Target {
         return _command.isDefaultCommand;
     }
 
-    CommandType getCommandType() @safe pure const nothrow {
+    CommandType getCommandType() @safe pure const nothrow scope {
         return _command.getType;
     }
 
-    string[] getCommandParams(in string projectPath, in string key, string[] ifNotFound) @safe pure const {
+    string[] getCommandParams(in string projectPath, in string key, string[] ifNotFound) @safe pure const return scope {
         return _command.getParams(projectPath, key, ifNotFound);
     }
 
@@ -437,7 +437,7 @@ struct Target {
 
 private:
 
-    string[] depsInProjectPath(in Target[] deps, in string projectPath) @safe pure const {
+    string[] depsInProjectPath(in Target[] deps, in string projectPath) @safe pure const scope {
         import reggae.range;
         return deps.map!(a => a.expandOutputs(projectPath)).join;
     }
@@ -511,7 +511,8 @@ struct Command {
         this.function_ = func;
     }
 
-    static Command phony(in string shellCommand) @safe pure nothrow {
+    // TODO: DIP100 bug? Why can't I return `cmd`?
+    static Command phony(in string shellCommand) @trusted pure nothrow scope {
         Command cmd;
         cmd.type = CommandType.phony;
         cmd.command = shellCommand;
@@ -522,7 +523,7 @@ struct Command {
         return params.keys;
     }
 
-    CommandType getType() @safe pure const nothrow {
+    CommandType getType() @safe pure const nothrow scope {
         return type;
     }
 
@@ -532,7 +533,8 @@ struct Command {
             return cast(bool) type.among(compile, link, compileAndLink);
     }
 
-    string[] getParams(in string projectPath, in string key, string[] ifNotFound) @safe pure const {
+    // TODO: DIP1000 bug? Complaining about scope when there's scope on both `getParams` overloads
+    string[] getParams(in string projectPath, in string key, string[] ifNotFound) @trusted pure const return scope {
         return getParams(projectPath, key, true, ifNotFound);
     }
 
@@ -561,9 +563,12 @@ struct Command {
     }
 
     private string[] getParams(string projectPath, in string key,
-                               bool useIfNotFound, string[] ifNotFound = []) @safe pure const {
+                               bool useIfNotFound, string[] ifNotFound = []) @safe pure const return scope {
         projectPath = buildPath(projectPath);
-        return params.get(key, ifNotFound).map!(a => a.replace(gProjdir, projectPath)).array;
+        return params
+            .get(key, ifNotFound)
+            .map!(a => a.replace(gProjdir, projectPath))
+            .array;
     }
 
     // Caution: never trust comments in code.
@@ -575,7 +580,7 @@ struct Command {
     const(string)[] execute(
         in Options options,
         in Language language,
-        in string[] outputs,
+        const string[] outputs,
         in string[] inputs
         )
         const @trusted
@@ -730,8 +735,8 @@ struct Command {
     }
 
     ///Replace $in, $out, $project with values and remove $builddir
-    private static auto expandCmd(in string[] cmd, in string projectPath,
-                                  in string[] outputs, in string[] inputs)
+    private static auto expandCmd(const string[] cmd, const string projectPath,
+                                  const string[] outputs, const string[] inputs)
         @safe pure
     {
         import std.array: replace;
@@ -792,12 +797,12 @@ struct Command {
                 final switch(language) with(Language) {
                     case D:
                     case unknown:
-                        return options.dCompiler ~
+                        return options.dCompiler.idup ~
                             ["-of$out", "$flags", "$in"];
                     case Cplusplus:
-                        return options.cppCompiler ~ cArgs;
+                        return options.cppCompiler.idup ~ cArgs;
                     case C:
-                        return options.cCompiler ~ cArgs;
+                        return options.cCompiler.idup ~ cArgs;
                 }
             }
 
@@ -859,15 +864,15 @@ struct Command {
                 const postfix = deps
                     ? ["$in"]
                     : [output, "$in"];
-                auto meat = options.dCompiler ~
+                auto meat = options.dCompiler.idup ~
                     makeDeps ~
                     ["$flags", "$includes", "$stringImports", output, colour, "-c"];
                 return meat ~ postfix;
             }
             case Cplusplus:
-                return options.cppCompiler ~ ccParams;
+                return options.cppCompiler.idup ~ ccParams;
             case C:
-                return options.cCompiler ~ ccParams;
+                return options.cCompiler.idup ~ ccParams;
             case unknown:
                 throw new Exception("Unsupported language for compiling");
         }
@@ -987,7 +992,7 @@ private ubyte[] setUshort(in ushort length) @safe pure nothrow {
 }
 
 
-string replaceConcreteCompilersWithVars(in string cmd, in Options options) @safe pure nothrow {
+string replaceConcreteCompilersWithVars(const string cmd, in Options options) @safe pure nothrow {
     return cmd.
         replace(options.dCompiler, "$(DC)").
         replace(options.cppCompiler, "$(CXX)").

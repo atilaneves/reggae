@@ -24,7 +24,7 @@ struct Ninja {
 
     this(Build build, in Options options) @safe {
         _build = build;
-        _options = options;
+        _options = options.dup;
         _projectPath = _options.projectPath;
 
         foreach(target; _build.range) {
@@ -190,7 +190,7 @@ private:
         }
     }
 
-    void explicitInOutRule(Target target, in string shellCommand, in string implicitInput = "") @safe {
+    void explicitInOutRule(Target target, string shellCommand, string implicitInput = "") @safe {
         import std.regex: regex, match;
         import std.algorithm.iteration: map;
         import std.array: empty, join;
@@ -302,7 +302,7 @@ private:
     //ordering. The first time we create a rule with the same name as the command.
     //The subsequent times, if any, we append a number to the command to create
     //a new rule
-    string getRuleName(in string cmd, in string ruleCmdLine, out bool haveToAdd) @safe nothrow {
+    string getRuleName(string cmd, in string ruleCmdLine, out bool haveToAdd) @safe nothrow {
         import std.algorithm.searching: canFind, startsWith;
         import std.algorithm.iteration: filter;
         import std.array: array, empty, replace;
@@ -404,7 +404,7 @@ private:
     }
 }
 
-private string escapePathInBuildLine(in string path) @safe pure {
+private string escapePathInBuildLine(string path) @safe pure {
     import std.array: replace;
     return path.replace(":", "$:").replace(" ", "$ ");
 }
@@ -549,7 +549,7 @@ private string cmdTypeToNinjaRuleName(CommandType commandType, Language language
 
 //ninja doesn't like symbols in rule names
 //@trusted because of replace
-private string sanitizeCmd(in string cmd) @trusted pure nothrow {
+private string sanitizeCmd(string cmd) @trusted pure nothrow {
     import std.path: baseName;
     import std.array: replace;
     //only handles c++ compilers so far...

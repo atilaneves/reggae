@@ -36,7 +36,7 @@ struct AssocList(K, V) {
         entries ~= AssocEntry!(K, V)(key, value);
     }
 
-    T get(T)(in K key, T defaultValue) pure const {
+    T get(T)(in K key, T defaultValue) pure const scope {
         import std.conv: to;
         // workaround for a bug
         if(__ctfe && _isEmpty) return defaultValue;

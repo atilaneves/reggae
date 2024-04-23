@@ -26,7 +26,7 @@ struct Tup {
 
     this(Build build, in Options options) {
         this.build = build;
-        this.options = options;
+        this.options = options.dup;
     }
 
     string output() pure {

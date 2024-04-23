@@ -3,7 +3,7 @@ module reggae.dependencies;
 
 // Get a D file's dependencies from a file generated with
 // -makedeps=$filename
-string[] parseDepFile(in string fileName) @safe {
+string[] parseDepFile(const string fileName) @safe {
     import std.string: chomp;
     import std.algorithm: splitter, filter, canFind, among;
     import std.array: array;

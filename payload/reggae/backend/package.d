@@ -42,5 +42,11 @@ package string[] maybeAddDirDependencies(
     return srcs
         .map!(t => t.expandOutputs(projectPath)[0])
         .map!dirName
-        .array;
+        .trustedArray;
+}
+
+// TODO: fix std.array.array
+auto trustedArray(R)(auto ref scope R rng) @trusted {
+    import std.array: array;
+    return rng.array;
 }

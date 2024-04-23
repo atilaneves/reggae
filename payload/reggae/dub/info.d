@@ -379,7 +379,7 @@ struct DubInfo {
 }
 
 
-private string[] packagePaths(in DubPackage dubPackage, in string[] paths) @safe pure nothrow {
+private string[] packagePaths(in DubPackage dubPackage, const string[] paths) @safe pure nothrow {
     import std.algorithm: map;
     import std.array: array;
     import std.path: buildPath;

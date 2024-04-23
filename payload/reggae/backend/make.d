@@ -13,7 +13,7 @@ struct Makefile {
 
     this(Build build, in Options options) @safe pure {
         this.build = build;
-        this.options = options;
+        this.options = options.dup;
     }
 
     string fileName() @safe pure nothrow const {
@@ -55,7 +55,7 @@ struct Makefile {
         return ret;
     }
 
-    private static string replaceEnvVars(in string str) @safe {
+    private static string replaceEnvVars(string str) @safe {
         import std.regex: regex, matchAll;
         import std.algorithm: _sort = sort, uniq, map;
         import std.array: array, replace;

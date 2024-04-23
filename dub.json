@@ -13,7 +13,7 @@
     "mainSourceFile": "src/reggae/reggae_main.d",
     "preGenerateCommands": ["rdmd $PACKAGE_DIR/list_payload.d $PACKAGE_DIR"],
     "dependencies": {
-        "dub": "~>1.36.0"
+        "dub": "~>1.37.0"
     },
     "subConfigurations": {
         "dub": "library"

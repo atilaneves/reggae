@@ -4,6 +4,8 @@ module tests.it.buildgen.phony;
 import tests.it.buildgen;
 
 
+version(Posix):
+
 static foreach (backend; ["ninja", "make", "binary"])
     @(backend ~ ".always_executed")
     @Tags(backend)

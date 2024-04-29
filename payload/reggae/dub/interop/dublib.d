@@ -323,6 +323,7 @@ private auto recipe(in string projectPath) @safe {
     import dub.recipe.packagerecipe: PackageRecipe;
     import dub.recipe.json: parseJson;
     import dub.recipe.sdl: parseSDL;
+    import dub.dependency: PackageName;
     static import dub.internal.vibecompat.data.json;
     import std.file: readText, exists;
 
@@ -335,12 +336,12 @@ private auto recipe(in string projectPath) @safe {
 
     if(inProjectPath("dub.sdl").exists) {
         const text = readText(inProjectPath("dub.sdl"));
-        () @trusted { parseSDL(recipe, text, "parent", "dub.sdl"); }();
+        () @trusted { parseSDL(recipe, text, PackageName("parent"), "dub.sdl"); }();
         return recipe;
     } else if(inProjectPath("dub.json").exists) {
         auto text = readText(inProjectPath("dub.json"));
         auto json = () @trusted { return dub.internal.vibecompat.data.json.parseJson(text); }();
-        () @trusted { parseJson(recipe, json, "" /*parent*/); }();
+        () @trusted { parseJson(recipe, json, PackageName("") /*parent*/); }();
         return recipe;
     } else
         throw new Exception("Could not find dub.sdl or dub.json in " ~ projectPath);

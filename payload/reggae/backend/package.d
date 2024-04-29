@@ -46,7 +46,7 @@ package string[] maybeAddDirDependencies(
 }
 
 // TODO: fix std.array.array
-auto trustedArray(R)(auto ref scope R rng) @trusted {
+private auto trustedArray(R)(auto ref scope R rng) @trusted {
     import std.array: array;
     return rng.array;
 }

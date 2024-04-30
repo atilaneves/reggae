@@ -58,7 +58,7 @@ imported!"reggae.dub.info".DubInfo[string] dubInfos(O)
 
         dub.fetchDeps(output);
 
-        output.log("Getting dub information");
+        output.log("Getting dub information for ", options.projectPath);
         auto ret = dub.getDubInfos(output);
         output.log("Got dub build information");
 

@@ -173,7 +173,6 @@ package struct Dub {
         }
 
         const haveSpecialTestConfig = testConfig.length && testConfig != "unittest";
-        const defaultConfig = _dub.project.getDefaultConfiguration(_generatorSettings.platform);
 
         // A violation of the Law of Demeter caused by a dub bug.
         // Otherwise _dub.project.configurations would do, but it fails for one
@@ -187,6 +186,14 @@ package struct Dub {
             .map!(c => c.name)
             .array
             ;
+
+        // Sometimes allConfigurationsAsStrings is empty. At the time
+        // of this comment, the only known case in the test suite is
+        // `it.runtime.dub.proper.subpackages`.
+        // When it is we fall back to the slower "proper" way.
+        const defaultConfig = allConfigurationsAsStrings.length
+            ? allConfigurationsAsStrings[0]
+            : _dub.project.getDefaultConfiguration(_generatorSettings.platform);
 
         if (!allConfigs) { // i.e. one single config specified by the user
             // translate `unittest` to the actual test configuration

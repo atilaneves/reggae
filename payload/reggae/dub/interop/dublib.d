@@ -276,11 +276,10 @@ package struct Dub {
 }
 
 
-// only exists because the dub API is "challenging" Only use this
-// function if a "full dub" is needed, since it will cause the package
-// recipe to be parsed, as well as all recipes for all packages
-// already downloaded. See other usages of the `Dub` class in this
-// module that don't do that on purpose for speed reasons.
+// This function was originally written to only use a "full" dub instance
+// if needed since dub startup is slow. This is due to the package manager
+// (for reasons unknown) scanning the entirety of the ~/.dub/packages and
+// parsing every recipe in there. Now it caches the package manager.
 auto fullDub(in string projectPath) @trusted {
     import dub.dub: DubClass = Dub;
     import dub.packagemanager: PackageManager;

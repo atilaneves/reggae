@@ -163,13 +163,9 @@ package struct Dub {
         const allConfigs = singleConfig == "";
         // add the special `dub test` configuration (which doesn't require an existing `unittest` config)
         const lookingForUnitTestsConfig = allConfigs || singleConfig == "unittest";
-        import reggae.io;
-        import std.stdio: output = stdout;
-        output.log("testConfig shenanigans");
         const testConfig = lookingForUnitTestsConfig
             ? _dub.project.addTestRunnerConfiguration(_generatorSettings)
             : null; // skip when requesting a single non-unittest config
-        output.log("testConfig shenanigans... done");
 
         // error out if the test config is explicitly requested but not available
         if(_options.dubConfig == "unittest" && testConfig == "") {
@@ -177,9 +173,7 @@ package struct Dub {
         }
 
         const haveSpecialTestConfig = testConfig.length && testConfig != "unittest";
-        output.log("Getting default config");
         const defaultConfig = _dub.project.getDefaultConfiguration(_generatorSettings.platform);
-        output.log("as strings");
 
         // A violation of the Law of Demeter caused by a dub bug.
         // Otherwise _dub.project.configurations would do, but it fails for one
@@ -195,7 +189,6 @@ package struct Dub {
             ;
 
         if (!allConfigs) { // i.e. one single config specified by the user
-            output.log("not all configs");
             // translate `unittest` to the actual test configuration
             const requestedConfig = haveSpecialTestConfig ? testConfig : singleConfig;
 
@@ -217,12 +210,10 @@ package struct Dub {
             return DubConfigurations([actualConfig], actualConfig, testConfig);
         }
 
-        output.log("filter array");
         auto configurations = allConfigurationsAsStrings
             // exclude unittest config if there's a derived special one
             .filter!(n => !haveSpecialTestConfig || n != "unittest")
             .array;
-        output.log("returning");
 
         return DubConfigurations(configurations, defaultConfig, testConfig);
     }

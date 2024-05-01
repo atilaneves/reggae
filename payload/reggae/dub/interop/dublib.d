@@ -163,13 +163,9 @@ package struct Dub {
         const allConfigs = singleConfig == "";
         // add the special `dub test` configuration (which doesn't require an existing `unittest` config)
         const lookingForUnitTestsConfig = allConfigs || singleConfig == "unittest";
-        import reggae.io;
-        import std.stdio: output = stdout;
-        output.log("testConfig shenanigans");
         const testConfig = lookingForUnitTestsConfig
             ? _dub.project.addTestRunnerConfiguration(_generatorSettings)
             : null; // skip when requesting a single non-unittest config
-        output.log("testConfig shenanigans... done");
 
         // error out if the test config is explicitly requested but not available
         if(_options.dubConfig == "unittest" && testConfig == "") {
@@ -177,9 +173,6 @@ package struct Dub {
         }
 
         const haveSpecialTestConfig = testConfig.length && testConfig != "unittest";
-        output.log("Getting default config");
-        const defaultConfig = _dub.project.getDefaultConfiguration(_generatorSettings.platform);
-        output.log("as strings");
 
         // A violation of the Law of Demeter caused by a dub bug.
         // Otherwise _dub.project.configurations would do, but it fails for one
@@ -194,8 +187,15 @@ package struct Dub {
             .array
             ;
 
+        // Sometimes allConfigurationsAsStrings is empty. At the time
+        // of this comment, the only known case in the test suite is
+        // `it.runtime.dub.proper.subpackages`.
+        // When it is we fall back to the slower "proper" way.
+        const defaultConfig = allConfigurationsAsStrings.length
+            ? allConfigurationsAsStrings[0]
+            : _dub.project.getDefaultConfiguration(_generatorSettings.platform);
+
         if (!allConfigs) { // i.e. one single config specified by the user
-            output.log("not all configs");
             // translate `unittest` to the actual test configuration
             const requestedConfig = haveSpecialTestConfig ? testConfig : singleConfig;
 
@@ -217,12 +217,10 @@ package struct Dub {
             return DubConfigurations([actualConfig], actualConfig, testConfig);
         }
 
-        output.log("filter array");
         auto configurations = allConfigurationsAsStrings
             // exclude unittest config if there's a derived special one
             .filter!(n => !haveSpecialTestConfig || n != "unittest")
             .array;
-        output.log("returning");
 
         return DubConfigurations(configurations, defaultConfig, testConfig);
     }
@@ -278,11 +276,10 @@ package struct Dub {
 }
 
 
-// only exists because the dub API is "challenging" Only use this
-// function if a "full dub" is needed, since it will cause the package
-// recipe to be parsed, as well as all recipes for all packages
-// already downloaded. See other usages of the `Dub` class in this
-// module that don't do that on purpose for speed reasons.
+// This function was originally written to only use a "full" dub instance
+// if needed since dub startup is slow. This is due to the package manager
+// (for reasons unknown) scanning the entirety of the ~/.dub/packages and
+// parsing every recipe in there. Now it caches the package manager.
 auto fullDub(in string projectPath) @trusted {
     import dub.dub: DubClass = Dub;
     import dub.packagemanager: PackageManager;
@@ -323,6 +320,7 @@ private auto recipe(in string projectPath) @safe {
     import dub.recipe.packagerecipe: PackageRecipe;
     import dub.recipe.json: parseJson;
     import dub.recipe.sdl: parseSDL;
+    import dub.dependency: PackageName;
     static import dub.internal.vibecompat.data.json;
     import std.file: readText, exists;
 
@@ -335,12 +333,12 @@ private auto recipe(in string projectPath) @safe {
 
     if(inProjectPath("dub.sdl").exists) {
         const text = readText(inProjectPath("dub.sdl"));
-        () @trusted { parseSDL(recipe, text, "parent", "dub.sdl"); }();
+        () @trusted { parseSDL(recipe, text, PackageName("parent"), "dub.sdl"); }();
         return recipe;
     } else if(inProjectPath("dub.json").exists) {
         auto text = readText(inProjectPath("dub.json"));
         auto json = () @trusted { return dub.internal.vibecompat.data.json.parseJson(text); }();
-        () @trusted { parseJson(recipe, json, "" /*parent*/); }();
+        () @trusted { parseJson(recipe, json, PackageName("") /*parent*/); }();
         return recipe;
     } else
         throw new Exception("Could not find dub.sdl or dub.json in " ~ projectPath);

@@ -511,8 +511,7 @@ struct Command {
         this.function_ = func;
     }
 
-    // TODO: DIP100 bug? Why can't I return `cmd`?
-    static Command phony(in string shellCommand) @trusted pure nothrow scope {
+    static Command phony(const string shellCommand) @safe pure nothrow scope {
         Command cmd;
         cmd.type = CommandType.phony;
         cmd.command = shellCommand;

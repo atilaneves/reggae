@@ -532,22 +532,22 @@ struct Command {
             return cast(bool) type.among(compile, link, compileAndLink);
     }
 
-    // TODO: DIP1000 bug? Complaining about scope when there's scope on both `getParams` overloads
-    string[] getParams(in string projectPath, in string key, string[] ifNotFound) @trusted pure const return scope {
+    string[] getParams(in string projectPath, in string key, string[] ifNotFound)
+        @safe pure const return scope
+    {
         return getParams(projectPath, key, true, ifNotFound);
     }
 
     private string[] getParams(
-        string projectPath,
+        in string projectPath,
         in string key,
-        bool useIfNotFound,
+        in bool useIfNotFound,
         string[] ifNotFound = [])
         @safe pure const return scope
     {
-        projectPath = buildPath(projectPath);
         return params
             .get(key, ifNotFound)
-            .map!(a => a.replace(gProjdir, projectPath))
+            .map!(a => a.replace(gProjdir, buildPath(projectPath)))
             .array;
     }
 

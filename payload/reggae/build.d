@@ -537,6 +537,21 @@ struct Command {
         return getParams(projectPath, key, true, ifNotFound);
     }
 
+    private string[] getParams(
+        string projectPath,
+        in string key,
+        bool useIfNotFound,
+        string[] ifNotFound = [])
+        @safe pure const return scope
+    {
+        projectPath = buildPath(projectPath);
+        return params
+            .get(key, ifNotFound)
+            .map!(a => a.replace(gProjdir, projectPath))
+            .array;
+    }
+
+
     Command expandVariables() @safe pure {
         switch(type) with(CommandType) {
             case shell:
@@ -559,15 +574,6 @@ struct Command {
             throw new Exception("Command type 'code' not supported for ninja backend");
 
         return command.replace(gProjdir, buildPath(projectPath));
-    }
-
-    private string[] getParams(string projectPath, in string key,
-                               bool useIfNotFound, string[] ifNotFound = []) @safe pure const return scope {
-        projectPath = buildPath(projectPath);
-        return params
-            .get(key, ifNotFound)
-            .map!(a => a.replace(gProjdir, projectPath))
-            .array;
     }
 
     // Caution: never trust comments in code.

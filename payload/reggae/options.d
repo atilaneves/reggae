@@ -381,11 +381,20 @@ string banner() @safe pure nothrow {
 }
 
 private void setExePath(ref string executable, in string envVar, const string default_) @safe {
-    import std.process : environment, executeShell;
-    import std.string : splitLines;
+    import std.process : environment;
 
     if (executable == "")
         executable = environment.get(envVar, default_);
+
+    executable = resolveExecutable(executable);
+}
+
+string resolveExecutable(const string executable) @safe {
+    import std.process : executeShell;
+    import std.string : splitLines;
+
+    if (executable == "")
+        return executable;
 
     static finder(in string exe) {
         version(Windows)
@@ -395,11 +404,13 @@ private void setExePath(ref string executable, in string envVar, const string de
     }
 
     const finderResult = finder(executable);
-    if (finderResult.status != 0) return;
+    if (finderResult.status == 0) {
+        // splitting lines here instead of chomp because `where` can (and
+        // does for dmd on Windows) return more than one line
+        const lines = finderResult.output.splitLines;
+        if (lines.length)
+            return lines[0];
+    }
 
-    // splitting lines here instead of chomp because `where` can (and
-    // does for dmd on Windows) return more than one line
-    const lines = finderResult.output.splitLines;
-    if (lines.length)
-        executable = lines[0];
+    return executable;
 }

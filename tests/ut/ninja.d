@@ -24,12 +24,10 @@ else
                                      "/usr/bin/c++ $in -o $out",
                                      [Target("foo.o"), Target("bar.o")],
                                   )));
-    ninja.buildEntries.shouldEqual([NinjaEntry("build mybin: cpp foo.o bar.o",
-                                               ["between = -o"])
+    ninja.buildEntries.shouldEqual([NinjaEntry("build mybin: _custom_in_out foo.o bar.o",
+                                               ["before = /usr/bin/c++ ",
+                                                "between = $ -o "])
                                        ]);
-    ninja.ruleEntries.shouldEqual([NinjaEntry("rule cpp",
-                                              ["command = /usr/bin/c++ $in $between $out"])
-                                      ]);
 }
 
 @("C++ linker project path") unittest {
@@ -40,12 +38,10 @@ else
                         "/home/user/myproject");
     enum obj1 = buildPath("/home/user/myproject/foo.o");
     enum obj2 = buildPath("/home/user/myproject/bar.o");
-    ninja.buildEntries.shouldEqual([NinjaEntry("build mybin: cpp " ~ obj1 ~ " " ~ obj2,
-                                               ["between = -o"])
+    ninja.buildEntries.shouldEqual([NinjaEntry("build mybin: _custom_in_out " ~ obj1 ~ " " ~ obj2,
+                                               ["before = /usr/bin/c++ ",
+                                                "between = $ -o "])
                                        ]);
-    ninja.ruleEntries.shouldEqual([NinjaEntry("rule cpp",
-                                              ["command = /usr/bin/c++ $in $between $out"])
-                                      ]);
 }
 
 
@@ -57,12 +53,10 @@ else
                         "/home/user/myproject");
     enum obj1 = buildPath("/home/user/myproject/foo.o");
     enum obj2 = buildPath("/home/user/myproject/bar.o");
-    ninja.buildEntries.shouldEqual([NinjaEntry("build mybin: cpp " ~ obj1 ~ " " ~ obj2,
-                                               ["between = -o"])
+    ninja.buildEntries.shouldEqual([NinjaEntry("build mybin: _custom_in_out " ~ obj1 ~ " " ~ obj2,
+                                               ["before = /usr/bin/c++ ",
+                                                "between = $ -o "])
                                        ]);
-    ninja.ruleEntries.shouldEqual([NinjaEntry("rule cpp",
-                                              ["command = /usr/bin/c++ $in $between $out"])
-                                      ]);
 }
 
 
@@ -70,10 +64,9 @@ else
     auto ninja = Ninja(Build(Target("/path/to/foo.o",
                                      "icc.12.0.022b.i686-linux -pe-file-prefix=/usr/intel/12.0.022b/cc/12.0.022b/include/ @/usr/lib/icc-cc.cfg -I/path/to/headers -gcc-version=345 -fno-strict-aliasing -nostdinc -include /path/to/myheader.h -DTOOL_CHAIN_GCC=gcc-user -D__STUFF__ -imacros /path/to/preinclude_macros.h -I/path/to -Wall -c -MD -MF /path/to/foo.d -o $out $in",
                                      [Target("/path/to/foo.c")])));
-    ninja.buildEntries.shouldEqual([NinjaEntry("build " ~ buildPath("/path/to/foo.o") ~ ": icc.12.0.022b.i686-linux " ~ buildPath("/path/to/foo.c"),
-                                               ["before = -pe-file-prefix=/usr/intel/12.0.022b/cc/12.0.022b/include/ @/usr/lib/icc-cc.cfg -I/path/to/headers -gcc-version=345 -fno-strict-aliasing -nostdinc -include /path/to/myheader.h -DTOOL_CHAIN_GCC=gcc-user -D__STUFF__ -imacros /path/to/preinclude_macros.h -I/path/to -Wall -c -MD -MF /path/to/foo.d -o"])]);
-    ninja.ruleEntries.shouldEqual([NinjaEntry("rule icc.12.0.022b.i686-linux",
-                                              ["command = icc.12.0.022b.i686-linux $before $out $in"])]);
+    ninja.buildEntries.shouldEqual([NinjaEntry("build " ~ buildPath("/path/to/foo.o") ~ ": _custom_out_in " ~ buildPath("/path/to/foo.c"),
+                                               ["before = icc.12.0.022b.i686-linux -pe-file-prefix=/usr/intel/12.0.022b/cc/12.0.022b/include/ @/usr/lib/icc-cc.cfg -I/path/to/headers -gcc-version=345 -fno-strict-aliasing -nostdinc -include /path/to/myheader.h -DTOOL_CHAIN_GCC=gcc-user -D__STUFF__ -imacros /path/to/preinclude_macros.h -I/path/to -Wall -c -MD -MF /path/to/foo.d -o ",
+                                                "between = $ "])]);
 }
 
 
@@ -82,11 +75,10 @@ else
                                      "icc @/path/to/icc-ld.cfg -o $out $in -Wl,-rpath-link -Wl,/usr/lib",
                                      [Target("main.o"), Target("extra.o"), Target("sub_foo.o"), Target("sub_bar.o"),
                                       Target("sub_baz.a")])));
-    ninja.buildEntries.shouldEqual([NinjaEntry("build foo.temp: icc main.o extra.o sub_foo.o sub_bar.o sub_baz.a",
-                                               ["before = @/path/to/icc-ld.cfg -o",
-                                                "after = -Wl,-rpath-link -Wl,/usr/lib"])]);
-    ninja.ruleEntries.shouldEqual([NinjaEntry("rule icc",
-                                              ["command = icc $before $out $in $after"])]);
+    ninja.buildEntries.shouldEqual([NinjaEntry("build foo.temp: _custom_out_in main.o extra.o sub_foo.o sub_bar.o sub_baz.a",
+                                               ["before = icc @/path/to/icc-ld.cfg -o ",
+                                                "between = $ ",
+                                                "after = $ -Wl,-rpath-link -Wl,/usr/lib"])]);
 }
 
 @("Simple D build") unittest {
@@ -100,21 +92,15 @@ else
     auto ninja = Ninja(build, "/path/to/project");
 
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry(buildPath("build .reggae/objs/myapp.objs/main.o: dmd /path/to/project/src/main.d"),
-                    ["before = -I" ~ buildPath("/path/to/project") ~ "/src -c",
-                     "between = -of"]),
-         NinjaEntry(buildPath("build .reggae/objs/myapp.objs/maths.o: dmd /path/to/project/src/maths.d"),
-                    ["before = -c",
-                     "between = -of"]),
-         NinjaEntry(buildPath("build myapp: dmd_2 .reggae/objs/myapp.objs/main.o .reggae/objs/myapp.objs/maths.o"),
-                    ["before = -of"])
-            ]);
-
-    ninja.ruleEntries.shouldEqual(
-        [NinjaEntry("rule dmd",
-                    ["command = dmd $before $in $between$out"]),
-         NinjaEntry("rule dmd_2",
-                    ["command = dmd $before$out $in"])
+        [NinjaEntry(buildPath("build .reggae/objs/myapp.objs/main.o: _custom_in_out /path/to/project/src/main.d"),
+                    ["before = dmd -I" ~ buildPath("/path/to/project") ~ "/src -c ",
+                     "between = $ -of"]),
+         NinjaEntry(buildPath("build .reggae/objs/myapp.objs/maths.o: _custom_in_out /path/to/project/src/maths.d"),
+                    ["before = dmd -c ",
+                     "between = $ -of"]),
+         NinjaEntry(buildPath("build myapp: _custom_out_in .reggae/objs/myapp.objs/main.o .reggae/objs/myapp.objs/maths.o"),
+                    ["before = dmd -of",
+                     "between = $ "])
             ]);
 }
 
@@ -123,28 +109,20 @@ else
     auto target = Target("foo.o", "gcc -o $out -c $in", [Target("foo.c")], [Target("foo.h")]);
     auto ninja = Ninja(Build(target));
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build foo.o: gcc foo.c | foo.h",
-                    ["before = -o",
-                     "between = -c"])
+        [NinjaEntry("build foo.o: _custom_out_in foo.c | foo.h",
+                    ["before = gcc -o ",
+                     "between = $ -c "])
             ]);
-
-    ninja.ruleEntries.shouldEqual(
-        [NinjaEntry("rule gcc",
-                    ["command = gcc $before $out $between $in"])]);
 }
 
 @("Implicit dependencies more than one") unittest {
     auto target = Target("foo.o", "gcc -o $out -c $in", [Target("foo.c")], [Target("foo.h"), Target("foo.idl")]);
     auto ninja = Ninja(Build(target));
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build foo.o: gcc foo.c | foo.h foo.idl",
-                    ["before = -o",
-                     "between = -c"])
+        [NinjaEntry("build foo.o: _custom_out_in foo.c | foo.h foo.idl",
+                    ["before = gcc -o ",
+                     "between = $ -c "])
             ]);
-
-    ninja.ruleEntries.shouldEqual(
-        [NinjaEntry("rule gcc",
-                    ["command = gcc $before $out $between $in"])]);
 }
 
 
@@ -172,12 +150,10 @@ else
     auto ninja = Ninja(Build(foo, bar));
 
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry("build foo.h foo.c: protocomp foo.proto"),
-         NinjaEntry("build bar.h bar.c: protocomp bar.proto")]);
-
-    ninja.ruleEntries.shouldEqual(
-        [NinjaEntry("rule protocomp",
-                    ["command = protocomp $in "])]);
+        [NinjaEntry("build foo.h foo.c: _custom_in foo.proto",
+                    ["before = protocomp "]),
+         NinjaEntry("build bar.h bar.c: _custom_in bar.proto",
+                    ["before = protocomp "])]);
 }
 
 
@@ -197,24 +173,16 @@ else
     auto ninja = Ninja(Build(app));
 
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry(buildPath("build gen/protocol.c gen/protocol.h: compiler protocol.proto")),
-         NinjaEntry(buildPath("build bin/protocol.o: gcc gen/protocol.c | gen/protocol.c gen/protocol.h"),
-                    ["before = -o",
-                     "between = -c"]),
-         NinjaEntry(buildPath("build gen/protocol.d: translator gen/protocol.h | gen/protocol.c gen/protocol.h")),
-         NinjaEntry(buildPath("build app: dmd src/main.d bin/protocol.o gen/protocol.d"),
-                    ["before = -of"])
-            ]);
-
-    ninja.ruleEntries.shouldEqual(
-        [NinjaEntry("rule compiler",
-                    ["command = ./compiler $in "]),
-         NinjaEntry("rule gcc",
-                    ["command = gcc $before $out $between $in"]),
-         NinjaEntry("rule translator",
-                    ["command = ./translator $in $out"]),
-         NinjaEntry("rule dmd",
-                    ["command = dmd $before$out $in"])
+        [NinjaEntry(buildPath("build gen/protocol.c gen/protocol.h: _custom_in protocol.proto"),
+                    ["before = ./compiler "]),
+         NinjaEntry(buildPath("build bin/protocol.o: _custom_out  | gen/protocol.c gen/protocol.h"),
+                    ["before = gcc -o ",
+                     "after = $ -c gen/protocol.c"]),
+         NinjaEntry(buildPath("build gen/protocol.d: _custom_out  | gen/protocol.c gen/protocol.h"),
+                    ["before = ./translator gen/protocol.h "]),
+         NinjaEntry(buildPath("build app: _custom_out_in src/main.d bin/protocol.o gen/protocol.d"),
+                    ["before = dmd -of",
+                     "between = $ "])
             ]);
 }
 
@@ -223,9 +191,9 @@ else
     auto tgt = Target("$project/foo.o", "gcc -o $out -c $in", Target("foo.c"));
     auto ninja = Ninja(Build(tgt), "/path/to/proj");
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry(buildPath("build /path/to/proj/foo.o: gcc /path/to/proj/foo.c"),
-                    ["before = -o",
-                     "between = -c"])]);
+        [NinjaEntry(buildPath("build /path/to/proj/foo.o: _custom_out_in /path/to/proj/foo.c"),
+                    ["before = gcc -o ",
+                     "between = $ -c "])]);
 }
 
 
@@ -237,12 +205,15 @@ else
     auto ninja = Ninja(build, "/tmp/proj");
 
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry(buildPath("build /tmp/proj/foo.so: dmd /tmp/proj/src1.d /tmp/proj/src2.d"),
-                    ["before = -of"]),
-         NinjaEntry(buildPath("build /tmp/proj/weird/path/thingie1: ln /tmp/proj/foo.so"),
-                    ["before = -sf"]),
-         NinjaEntry(buildPath("build /tmp/proj/weird/path/thingie2: ln /tmp/proj/foo.so"),
-                    ["before = -sf"]),
+        [NinjaEntry(buildPath("build /tmp/proj/foo.so: _custom_out_in /tmp/proj/src1.d /tmp/proj/src2.d"),
+                    ["before = dmd -of",
+                     "between = $ "]),
+         NinjaEntry(buildPath("build /tmp/proj/weird/path/thingie1: _custom_in_out /tmp/proj/foo.so"),
+                    ["before = ln -sf ",
+                     "between = $ "]),
+         NinjaEntry(buildPath("build /tmp/proj/weird/path/thingie2: _custom_in_out /tmp/proj/foo.so"),
+                    ["before = ln -sf ",
+                     "between = $ "]),
             ]
         );
 }
@@ -278,29 +249,23 @@ else
     auto foo = Target("$project/foodir", "mkdir -p $out", emptyDependencies, [stuff]);
     auto ninja = Ninja(Build(foo), "/path/to/proj"); //to make sure we can
     ninja.buildEntries.shouldEqual(
-        [NinjaEntry(buildPath("build .reggae/objs/__project__/foodir.objs/foo.o: dmd /path/to/proj/foo.d"),
-                    ["before = -of",
-                     "between = -c"]),
-         NinjaEntry(buildPath("build /path/to/proj/foodir: mkdir  | .reggae/objs/__project__/foodir.objs/foo.o"),
-                    ["before = -p"]),
-            ]);
-    ninja.ruleEntries.shouldEqual(
-        [NinjaEntry("rule dmd",
-                    ["command = dmd $before$out $between $in"]),
-         NinjaEntry("rule mkdir",
-                    ["command = mkdir $before $out$in"])
+        [NinjaEntry(buildPath("build .reggae/objs/__project__/foodir.objs/foo.o: _custom_out_in /path/to/proj/foo.d"),
+                    ["before = dmd -of",
+                     "between = $ -c "]),
+         NinjaEntry(buildPath("build /path/to/proj/foodir: _custom_out  | .reggae/objs/__project__/foodir.objs/foo.o"),
+                    ["before = mkdir -p "]),
             ]);
 }
 
 
 @("Custom rule involving project path") unittest {
-    auto foo = Target("foo.o", "$project/../dmd/src/dmd -of$out -c $in", Target("foo.d"));
     auto app = Target("app", "$project/../dmd/src/dmd -of$out -c $in", Target("foo.d"));
     auto ninja = Ninja(Build(app), "/path/to/proj");
-    ninja.ruleEntries.should ==
-        [NinjaEntry("rule dmd",
-                    ["command = " ~ "/path/to/proj/../dmd/src/dmd $before$out $between $in"]),
-            ];
+    ninja.buildEntries.shouldEqual(
+        [NinjaEntry(buildPath("build app: _custom_out_in /path/to/proj/foo.d"),
+                    ["before = " ~ buildPath("/path/to/proj") ~ "/../dmd/src/dmd -of",
+                     "between = $ -c "]),
+            ]);
 }
 
 

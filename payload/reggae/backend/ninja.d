@@ -166,179 +166,59 @@ private:
     // a random shell command the user wrote themselves
     void customRule(Target target) @safe {
 
-        import std.algorithm.searching: canFind;
+        import std.string: indexOf;
         import std.conv: text;
 
         // rawCmdString is used because ninja needs to find where $in and $out are,
         // so shellCommand wouldn't work
         const shellCommand = target.rawCmdString(_projectPath);
-        const implicitInput  = !shellCommand.canFind("$in");
-        const implicitOutput = !shellCommand.canFind("$out");
+        const i_in = shellCommand.indexOf("$in");
+        const i_out = shellCommand.indexOf("$out");
 
-        if(implicitOutput && implicitInput)
+        if(i_in < 0 && i_out < 0)
             throw new Exception(
                 text("Cannot have a custom rule with no $in or $out: use `phony` or explicit $in/$out instead."
                 )
             );
 
-        if(implicitOutput) {
-            implicitOutputRule(target, shellCommand);
-        } else if(implicitInput) {
-            implicitInputRule(target, shellCommand);
+        string ruleName;
+        string[] paramLines;
+        void addParamLine(string name, ptrdiff_t startIndex, ptrdiff_t endIndex) {
+            assert(startIndex >= 0);
+            if (endIndex < 0) endIndex = shellCommand.length;
+
+            if (startIndex < endIndex) {
+                const value = shellCommand[startIndex .. endIndex];
+                // if the value starts with a space, it needs to be escaped as `$ ` (for ninja's lexer)
+                paramLines ~= name ~ " = " ~ (value[0] == ' ' ? "$" : "") ~ value;
+            }
+        }
+
+        if (i_out < 0) {
+            ruleName = "_custom_in";
+            addParamLine("before", 0, i_in);
+            addParamLine("after", i_in + 3, -1);
+        } else if (i_in < 0) {
+            ruleName = "_custom_out";
+            addParamLine("before", 0, i_out);
+            addParamLine("after", i_out + 4, -1);
+        } else if (i_in < i_out) {
+            ruleName = "_custom_in_out";
+            addParamLine("before", 0, i_in);
+            addParamLine("between", i_in + 3, i_out);
+            addParamLine("after", i_out + 4, -1);
         } else {
-            explicitInOutRule(target, shellCommand);
-        }
-    }
-
-    void explicitInOutRule(Target target, string shellCommand, string implicitInput = "") @safe {
-        import std.regex: regex, match;
-        import std.algorithm.iteration: map;
-        import std.array: empty, join;
-        import std.string: strip;
-        import std.conv: text;
-
-        auto reg = regex(`^[^ ]+ +(.*?)(\$in|\$out)(.*?)(\$in|\$out)(.*?)$`);
-
-        auto mat = shellCommand.match(reg);
-
-        if(mat.captures.empty) { //this is usually bad since we need both $in and $out
-            if(target.dependencyTargets.empty) { //ah, no $in needed then
-                mat = match(shellCommand ~ " $in", reg); //add a dummy one
-            }
-            else
-                throw new Exception(text("Could not find both $in and $out.\nCommand: ",
-                                         shellCommand, "\nCaptures: ", mat.captures, "\n",
-                                         "outputs: ", target.rawOutputs.join(" "), "\n",
-                                         "dependencies: ", targetDependencies(target)));
+            ruleName = "_custom_out_in";
+            addParamLine("before", 0, i_out);
+            addParamLine("between", i_out + 4, i_in);
+            addParamLine("after", i_in + 3, -1);
         }
 
-        immutable before  = mat.captures[1].strip;
-        immutable first   = mat.captures[2];
-        immutable between = mat.captures[3].strip;
-        immutable last    = mat.captures[4];
-        immutable after   = mat.captures[5].strip;
+        const includeImplicitInputs = (i_out >= 0);
+        // TODO: weird inputsOverride for implicitInput case?!
+        const buildLine = buildLine(target, ruleName, includeImplicitInputs);
 
-        immutable ruleCmdLine = getRuleCommandLine(target, shellCommand, before, first, between, last, after);
-        bool haveToAddRule;
-        immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAddRule);
-
-        const inputOverride = implicitInput.length ? [implicitInput] : null;
-        const buildLine = buildLine(target, ruleName, /*includeImplicitInputs=*/true, inputOverride);
-
-        string[] buildParamLines;
-        if(!before.empty)  buildParamLines ~= "before = "  ~ before;
-        if(!between.empty) buildParamLines ~= "between = " ~ between;
-        if(!after.empty)   buildParamLines ~= "after = "   ~ after;
-
-        buildEntries ~= NinjaEntry(buildLine, buildParamLines);
-
-        if(haveToAddRule) {
-            ruleEntries ~= NinjaEntry("rule " ~ ruleName, [ruleCmdLine]);
-        }
-    }
-
-    void implicitOutputRule(Target target, in string shellCommand) @safe {
-        bool haveToAdd;
-        immutable ruleCmdLine = getRuleCommandLine(target, shellCommand, "" /*before*/, "$in");
-        immutable ruleName = getRuleName(targetCommand(target), ruleCmdLine, haveToAdd);
-
-        immutable buildLine = buildLine(target, ruleName, /*includeImplicitInputs=*/false);
-        buildEntries ~= NinjaEntry(buildLine);
-
-        if(haveToAdd) {
-            ruleEntries ~= NinjaEntry("rule " ~ ruleName, [ruleCmdLine]);
-        }
-    }
-
-    void implicitInputRule(Target target, in string shellCommand) @safe {
-
-        import std.algorithm.searching: canFind;
-        import std.array: replace;
-
-        string input;
-
-        immutable cmdLine = () @trusted {
-            string line = shellCommand;
-            auto allDeps = target.dependenciesInProjectPath(_projectPath) ~ target.implicitsInProjectPath(_projectPath);
-            foreach(dep; allDeps) {
-                if(line.canFind(dep)) {
-                    line = line.replace(dep, "$in");
-                    input = dep;
-                } else version(Windows) {
-                    const dep_fwd = dep.replace(`\`, "/");
-                    if(line.canFind(dep_fwd)) {
-                        line = line.replace(dep_fwd, "$in");
-                        input = dep;
-                    }
-                }
-            }
-            return line;
-        }();
-
-        explicitInOutRule(target, cmdLine, input);
-    }
-
-    //@trusted because of canFind
-    string getRuleCommandLine(Target target, in string shellCommand,
-                              in string before = "", in string first = "",
-                              in string between = "",
-                              in string last = "", in string after = "") @trusted pure const {
-
-        import std.array: empty;
-        import std.algorithm.searching: canFind;
-
-        auto cmdLine = "command = " ~ targetRawCommand(target);
-        if(!before.empty) cmdLine ~= " $before";
-        cmdLine ~= shellCommand.canFind(" " ~ first) ? " " ~ first : first;
-        if(!between.empty) cmdLine ~= " $between";
-        cmdLine ~= shellCommand.canFind(" " ~ last) ? " " ~ last : last;
-        if(!after.empty) cmdLine ~= " $after";
-
-        return cmdLine;
-    }
-
-    //Ninja operates on rules, not commands. Since this is supposed to work with
-    //generic build systems, the same command can appear with different parameter
-    //ordering. The first time we create a rule with the same name as the command.
-    //The subsequent times, if any, we append a number to the command to create
-    //a new rule
-    string getRuleName(string cmd, in string ruleCmdLine, out bool haveToAdd) @safe nothrow {
-        import std.algorithm.searching: canFind, startsWith;
-        import std.algorithm.iteration: filter;
-        import std.array: array, empty, replace;
-        import std.conv: text;
-
-        immutable ruleMainLine = "rule " ~ cmd;
-        //don't have a rule for this cmd yet, return just the cmd
-        if(!ruleEntries.canFind!(a => a.mainLine == ruleMainLine)) {
-            haveToAdd = true;
-            return cmd;
-        }
-
-        //so we have a rule for this already. Need to check if the command line
-        //is the same
-
-        //same cmd: either matches exactly or is cmd_{number}
-        auto isSameCmd = (in NinjaEntry entry) {
-            bool sameMainLine = entry.mainLine.startsWith(ruleMainLine) &&
-                (entry.mainLine == ruleMainLine || entry.mainLine[ruleMainLine.length] == '_');
-            bool sameCmdLine = entry.paramLines == [ruleCmdLine];
-
-            return sameMainLine && sameCmdLine;
-        };
-
-        auto rulesWithSameCmd = ruleEntries.filter!isSameCmd;
-        assert(rulesWithSameCmd.empty || rulesWithSameCmd.array.length == 1);
-
-        //found a sule with the same cmd and paramLines
-        if(!rulesWithSameCmd.empty)
-            return () @trusted { return rulesWithSameCmd.front.mainLine.replace("rule ", ""); }();
-
-        //if we got here then it's the first time we see "cmd" with a new
-        //ruleCmdLine, so we add it
-        haveToAdd = true;
-
-        return cmd ~ "_" ~ (++_counter).text;
+        buildEntries ~= NinjaEntry(buildLine, paramLines);
     }
 
     string output(const(NinjaEntry)[] entries) @safe pure const nothrow {
@@ -491,6 +371,11 @@ NinjaEntry[] defaultRules(in Options options) @safe pure {
         enum phonyParamLines = ["command = $cmd"];
 
     entries ~= NinjaEntry("rule _phony", phonyParamLines);
+
+    entries ~= NinjaEntry("rule _custom_in", ["command = ${before}${in}${after}"]);
+    entries ~= NinjaEntry("rule _custom_out", ["command = ${before}${out}${after}"]);
+    entries ~= NinjaEntry("rule _custom_in_out", ["command = ${before}${in}${between}${out}${after}"]);
+    entries ~= NinjaEntry("rule _custom_out_in", ["command = ${before}${out}${between}${in}${after}"]);
 
     return entries;
 }

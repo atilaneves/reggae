@@ -487,7 +487,7 @@ Target staticLibrary(
     );
 }
 
-Target staticLibraryTarget(in string name, Target[] objects) @safe pure {
+Target staticLibraryTarget(in string name, Target[] objects) @safe {
     import std.path: defaultExtension;
     return Target(
         [buildPath("$builddir", defaultExtension(name, libExt))],
@@ -496,7 +496,7 @@ Target staticLibraryTarget(in string name, Target[] objects) @safe pure {
     );
 }
 
-Target staticLibraryTarget(in string name, Target[] objects, Target[] implicits) @safe pure {
+Target staticLibraryTarget(in string name, Target[] objects, Target[] implicits) @safe {
     import std.path: defaultExtension;
     return Target(
         [buildPath("$builddir", defaultExtension(name, libExt))],
@@ -506,10 +506,19 @@ Target staticLibraryTarget(in string name, Target[] objects, Target[] implicits)
     );
 }
 
-version(Windows)
-    private enum staticLibraryShellCommand = "lib.exe /OUT:$out $in";
-else
-    private enum staticLibraryShellCommand = "ar rcs $out $in";
+private string staticLibraryShellCommand() @safe {
+    version(Windows) {
+        import reggae.options: resolveExecutable;
+
+        static string libExe;
+        if (!libExe.length)
+            libExe = resolveExecutable("lib.exe");
+
+        return `"` ~ libExe ~ `" /OUT:$out $in`;
+    } else {
+        return "ar rcs $out $in";
+    }
+}
 
 private Target[] srcFilesToObjectTargets(
     in imported!"reggae.options".Options options,

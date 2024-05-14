@@ -157,7 +157,7 @@ production and unittest binaries concurrently is this:
 ```d
 import reggae;
 alias main = dubDefaultTarget!(CompilerFlags("-g -debug"));
-alias ut = dubConfigurationTarget!(Configuration("unittest"));
+alias ut = dubBuild!(Configuration("unittest"));
 mixin build!(main, ut);
 ```
 

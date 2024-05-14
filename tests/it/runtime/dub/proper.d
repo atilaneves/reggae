@@ -478,7 +478,7 @@ unittest {
         writeFile("reggaefile.d",
                   q{
                       import reggae;
-                      alias lib = dubConfigurationTarget!(Configuration("library"));
+                      alias lib = dubBuild!(Configuration("library"));
                       enum mainObj = objectFile!(SourceFile("source/main.d"));
                       alias exe = link!(ExeName("d++"), targetConcat!(lib, mainObj));
                       mixin build!(exe);
@@ -517,7 +517,7 @@ unittest {
         writeFile("reggaefile.d",
                   q{
                       import reggae;
-                      alias lib = dubConfigurationTarget!(Configuration("library"));
+                      alias lib = dubBuild!(Configuration("library"));
                       enum mainObj = objectFile!(SourceFile("source/main.d"));
                       alias exe = link!(ExeName("d++"), targetConcat!(lib, mainObj));
                       mixin build!(exe);

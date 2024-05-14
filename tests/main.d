@@ -66,15 +66,17 @@ int main(string[] args) {
 }
 
 private void primeDubBuild() {
-    import reggae.reggae: dubObjsDir;
+    import reggae.reggae: buildgenDubObjsDir;
+    import reggae.io: log;
     import tests.it.runtime: testRun;
     import std.file: write, exists, mkdirRecurse;
     import std.path: buildPath, dirName;
-    import std.stdio: writeln;
+    import std.stdio: writeln, stdout;
 
-    writeln("Priming...");
-    scope(exit) writeln("Primed\n");
+    stdout.log("Priming...");
+    scope(exit) stdout.log("Primed\n");
 
+    const dubObjsDir = buildgenDubObjsDir;
     const reggaefile = buildPath(dubObjsDir, "prime", "reggaefile.d");
     if(!reggaefile.dirName.exists)
         mkdirRecurse(reggaefile.dirName);

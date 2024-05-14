@@ -276,7 +276,7 @@ private enum reggaeFileDubSelectionsJson =
 `;
 
 
-// dub support is needed at runtime, build and link with dub-as-a-library
+// build the reggaefile (i.e. buildgen) with dub
 private Binary buildReggaefileDub(O)(
     auto ref O output,
     in Options options,
@@ -428,10 +428,9 @@ private imported!"std.json".JSONValue selectionsPkgVersion(string pkg)() @safe p
 }
 
 
-// builds the reggaefile custom dub project using reggae itself.
-// I put a build system in the build system so it can build system while it build systems.
-// Currently slower than using dub because of multiple thread scheduling but also because
-// building per package is causing linker errors.
+// Builds the reggaefile custom dub project using reggae itself. I put
+// a build system in the build system so it can build system while it
+// build systems.
 private string buildReggaefileWithReggae(
     in imported!"reggae.options".Options options,
     imported!"std.typecons".Flag!"needDub" needDub,)
@@ -454,7 +453,7 @@ private string buildReggaefileWithReggae(
     // the actual build at all.
     auto newOptions = options.dup;
     newOptions.backend = Backend.binary;
-    newOptions.dubObjsDir = dubObjsDir;
+    newOptions.dubObjsDir = buildgenDubObjsDir;
     newOptions.projectPath = dubRecipeDir;
     newOptions.workingDir = dubRecipeDir;
 
@@ -661,13 +660,19 @@ import reggae.options;
     return ret;
 }
 
-public string dubObjsDir() @safe {
+// where the dub object files should be placed when building buildgen,
+// i.e. when compiling the reggaefile.
+public string buildgenDubObjsDir() @safe {
     import std.path: buildPath;
-    import std.file: tempDir;
+    import std.file: tempDir, exists, mkdirRecurse;
+
     // don't ask
     static string ret;
-    if(ret == ret.init)
+    if(ret == ret.init) {
         ret = buildPath(tempDir, "reggae");
+        if(!ret.exists)
+            mkdirRecurse(ret);
+    }
     return ret;
 }
 

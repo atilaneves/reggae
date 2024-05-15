@@ -92,10 +92,9 @@ struct ReggaeSandbox {
 private:
 
     auto runImpl(string[] args, string project = "") const {
-
+        import reggae.reggae: buildgenDubObjsDir;
         import std.algorithm: canFind;
         import std.path: buildPath;
-        import std.file: tempDir;
 
         if(project == "") project = testPath;
 
@@ -111,7 +110,7 @@ private:
         else
             static assert(false, "Unknown D compiler");
 
-        const dubObjsDir = buildPath(tempDir, "reggae", "test");
+        const dubObjsDir = buildPath(buildgenDubObjsDir, "test");
         return testRun(["reggae", "--dub-objs-dir=" ~ dubObjsDir] ~ fromWhereArgs ~ args ~ project);
     }
 }

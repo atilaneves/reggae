@@ -438,6 +438,7 @@ private string buildReggaefileWithReggae(
     import reggae.rules.dub: dubPackage, DubPath;
     import reggae.build: Build;
     import std.typecons: Yes;
+    import std.file: getcwd, chdir;
 
     // HACK: needs refactoring, calling this just to create the phony dub package
     // for the reggaefile build
@@ -459,7 +460,12 @@ private string buildReggaefileWithReggae(
 
     auto build = Build(dubPackage(newOptions, DubPath(dubRecipeDir)));
 
-    runtimeBuild(newOptions, build);
+    {
+        const cwd = getcwd;
+        chdir(newOptions.workingDir);
+        runtimeBuild(newOptions, build);
+        chdir(cwd);
+    }
 
     return getBuildGenName(options);
 }

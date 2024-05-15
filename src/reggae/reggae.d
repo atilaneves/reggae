@@ -400,7 +400,7 @@ private void buildTarget(in Options options, imported!"reggae.build".Target targ
     runtimeBuild(newOptions, Build(target));
 }
 
-private void writeIfDiffers(O)(auto ref O output, const string path, in string contents) @safe {
+void writeIfDiffers(O)(auto ref O output, const string path, in string contents) @safe {
     import reggae.io: log;
     import std.file: exists, readText, write, mkdirRecurse;
     import std.path: dirName;

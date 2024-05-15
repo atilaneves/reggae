@@ -66,7 +66,7 @@ int main(string[] args) {
 }
 
 private void primeDubBuild() {
-    import reggae.reggae: buildgenDubObjsDir;
+    import reggae.reggae: buildgenDubObjsDir, writeIfDiffers;
     import reggae.io: log;
     import tests.it.runtime: testRun;
     import std.file: write, exists, mkdirRecurse;
@@ -81,7 +81,8 @@ private void primeDubBuild() {
     if(!reggaefile.dirName.exists)
         mkdirRecurse(reggaefile.dirName);
 
-    write(
+    writeIfDiffers(
+        stdout,
         reggaefile,
         q{
             import reggae;

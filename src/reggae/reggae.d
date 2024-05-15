@@ -460,12 +460,7 @@ private string buildReggaefileWithReggae(
 
     auto build = Build(dubPackage(newOptions, DubPath(dubRecipeDir)));
 
-    {
-        const cwd = getcwd;
-        chdir(newOptions.workingDir);
-        runtimeBuild(newOptions, build);
-        chdir(cwd);
-    }
+    runtimeBuild(newOptions, build);
 
     return getBuildGenName(options);
 }

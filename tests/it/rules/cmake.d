@@ -1,4 +1,7 @@
-module tests.it.rules.cmake;
+/**
+   Tests for CMake without D interop
+ */
+module tests.it.rules.cmake.only;
 
 import tests.it.runtime;
 import tests.utils;
@@ -9,7 +12,7 @@ string binaryPath(in string binary) {
     return buildNormalizedPath(ReggaeSandbox.currentTestPath, ".reggae", binary);
 }
 
-@("single target")
+@("single")
 unittest {
     import std.format : format;
 
@@ -59,7 +62,7 @@ unittest {
     }
 }
 
-@("targets with dependencies - shared library")
+@("dependencies.library.shared")
 unittest {
     import std.format : format;
 
@@ -88,7 +91,7 @@ unittest {
     }
 }
 
-@("targets with dependencies - static library")
+@("dependencies.library.static")
 unittest {
     import std.format : format;
 

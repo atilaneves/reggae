@@ -1,4 +1,7 @@
-module tests.it.rules.d_cmake_interop;
+/**
+   Interop with D rules
+ */
+module tests.it.rules.cmake.interop;
 
 import tests.it.runtime;
 import tests.utils;
@@ -9,7 +12,7 @@ string binaryPath(in string binary) {
     return buildNormalizedPath(ReggaeSandbox.currentTestPath, ".reggae", binary);
 }
 
-@("D and CMake rules interop - shared library")
+@("library.shared")
 unittest {
     import std.process : executeShell;
     import std.format : format;
@@ -31,7 +34,7 @@ unittest {
     }
 }
 
-@("D and CMake rules interop - static library")
+@("library.static")
 unittest {
     import std.process : executeShell;
     import std.format : format;

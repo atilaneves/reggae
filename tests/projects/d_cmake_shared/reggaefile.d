@@ -19,3 +19,5 @@ Build reggaeBuild() {
 
     return Build(dlangExeTarget);
 }
+
+mixin BuildgenMain;

@@ -301,7 +301,6 @@ private Binary buildReggaefileDub(O)(
     }
 
     auto userFiles = chain(
-        buildGenMainSrcPath(options).only,
         options.reggaeFilePath.only,
         options.getReggaeFileDependenciesDlang // must be called after .dep file created
     );
@@ -517,37 +516,10 @@ private string getBuildGenName(in Options options) @safe pure nothrow {
     return buildPath(hiddenDirAbsPath(options), baseName) ~ exeExt;
 }
 
-// On Windows we're apparently not allowed to have a main function in
-// a static library so we have to build the main function with the
-// reggaefile
-private enum buildGenMainSrc =
-q{
-    // args is empty except for the binary backend,
-    // in which case it's used for runtime options
-    int main(string[] args) {
-        try {
-            import reggae.config: options;
-            import reggae.buildgen: doBuildFor;
-            doBuildFor!("reggaefile")(options, args); //the user's build description
-            return 0;
-        } catch(Exception ex) {
-            import std.stdio: stderr;
-            stderr.writeln(ex.msg);
-            return 1;
-        }
-    }
-};
-
 private void writeSrcFiles(T)(auto ref T output, in Options options) {
     import reggae.io: log;
     import std.file: mkdirRecurse, rmdirRecurse, exists;
     import std.path: dirName;
-
-    writeIfDiffers(
-        output,
-        buildGenMainSrcPath(options),
-        buildGenMainSrc,
-    );
 
     if(!haveToWriteSrcFiles(options))
         return;
@@ -697,11 +669,6 @@ private string hiddenDirAbsPath(in Options options) @safe pure nothrow {
     import std.path: buildPath;
 
     return buildPath(options.workingDir, hiddenDir);
-}
-
-private string buildGenMainSrcPath(in Options options) @safe pure nothrow {
-    import std.path: buildPath;
-    return buildPath(hiddenDirAbsPath(options), "buildgen_main.d");
 }
 
 private bool strEqModNewLine(in string lhs, in string rhs) @safe pure nothrow {

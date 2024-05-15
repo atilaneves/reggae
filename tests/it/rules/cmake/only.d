@@ -53,6 +53,7 @@ unittest {
                                                         CMakeFlags("-G Ninja -D CMAKE_BUILD_TYPE=Release"));
                         return Build(cmakeTargets);
                     }
+                    mixin BuildgenMain;
                 }.format(currentTestPath)
         );
 
@@ -76,6 +77,7 @@ unittest {
                                                         CMakeFlags("-G Ninja -D CMAKE_BUILD_TYPE=Release"));
                         return Build(cmakeTargets);
                     }
+                    mixin BuildgenMain;
                 }.format(currentTestPath)
         );
 
@@ -105,6 +107,7 @@ unittest {
                                                         CMakeFlags("-G Ninja -D CMAKE_BUILD_TYPE=Release"));
                         return Build(cmakeTargets);
                     }
+                    mixin BuildgenMain;
                 }.format(currentTestPath)
         );
 

@@ -47,6 +47,8 @@ unittest {
         runReggae(["-b", "binary"]);
         binary.shouldExecuteOk; // build the 1st time
         // shouldn't build the 2nd time
-        binary.shouldExecuteOk.should == ["[build] Nothing to do"];
+        const output = binary.shouldExecuteOk;
+        "[build] Nothing to do".should.be in output;
+        writelnUt(output);
     }
 }

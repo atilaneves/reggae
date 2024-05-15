@@ -69,9 +69,9 @@ private void primeDubBuild() {
     import reggae.reggae: buildgenDubObjsDir, writeIfDiffers;
     import reggae.io: log;
     import tests.it.runtime: testRun;
-    import std.file: write, exists, mkdirRecurse;
+    import std.file: exists, mkdirRecurse;
     import std.path: buildPath, dirName;
-    import std.stdio: writeln, stdout;
+    import std.stdio: stdout;
 
     stdout.log("Priming...");
     scope(exit) stdout.log("Primed\n");

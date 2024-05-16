@@ -440,17 +440,17 @@ private imported!"std.json".JSONValue selectionsPkgVersion(string pkg)() @safe p
 // build systems.
 private string buildReggaefileWithReggae(
     in imported!"reggae.options".Options options,
-    imported!"std.typecons".Flag!"needDub" needDub,)
+    imported!"std.typecons".Flag!"needDub" needDub,
+    )
 {
     import reggae.rules.dub: dubPackage, DubPath;
     import reggae.build: Build;
-    import std.typecons: Yes;
     import std.file: getcwd, chdir;
 
     // HACK: needs refactoring, calling this just to create the phony dub package
     // for the reggaefile build
     import std.stdio: stdout;
-    buildReggaefileDub(stdout, options, Yes.needDub);
+    buildReggaefileDub(stdout, options, needDub);
 
     const dubRecipeDir = hiddenDirAbsPath(options);
 

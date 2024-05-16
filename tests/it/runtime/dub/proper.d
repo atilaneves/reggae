@@ -269,7 +269,7 @@ unittest {
 
         writeFile("reggaefile.d", q{
             import reggae;
-            mixin build!(dubDefaultTarget!());
+            mixin build!(dubBuild!());
         });
 
         writeFile("dub.sdl",`
@@ -315,7 +315,7 @@ unittest {
 
         writeFile("reggaefile.d", q{
             import reggae;
-            mixin build!(dubDefaultTarget!());
+            mixin build!(dubBuild!());
         });
 
         writeFile("dub.sdl",`
@@ -574,7 +574,7 @@ version(Posix) { // cannot be bothered debugging this on Windows
             writeFile("reggaefile.d",
                       q{
                           import reggae;
-                          alias exe = dubDefaultTarget!(
+                          alias exe = dubBuild!(
                           );
                           mixin build!(exe);
                       });
@@ -629,7 +629,7 @@ unittest {
         writeFile("reggaefile.d",
                   q{
                       import reggae;
-                      alias exe = dubDefaultTarget!(
+                      alias exe = dubBuild!(
                       );
                       mixin build!(exe);
                   });
@@ -672,7 +672,7 @@ unittest {
         writeFile("reggaefile.d",
                   q{
                       import reggae;
-                      mixin build!(dubDefaultTarget!());
+                      mixin build!(dubBuild!());
                   });
 
         writeFile("source/main.d",
@@ -984,7 +984,7 @@ unittest {
             "reggaefile.d",
             [
                 `import reggae;`,
-                `mixin build!(dubDefaultTarget!());`,
+                `mixin build!(dubBuild!());`,
             ]
         );
         runReggae("-b", "binary");

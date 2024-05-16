@@ -301,6 +301,10 @@ struct DubInfo {
 
     string targetPath(in Options options) @safe const pure {
         import std.path: relativePath, buildNormalizedPath;
+
+        if(options.dubTargetPathAbs)
+            return packages[0].targetPath;
+
         // Do NOT use absolute paths here, otherwise the user will
         // have to type an absolute path such as `/path/to/foo` to
         // select a specific target instead of just `foo`.

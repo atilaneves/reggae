@@ -61,6 +61,11 @@ struct Options {
     string dubConfig;
     string[] reggaefileImportPaths;
     bool buildReggaefileWithDub;
+    // Use absolute paths in the `targetPath` function.
+    // This is needed because for users we want the output paths to be relative so they
+    // don't have to type in an absolute path to build their binary, but for internal
+    // reggae use, we do.
+    bool dubTargetPathAbs;
     string[string] userVars; // must be last
 
     Options dup() @safe pure const nothrow scope {

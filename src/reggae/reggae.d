@@ -301,7 +301,7 @@ private Binary buildReggaefileDub(O)(
     }
 
     auto userFiles = chain(
-        options.reggaeFilePath.only,
+        buildgenReggaefilePath(options).only,
         options.getReggaeFileDependenciesDlang // must be called after .dep file created
     );
     auto userSourceFilesForDubSdl = stringsToSdlList(userFiles);
@@ -329,6 +329,14 @@ private Binary buildReggaefileDub(O)(
             userSourceFilesForDubSdl,
             importPathsForDubSdl,
         ) ~ extraLines.join("\n"),
+    );
+
+    // copy the user's reggaefile to the hidden directory so that it
+    // has a path relative to the project.
+    writeIfDiffers(
+        output,
+        buildgenReggaefilePath(options),
+        options.reggaeFilePath.readText,
     );
 
     writeIfDiffers(
@@ -456,6 +464,7 @@ private string buildReggaefileWithReggae(
     newOptions.dubObjsDir = buildgenDubObjsDir;
     newOptions.projectPath = dubRecipeDir;
     newOptions.workingDir = dubRecipeDir;
+    newOptions.dubTargetPathAbs = true; // use absolute paths in `dubBuild`.
 
     auto build = Build(dubPackage(newOptions, DubPath(dubRecipeDir)));
 
@@ -678,4 +687,9 @@ private bool strEqModNewLine(in string lhs, in string rhs) @safe pure nothrow {
 private string dos2unix(const string str) @safe pure nothrow {
     import std.array: replace;
     return str.replace("\r\n", "\n");
+}
+
+private string buildgenReggaefilePath(in Options options) @safe pure nothrow {
+    import std.path: buildPath;
+    return buildPath(hiddenDirAbsPath(options), "reggaefile.d");
 }

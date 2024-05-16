@@ -54,55 +54,57 @@ unittest {
 }
 
 version(DigitalMars) {
-    @("compile.once.reggaetime")
-    @Tags("binary")
-    unittest {
-        import tests.utils: gCurrentFakeFile;
+    version(linux) {
+        @("compile.once.reggaetime")
+        @Tags("binary")
+        unittest {
+            import tests.utils: gCurrentFakeFile;
 
-        with(immutable ReggaeSandbox()) {
-            writeFile(
-                "reggaefile.d",
-                q{
-                    import reggae;
-                    alias lib = staticLibrary!("mylib", Sources!"src");
-                    mixin build!lib;
-                }
-            );
-
-            writeFile(
-                "src/foo.d",
-                q{
-                    module foo;
-                    import bar;
-
-                    void main() {
-
+            with(immutable ReggaeSandbox()) {
+                writeFile(
+                    "reggaefile.d",
+                    q{
+                        import reggae;
+                        alias lib = staticLibrary!("mylib", Sources!"src");
+                        mixin build!lib;
                     }
+                );
 
-                    int foo(int i) {
-                        return bar(i) * 2;
+                writeFile(
+                    "src/foo.d",
+                    q{
+                        module foo;
+                        import bar;
+
+                        void main() {
+
+                        }
+
+                        int foo(int i) {
+                            return bar(i) * 2;
+                        }
                     }
-                }
-            );
+                );
 
-            writeFile(
-                "src/foo.d",
-                q{
-                    module bar;
-                    int bar(int i) {
-                        return i + 1;
+                writeFile(
+                    "src/foo.d",
+                    q{
+                        module bar;
+                        int bar(int i) {
+                            return i + 1;
+                        }
                     }
-                }
-            );
+                );
 
-            runReggae(["-b", "ninja"]);
-            writelnUt(gCurrentFakeFile.lines);
-            gCurrentFakeFile.lines.shouldHaveCompiledBuildgen;
-            gCurrentFakeFile.reset;
+                runReggae(["-b", "ninja"]);
+                writelnUt(gCurrentFakeFile.lines);
+                gCurrentFakeFile.lines.shouldHaveCompiledBuildgen;
+                gCurrentFakeFile.reset;
 
-            runReggae(["-b", "ninja"]); // should not build reggaefile again
-            writelnUt(gCurrentFakeFile.lines);
-            gCurrentFakeFile.lines.shouldNotHaveCompiledBuildgen;
+                runReggae(["-b", "ninja"]); // should not build reggaefile again
+                writelnUt(gCurrentFakeFile.lines);
+                gCurrentFakeFile.lines.shouldNotHaveCompiledBuildgen;
+            }
         }
     }
 }

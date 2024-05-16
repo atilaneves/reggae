@@ -73,7 +73,7 @@ private void primeDubBuild() {
     import std.path: buildPath, dirName;
     import std.stdio: stdout;
 
-    stdout.log("Priming...");
+    stdout.log("Priming libdub");
     scope(exit) stdout.log("Primed\n");
 
     const dubObjsDir = buildgenDubObjsDir;

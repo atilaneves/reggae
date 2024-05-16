@@ -52,8 +52,8 @@ private struct BinaryOptions {
 
 auto Binary(Build build, in Options options) @system {
     version(unittest) {
-        import tests.utils: FakeFile;
-        auto file = new FakeFile;
+        import tests.utils: FakeFile, gCurrentFakeFile;
+        auto file = gCurrentFakeFile = new FakeFile;
         return Binary(build, options, *file);
     }
     else {

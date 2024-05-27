@@ -196,12 +196,39 @@ version(reggaelib) {
         mixin reggaeGen!(targets);
     }
 } else {
-    alias build = buildImpl;
+    mixin template build(targets...) {
+        mixin buildImpl!targets;
+        mixin BuildgenMain;
+    }
 }
 
 mixin template buildImpl(targets...) if(allSatisfy!(isTarget, targets)) {
     Build reggaeBuild() {
         return Build(targets);
+    }
+}
+
+mixin template BuildgenMain() {
+    // buildgen main function
+    // On Windows we're apparently not allowed to have a main function in
+    // a static library so we have to build the main function with the
+    // reggaefile
+    version(ReggaeTest) {} // the unittest binary has it own
+    else {
+        // args is empty except for the binary backend,
+        // in which case it's used for runtime options
+        int main(string[] args) {
+            try {
+                import reggae.config: options;
+                import reggae.buildgen: doBuildFor;
+                doBuildFor!("reggaefile")(options, args); //the user's build description
+                return 0;
+            } catch(Exception ex) {
+                import std.stdio: stderr;
+                stderr.writeln(ex.msg);
+                return 1;
+            }
+        }
     }
 }
 

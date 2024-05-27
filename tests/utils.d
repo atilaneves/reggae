@@ -87,13 +87,19 @@ struct FakeFile {
     string soFar;
     string[] lines;
 
+    // in case we need to log something
+    import std.stdio: output = stdout;
+    import reggae.io: log;
+
     void write(T...)(auto ref T args) {
+        //debug output.log(args);
         import std.conv: text;
         static if(T.length > 0)
             soFar ~= text(args);
     }
 
     void writeln(T...)(auto ref T args) {
+        //debug output.log(args);
         import std.conv: text;
         static if(T.length > 0)
             lines ~= soFar ~ text(args);
@@ -110,4 +116,10 @@ struct FakeFile {
     }
 
     void flush() @safe @nogc pure nothrow const {}
+
+    void reset() @safe @nogc pure nothrow scope {
+        lines = [];
+    }
 }
+
+FakeFile *gCurrentFakeFile;

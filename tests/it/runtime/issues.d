@@ -353,7 +353,7 @@ unittest {
             "no123core/reggaefile.d",
             [
                 `import reggae;`,
-                `mixin build!(dubDefaultTarget!());`
+                `mixin build!(dubBuild!());`
             ]
         );
         writeFile("no123core/src/no123core/oops.d", "module no123core.oops;");

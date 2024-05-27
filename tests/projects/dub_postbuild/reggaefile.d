@@ -1,2 +1,2 @@
 import reggae;
-mixin build!(dubDefaultTarget!());
+mixin build!(dubBuild!());

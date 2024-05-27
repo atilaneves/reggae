@@ -44,7 +44,7 @@ jobs:
             echo.
             echo *** Retrying tests serially ***
             echo.
-            dub -q test -- -s %RUNNER_ARGS% || exit /b
+            dub -q test -- -d -s %RUNNER_ARGS% || exit /b
           )
 
   bootstrap:

@@ -53,12 +53,12 @@ imported!"reggae.dub.info".DubInfo[string] dubInfos(O)
         import reggae.dub.interop.dublib: Dub;
         import std.file: readText;
 
-        output.log("Creating dub instance");
+        output.log("Creating dub instance for ", options.projectPath);
         auto dub = Dub(options);
 
         dub.fetchDeps(output);
 
-        output.log("Getting dub information for ", options.projectPath);
+        output.log("Getting dub information");
         auto ret = dub.getDubInfos(output);
         output.log("Got dub build information");
 

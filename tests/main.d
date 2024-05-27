@@ -46,8 +46,8 @@ int main(string[] args) {
         "tests.it",
         "tests.it.rules.scriptlike",
         "tests.it.rules.json_build",
-        "tests.it.rules.cmake",
-        "tests.it.rules.d_cmake_interop",
+        "tests.it.rules.cmake.only",
+        "tests.it.rules.cmake.interop",
         "tests.it.rules.static_lib",
         "tests.it.runtime.lua",
         "tests.it.runtime.javascript",
@@ -66,20 +66,23 @@ int main(string[] args) {
 }
 
 private void primeDubBuild() {
-    import reggae.reggae: dubObjsDir;
+    import reggae.reggae: buildgenDubObjsDir, writeIfDiffers;
+    import reggae.io: log;
     import tests.it.runtime: testRun;
-    import std.file: write, exists, mkdirRecurse;
+    import std.file: exists, mkdirRecurse;
     import std.path: buildPath, dirName;
-    import std.stdio: writeln;
+    import std.stdio: stdout;
 
-    writeln("Priming...");
-    scope(exit) writeln("Primed\n");
+    stdout.log("Priming libdub");
+    scope(exit) stdout.log("Primed\n");
 
+    const dubObjsDir = buildgenDubObjsDir;
     const reggaefile = buildPath(dubObjsDir, "prime", "reggaefile.d");
     if(!reggaefile.dirName.exists)
         mkdirRecurse(reggaefile.dirName);
 
-    write(
+    writeIfDiffers(
+        stdout,
         reggaefile,
         q{
             import reggae;

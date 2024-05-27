@@ -276,7 +276,7 @@ private enum reggaeFileDubSelectionsJson =
 `;
 
 
-// dub support is needed at runtime, build and link with dub-as-a-library
+// build the reggaefile (i.e. buildgen) with dub
 private Binary buildReggaefileDub(O)(
     auto ref O output,
     in Options options,
@@ -301,8 +301,7 @@ private Binary buildReggaefileDub(O)(
     }
 
     auto userFiles = chain(
-        buildGenMainSrcPath(options).only,
-        options.reggaeFilePath.only,
+        buildgenReggaefilePath(options).only,
         options.getReggaeFileDependenciesDlang // must be called after .dep file created
     );
     auto userSourceFilesForDubSdl = stringsToSdlList(userFiles);
@@ -330,6 +329,14 @@ private Binary buildReggaefileDub(O)(
             userSourceFilesForDubSdl,
             importPathsForDubSdl,
         ) ~ extraLines.join("\n"),
+    );
+
+    // copy the user's reggaefile to the hidden directory so that it
+    // has a path relative to the project.
+    writeIfDiffers(
+        output,
+        buildgenReggaefilePath(options),
+        options.reggaeFilePath.readText,
     );
 
     writeIfDiffers(
@@ -400,7 +407,7 @@ private void buildTarget(in Options options, imported!"reggae.build".Target targ
     runtimeBuild(newOptions, Build(target));
 }
 
-private void writeIfDiffers(O)(auto ref O output, const string path, in string contents) @safe {
+void writeIfDiffers(O)(auto ref O output, const string path, in string contents) @safe {
     import reggae.io: log;
     import std.file: exists, readText, write, mkdirRecurse;
     import std.path: dirName;
@@ -428,22 +435,22 @@ private imported!"std.json".JSONValue selectionsPkgVersion(string pkg)() @safe p
 }
 
 
-// builds the reggaefile custom dub project using reggae itself.
-// I put a build system in the build system so it can build system while it build systems.
-// Currently slower than using dub because of multiple thread scheduling but also because
-// building per package is causing linker errors.
+// Builds the reggaefile custom dub project using reggae itself. I put
+// a build system in the build system so it can build system while it
+// build systems.
 private string buildReggaefileWithReggae(
     in imported!"reggae.options".Options options,
-    imported!"std.typecons".Flag!"needDub" needDub,)
+    imported!"std.typecons".Flag!"needDub" needDub,
+    )
 {
     import reggae.rules.dub: dubPackage, DubPath;
     import reggae.build: Build;
-    import std.typecons: Yes;
+    import std.file: getcwd, chdir;
 
     // HACK: needs refactoring, calling this just to create the phony dub package
     // for the reggaefile build
     import std.stdio: stdout;
-    buildReggaefileDub(stdout, options, Yes.needDub);
+    buildReggaefileDub(stdout, options, needDub);
 
     const dubRecipeDir = hiddenDirAbsPath(options);
 
@@ -454,9 +461,10 @@ private string buildReggaefileWithReggae(
     // the actual build at all.
     auto newOptions = options.dup;
     newOptions.backend = Backend.binary;
-    newOptions.dubObjsDir = dubObjsDir;
+    newOptions.dubObjsDir = buildgenDubObjsDir;
     newOptions.projectPath = dubRecipeDir;
     newOptions.workingDir = dubRecipeDir;
+    newOptions.dubTargetPathAbs = true; // use absolute paths in `dubBuild`.
 
     auto build = Build(dubPackage(newOptions, DubPath(dubRecipeDir)));
 
@@ -517,37 +525,10 @@ private string getBuildGenName(in Options options) @safe pure nothrow {
     return buildPath(hiddenDirAbsPath(options), baseName) ~ exeExt;
 }
 
-// On Windows we're apparently not allowed to have a main function in
-// a static library so we have to build the main function with the
-// reggaefile
-private enum buildGenMainSrc =
-q{
-    // args is empty except for the binary backend,
-    // in which case it's used for runtime options
-    int main(string[] args) {
-        try {
-            import reggae.config: options;
-            import reggae.buildgen: doBuildFor;
-            doBuildFor!("reggaefile")(options, args); //the user's build description
-            return 0;
-        } catch(Exception ex) {
-            import std.stdio: stderr;
-            stderr.writeln(ex.msg);
-            return 1;
-        }
-    }
-};
-
 private void writeSrcFiles(T)(auto ref T output, in Options options) {
     import reggae.io: log;
     import std.file: mkdirRecurse, rmdirRecurse, exists;
     import std.path: dirName;
-
-    writeIfDiffers(
-        output,
-        buildGenMainSrcPath(options),
-        buildGenMainSrc,
-    );
 
     if(!haveToWriteSrcFiles(options))
         return;
@@ -661,13 +642,19 @@ import reggae.options;
     return ret;
 }
 
-public string dubObjsDir() @safe {
+// where the dub object files should be placed when building buildgen,
+// i.e. when compiling the reggaefile.
+public string buildgenDubObjsDir() @safe {
     import std.path: buildPath;
-    import std.file: tempDir;
+    import std.file: tempDir, exists, mkdirRecurse;
+
     // don't ask
     static string ret;
-    if(ret == ret.init)
+    if(ret == ret.init) {
         ret = buildPath(tempDir, "reggae");
+        if(!ret.exists)
+            mkdirRecurse(ret);
+    }
     return ret;
 }
 
@@ -693,11 +680,6 @@ private string hiddenDirAbsPath(in Options options) @safe pure nothrow {
     return buildPath(options.workingDir, hiddenDir);
 }
 
-private string buildGenMainSrcPath(in Options options) @safe pure nothrow {
-    import std.path: buildPath;
-    return buildPath(hiddenDirAbsPath(options), "buildgen_main.d");
-}
-
 private bool strEqModNewLine(in string lhs, in string rhs) @safe pure nothrow {
     return lhs.dos2unix == rhs.dos2unix;
 }
@@ -705,4 +687,9 @@ private bool strEqModNewLine(in string lhs, in string rhs) @safe pure nothrow {
 private string dos2unix(const string str) @safe pure nothrow {
     import std.array: replace;
     return str.replace("\r\n", "\n");
+}
+
+private string buildgenReggaefilePath(in Options options) @safe pure nothrow {
+    import std.path: buildPath;
+    return buildPath(hiddenDirAbsPath(options), "reggaefile.d");
 }

@@ -27,7 +27,17 @@ auto shouldExecuteOk(in string[] args, in WorkDir workDir,
     Config config = Config.none;
     size_t maxOutput = size_t.max;
 
-    immutable res = execute(args, env, config, maxOutput, workDir.value);
+    auto exe() {
+        return execute(args, env, config, maxOutput, workDir.value);
+    }
+    auto res = exe;
+    version(Windows) {
+        if(res.status != 0) {
+            import core.thread;
+            Thread.sleep(1.seconds);
+            res = exe;
+        }
+    }
 
     auto lines = res.output.chomp.splitLines;
     if(res.status != 0)

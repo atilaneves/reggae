@@ -61,15 +61,17 @@ unittest {
 }
 
 
-@("postbuild")
-@Tags(["dub", "ninja", "posix"])
-unittest {
-    with(immutable ReggaeSandbox("dub_postbuild")) {
-        runReggae("-b", "ninja");
-        shouldNotExist("foo.txt");
-        ninja.shouldExecuteOk;
-        shouldExist("foo.txt");
-        shouldSucceed("postbuild");
+version(Posix) {
+    @("postbuild")
+    @Tags(["dub", "ninja", "posix"])
+    unittest {
+        with(immutable ReggaeSandbox("dub_postbuild")) {
+            runReggae("-b", "ninja");
+            shouldNotExist("foo.txt");
+            ninja.shouldExecuteOk;
+            shouldExist("foo.txt");
+            shouldSucceed("postbuild");
+        }
     }
 }
 
@@ -244,7 +246,7 @@ version(DigitalMars) {
                 extern(C) int lebaz() { return 42; }
             });
 
-            ["dmd", "-c", "baz.d"].shouldExecuteOk;
+            ["dmd", "-c", inSandboxPath("baz.d")].shouldExecuteOk;
 
             runReggae("-b", "ninja");
             ninja.shouldExecuteOk;
@@ -377,7 +379,7 @@ version(DigitalMars) {
                 extern(C) int lebaz() { return 42; }
             });
 
-            ["dmd", "-c", "baz.d"].shouldExecuteOk;
+            ["dmd", "-c", inSandboxPath("baz.d")].shouldExecuteOk;
 
             const output = runReggae("-b", "ninja", "--dub-objs-dir=" ~ testPath);
             writelnUt(output);
@@ -438,19 +440,20 @@ unittest {
 }
 
 
-@("depends on package with prebuild")
-// fails for CI with DMD on Windows - the path to dub-generated dub_test_root.d is just over 260 chars
-@Tags(["dub", "ninja", "fails-on-windows-with-dmd"])
-unittest {
+version(Posix) {
+    @("depends on package with prebuild")
+    @Tags(["dub", "ninja"])
+    unittest {
 
-    with(immutable ReggaeSandbox("dub_depends_on_prebuild")) {
+        with(immutable ReggaeSandbox("dub_depends_on_prebuild")) {
 
-        copyProject("dub_prebuild", buildPath("../dub_prebuild"));
+            copyProject("dub_prebuild", buildPath("../dub_prebuild"));
 
-        runReggae("-b", "ninja");
-        ninja.shouldExecuteOk;
-        shouldSucceed("app");
-        shouldExist(inSandboxPath("../dub_prebuild/el_prebuildo.txt"));
+            runReggae("-b", "ninja");
+            ninja.shouldExecuteOk;
+            shouldSucceed("app");
+            shouldExist(inSandboxPath("../dub_prebuild/el_prebuildo.txt"));
+        }
     }
 }
 

@@ -5,65 +5,69 @@ import tests.it.runtime;
 import reggae.reggae;
 
 
-@("Issue 14: builddir not expanded")
-@Tags(["ninja", "regressions", "posix"])
-unittest {
+version(Posix) {
+    @("Issue 14: builddir not expanded")
+    @Tags(["ninja", "regressions", "posix"])
+    unittest {
 
-    with(immutable ReggaeSandbox()) {
-        writeFile("reggaefile.d", q{
-            import reggae;
-            enum ao = objectFile!(SourceFile("a.c"));
-            enum liba = Target("$builddir/liba.a", "ar rcs $out $in", [ao]);
-            mixin build!(liba);
-        });
+        with(immutable ReggaeSandbox()) {
+            writeFile("reggaefile.d", q{
+                import reggae;
+                enum ao = objectFile!(SourceFile("a.c"));
+                enum liba = Target("$builddir/liba.a", "ar rcs $out $in", [ao]);
+                mixin build!(liba);
+            });
 
-        writeFile("a.c");
+            writeFile("a.c");
 
-        runReggae("-b", "ninja");
-        ninja.shouldExecuteOk;
+            runReggae("-b", "ninja");
+            ninja.shouldExecuteOk;
+        }
     }
 }
 
-@("Issue 12: can't set executable as a dependency")
-@Tags(["ninja", "regressions"])
-unittest {
+version(Posix) {
+    @("Issue 12: can't set executable as a dependency")
+    @Tags(["ninja", "regressions"])
+    unittest {
 
-    with(immutable ReggaeSandbox()) {
-        writeFile("reggaefile.d", q{
-            import reggae;
-            alias app = scriptlike!(App(SourceFileName("main.d"),
-                                        BinaryFileName("$builddir/myapp")),
-                                        Flags(),
-                                        ImportPaths(["/path/to/imports"])
-                    );
-            alias code_gen = target!("out.c", "./myapp $in $out", target!"in.txt", app);
-            mixin build!(code_gen);
-        });
+        with(immutable ReggaeSandbox()) {
+            writeFile("reggaefile.d", q{
+                import reggae;
+                alias app = scriptlike!(App(SourceFileName("main.d"),
+                                            BinaryFileName("$builddir/myapp")),
+                                            Flags(),
+                                            ImportPaths(["/path/to/imports"])
+                        );
+                alias code_gen = target!("out.c", "./myapp $in $out", target!"in.txt", app);
+                mixin build!(code_gen);
+            });
 
-        writeFile("main.d", q{
-            import std.stdio;
-            import std.algorithm;
-            import std.conv;
-            void main(string[] args) {
-                auto inFileName = args[1];
-                auto outFileName = args[2];
-                auto lines = File(inFileName, `r`).byLine.
-                    map!(a => a.to!string).
-                    map!(a => a ~ ` ` ~ a);
-                auto outFile = File(outFileName, `w`);
-                foreach(line; lines) outFile.writeln(line);
-            }
-        });
+            writeFile("main.d", q{
+                import std.stdio;
+                import std.algorithm;
+                import std.conv;
+                void main(string[] args) {
+                    auto inFileName = args[1];
+                    auto outFileName = args[2];
+                    auto lines = File(inFileName, `r`).byLine.
+                        map!(a => a.to!string).
+                        map!(a => a ~ ` ` ~ a);
+                    auto outFile = File(outFileName, `w`);
+                    foreach(line; lines) outFile.writeln(line);
+                }
+            });
 
-        writeFile("in.txt", ["foo", "bar", "baz"]);
+            writeFile("in.txt", ["foo", "bar", "baz"]);
 
-        runReggae("-b", "ninja");
-        ninja.shouldExecuteOk;
-        ["cat", "out.c"].shouldExecuteOk;
-        shouldEqualLines("out.c",
-                         ["foo foo",
-                          "bar bar",
-                          "baz baz"]);
+            runReggae("-b", "ninja");
+            ninja.shouldExecuteOk;
+            ["cat", "out.c"].shouldExecuteOk;
+            shouldEqualLines("out.c",
+                             ["foo foo",
+                              "bar bar",
+                              "baz baz"]);
+        }
     }
 }
 

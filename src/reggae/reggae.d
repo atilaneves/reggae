@@ -102,7 +102,11 @@ private bool dubBuild(in Options options) {
     return runtimeBuild(options, build);
 }
 
-private bool runtimeBuild(in Options options, imported!"reggae.build".Build build) {
+private bool runtimeBuild(
+    in Options options,
+    imported!"reggae.build".Build build,
+    in string[] extraArgs = [])
+{
     version(minimal)
         assert(0, "Runtime builds not supported in minimal version");
     else {
@@ -113,7 +117,7 @@ private bool runtimeBuild(in Options options, imported!"reggae.build".Build buil
         // The binary backend requires `args` to not be empty because
         // the first entry must be the binary name. We also don't want
         // to rerun ourselves from here.
-        auto args = ["build", "--norerun"];
+        auto args = ["build", "--norerun"] ~ extraArgs;
         doBuild(build, options, args);
     }
 
@@ -366,7 +370,8 @@ private Binary buildReggaefileDub(O)(
 // can compile them
 private void calculateReggaeFileDeps(O)(auto ref O output, in Options options) {
     import reggae.io: log;
-    import reggae.build: Target, Command;
+    import reggae.build: Build, Target, Command;
+    import reggae.types: Backend;
 
     // `options.getReggaeFileDependenciesDlang` depends on
     // `options.reggaeFileDepFile` existing, which means we need to
@@ -394,18 +399,13 @@ private void calculateReggaeFileDeps(O)(auto ref O output, in Options options) {
         options.reggaeFilePath,
     );
 
-    buildTarget(options, target); // run the command
-}
-
-// build a target using reggae as a build system
-private void buildTarget(in Options options, imported!"reggae.build".Target target) {
-    import reggae.types: Backend;
-    import reggae.build: Build;
-
     auto newOptions = options.dup;
     newOptions.backend = Backend.binary;
-    runtimeBuild(newOptions, Build(target));
+    // we don't want to spawn a thread for this, so --single we've
+    // actually had problems in the past due to race conditions
+    runtimeBuild(newOptions, Build(target), ["--single"]);
 }
+
 
 void writeIfDiffers(O)(auto ref O output, const string path, in string contents) @safe {
     import reggae.io: log;
@@ -467,7 +467,11 @@ private string buildReggaefileWithReggae(
 
     auto build = Build(dubPackage(newOptions, DubPath(dubRecipeDir)));
 
-    runtimeBuild(newOptions, build);
+    const extraArgs = options.buildReggaefileSingle
+        ? ["--single"]
+        : [];
+
+    runtimeBuild(newOptions, build, extraArgs);
 
     return getBuildGenName(options);
 }

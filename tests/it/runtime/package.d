@@ -111,7 +111,12 @@ private:
             static assert(false, "Unknown D compiler");
 
         const dubObjsDir = buildPath(buildgenDubObjsDir, "test");
-        return testRun(["reggae", "--dub-objs-dir=" ~ dubObjsDir] ~ fromWhereArgs ~ args ~ project);
+        // tell the binary backend to use a single thread since we'll
+        // be using many of them to run the tests themselves.
+        return testRun(
+            ["reggae", "--dub-objs-dir=" ~ dubObjsDir, "--build-reggaefile-single"] ~
+            fromWhereArgs ~ args ~ project
+        );
     }
 }
 

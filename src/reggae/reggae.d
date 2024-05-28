@@ -445,7 +445,6 @@ private string buildReggaefileWithReggae(
 {
     import reggae.rules.dub: dubPackage, DubPath;
     import reggae.build: Build;
-    import std.file: getcwd, chdir;
 
     // HACK: needs refactoring, calling this just to create the phony dub package
     // for the reggaefile build
@@ -485,15 +484,29 @@ private void buildBinary(T)(auto ref T output, in Options options, in Binary bin
         ? " with " ~  bin.cmd.join(" ")
         : "";
     output.log("Compiling metabuild binary ", bin.name, extraInfo);
-    // std.process.execute has a bug where using workDir and a relative path
-    // don't work (https://issues.dlang.org/show_bug.cgi?id=15915)
+
+    // std.process.execute has a bug where using workDir and a
+    // relative path don't work
+    // (https://issues.dlang.org/show_bug.cgi?id=15915)
     // so executeShell is used instead
-    immutable res = executeShell(bin.cmd.join(" "), env, config, maxOutput, workDir);
+    auto execute() {
+        return executeShell(bin.cmd.join(" "), env, config, maxOutput, workDir);
+    }
+
+    auto res = execute;
+    version(Windows) // because of race conditions, *somehow*
+        if(res.status != 0) {
+            import core.thread;
+            Thread.sleep(1.seconds);
+            res = execute;
+        }
+
     enforce(
         res.status == 0,
         text("Couldn't execute ", bin.cmd.join(" "), "\nin ", workDir,
              ":\n", res.output,
              "\n", "bin.name: ", bin.name, ", bin.cmd: ", bin.cmd.join(" ")));
+
     if(options.verbose)
         output.log(res.output);
 }
@@ -553,6 +566,8 @@ private void writeSrcFiles(T)(auto ref T output, in Options options) {
 
         auto file = File(filePath, "w");
         file.write(import(fileName));
+        // trying to add a delay here or flushing/sync'ing actually
+        // caused more problems, somehow
     }
 }
 

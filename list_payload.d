@@ -14,10 +14,11 @@ int main(string[] args) {
 }
 
 void run(string[] args) {
-    import std.file: dirEntries, SpanMode;
+    import std.file: dirEntries, SpanMode, readText, exists;
     import std.stdio: File;
     import std.algorithm: filter, map;
     import std.path: buildPath, pathSeparator;
+    import std.conv: text;
 
     import std.stdio;
     args[0].writeln;
@@ -32,6 +33,11 @@ void run(string[] args) {
         .filter!(de => !de.isDir)
         .map!(de => de.name[prefix.length .. $]);
 
-    auto file = File(buildPath(outputDir, "payload.txt"), "w");
-    file.writeln(entries);
+    const output = text(entries, "\n");
+    const outputFileName = buildPath(outputDir, "payload.txt");
+    if(outputFileName.exists && outputFileName.readText == output)
+        return;
+
+    auto file = File(outputFileName, "w");
+    file.write(output);
 }

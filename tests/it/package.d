@@ -72,16 +72,8 @@ string projectPath(in string name) {
 }
 
 string newTestDir() {
-    import unit_threaded.integration: mkdtemp;
-    import std.conv;
-    import std.path: absolutePath;
-    import std.algorithm;
-
-    char[100] template_;
-    std.algorithm.copy(buildPath(testsPath, "YYYYYYXXXXXX") ~ '\0', template_[]);
-    auto ret = mkdtemp(&template_[0]).to!string;
-
-    return ret.absolutePath;
+    import unit_threaded.integration: uniqueDirName;
+    return uniqueDirName(testsPath);
 }
 
 Options testOptions(string[] args) {

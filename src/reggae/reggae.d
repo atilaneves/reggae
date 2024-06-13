@@ -379,7 +379,7 @@ private void calculateReggaeFileDeps(O)(auto ref O output, in Options options) {
     import std.path: dirName;
 
     // No imports => no dependencies => no need to spend time calculating.
-    if(noExternalImports(options)) {
+    if(!options.forceReggaefileDeps && noExternalImports(options)) {
         if(!options.reggaeFileDepFile.dirName.exists)
             mkdirRecurse(options.reggaeFileDepFile.dirName);
         write(options.reggaeFileDepFile, "reggaefile.o: \\\n  " ~ options.reggaeFilePath);

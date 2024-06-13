@@ -68,6 +68,7 @@ struct Options {
     bool dubTargetPathAbs;
     bool buildReggaefileSingle; // single-threaded build using the binary backend
     bool buildReggaefileOptimise; // compile the build description with optimisations
+    bool forceReggaefileDeps;
     string[string] userVars; // must be last
 
     Options dup() @safe pure const nothrow scope {
@@ -334,6 +335,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             "build-reggaefile-with-dub", "Build the reggaefile with dub instead of the binary backend", &options.buildReggaefileWithDub,
             "build-reggaefile-single", "Build the reggaefile using a single thread", &options.buildReggaefileSingle,
             "build-reggaefile-release", "Build the reggaefile with optimisations", &options.buildReggaefileOptimise,
+            "force-reggaefile-deps", "Force calculating reggaefile import dependencies", &options.forceReggaefileDeps,
         );
 
         if(helpInfo.helpWanted) {

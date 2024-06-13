@@ -357,12 +357,16 @@ private Binary buildReggaefileDub(O)(
         libReggaeRecipe,
     );
 
+    const extraOptions = options.buildReggaefileOptimise
+        ? ["--build=release"]
+        : [];
+
     // FIXME - use --compiler
     // The reason it doesn't work now is due to a test using
     // a custom compiler
     return Binary(
         getBuildGenName(options),
-        ["dub", "build"], // since we now depend on dub at buildgen runtime
+        ["dub", "build"] ~ extraOptions, // since we now depend on dub at buildgen runtime
     );
 }
 
@@ -464,6 +468,8 @@ private string buildReggaefileWithReggae(
     newOptions.projectPath = dubRecipeDir;
     newOptions.workingDir = dubRecipeDir;
     newOptions.dubTargetPathAbs = true; // use absolute paths in `dubBuild`.
+    if(newOptions.buildReggaefileOptimise)
+        newOptions.dflags ~= newOptions.optimisationFlags;
 
     auto build = Build(dubPackage(newOptions, DubPath(dubRecipeDir)));
 

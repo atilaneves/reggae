@@ -223,7 +223,6 @@ struct Binary {
 
 
 private string compileBuildGenerator(T)(auto ref T output, in Options options) {
-
     import std.algorithm: any, canFind;
     import std.typecons: Yes, No;
 
@@ -242,7 +241,7 @@ private string compileBuildGenerator(T)(auto ref T output, in Options options) {
         return buildGenName;
     }
 
-    return buildReggaefileWithReggae(options, needsDub);
+    return buildReggaefileWithReggae(output, options, needsDub);
 }
 
 private enum reggaeFileDubSdl =
@@ -534,11 +533,14 @@ private imported!"std.json".JSONValue selectionsPkgVersion(string pkg)() @safe p
 // Builds the reggaefile custom dub project using reggae itself. I put
 // a build system in the build system so it can build system while it
 // build systems.
-private string buildReggaefileWithReggae(
-    in imported!"reggae.options".Options options,
-    imported!"std.typecons".Flag!"needDub" needDub,
+private string buildReggaefileWithReggae(O)
+    (
+        auto ref O output,
+        in imported!"reggae.options".Options options,
+        imported!"std.typecons".Flag!"needDub" needDub,
     )
 {
+    import reggae.io: log;
     import reggae.rules.dub: dubPackage, DubPath;
     import reggae.build: Build;
 
@@ -569,6 +571,7 @@ private string buildReggaefileWithReggae(
         ? ["--single"]
         : [];
 
+    output.log("Building reggaefile");
     runtimeBuild(newOptions, build, extraArgs);
 
     return getBuildGenName(options);

@@ -358,6 +358,10 @@ struct Target {
         return _command.shellCommand(options, getLanguage(), _outputs, inputs(options.projectPath), deps);
     }
 
+    string describe(in Options options) {
+        return _command.describe(options, getLanguage(), _outputs, inputs(options.projectPath), Yes.dependencies);
+    }
+
     // not const because the code commands take inputs and outputs as non-const strings
     const(string)[] execute(in Options options) @safe const {
         return _command.execute(options, getLanguage(), _outputs, inputs(options.projectPath));
@@ -371,7 +375,9 @@ struct Target {
         return _command.getType;
     }
 
-    string[] getCommandParams(in string projectPath, in string key, string[] ifNotFound) @safe pure const return scope {
+    string[] getCommandParams(in string projectPath, in string key, string[] ifNotFound)
+        @safe pure const return scope
+    {
         return _command.getParams(projectPath, key, ifNotFound);
     }
 
@@ -706,6 +712,39 @@ struct Command {
         // `string`.
         return shellCommandRange(options, language, outputs, inputs, deps)
             .join(" ");
+    }
+
+    /// Describes what the command does, like "compiling", "linking", etc.
+    string describe(in Options options,
+                    in Language language,
+                    in string[] outputs,
+                    in string[] inputs,
+                    Flag!"dependencies" deps = Yes.dependencies)
+    {
+        import std.array: join;
+        import std.algorithm: map;
+
+        const outputsStr = outputs
+            .map!(a => expandOutput(a, options.projectPath))
+            .join(", ");
+
+        final switch(type) with(CommandType) {
+            case shell:
+            case phony:
+                return "Shell command generating " ~ outputsStr;
+
+            case code:
+                return "D code generating " ~ outputsStr;
+
+            case compile:
+                return "Compiling " ~ outputsStr;
+
+            case link:
+                return "Linking " ~ outputsStr;
+
+            case compileAndLink:
+                return "Compiling and linking " ~ outputsStr;
+        }
     }
 
     ///returns a command string to be run by the shell

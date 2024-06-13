@@ -112,7 +112,7 @@ struct BinaryT(T) {
         else
             didAnything = mainLoop(topTargets.parallel, binaryOptions, didAnything);
 
-        if(!didAnything) output.writeln("[build] Nothing to do");
+        if(!didAnything) log("Nothing to do");
     }
 
     Target[] topLevelTargets(string[] args) @trusted pure {
@@ -197,7 +197,7 @@ private:
 
         immutable myPath = thisExePath;
         if(deps.any!(a => a.newerThan(myPath))) {
-            output.writeln("[build] " ~ options.rerunArgs.join(" "));
+            log(options.rerunArgs.join(" "));
             immutable reggaeRes = execute(options.rerunArgs);
             enforce(reggaeRes.status == 0,
                     text("Could not run ", options.rerunArgs.join(" "), " to regenerate build:\n",
@@ -268,7 +268,7 @@ private:
     }
 
     void executeCommand(Target target) @trusted {
-        output.writeln("[build] ", target.shellCommand(options));
+        log(target.shellCommand(options));
 
         mkDir(target);
         auto targetOutput = target.execute(options);
@@ -286,6 +286,11 @@ private:
             if(!output.dirName.exists)
                 mkdirRecurse(output.dirName);
         }
+    }
+
+    private void log(A...)(auto ref A args) {
+        import std.functional: forward;
+        output.writeln("[build] ", forward!args);
     }
 }
 

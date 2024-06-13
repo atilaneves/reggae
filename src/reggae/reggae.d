@@ -464,6 +464,8 @@ private string buildReggaefileWithReggae(
     newOptions.projectPath = dubRecipeDir;
     newOptions.workingDir = dubRecipeDir;
     newOptions.dubTargetPathAbs = true; // use absolute paths in `dubBuild`.
+    if(newOptions.buildReggaefileOptimise)
+        newOptions.dflags ~= newOptions.optimisationFlags;
 
     auto build = Build(dubPackage(newOptions, DubPath(dubRecipeDir)));
 

@@ -67,6 +67,7 @@ struct Options {
     // build their binary, but for internal reggae use, we do.
     bool dubTargetPathAbs;
     bool buildReggaefileSingle; // single-threaded build using the binary backend
+    bool buildReggaefileOptimise; // compile the build description with optimisations
     string[string] userVars; // must be last
 
     Options dup() @safe pure const nothrow scope {
@@ -277,6 +278,13 @@ struct Options {
         import std.path: baseName, stripExtension;
         return baseName(stripExtension(dCompiler)).dup;
     }
+
+    string[] optimisationFlags() @safe pure scope const {
+        if(isLdc || isGdc)
+            return ["-O2"];
+        else
+            return ["-O", "-inline"];
+    }
 }
 
 Options getOptions(string[] args) {
@@ -325,6 +333,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             "reggaefile-import-path", "Import paths for the reggaefile itself", &options.reggaefileImportPaths,
             "build-reggaefile-with-dub", "Build the reggaefile with dub instead of the binary backend", &options.buildReggaefileWithDub,
             "build-reggaefile-single", "Build the reggaefile using a single thread", &options.buildReggaefileSingle,
+            "build-reggaefile-release", "Build the reggaefile with optimisations", &options.buildReggaefileOptimise,
         );
 
         if(helpInfo.helpWanted) {

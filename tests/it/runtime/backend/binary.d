@@ -98,18 +98,70 @@ version(DigitalMars) {
 
                 runReggae(["-b", "ninja"]);
                 writelnUt(gCurrentFakeFile.lines);
-                gCurrentFakeFile.lines.shouldHaveCompiledBuildgen;
+                gCurrentFakeFile.lines.shouldHaveCompiledQuiet;
                 gCurrentFakeFile.reset;
 
                 runReggae(["-b", "ninja"]); // should not build reggaefile again
                 writelnUt(gCurrentFakeFile.lines);
-                gCurrentFakeFile.lines.shouldNotHaveCompiledBuildgen;
+                gCurrentFakeFile.lines.shouldNotHaveCompiledQuiet;
             }
         }
     }
 }
 
-void shouldHaveCompiledBuildgen(in string[] lines, in string file = __FILE__, in size_t line = __LINE__) {
+version(DigitalMars) {
+    version(linux) {
+
+        @("output.quiet")
+        @Tags("binary")
+        unittest {
+            with(immutable ReggaeSandbox()) {
+                writeFile(
+                    "reggaefile.d",
+                    q{
+                        import reggae;
+                        alias lib = staticLibrary!("mylib", Sources!"src");
+                        mixin build!lib;
+                    }
+                );
+
+                writeFile(
+                    "src/foo.d",
+                    q{
+                        module foo;
+                        import bar;
+
+                        void main() {
+
+                        }
+
+                        int foo(int i) {
+                            return bar(i) * 2;
+                        }
+                    }
+                );
+
+                writeFile(
+                    "src/foo.d",
+                    q{
+                        module bar;
+                        int bar(int i) {
+                            return i + 1;
+                        }
+                    }
+                );
+
+                runReggae(["-b", "binary"]);
+                binary.shouldExecuteOk; // build the 1st time
+                gCurrentFakeFile.lines.shouldNotHaveCompiledVerbose;
+                ("[build] Linking " ~ inSandboxPath("build")).should.be in gCurrentFakeFile.lines;
+            }
+        }
+    }
+}
+
+
+void shouldHaveCompiledVerbose(in string[] lines, in string file = __FILE__, in size_t line = __LINE__) {
     import std.algorithm: filter, canFind;
     lines
         .filter!(l => l.canFind("[build]"))
@@ -119,11 +171,28 @@ void shouldHaveCompiledBuildgen(in string[] lines, in string file = __FILE__, in
 }
 
 
-void shouldNotHaveCompiledBuildgen(in string[] lines, in string file = __FILE__, in size_t line = __LINE__) {
+void shouldNotHaveCompiledVerbose(in string[] lines, in string file = __FILE__, in size_t line = __LINE__) {
     import std.algorithm: filter, canFind;
     lines
         .filter!(l => l.canFind("[build]"))
         .filter!(l => l.canFind("dmd "))
         .filter!(l => l.canFind("-of"))
+        .shouldBeEmpty(file, line);
+}
+
+void shouldHaveCompiledQuiet(in string[] lines, in string file = __FILE__, in size_t line = __LINE__) {
+    import std.algorithm: filter, canFind;
+    lines
+        .filter!(l => l.canFind("[build]"))
+        .filter!(l => l.canFind("Compiling "))
+        .shouldNotBeEmpty(file, line);
+}
+
+
+void shouldNotHaveCompiledQuiet(in string[] lines, in string file = __FILE__, in size_t line = __LINE__) {
+    import std.algorithm: filter, canFind;
+    lines
+        .filter!(l => l.canFind("[build]"))
+        .filter!(l => l.canFind("Compiling "))
         .shouldBeEmpty(file, line);
 }

@@ -376,6 +376,16 @@ private void calculateReggaeFileDeps(O)(auto ref O output, in Options options) {
     import reggae.io: log;
     import reggae.build: Build, Target, Command;
     import reggae.types: Backend;
+    import std.file: write, exists, mkdirRecurse;
+    import std.path: dirName;
+
+    // No imports => no dependencies => no need to spend time calculating.
+    if(noExternalImports(options)) {
+        if(!options.reggaeFileDepFile.dirName.exists)
+            mkdirRecurse(options.reggaeFileDepFile.dirName);
+        write(options.reggaeFileDepFile, "reggaefile.o: \\\n  " ~ options.reggaeFilePath);
+        return;
+    }
 
     // `options.getReggaeFileDependenciesDlang` depends on
     // `options.reggaeFileDepFile` existing, which means we need to
@@ -392,7 +402,7 @@ private void calculateReggaeFileDeps(O)(auto ref O output, in Options options) {
                     [
                         options.dCompiler,
                         options.reggaeFilePath, "-o-", "-makedeps=" ~ options.reggaeFileDepFile,
-                        ]
+                    ]
                     ~ importPaths(options),
                 );
 
@@ -409,6 +419,88 @@ private void calculateReggaeFileDeps(O)(auto ref O output, in Options options) {
     // actually had problems in the past due to race conditions
     runtimeBuild(newOptions, Build(target), ["--single"]);
 }
+
+// If all imports are reggae or phobos. In this common case, we don't
+// need to ask the compiler to get the dependencies of the reggaefile
+// so that we can compile them as well.
+bool noExternalImports(in Options options) {
+    import std.file: readText;
+    import std.algorithm: splitter, all;
+
+    return extractImports(options.reggaeFilePath.readText)
+        .map!(i => i.splitter(".").front)
+        .all!(a => a.among("std", "core", "etc", "reggae"));
+}
+
+private string[] extractImports(string code) {
+    import std.algorithm: startsWith, map, splitter, sort, uniq;
+    import std.string: indexOf, strip;
+    import std.array: array;
+
+    string[] imports;
+
+    size_t pos = 0;
+    while (pos < code.length) {
+        // Skip over single-line comments
+        if (code[pos .. $].startsWith("//")) {
+            pos = code.indexOf('\n', pos);
+            if (pos == size_t.max) break;
+            pos++;
+            continue;
+        }
+        // Skip over multi-line comments
+        else if (code[pos .. $].startsWith("/*")) {
+            pos = code.indexOf("*/", pos);
+            if (pos == size_t.max) break;
+            pos += 2;
+            continue;
+        }
+        // Skip over nested comments
+        else if (code[pos .. $].startsWith("/+")) {
+            int nestedLevel = 1;
+            pos += 2;
+            while (nestedLevel > 0 && pos < code.length) {
+                if (code[pos .. $].startsWith("/+")) {
+                    nestedLevel++;
+                    pos += 2;
+                } else if (code[pos .. $].startsWith("+/")) {
+                    nestedLevel--;
+                    pos += 2;
+                } else {
+                    pos++;
+                }
+            }
+            continue;
+        }
+
+        // Find import statements
+        if (code[pos .. $].startsWith("import ")) {
+            pos += 7; // Move past "import "
+            size_t end = code.indexOf(';', pos);
+            if (end == size_t.max) break;
+
+            auto statement = code[pos .. end].strip();
+            // Split imports by comma
+            auto modules = statement.splitter(',').map!(s => s.strip);
+            foreach (mod; modules) {
+                auto parts = mod.splitter(':').map!(s => s.strip).array;
+                if (parts.length == 2) {
+                    imports ~= parts[0];
+                } else {
+                    imports ~= parts[0];
+                }
+            }
+
+            pos = end + 1;
+        } else {
+            pos++;
+        }
+    }
+
+    // Return sorted and unique imports
+    return imports.sort.uniq.array;
+}
+
 
 
 void writeIfDiffers(O)(auto ref O output, const string path, in string contents) @safe {

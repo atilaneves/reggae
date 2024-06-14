@@ -241,7 +241,7 @@ private imported!"reggae.build".Target toReggaeTarget(in imported!"std.json".JSO
     import reggae.config: options;
     import reggae.rules.common : objectFile, link, staticLibraryTarget;
     import reggae.build : Target;
-    import reggae.types : SourceFile, ExeName, LinkerFlags;
+    import reggae.types : SourceFile, TargetName, LinkerFlags;
     import std.format : format;
     import std.exception : enforce;
     import std.path : buildNormalizedPath, isAbsolute, baseName, extension;
@@ -313,7 +313,7 @@ private imported!"reggae.build".Target toReggaeTarget(in imported!"std.json".JSO
                 enum sharedLibFlag = "-shared";
             }
             return link(
-                ExeName(reggaeArtifactPath),
+                TargetName(reggaeArtifactPath),
                 intermediateTargets,
                 LinkerFlags(sharedLibFlag ~ linkAndLibrarySearchPathFlags),
                 implicits,
@@ -322,7 +322,7 @@ private imported!"reggae.build".Target toReggaeTarget(in imported!"std.json".JSO
 
         case Executable:
             return link(
-                ExeName(reggaeArtifactPath),
+                TargetName(reggaeArtifactPath),
                 intermediateTargets,
                 LinkerFlags(linkAndLibrarySearchPathFlags),
                 implicits,

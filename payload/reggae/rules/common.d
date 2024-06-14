@@ -159,9 +159,11 @@ Target executable(ExeName exeName,
                   ImportPaths includes = ImportPaths(),
                   StringImportPaths stringImports = StringImportPaths(),
                   LinkerFlags linkerFlags = LinkerFlags())
-    () {
+    ()
+{
+    import reggae.types: TargetName;
     auto objs = objectFiles!(sourcesFunc, compilerFlags, includes, stringImports);
-    return link!(exeName, { return objs; }, linkerFlags);
+    return link!(TargetName(exeName.value), { return objs; }, linkerFlags);
 }
 
 Target executable(in imported!"reggae.options".Options options,
@@ -188,7 +190,7 @@ Target executable(in imported!"reggae.options".Options options,
         includes,
         stringImports
     );
-    return link(ExeName(name), objs, const LinkerFlags(linkerFlags));
+    return link(TargetName(name), objs, const LinkerFlags(linkerFlags));
 }
 
 
@@ -202,9 +204,9 @@ Target executable(in imported!"reggae.options".Options options,
  If any D files are found, the linker is the D compiler, and so on with
  C++ and C. If none of those apply, the D compiler is used.
  */
-Target link(ExeName exeName, alias dependenciesFunc, LinkerFlags flags = LinkerFlags())() {
+Target link(TargetName targetName, alias dependenciesFunc, LinkerFlags flags = LinkerFlags())() {
     auto dependencies = dependenciesFunc();
-    return link(exeName, dependencies, flags);
+    return link(targetName, dependencies, flags);
 }
 
 /**
@@ -214,22 +216,31 @@ Target link(ExeName exeName, alias dependenciesFunc, LinkerFlags flags = LinkerF
  If any D files are found, the linker is the D compiler, and so on with
  C++ and C. If none of those apply, the D compiler is used.
  */
-Target link(in ExeName exeName, Target[] dependencies, in LinkerFlags flags = LinkerFlags(),
-            in LibraryFlags linkLibraryFlags = LibraryFlags()) @safe pure {
+Target link(in TargetName targetName,
+            Target[] dependencies,
+            in LinkerFlags flags = LinkerFlags(),
+            in LibraryFlags linkLibraryFlags = LibraryFlags())
+    @safe pure
+{
     auto command = Command(
         CommandType.link,
         assocList([assocEntry("flags", flags.value.dup), assocEntry("link_libraries", linkLibraryFlags.value.dup)]),
     );
-    return Target(exeName.value, command, dependencies);
+    return Target(targetName.value, command, dependencies);
 }
 
-Target link(const ExeName exeName, Target[] dependencies, in LinkerFlags flags, Target[] implicits,
-            in LibraryFlags linkLibraryFlags = LibraryFlags()) @safe pure {
+Target link(const TargetName targetName,
+            Target[] dependencies,
+            in LinkerFlags flags,
+            Target[] implicits,
+            in LibraryFlags linkLibraryFlags = LibraryFlags())
+    @safe pure
+{
     auto command = Command(
         CommandType.link,
         assocList([assocEntry("flags", flags.value.dup), assocEntry("link_libraries", linkLibraryFlags.value.dup)]),
     );
-    return Target(exeName.value, command, dependencies, implicits);
+    return Target(targetName.value, command, dependencies, implicits);
 }
 
 /**

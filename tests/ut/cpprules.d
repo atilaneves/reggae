@@ -134,7 +134,7 @@ private void shouldEqualLines(string actual, string[] expected,
     }
 
     immutable projectPath = "/path/to/proj";
-    auto target = unityTarget!(ExeName("leapp"),
+    auto target = unityTarget!(TargetName("leapp"),
                                 projectPath,
                                 files,
                                 CompilerFlags("-g -O0"),
@@ -167,7 +167,7 @@ private void shouldEqualLines(string actual, string[] expected,
     }
 
     immutable projectPath = "/path/to/proj";
-    auto target = unityTarget!(ExeName("leapp"),
+    auto target = unityTarget!(TargetName("leapp"),
                                 projectPath,
                                 files,
                                 CompilerFlags("-g -O0"),

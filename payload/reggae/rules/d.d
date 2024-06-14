@@ -363,7 +363,7 @@ Target scriptlike(
         stringImportPaths,
     );
 
-    return link(ExeName(app.exeFileName.value), dependencies ~ linkWith);
+    return link(TargetName(app.exeFileName.value), dependencies ~ linkWith);
 }
 
 
@@ -397,12 +397,12 @@ private auto runDCompiler(in imported!"reggae.options".Options options,
     return depsFile;
 }
 
-Target dlink(in ExeName exeName, Target[] dependencies, in LinkerFlags flags = LinkerFlags()) @safe pure {
+Target dlink(in TargetName targetName, Target[] dependencies, in LinkerFlags flags = LinkerFlags()) @safe pure {
     import reggae.rules.common: link;
     return link(
-        exeName,
+        targetName,
         dependencies,
-        LinkerFlags(flags.value ~ maybeLibFlags(exeName.value))
+        LinkerFlags(flags.value ~ maybeLibFlags(targetName.value))
     );
 }
 

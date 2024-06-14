@@ -11,7 +11,7 @@ import std.file;
 
 @safe:
 
-Target unityBuild(ExeName exeName,
+Target unityBuild(TargetName targetName,
                   alias sourcesFunc,
                   CompilerFlags flags = CompilerFlags(),
                   IncludePaths includes = IncludePaths(),
@@ -22,7 +22,7 @@ Target unityBuild(ExeName exeName,
 
     const srcFiles = sourcesToFileNames!sourcesFunc(options);
 
-    immutable dirName = buildPath(options.workingDir, objDirOf(Target(exeName.value)));
+    immutable dirName = buildPath(options.workingDir, objDirOf(Target(targetName.value)));
     dirName.exists || mkdirRecurse(dirName);
 
     immutable fileName = buildPath(dirName, "unity.cpp");
@@ -32,7 +32,7 @@ Target unityBuild(ExeName exeName,
 
     return unityTarget(
         options,
-        exeName,
+        targetName,
         options.projectPath,
         srcFiles,
         flags,
@@ -70,7 +70,7 @@ string unityFileContents(in string projectPath, in string[] files) pure {
 /**
  Returns the unity build target for these parameters.
  */
-Target unityTarget(ExeName exeName,
+Target unityTarget(TargetName targetName,
                    string projectPath,
                    string[] srcFiles,
                    CompilerFlags flags = CompilerFlags(),
@@ -79,11 +79,11 @@ Target unityTarget(ExeName exeName,
                    alias implicitsFunc = emptyTargets,
     )() {
     import reggae.config: options;
-    return unityTarget(options, exeName, projectPath, srcFiles, flags, includes, dependenciesFunc());
+    return unityTarget(options, targetName, projectPath, srcFiles, flags, includes, dependenciesFunc());
 }
 
 private Target unityTarget(R1, R2)(in imported!"reggae.options".Options options,
-                                   in ExeName exeName,
+                                   in TargetName targetName,
                                    in string projectPath,
                                    in string[] srcFiles,
                                    in CompilerFlags flags = CompilerFlags(),
@@ -98,10 +98,10 @@ private Target unityTarget(R1, R2)(in imported!"reggae.options".Options options,
     import std.algorithm;
 
     auto justFileName = srcFiles.map!getLanguage.front == Language.C ? "unity.c" : "unity.cpp";
-    auto unityFileName = buildPath(gBuilddir, objDirOf(Target(exeName.value)), justFileName);
+    auto unityFileName = buildPath(gBuilddir, objDirOf(Target(targetName.value)), justFileName);
     auto unityFileTarget = Target.phony(unityFileName, "", [], srcFiles.map!(a => Target(a)).array);
     auto incompleteTarget = Target(
-        exeName.value,
+        targetName.value,
         "", // filled in below by compileTarget
         unityFileTarget ~ dependencies.array,
     );

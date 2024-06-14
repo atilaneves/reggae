@@ -53,7 +53,7 @@ imported!"reggae.build".Target dubDependant(
     import reggae.rules.dub: oneOptionalOf, isOfType;
     import reggae.rules.d: dlink;
     import reggae.rules.common: objectFiles;
-    import reggae.types: ExeName, CompilerFlags, LinkerFlags, ImportPaths, StringImportPaths;
+    import reggae.types: TargetName, CompilerFlags, LinkerFlags, ImportPaths, StringImportPaths;
     import reggae.config: reggaeOptions = options; // the ones used to run reggae
     import std.meta: Filter;
     import std.algorithm: map, joiner;
@@ -98,8 +98,7 @@ imported!"reggae.build".Target dubDependant(
 
     const targetNameWithExt = withExtension(targetName, targetType);
     return dlink(
-         // FIXME: ExeName doesn't make sense for libraries, conversion TargetName -> ExeName is silly
-        ExeName(targetNameWithExt),
+        TargetName(targetNameWithExt),
         objs ~ dubDepsObjs,
         linkerFlags,
     );

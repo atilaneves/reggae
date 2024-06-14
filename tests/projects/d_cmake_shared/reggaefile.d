@@ -14,7 +14,7 @@ Build reggaeBuild() {
         enum flags = LinkerFlags(`-L-L.reggae -L-rpath="\$ORIGIN/.reggae" -L-lCalculatorShared`);
     }
 
-    auto dlangExeTarget = link(ExeName("dcpp"), dlangObjects!(Sources!"source"),
+    auto dlangExeTarget = link(TargetName("dcpp"), dlangObjects!(Sources!"source"),
                                flags, cmakeTargets);
 
     return Build(dlangExeTarget);

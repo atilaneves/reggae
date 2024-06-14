@@ -290,7 +290,7 @@ unittest {
                     CompilerFlags("-g"),
                     ImportPaths(["src"]),
                 );
-                alias app = link!(ExeName("app"), testObjs);
+                alias app = link!(TargetName("app"), testObjs);
                 mixin build!app;
             }
         );

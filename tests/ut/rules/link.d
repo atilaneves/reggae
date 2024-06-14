@@ -9,11 +9,11 @@ import unit_threaded;
 @("shell commands") unittest {
     import reggae.config: gDefaultOptions, dCompiler;
 
-    auto objTarget = link(ExeName("myapp"), [Target("foo.o"), Target("bar.o")], LinkerFlags("-L-L"));
+    auto objTarget = link(TargetName("myapp"), [Target("foo.o"), Target("bar.o")], LinkerFlags("-L-L"));
     objTarget.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
         dCompiler ~ " -ofmyapp -L-L " ~ buildPath("/path/to/foo.o") ~ " " ~ buildPath("/path/to/bar.o"));
 
-    auto cppTarget = link(ExeName("cppapp"), [Target("foo.o", "", Target("foo.cpp"))], LinkerFlags("--sillyflag"));
+    auto cppTarget = link(TargetName("cppapp"), [Target("foo.o", "", Target("foo.cpp"))], LinkerFlags("--sillyflag"));
     //since foo.o is not a leaf target, the path should not appear (it's created in the build dir)
     version(Windows)
         enum expectedCpp = "cl.exe /nologo /Fecppapp --sillyflag foo.o";
@@ -21,7 +21,7 @@ import unit_threaded;
         enum expectedCpp = "g++ --sillyflag foo.o -o cppapp";
     cppTarget.shellCommand(gDefaultOptions.withProjectPath("/foo/bar")).shouldEqual(expectedCpp);
 
-    auto cTarget = link(ExeName("capp"), [Target("bar.o", "", Target("bar.c"))]);
+    auto cTarget = link(TargetName("capp"), [Target("bar.o", "", Target("bar.c"))]);
     //since foo.o is not a leaf target, the path should not appear (it's created in the build dir)
     version(Windows)
         enum expectedC = "cl.exe /nologo /Fecapp bar.o";
@@ -34,7 +34,7 @@ import unit_threaded;
 @("include flags in project dir") unittest {
     auto obj = objectFile(Options(), SourceFile("src/foo.c"),
                           CompilerFlags("-include $project/includes/header.h"));
-    auto app = link(ExeName("app"), [obj]);
+    auto app = link(TargetName("app"), [obj]);
     auto bld = Build(app);
     import reggae.config: gDefaultOptions;
     enum objPath = buildPath(".reggae/objs/app.objs/src/foo" ~ objExt);
@@ -50,7 +50,7 @@ import unit_threaded;
 
 @("template link") unittest {
     string[] flags;
-    link!(ExeName("app"), () => [Target("foo.o"), Target("bar.o")]).shouldEqual(
+    link!(TargetName("app"), () => [Target("foo.o"), Target("bar.o")]).shouldEqual(
         Target("app",
                Command(CommandType.link, assocListT("flags", flags, "link_libraries", flags)),
                [Target("foo.o"), Target("bar.o")]));

@@ -290,7 +290,7 @@ private Target callTargetFunc(in imported!"reggae.options".Options options,
     return scriptlike(options,
                       projectPath,
                       app,
-                      const Flags(strings(json, "flags")),
+                      const CompilerFlags(strings(json, "flags")),
                       const ImportPaths(strings(json, "includes")),
                       const StringImportPaths(strings(json, "string_imports")),
                       getDeps(options, projectPath, json["link_with"]));

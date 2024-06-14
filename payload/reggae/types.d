@@ -34,28 +34,6 @@ struct App {
     }
 }
 
-
-struct Flags {
-    string[] value;
-
-    this(string value) @trusted pure {
-        import std.array: split;
-        this.value = value.split;
-    }
-
-    this(inout(string)[] values) inout @safe @nogc pure nothrow {
-        value = values;
-    }
-
-    this(inout(CompilerFlags) other) inout @safe @nogc pure nothrow {
-        value = other.value;
-    }
-
-    this(inout(LinkerFlags) other) inout @safe @nogc pure nothrow {
-        value = other.value;
-    }
-}
-
 struct CompilerFlags {
     string[] value;
 
@@ -195,6 +173,24 @@ struct LibraryFlags {
         this.value = values;
     }
 }
+
+struct LibraryPathFlags {
+    string[] value;
+
+    this(string value) @trusted pure {
+        import std.array: split;
+        this.value = value.split;
+    }
+
+    this(string[] values...) @safe pure nothrow {
+        this.value = values.dup;
+    }
+
+    this(inout(string)[] values) inout @safe @nogc pure nothrow {
+        this.value = values;
+    }
+}
+
 
 struct CMakeFlags {
     string value;

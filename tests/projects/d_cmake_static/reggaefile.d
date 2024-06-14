@@ -9,9 +9,9 @@ Build reggaeBuild() {
                                     CMakeFlags("-G Ninja -D CMAKE_BUILD_TYPE=Release"));
 
     version(Windows) {
-        enum flags = Flags(`-L/LIBPATH:.reggae -LCalculatorStatic.lib`);
+        enum flags = LinkerFlags(`-L/LIBPATH:.reggae -LCalculatorStatic.lib`);
     } else {
-        enum flags = Flags(`-L-L.reggae -L-lCalculatorStatic`);
+        enum flags = LinkerFlags(`-L-L.reggae -L-lCalculatorStatic`);
     }
 
     auto dlangExeTarget = link(ExeName("dcpp"), dlangObjects!(Sources!"source"),

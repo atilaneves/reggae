@@ -15,7 +15,7 @@ import unit_threaded;
     import reggae;
     Options defaultOptions;
     defaultOptions.cCompiler = "weirdcc";
-    enum target = objectFile!(SourceFile("foo.c"), Flags("-g -O0"), IncludePaths(["includey", "headers"]));
+    enum target = objectFile!(SourceFile("foo.c"), CompilerFlags("-g -O0"), IncludePaths(["includey", "headers"]));
     auto build = Build(target);
 
     version(Windows)

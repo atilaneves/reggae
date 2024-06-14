@@ -99,7 +99,7 @@ private imported!"reggae.build".Target objectsToTarget(
     import reggae.rules.d: dlink;
     import reggae.rules.common: link, libExt, dynExt;
     import reggae.dub.info: TargetType;
-    import reggae.types: ExeName, Flags;
+    import reggae.types: ExeName, LinkerFlags;
     import std.path: extension;
 
     if(dubInfo.targetType == TargetType.none)
@@ -116,7 +116,7 @@ private imported!"reggae.build".Target objectsToTarget(
         assert(name.extension == dynExt,
                "`" ~ name ~ "` does not have a dynamic library extension`");
 
-    return dlink(ExeName(name), allObjs, const Flags(dubInfo.linkerFlags));
+    return dlink(ExeName(name), allObjs, LinkerFlags(dubInfo.linkerFlags));
 }
 
 private auto dubObjsDir(

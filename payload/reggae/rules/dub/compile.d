@@ -72,12 +72,12 @@ static if(imported!"reggae.config".isDubProject) {
     {
         import reggae.config: configToDubInfo;
         import reggae.rules.common: link;
-        import reggae.types: ExeName, Flags;
+        import reggae.types: ExeName, LinkerFlags;
 
         return link!(
             ExeName(targetName.value),
             objsFunction,
-            Flags(linkerFlags.value ~ configToDubInfo[config.value].linkerFlags)
+            LinkerFlags(linkerFlags.value ~ configToDubInfo[config.value].linkerFlags)
         );
     }
 }

@@ -9,9 +9,9 @@ Build reggaeBuild() {
                                     CMakeFlags("-G Ninja -D CMAKE_BUILD_TYPE=Release"));
 
     version(Windows) {
-        enum flags = Flags(`-L/LIBPATH:.reggae -LCalculatorShared.lib`);
+        enum flags = LinkerFlags(`-L/LIBPATH:.reggae -LCalculatorShared.lib`);
     } else {
-        enum flags = Flags(`-L-L.reggae -L-rpath="\$ORIGIN/.reggae" -L-lCalculatorShared`);
+        enum flags = LinkerFlags(`-L-L.reggae -L-rpath="\$ORIGIN/.reggae" -L-lCalculatorShared`);
     }
 
     auto dlangExeTarget = link(ExeName("dcpp"), dlangObjects!(Sources!"source"),

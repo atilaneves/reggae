@@ -169,7 +169,7 @@ Target[] dlangObjectFilesPerModule(
     return srcFiles
         .map!(a => objectFile(options,
                               const SourceFile(a),
-                              const Flags(flags),
+                              const CompilerFlags(flags),
                               const ImportPaths(importPaths),
                               const StringImportPaths(stringImportPaths),
                               implicits,
@@ -313,7 +313,7 @@ private Target[] dlangTargetTogether(
  )
  */
 Target scriptlike(App app,
-                  Flags flags = Flags(),
+                  CompilerFlags flags = CompilerFlags(),
                   ImportPaths importPaths = ImportPaths(),
                   StringImportPaths stringImportPaths = StringImportPaths(),
                   alias linkWithFunction = imported!"reggae.rules.common".emptyTargets)
@@ -331,7 +331,7 @@ Target scriptlike(App app,
 Target scriptlike(
     in imported!"reggae.options".Options options,
     in string projectPath,
-    in App app, in Flags flags,
+    in App app, in CompilerFlags flags,
     in ImportPaths importPaths,
     in StringImportPaths stringImportPaths,
     Target[] linkWith)
@@ -397,12 +397,12 @@ private auto runDCompiler(in imported!"reggae.options".Options options,
     return depsFile;
 }
 
-Target dlink(in ExeName exeName, Target[] dependencies, in Flags flags = Flags()) @safe pure {
+Target dlink(in ExeName exeName, Target[] dependencies, in LinkerFlags flags = LinkerFlags()) @safe pure {
     import reggae.rules.common: link;
     return link(
         exeName,
         dependencies,
-        Flags(flags.value ~ maybeLibFlags(exeName.value))
+        LinkerFlags(flags.value ~ maybeLibFlags(exeName.value))
     );
 }
 

@@ -9,11 +9,11 @@ import unit_threaded;
 @("shell commands") unittest {
     import reggae.config: gDefaultOptions, dCompiler;
 
-    auto objTarget = link(ExeName("myapp"), [Target("foo.o"), Target("bar.o")], Flags("-L-L"));
+    auto objTarget = link(ExeName("myapp"), [Target("foo.o"), Target("bar.o")], LinkerFlags("-L-L"));
     objTarget.shellCommand(gDefaultOptions.withProjectPath("/path/to")).shouldEqual(
         dCompiler ~ " -ofmyapp -L-L " ~ buildPath("/path/to/foo.o") ~ " " ~ buildPath("/path/to/bar.o"));
 
-    auto cppTarget = link(ExeName("cppapp"), [Target("foo.o", "", Target("foo.cpp"))], Flags("--sillyflag"));
+    auto cppTarget = link(ExeName("cppapp"), [Target("foo.o", "", Target("foo.cpp"))], LinkerFlags("--sillyflag"));
     //since foo.o is not a leaf target, the path should not appear (it's created in the build dir)
     version(Windows)
         enum expectedCpp = "cl.exe /nologo /Fecppapp --sillyflag foo.o";
@@ -33,7 +33,7 @@ import unit_threaded;
 
 @("include flags in project dir") unittest {
     auto obj = objectFile(Options(), SourceFile("src/foo.c"),
-                          Flags("-include $project/includes/header.h"));
+                          CompilerFlags("-include $project/includes/header.h"));
     auto app = link(ExeName("app"), [obj]);
     auto bld = Build(app);
     import reggae.config: gDefaultOptions;

@@ -67,7 +67,7 @@ unittest {
                       alias mylib = staticLibrary!(
                           "mylib",
                           Sources!("src"),
-                          Flags(),
+                          CompilerFlags(),
                           ImportPaths(["include"]),
                       );
                       mixin build!mylib;
@@ -287,7 +287,7 @@ unittest {
                 import reggae;
                 alias testObjs = objectFiles!(
                     Sources!(["src"], Files(["test.d"])),
-                    Flags("-g"),
+                    CompilerFlags("-g"),
                     ImportPaths(["src"]),
                 );
                 alias app = link!(ExeName("app"), testObjs);

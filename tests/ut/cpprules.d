@@ -20,7 +20,7 @@ import unit_threaded;
 
 
 @("Include paths") unittest {
-    auto build = Build(objectFile(Options(), SourceFile("path/to/src/foo.cpp"), Flags(""),
+    auto build = Build(objectFile(Options(), SourceFile("path/to/src/foo.cpp"), CompilerFlags(""),
                                    IncludePaths(["path/to/src", "other/path"])));
     auto ninja = Ninja(build, "/tmp/myproject");
     enum objPath = buildPath("path/to/src/foo" ~ objExt);
@@ -31,8 +31,8 @@ import unit_threaded;
 }
 
 
-@("Flags compile C") unittest {
-    auto build = Build(objectFile(Options(), SourceFile("path/to/src/foo.c"), Flags("-m64 -fPIC -O3")));
+@("CompilerFlags compile C") unittest {
+    auto build = Build(objectFile(Options(), SourceFile("path/to/src/foo.c"), CompilerFlags("-m64 -fPIC -O3")));
     auto ninja = Ninja(build, "/tmp/myproject");
     enum objPath = buildPath("path/to/src/foo" ~ objExt);
     ninja.buildEntries.shouldEqual(
@@ -41,8 +41,8 @@ import unit_threaded;
             ]);
 }
 
-@("Flags compile C++") unittest {
-    auto build = Build(objectFile(Options(), SourceFile("path/to/src/foo.cpp"), Flags("-m64 -fPIC -O3")));
+@("CompilerFlags compile C++") unittest {
+    auto build = Build(objectFile(Options(), SourceFile("path/to/src/foo.cpp"), CompilerFlags("-m64 -fPIC -O3")));
     auto ninja = Ninja(build, "/tmp/myproject");
     enum objPath = buildPath("path/to/src/foo" ~ objExt);
     ninja.buildEntries.shouldEqual(
@@ -53,7 +53,7 @@ import unit_threaded;
 
 @("C++ compile") unittest {
     auto mathsObj = objectFile(Options(), SourceFile("src/cpp/maths.cpp"),
-                                Flags("-m64 -fPIC -O3"),
+                                CompilerFlags("-m64 -fPIC -O3"),
                                 IncludePaths(["headers"]));
 
     version(Windows) {
@@ -70,7 +70,7 @@ import unit_threaded;
 
 @("C compile") unittest {
     auto mathsObj = objectFile(Options(), SourceFile("src/c/maths.c"),
-                                Flags("-m64 -fPIC -O3"),
+                                CompilerFlags("-m64 -fPIC -O3"),
                                 IncludePaths(["headers"]));
 
     version(Windows) {
@@ -137,7 +137,7 @@ private void shouldEqualLines(string actual, string[] expected,
     auto target = unityTarget!(ExeName("leapp"),
                                 projectPath,
                                 files,
-                                Flags("-g -O0"),
+                                CompilerFlags("-g -O0"),
                                 IncludePaths(["headers"]),
                                 dependencies);
     target.rawOutputs.shouldEqual(["leapp"]);
@@ -170,7 +170,7 @@ private void shouldEqualLines(string actual, string[] expected,
     auto target = unityTarget!(ExeName("leapp"),
                                 projectPath,
                                 files,
-                                Flags("-g -O0"),
+                                CompilerFlags("-g -O0"),
                                 IncludePaths(["headers"]),
                                 dependencies);
     target.rawOutputs.shouldEqual(["leapp"]);

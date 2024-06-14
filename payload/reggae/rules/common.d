@@ -125,9 +125,9 @@ Target objectFile(
         options,
         incompleteTarget,
         srcFile.value,
-        flags.value,
-        includePaths.value,
-        stringImportPaths.value,
+        flags,
+        includePaths,
+        stringImportPaths,
         projDir
     );
 }
@@ -531,7 +531,7 @@ private Target[] srcFilesToObjectTargets(
     auto otherSrcs = srcFiles.filter!(a => a.getLanguage != Language.D && a.getLanguage != Language.unknown);
     import reggae.rules.d: dlangObjectFiles;
     return
-        dlangObjectFiles(options, dSrcs, flags.value, ["."] ~ includes.value, stringImports.value) ~
+        dlangObjectFiles(options, dSrcs, flags, ImportPaths(["."] ~ includes.value), stringImports) ~
         otherSrcs.map!(a => objectFile(options, SourceFile(a), flags, includes)).array;
 }
 
@@ -580,9 +580,9 @@ string removeProjectPath(in string projectPath, const string path) @safe pure {
 version(unittest) {
     public Command compileCommand(
         in string srcFileName,
-        in string[] flags = [],
-        in string[] includePaths = [],
-        in string[] stringImportPaths = [],
+        in CompilerFlags flags = CompilerFlags(),
+        in ImportPaths includePaths = ImportPaths(),
+        in StringImportPaths stringImportPaths = StringImportPaths(),
         in string projDir = "$project",
         Flag!"justCompile" justCompile = Yes.justCompile)
         @safe pure
@@ -591,19 +591,20 @@ version(unittest) {
     }
 }
 
-// The reason this is needed is to have one and only one API for creating
-// a compilation target. Not all code goes through `objectFile` above, because
-// for D compilation can happen all-at-once, per-package, or per-module. We want
-// to add the compiler binary to the list of implicit dependencies, so this function
-// takes a target that wants to add a compilation command to it, and we also add
-// the compiler to the implicit dependencies.
+// The reason this is needed is to have one and only one API for
+// creating a compilation target. Not all code goes through
+// `objectFile` above, because for D compilation can happen
+// all-at-once, per-package, or per-module. We want to add the
+// compiler binary to the list of implicit dependencies, so this
+// function takes a target that wants to add a compilation command to
+// it, and we also add the compiler to the implicit dependencies.
 package Target compileTarget(
     in imported!"reggae.options".Options options,
     Target target,
     in string srcFileName,
-    in string[] flags = [],
-    in string[] includePaths = [],
-    in string[] stringImportPaths = [],
+    in CompilerFlags flags = CompilerFlags(),
+    in ImportPaths includePaths = ImportPaths(),
+    in StringImportPaths stringImportPaths = StringImportPaths(),
     in string projDir = "$project",
     Flag!"justCompile" justCompile = Yes.justCompile)
     @safe pure
@@ -626,9 +627,9 @@ package Target compileTarget(
 
 private Command compileCommandImpl(
     in string srcFileName,
-    in string[] flags = [],
-    in string[] includePaths = [],
-    in string[] stringImportPaths = [],
+    in CompilerFlags flags = CompilerFlags(),
+    in ImportPaths includePaths = ImportPaths(),
+    in StringImportPaths stringImportPaths = StringImportPaths(),
     in string projDir = "$project",
     Flag!"justCompile" justCompile = Yes.justCompile)
     @safe pure
@@ -639,16 +640,19 @@ private Command compileCommandImpl(
     }
 
     auto includeParams = includePaths
+        .value
         .map!(a => "-I" ~ maybeExpand(a))
         .array;
 
     auto params = [
         assocEntry("includes", includeParams.dup),
-        assocEntry("flags", flags.dup),
+        assocEntry("flags", flags.value.dup),
     ];
 
-    params ~= assocEntry("stringImports",
-                         stringImportPaths.map!(a => "-J" ~ maybeExpand(a)).array.dup);
+    params ~= assocEntry(
+        "stringImports",
+        stringImportPaths.value.map!(a => "-J" ~ maybeExpand(a)).array.dup
+    );
 
     params ~= assocEntry("DEPFILE", [srcFileName.objFileName ~ ".dep"]);
 

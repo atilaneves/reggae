@@ -1,4 +1,3 @@
-
 /**
 High-level rules for compiling D files. For a D-only application with
 no dub dependencies, $(D scriptlike) should suffice. If the app depends
@@ -29,9 +28,9 @@ Target[] dlangObjects(
     return dlangObjectFiles(
         options,
         sourcesToFileNames!sourcesFunc(options),
-        compilerFlags.value,
-        importPaths.value,
-        stringImportPaths.value,
+        compilerFlags,
+        importPaths,
+        stringImportPaths,
         [], // implicits
         projectDir.value,
     );
@@ -49,9 +48,9 @@ Target[] dlangObjectsPerPackage(
 {
     return dlangObjectFilesPerPackage(
         sourcesToFileNames!sourcesFunc,
-        compilerFlags.value,
-        importPaths.value,
-        stringImportPaths.value,
+        compilerFlags,
+        importPaths,
+        stringImportPaths,
         [], // implicits
         projectDir.value,
     );
@@ -68,9 +67,9 @@ Target[] dlangObjectsPerModule(
 {
     return dlangObjectFilesPerModule(
         sourcesToFileNames!sourcesFunc,
-        compilerFlags.value,
-        importPaths.value,
-        stringImportPaths.value,
+        compilerFlags,
+        importPaths,
+        stringImportPaths,
         [], // implicits
         projectDir.value,
     );
@@ -84,9 +83,9 @@ Target[] dlangObjectsPerModule(
 Target[] dlangObjectFiles(
     in imported!"reggae.options".Options options,
     in string[] srcFiles,
-    in string[] flags = [],
-    in string[] importPaths = [],
-    in string[] stringImportPaths = [],
+    in CompilerFlags flags = CompilerFlags(),
+    in ImportPaths importPaths = ImportPaths(),
+    in StringImportPaths stringImportPaths = StringImportPaths(),
     Target[] implicits = [],
     in string projDir = "$project")
     @safe pure
@@ -114,9 +113,9 @@ auto dlangObjectFilesFunc(in imported!"reggae.options".Options options) @safe pu
 Target[] dlangObjectFilesPerPackage(
     in imported!"reggae.options".Options options,
     in string[] srcFiles,
-    in string[] flags = [],
-    in string[] importPaths = [],
-    in string[] stringImportPaths = [],
+    in CompilerFlags flags = CompilerFlags(),
+    in ImportPaths importPaths = ImportPaths(),
+    in StringImportPaths stringImportPaths = StringImportPaths(),
     Target[] implicits = [],
     in string projDir = "$project")
     @safe pure
@@ -159,9 +158,9 @@ Target[] dlangObjectFilesPerPackage(
 Target[] dlangObjectFilesPerModule(
     in imported!"reggae.options".Options options,
     in string[] srcFiles,
-    in string[] flags = [],
-    in string[] importPaths = [],
-    in string[] stringImportPaths = [],
+    in CompilerFlags flags = CompilerFlags(),
+    in ImportPaths importPaths = ImportPaths(),
+    in StringImportPaths stringImportPaths = StringImportPaths(),
     Target[] implicits = [],
     in string projDir = "$project")
     @trusted /*TODO: std.array.array*/ pure
@@ -169,9 +168,9 @@ Target[] dlangObjectFilesPerModule(
     return srcFiles
         .map!(a => objectFile(options,
                               const SourceFile(a),
-                              const CompilerFlags(flags),
-                              const ImportPaths(importPaths),
-                              const StringImportPaths(stringImportPaths),
+                              flags,
+                              importPaths,
+                              stringImportPaths,
                               implicits,
                               projDir))
         .array;
@@ -181,9 +180,9 @@ Target[] dlangObjectFilesPerModule(
 Target[] dlangObjectFilesTogether(
     in imported!"reggae.options".Options options,
     in string[] srcFiles,
-    in string[] flags = [],
-    in string[] importPaths = [],
-    in string[] stringImportPaths = [],
+    in CompilerFlags flags = CompilerFlags(),
+    in ImportPaths importPaths = ImportPaths(),
+    in StringImportPaths stringImportPaths = StringImportPaths(),
     Target[] implicits = [],
     in string projDir = "$project")
     @safe pure
@@ -210,9 +209,9 @@ Target[] dlangObjectFilesTogether(
 Target[] dlangStaticLibraryTogether(
     in imported!"reggae.options".Options options,
     in string[] srcFiles,
-    in string[] flags = [],
-    in string[] importPaths = [],
-    in string[] stringImportPaths = [],
+    in CompilerFlags flags = CompilerFlags(),
+    in ImportPaths importPaths = ImportPaths(),
+    in StringImportPaths stringImportPaths = StringImportPaths(),
     Target[] implicits = [],
     in string projDir = "$project")
     @safe pure
@@ -228,7 +227,7 @@ Target[] dlangStaticLibraryTogether(
         options,
         &libFileName,
         srcFiles,
-        libFlags ~ flags,
+        const CompilerFlags(libFlags ~ flags.value),
         importPaths,
         stringImportPaths,
         implicits,
@@ -241,9 +240,9 @@ private Target[] dlangTargetTogether(
     in imported!"reggae.options".Options options,
     string function(in string) @safe pure toFileName,
     in string[] srcFiles,
-    in string[] flags = [],
-    in string[] importPaths = [],
-    in string[] stringImportPaths = [],
+    in CompilerFlags flags = CompilerFlags(),
+    in ImportPaths importPaths = ImportPaths(),
+    in StringImportPaths stringImportPaths = StringImportPaths(),
     Target[] implicits = [],
     in string projDir = "$project",
     )
@@ -358,9 +357,10 @@ Target scriptlike(
     const files = parseDepFile(depsFile);
     auto dependencies = [mainObj] ~ dlangObjectFiles(
         options,
-        files, flags.value,
-        importPaths.value,
-        stringImportPaths.value,
+        files,
+        flags,
+        importPaths,
+        stringImportPaths,
     );
 
     return link(ExeName(app.exeFileName.value), dependencies ~ linkWith);

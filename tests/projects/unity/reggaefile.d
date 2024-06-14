@@ -1,7 +1,7 @@
 module unity.reggaefile;
 
 import reggae;
-alias app = unityBuild!(ExeName(`unity`),
+alias app = unityBuild!(TargetName(`unity`),
                         Sources!([`src`]),
-                        Flags(`-g`));
+                        CompilerFlags(`-g`));
 mixin build!app;

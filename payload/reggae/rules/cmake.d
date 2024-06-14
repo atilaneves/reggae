@@ -92,8 +92,8 @@ private bool isSupportedLanguage(in string lang) {
 }
 
 private struct CompileOptions {
-    import reggae.types : Flags, IncludePaths;
-    Flags compilerFlags;
+    import reggae.types : CompilerFlags, IncludePaths;
+    CompilerFlags compilerFlags;
     IncludePaths includes;
     SourceLanguage language;
 }
@@ -117,7 +117,7 @@ private CompileOptions getCompileOptions(in imported!"std.json".JSONValue target
     }
 
     static CompileOptions getCompileOptionsImpl(in imported!"std.json".JSONValue compileGroup, size_t groupIndex) {
-        import reggae.types : IncludePaths, Flags;
+        import reggae.types : IncludePaths, CompilerFlags;
 
         static CompileOptions[size_t] groupIndexToOptions;
 
@@ -151,7 +151,7 @@ private CompileOptions getCompileOptions(in imported!"std.json".JSONValue target
                                     .map!(incl => incl["path"].str)
                                     .array.IncludePaths;
         }
-        return groupIndexToOptions[groupIndex] = CompileOptions(Flags(defines ~ " " ~ compileCommand),
+        return groupIndexToOptions[groupIndex] = CompileOptions(CompilerFlags(defines ~ " " ~ compileCommand),
                                                                 includes,
                                                                 cast(SourceLanguage) compileGroup["language"].str);
     }
@@ -174,14 +174,14 @@ private bool isHeaderFile(in string file) {
 }
 
 private struct CMakeLinkerFlags {
-    import reggae.types : Flags, LibraryFlags;
-    Flags flags;
+    import reggae.types : LinkerFlags, LibraryFlags, LibraryPathFlags;
+    LinkerFlags flags;
     LibraryFlags libraryFlags;
-    Flags libraryPathFlags;
+    LibraryPathFlags libraryPathFlags;
 }
 
 private CMakeLinkerFlags getLinkerFlags(in imported!"std.json".JSONValue target, ref CMakeInfo cmakeInfo) {
-    import reggae.types : Flags, LibraryFlags;
+    import reggae.types : LinkerFlags, LibraryFlags, LibraryPathFlags;
     import std.array : join;
     import std.algorithm : each;
 
@@ -221,7 +221,7 @@ private CMakeLinkerFlags getLinkerFlags(in imported!"std.json".JSONValue target,
         }
     });
 
-    return CMakeLinkerFlags(Flags(flags), LibraryFlags(libraries), Flags(libraryPath));
+    return CMakeLinkerFlags(LinkerFlags(flags), LibraryFlags(libraries), LibraryPathFlags(libraryPath));
 }
 
 private enum TargetType : string {
@@ -241,7 +241,7 @@ private imported!"reggae.build".Target toReggaeTarget(in imported!"std.json".JSO
     import reggae.config: options;
     import reggae.rules.common : objectFile, link, staticLibraryTarget;
     import reggae.build : Target;
-    import reggae.types : SourceFile, ExeName, Flags;
+    import reggae.types : SourceFile, TargetName, LinkerFlags;
     import std.format : format;
     import std.exception : enforce;
     import std.path : buildNormalizedPath, isAbsolute, baseName, extension;
@@ -312,12 +312,22 @@ private imported!"reggae.build".Target toReggaeTarget(in imported!"std.json".JSO
             } else {
                 enum sharedLibFlag = "-shared";
             }
-            return link(ExeName(reggaeArtifactPath), intermediateTargets, Flags(sharedLibFlag ~ linkAndLibrarySearchPathFlags),
-                        implicits, cmakeLinkerFlags.libraryFlags);
+            return link(
+                TargetName(reggaeArtifactPath),
+                intermediateTargets,
+                LinkerFlags(sharedLibFlag ~ linkAndLibrarySearchPathFlags),
+                implicits,
+                cmakeLinkerFlags.libraryFlags
+            );
 
         case Executable:
-            return link(ExeName(reggaeArtifactPath), intermediateTargets, Flags(linkAndLibrarySearchPathFlags),
-                        implicits, cmakeLinkerFlags.libraryFlags);
+            return link(
+                TargetName(reggaeArtifactPath),
+                intermediateTargets,
+                LinkerFlags(linkAndLibrarySearchPathFlags),
+                implicits,
+                cmakeLinkerFlags.libraryFlags
+            );
 
         case StaticLib:
             return staticLibraryTarget(reggaeArtifactPath, intermediateTargets, implicits);

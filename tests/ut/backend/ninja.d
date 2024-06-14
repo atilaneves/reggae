@@ -10,7 +10,7 @@ import unit_threaded;
 @("Environment variables are properly escaped")
 unittest {
     import std.algorithm: canFind;
-    auto ninja = Ninja(Build(objectFile(Options(), SourceFile("foo.d"), Flags("-I$BLA"))));
+    auto ninja = Ninja(Build(objectFile(Options(), SourceFile("foo.d"), CompilerFlags("-I$BLA"))));
     try
         ninja.buildOutput.canFind("$$BLA").shouldBeTrue;
     catch(UnitTestException ex) {

@@ -64,7 +64,7 @@ string linkJsonString() @safe pure nothrow {
     import reggae.config: options;
     auto mainObj = Target("main.o", "dmd -I$project/src -c $in -of$out", Target("src/main.d"));
     auto mathsObj = Target("maths.o", "dmd -c $in -of$out", Target("src/maths.d"));
-    auto app = link(ExeName("myapp"), [mainObj, mathsObj], Flags("-L-M"));
+    auto app = link(TargetName("myapp"), [mainObj, mathsObj], LinkerFlags("-L-M"));
 
     jsonToBuild(options, "", linkJsonString).shouldEqual(Build(app));
 }
@@ -191,6 +191,6 @@ string targetConcatFixedJsonStr() @safe pure nothrow {
     import reggae.config: options;
     auto mainObj = Target("main.o", "dmd -I$project/src -c $in -of$out", Target("src/main.d"));
     auto mathsObj = Target("maths.o", "dmd -c $in -of$out", Target("src/maths.d"));
-    auto app = link(ExeName("myapp"), [mainObj, mathsObj], Flags("-L-M"));
+    auto app = link(TargetName("myapp"), [mainObj, mathsObj], LinkerFlags("-L-M"));
     jsonToBuild(options, "", targetConcatFixedJsonStr).shouldEqual(Build(app));
 }

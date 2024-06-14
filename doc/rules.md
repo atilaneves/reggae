@@ -102,10 +102,10 @@ Generates an executable or shared object / dynamic library.
 ### D
 
 ```d
-Target link(ExeName exeName, alias dependenciesFunc, Flags flags = Flags())
+Target link(TargetName targetName, alias dependenciesFunc, Flags flags = Flags())
 ```
 
-* `exeName`: The name of the executable.
+* `targetName`: The name of the executable.
 * `dependenciesFunc`: A function that, at runtime, returns an array of `Target` structs to link to
 * `flags`: Linker flags.
 
@@ -210,7 +210,7 @@ The binary is compiled as one translation unit by compiling a C/C++ file that
 ### D
 
 ```d
-Target unityBuild(ExeName exeName,
+Target unityBuild(TargetName targetName,
                   alias sourcesFunc,
                   Flags flags = Flags(),
                   IncludePaths includes = IncludePaths(),
@@ -218,7 +218,7 @@ Target unityBuild(ExeName exeName,
                   alias implicitsFunc = emptyTargets)();
 ```
 
-* `exeName`: Same as in `scriptlike`
+* `targetName`: Same as in `scriptlike`
 * `sourcesFunc`: Same as in `objectFiles`.
 * `flags`: Compiler flags.
 * `includes`: Include paths.

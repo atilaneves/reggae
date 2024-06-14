@@ -26,7 +26,7 @@ import std.typecons;
  a filter function to select those files that are actually wanted.
  */
 Target[] objectFiles(alias sourcesFunc = Sources!(),
-                     Flags flags = Flags(),
+                     CompilerFlags flags = CompilerFlags(),
                      ImportPaths includes = ImportPaths(),
                      StringImportPaths stringImports = StringImportPaths(),
     )() @trusted {
@@ -39,7 +39,7 @@ Target[] objectFiles(alias sourcesFunc = Sources!(),
 /// ditto
 Target[] objectFiles
     (alias sourcesFunc = Sources!())
-    (in Flags flags = Flags(),
+    (in CompilerFlags flags = CompilerFlags(),
      in ImportPaths includes = ImportPaths(),
      in StringImportPaths stringImports = StringImportPaths(),
     ) {
@@ -59,7 +59,7 @@ Target[] objectFiles
  source tree).
 */
 Target objectFile(SourceFile srcFile,
-                  Flags flags = Flags(),
+                  CompilerFlags flags = CompilerFlags(),
                   ImportPaths includePaths = ImportPaths(),
                   StringImportPaths stringImportPaths = StringImportPaths(),
                   Target[] implicits = [],
@@ -106,7 +106,7 @@ Target objectFile(SourceFile srcFile,
 Target objectFile(
     in imported!"reggae.options".Options options,
     in SourceFile srcFile,
-    in Flags flags = Flags(),
+    in CompilerFlags flags = CompilerFlags(),
     in ImportPaths includePaths = ImportPaths(),
     in StringImportPaths stringImportPaths = StringImportPaths(),
     Target[] implicits = [],
@@ -125,9 +125,9 @@ Target objectFile(
         options,
         incompleteTarget,
         srcFile.value,
-        flags.value,
-        includePaths.value,
-        stringImportPaths.value,
+        flags,
+        includePaths,
+        stringImportPaths,
         projDir
     );
 }
@@ -155,13 +155,15 @@ private Target[] compilerBinary(in imported!"reggae.options".Options options, in
  */
 Target executable(ExeName exeName,
                   alias sourcesFunc = Sources!(),
-                  Flags compilerFlags = Flags(),
+                  CompilerFlags compilerFlags = CompilerFlags(),
                   ImportPaths includes = ImportPaths(),
                   StringImportPaths stringImports = StringImportPaths(),
-                  Flags linkerFlags = Flags())
-    () {
+                  LinkerFlags linkerFlags = LinkerFlags())
+    ()
+{
+    import reggae.types: TargetName;
     auto objs = objectFiles!(sourcesFunc, compilerFlags, includes, stringImports);
-    return link!(exeName, { return objs; }, linkerFlags);
+    return link!(TargetName(exeName.value), { return objs; }, linkerFlags);
 }
 
 Target executable(in imported!"reggae.options".Options options,
@@ -188,7 +190,7 @@ Target executable(in imported!"reggae.options".Options options,
         includes,
         stringImports
     );
-    return link(ExeName(name), objs, const Flags(linkerFlags));
+    return link(TargetName(name), objs, const LinkerFlags(linkerFlags));
 }
 
 
@@ -202,9 +204,9 @@ Target executable(in imported!"reggae.options".Options options,
  If any D files are found, the linker is the D compiler, and so on with
  C++ and C. If none of those apply, the D compiler is used.
  */
-Target link(ExeName exeName, alias dependenciesFunc, Flags flags = Flags())() {
+Target link(TargetName targetName, alias dependenciesFunc, LinkerFlags flags = LinkerFlags())() {
     auto dependencies = dependenciesFunc();
-    return link(exeName, dependencies, flags);
+    return link(targetName, dependencies, flags);
 }
 
 /**
@@ -214,22 +216,31 @@ Target link(ExeName exeName, alias dependenciesFunc, Flags flags = Flags())() {
  If any D files are found, the linker is the D compiler, and so on with
  C++ and C. If none of those apply, the D compiler is used.
  */
-Target link(in ExeName exeName, Target[] dependencies, in Flags flags = Flags(),
-            in LibraryFlags linkLibraryFlags = LibraryFlags()) @safe pure {
+Target link(in TargetName targetName,
+            Target[] dependencies,
+            in LinkerFlags flags = LinkerFlags(),
+            in LibraryFlags linkLibraryFlags = LibraryFlags())
+    @safe pure
+{
     auto command = Command(
         CommandType.link,
         assocList([assocEntry("flags", flags.value.dup), assocEntry("link_libraries", linkLibraryFlags.value.dup)]),
     );
-    return Target(exeName.value, command, dependencies);
+    return Target(targetName.value, command, dependencies);
 }
 
-Target link(const ExeName exeName, Target[] dependencies, in Flags flags, Target[] implicits,
-            in LibraryFlags linkLibraryFlags = LibraryFlags()) @safe pure {
+Target link(const TargetName targetName,
+            Target[] dependencies,
+            in LinkerFlags flags,
+            Target[] implicits,
+            in LibraryFlags linkLibraryFlags = LibraryFlags())
+    @safe pure
+{
     auto command = Command(
         CommandType.link,
         assocList([assocEntry("flags", flags.value.dup), assocEntry("link_libraries", linkLibraryFlags.value.dup)]),
     );
-    return Target(exeName.value, command, dependencies, implicits);
+    return Target(targetName.value, command, dependencies, implicits);
 }
 
 /**
@@ -237,7 +248,7 @@ Target link(const ExeName exeName, Target[] dependencies, in Flags flags, Target
  */
 Target staticLibrary(string name,
                      alias sourcesFunc = Sources!(),
-                     Flags compilerFlags = Flags(),
+                     CompilerFlags compilerFlags = CompilerFlags(),
                      ImportPaths includes = ImportPaths(),
                      StringImportPaths stringImports = StringImportPaths(),
                      alias dependenciesFunc = emptyTargets)
@@ -451,7 +462,7 @@ Target[] objectFiles(
     return srcFilesToObjectTargets(
         options,
         sourcesToFileNames(projectPath, srcDirs, excDirs, srcFiles, excFiles),
-        const Flags(flags),
+        const CompilerFlags(flags),
         const ImportPaths(includes),
         const StringImportPaths(stringImports)
     );
@@ -523,7 +534,7 @@ private string staticLibraryShellCommand() @safe {
 private Target[] srcFilesToObjectTargets(
     in imported!"reggae.options".Options options,
     in string[] srcFiles,
-    in Flags flags,
+    in CompilerFlags flags,
     in ImportPaths includes,
     in StringImportPaths stringImports) {
 
@@ -531,7 +542,7 @@ private Target[] srcFilesToObjectTargets(
     auto otherSrcs = srcFiles.filter!(a => a.getLanguage != Language.D && a.getLanguage != Language.unknown);
     import reggae.rules.d: dlangObjectFiles;
     return
-        dlangObjectFiles(options, dSrcs, flags.value, ["."] ~ includes.value, stringImports.value) ~
+        dlangObjectFiles(options, dSrcs, flags, ImportPaths(["."] ~ includes.value), stringImports) ~
         otherSrcs.map!(a => objectFile(options, SourceFile(a), flags, includes)).array;
 }
 
@@ -580,9 +591,9 @@ string removeProjectPath(in string projectPath, const string path) @safe pure {
 version(unittest) {
     public Command compileCommand(
         in string srcFileName,
-        in string[] flags = [],
-        in string[] includePaths = [],
-        in string[] stringImportPaths = [],
+        in CompilerFlags flags = CompilerFlags(),
+        in ImportPaths includePaths = ImportPaths(),
+        in StringImportPaths stringImportPaths = StringImportPaths(),
         in string projDir = "$project",
         Flag!"justCompile" justCompile = Yes.justCompile)
         @safe pure
@@ -591,19 +602,20 @@ version(unittest) {
     }
 }
 
-// The reason this is needed is to have one and only one API for creating
-// a compilation target. Not all code goes through `objectFile` above, because
-// for D compilation can happen all-at-once, per-package, or per-module. We want
-// to add the compiler binary to the list of implicit dependencies, so this function
-// takes a target that wants to add a compilation command to it, and we also add
-// the compiler to the implicit dependencies.
+// The reason this is needed is to have one and only one API for
+// creating a compilation target. Not all code goes through
+// `objectFile` above, because for D compilation can happen
+// all-at-once, per-package, or per-module. We want to add the
+// compiler binary to the list of implicit dependencies, so this
+// function takes a target that wants to add a compilation command to
+// it, and we also add the compiler to the implicit dependencies.
 package Target compileTarget(
     in imported!"reggae.options".Options options,
     Target target,
     in string srcFileName,
-    in string[] flags = [],
-    in string[] includePaths = [],
-    in string[] stringImportPaths = [],
+    in CompilerFlags flags = CompilerFlags(),
+    in ImportPaths includePaths = ImportPaths(),
+    in StringImportPaths stringImportPaths = StringImportPaths(),
     in string projDir = "$project",
     Flag!"justCompile" justCompile = Yes.justCompile)
     @safe pure
@@ -626,9 +638,9 @@ package Target compileTarget(
 
 private Command compileCommandImpl(
     in string srcFileName,
-    in string[] flags = [],
-    in string[] includePaths = [],
-    in string[] stringImportPaths = [],
+    in CompilerFlags flags = CompilerFlags(),
+    in ImportPaths includePaths = ImportPaths(),
+    in StringImportPaths stringImportPaths = StringImportPaths(),
     in string projDir = "$project",
     Flag!"justCompile" justCompile = Yes.justCompile)
     @safe pure
@@ -639,16 +651,19 @@ private Command compileCommandImpl(
     }
 
     auto includeParams = includePaths
+        .value
         .map!(a => "-I" ~ maybeExpand(a))
         .array;
 
     auto params = [
         assocEntry("includes", includeParams.dup),
-        assocEntry("flags", flags.dup),
+        assocEntry("flags", flags.value.dup),
     ];
 
-    params ~= assocEntry("stringImports",
-                         stringImportPaths.map!(a => "-J" ~ maybeExpand(a)).array.dup);
+    params ~= assocEntry(
+        "stringImports",
+        stringImportPaths.value.map!(a => "-J" ~ maybeExpand(a)).array.dup
+    );
 
     params ~= assocEntry("DEPFILE", [srcFileName.objFileName ~ ".dep"]);
 

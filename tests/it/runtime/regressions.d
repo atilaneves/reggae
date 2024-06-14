@@ -36,7 +36,7 @@ version(Posix) {
                 import reggae;
                 alias app = scriptlike!(App(SourceFileName("main.d"),
                                             BinaryFileName("$builddir/myapp")),
-                                            Flags(),
+                                            CompilerFlags(),
                                             ImportPaths(["/path/to/imports"])
                         );
                 alias code_gen = target!("out.c", "./myapp $in $out", target!"in.txt", app);

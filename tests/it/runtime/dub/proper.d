@@ -483,7 +483,7 @@ unittest {
                       import reggae;
                       alias lib = dubBuild!(Configuration("library"));
                       enum mainObj = objectFile!(SourceFile("source/main.d"));
-                      alias exe = link!(ExeName("d++"), targetConcat!(lib, mainObj));
+                      alias exe = link!(TargetName("d++"), targetConcat!(lib, mainObj));
                       mixin build!(exe);
                   });
 
@@ -522,7 +522,7 @@ unittest {
                       import reggae;
                       alias lib = dubBuild!(Configuration("library"));
                       enum mainObj = objectFile!(SourceFile("source/main.d"));
-                      alias exe = link!(ExeName("d++"), targetConcat!(lib, mainObj));
+                      alias exe = link!(TargetName("d++"), targetConcat!(lib, mainObj));
                       mixin build!(exe);
                   });
 

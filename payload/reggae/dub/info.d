@@ -170,6 +170,7 @@ struct DubInfo {
         @safe pure const
     {
         import reggae.path: deabsolutePath;
+        import reggae.types;
         import std.range: chain, only;
         import std.algorithm: filter, map;
         import std.array: array, replace;
@@ -221,8 +222,24 @@ struct DubInfo {
                 !options.dubDepObjsInsteadOfStaticLib;
 
             return isStaticLibDep
-                ? dlangStaticLibraryTogether(options, srcFiles, allCompilerFlags, importPaths, stringImportPaths, [], projDir)
-                : compileFunc()(options, srcFiles, allCompilerFlags, importPaths, stringImportPaths, [], projDir);
+                ? dlangStaticLibraryTogether(
+                    options,
+                    srcFiles,
+                    const CompilerFlags(allCompilerFlags),
+                    const ImportPaths(importPaths),
+                    const StringImportPaths(stringImportPaths),
+                    [],
+                    projDir
+                )
+                : compileFunc()(
+                    options,
+                    srcFiles,
+                    const CompilerFlags(allCompilerFlags),
+                    const ImportPaths(importPaths),
+                    const StringImportPaths(stringImportPaths),
+                    [],
+                    projDir
+                );
         }();
 
         const dubPkgRoot = buildPath(dubPackage.path).deabsolutePath.stripRight(dirSeparator);

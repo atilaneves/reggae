@@ -50,26 +50,60 @@ imported!"reggae.build".Target dubDependant(
     )
     ()
 {
-    import reggae.rules.dub: oneOptionalOf, isOfType;
-    import reggae.rules.d: dlink;
-    import reggae.rules.common: objectFiles;
-    import reggae.types: TargetName, CompilerFlags, LinkerFlags, ImportPaths, StringImportPaths;
     import reggae.config: reggaeOptions = options; // the ones used to run reggae
-    import std.meta: Filter;
+    return dubDependant!sourcesFunc(reggaeOptions, targetName, targetType, A);
+}
+
+// mostly runtime version
+imported!"reggae.build".Target dubDependant
+    (alias sourcesFunc, A...)
+    (
+        in imported!"reggae.options".Options options,
+        in imported!"reggae.types".TargetName targetName,
+        DubPackageTargetType targetType,
+        // the other arguments can be:
+        // * DubPath
+        // * CompilerFlags
+        // * LinkerFlags
+        // * ImportPaths
+        // * StringImportPaths
+        auto ref A args,
+    )
+{
+    import reggae.rules.common: objectFiles;
+    import reggae.rules.d: dlink;
+    import reggae.types: TargetName, CompilerFlags, LinkerFlags, ImportPaths, StringImportPaths;
     import std.algorithm: map, joiner;
     import std.array: array;
     import std.range: chain;
+    import std.traits: Unqual;
 
-    alias DubPaths = Filter!(isOfType!DubPath, A);
-    static assert(DubPaths.length > 0, "At least one `DubPath` needed");
+    DubPath[] dubPaths;
+    static foreach(arg; args) {
+        static if(is(Unqual!(typeof(arg)) == DubPath))
+            dubPaths ~= arg;
+    }
 
-    enum compilerFlags     = oneOptionalOf!(CompilerFlags, A);
-    enum linkerFlags       = oneOptionalOf!(LinkerFlags, A);
-    enum importPaths       = oneOptionalOf!(ImportPaths, A);
-    enum stringImportPaths = oneOptionalOf!(StringImportPaths, A);
+    template oneOptionalOf(T) {
+        import std.meta: staticIndexOf;
+        enum index = staticIndexOf!(T, A);
+        static if(index == -1) {
+            T oneOptionalOf() {
+                return T();
+            }
+        } else {
+            T oneOptionalOf() {
+                return args[index];
+            }
+        }
+    }
+    const compilerFlags     = oneOptionalOf!CompilerFlags;
+    const linkerFlags       = oneOptionalOf!LinkerFlags;
+    const importPaths       = oneOptionalOf!ImportPaths;
+    const stringImportPaths = oneOptionalOf!StringImportPaths;
 
-    auto dubPathDependencies = [DubPaths]
-        .map!(p => DubPathDependency(reggaeOptions, p))
+    auto dubPathDependencies = dubPaths
+        .map!(p => DubPathDependency(options, p))
         .array
         ;
 
@@ -87,8 +121,8 @@ imported!"reggae.build".Target dubDependant(
 
     auto objs = objectFiles!sourcesFunc(
         compilerFlags,
-        ImportPaths(allImportPaths),
-        StringImportPaths(allStringImportPaths),
+        const ImportPaths(allImportPaths),
+        const StringImportPaths(allStringImportPaths),
     );
 
     auto dubDepsObjs = dubPathDependencies
@@ -97,13 +131,13 @@ imported!"reggae.build".Target dubDependant(
         ;
 
     const targetNameWithExt = withExtension(targetName, targetType);
+
     return dlink(
         TargetName(targetNameWithExt),
         objs ~ dubDepsObjs,
         linkerFlags,
     );
 }
-
 
 private struct DubPathDependency {
     import reggae.options: Options;

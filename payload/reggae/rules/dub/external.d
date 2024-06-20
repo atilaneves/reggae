@@ -50,58 +50,8 @@ imported!"reggae.build".Target dubDependant(
     )
     ()
 {
-    import reggae.rules.dub: oneOptionalOf, isOfType;
-    import reggae.rules.d: dlink;
-    import reggae.rules.common: objectFiles;
-    import reggae.types: TargetName, CompilerFlags, LinkerFlags, ImportPaths, StringImportPaths;
     import reggae.config: reggaeOptions = options; // the ones used to run reggae
-    import std.meta: Filter;
-    import std.algorithm: map, joiner;
-    import std.array: array;
-    import std.range: chain;
-
-    alias DubPaths = Filter!(isOfType!DubPath, A);
-    static assert(DubPaths.length > 0, "At least one `DubPath` needed");
-
-    enum compilerFlags     = oneOptionalOf!(CompilerFlags, A);
-    enum linkerFlags       = oneOptionalOf!(LinkerFlags, A);
-    enum importPaths       = oneOptionalOf!(ImportPaths, A);
-    enum stringImportPaths = oneOptionalOf!(StringImportPaths, A);
-
-    auto dubPathDependencies = [DubPaths]
-        .map!(p => DubPathDependency(reggaeOptions, p))
-        .array
-        ;
-
-    auto allImportPaths = dubPathDependencies
-        .map!(d => d.dubInfo.packages.map!(p => p.importPaths).joiner)
-        .joiner
-        .chain(importPaths.value)
-        ;
-
-    auto allStringImportPaths = dubPathDependencies
-        .map!(d => d.dubInfo.packages.map!(p => p.stringImportPaths).joiner)
-        .joiner
-        .chain(stringImportPaths.value)
-        ;
-
-    auto objs = objectFiles!sourcesFunc(
-        compilerFlags,
-        const ImportPaths(allImportPaths),
-        const StringImportPaths(allStringImportPaths),
-    );
-
-    auto dubDepsObjs = dubPathDependencies
-        .map!(d => d.target)
-        .array
-        ;
-
-    const targetNameWithExt = withExtension(targetName, targetType);
-    return dlink(
-        TargetName(targetNameWithExt),
-        objs ~ dubDepsObjs,
-        linkerFlags,
-    );
+    return dubDependant!sourcesFunc(reggaeOptions, targetName, targetType, A);
 }
 
 // mostly runtime version
@@ -120,7 +70,6 @@ imported!"reggae.build".Target dubDependant
         auto ref A args,
     )
 {
-    //import reggae.rules.dub: oneOptionalOf, isOfType;
     import reggae.rules.common: objectFiles;
     import reggae.rules.d: dlink;
     import reggae.types: TargetName, CompilerFlags, LinkerFlags, ImportPaths, StringImportPaths;

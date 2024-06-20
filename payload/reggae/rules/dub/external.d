@@ -186,11 +186,10 @@ private struct DubPathDependency {
         import std.process: execute;
         import std.conv: text;
 
-        const simpleVersion = dubVersion.version_[1..$]; // remove the leading 'v'
-        const path = buildPath(dubPkgsDir, dubVersion.name, simpleVersion, dubVersion.name);
+        const path = buildPath(dubPkgsDir, dubVersion.name, dubVersion.version_, dubVersion.name);
 
         if(!path.exists) {
-            const ret = execute(["dub", "fetch", dubVersion.name ~ "@" ~ simpleVersion]);
+            const ret = execute(["dub", "fetch", dubVersion.name ~ "@" ~ dubVersion.version_]);
             if(ret.status != 0)
                 throw new Exception(text("Could not fetch ", dubVersion, ": ", ret.output));
             if(!path.exists)

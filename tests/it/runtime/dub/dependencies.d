@@ -515,7 +515,7 @@ unittest {
             "reggaefile.d",
             q{
                 import reggae;
-                alias dubDep = dubPackage!(DubVersion("dubnull", "v0.0.1"));
+                alias dubDep = dubPackage!(DubVersion("dubnull", "0.0.1"));
                 mixin build!dubDep;
             }
         );

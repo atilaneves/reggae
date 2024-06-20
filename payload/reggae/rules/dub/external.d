@@ -87,8 +87,8 @@ imported!"reggae.build".Target dubDependant(
 
     auto objs = objectFiles!sourcesFunc(
         compilerFlags,
-        ImportPaths(allImportPaths),
-        StringImportPaths(allStringImportPaths),
+        const ImportPaths(allImportPaths),
+        const StringImportPaths(allStringImportPaths),
     );
 
     auto dubDepsObjs = dubPathDependencies
@@ -104,6 +104,63 @@ imported!"reggae.build".Target dubDependant(
     );
 }
 
+// mostly runtime version
+imported!"reggae.build".Target dubDependant
+    (alias sourcesFunc)
+    (
+        in imported!"reggae.options".Options options,
+        in imported!"reggae.types".TargetName targetName,
+        DubPackageTargetType targetType,
+        in imported!"reggae.types".CompilerFlags compilerFlags,
+        in imported!"reggae.types".LinkerFlags linkerFlags,
+        in imported!"reggae.types".ImportPaths importPaths,
+        in imported!"reggae.types".StringImportPaths stringImportPaths,
+        DubPath[] dubPaths...
+    )
+{
+    import reggae.rules.common: objectFiles;
+    import reggae.rules.d: dlink;
+    import reggae.types: TargetName, CompilerFlags, LinkerFlags, ImportPaths, StringImportPaths;
+    import std.algorithm: map, joiner;
+    import std.array: array;
+    import std.range: chain;
+
+    auto dubPathDependencies = dubPaths
+        .map!(p => DubPathDependency(options, p))
+        .array
+        ;
+
+    auto allImportPaths = dubPathDependencies
+        .map!(d => d.dubInfo.packages.map!(p => p.importPaths).joiner)
+        .joiner
+        .chain(importPaths.value)
+        ;
+
+    auto allStringImportPaths = dubPathDependencies
+        .map!(d => d.dubInfo.packages.map!(p => p.stringImportPaths).joiner)
+        .joiner
+        .chain(stringImportPaths.value)
+        ;
+
+    auto objs = objectFiles!sourcesFunc(
+        compilerFlags,
+        const ImportPaths(allImportPaths),
+        const StringImportPaths(allStringImportPaths),
+    );
+
+    auto dubDepsObjs = dubPathDependencies
+        .map!(d => d.target)
+        .array
+        ;
+
+    const targetNameWithExt = withExtension(targetName, targetType);
+
+    return dlink(
+        TargetName(targetNameWithExt),
+        objs ~ dubDepsObjs,
+        linkerFlags,
+    );
+}
 
 private struct DubPathDependency {
     import reggae.options: Options;

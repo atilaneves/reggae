@@ -16,7 +16,7 @@ else
 
 
 // A dub package that isn't at the root of the project directory
-@("dubDependant.path.exe.default")
+@("dubDependant.ct.path.exe.default")
 @MaybeFlaky
 @Tags("dub", "ninja")
 unittest {
@@ -66,8 +66,68 @@ unittest {
     }
 }
 
+@("dubDependant.rt.path.exe.default")
+@MaybeFlaky
+@Tags("dub", "ninja")
+unittest {
+    import reggae.rules.common: exeExt;
+    with(immutable ReggaeSandbox()) {
+        // a dub package we're going to depend on by path
+        writeFile(
+            "over/there/dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "library"`
+            ]
+        );
+        // src code for the dub dependency
+        writeFile(
+            "over/there/source/foo.d",
+            q{int twice(int i) { return i * 2; }}
+        );
+        // our main program, which will depend on a dub package by path
+        writeFile(
+            "src/app.d",
+            q{
+                import foo;
+                void main() {
+                    assert(5.twice == 10);
+                }
+            }
+        );
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+                import reggae.config: options;
+                auto app() {
+                    return dubDependant!(
+                        Sources!(Files("src/app.d")),
+                        )(
+                            options,
+                            TargetName("myapp"),
+                            DubPackageTargetType.executable,
+                            CompilerFlags(),
+                            LinkerFlags(),
+                            ImportPaths(),
+                            StringImportPaths(),
+                            DubPath("over/there"),
+                        );
+                }
+                mixin build!app;
+            }
+        );
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldExist("myapp" ~ exeExt);
+        shouldSucceed("myapp");
+    }
+}
+
+
 // A dub package that isn't at the root of the project directory
-@("dubDependant.path.exe.config")
+@("dubDependant.ct.path.exe.config")
 @MaybeFlaky
 @Tags("dub", "ninja")
 unittest {
@@ -132,7 +192,7 @@ unittest {
 
 
 // A dub package that isn't at the root of the project directory
-@("dubDependant.path.lib")
+@("dubDependant.ct.path.lib")
 @MaybeFlaky
 @Tags("dub", "ninja")
 unittest {
@@ -186,7 +246,7 @@ unittest {
 }
 
 // A dub package that isn't at the root of the project directory
-@("dubDependant.path.dll")
+@("dubDependant.ct.path.dll")
 @MaybeFlaky
 @Tags("dub", "ninja")
 unittest {
@@ -239,7 +299,7 @@ unittest {
     }
 }
 
-@("dubDependant.flags.compiler")
+@("dubDependant.ct.flags.compiler")
 @MaybeFlaky
 @Tags("dub", "ninja")
 unittest {
@@ -283,7 +343,7 @@ unittest {
 }
 
 
-@("dubDependant.flags.linker")
+@("dubDependant.ct.flags.linker")
 @MaybeFlaky
 @Tags("dub", "ninja")
 unittest {
@@ -328,7 +388,7 @@ unittest {
 }
 
 
-@("dubDependant.flags.imports")
+@("dubDependant.ct.flags.imports")
 @MaybeFlaky
 @Tags("dub", "ninja")
 unittest {
@@ -372,7 +432,7 @@ unittest {
 }
 
 
-@("dubDependant.flags.stringImports")
+@("dubDependant.ct.flags.stringImports")
 @MaybeFlaky
 @Tags("dub", "ninja")
 unittest {

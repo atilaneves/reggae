@@ -77,9 +77,9 @@ struct ImportPaths {
         this.value = value;
     }
 
-    this(R)(R range) @trusted /*array*/ if(isInputRange!R) {
+    this(R)(R range) inout @trusted /*array*/ if(isInputRange!R) {
         import std.array: array;
-        this.value = range.array;
+        this.value = cast(typeof(this.value)) range.array;
     }
 
     this(inout(string) value) inout pure {
@@ -99,9 +99,9 @@ struct StringImportPaths {
         this.value = value;
     }
 
-    this(R)(R range) @trusted /*array*/ if(isInputRange!R) {
+    this(R)(R range) inout @trusted /*array*/ if(isInputRange!R) {
         import std.array: array;
-        this.value = range.array;
+        this.value = cast(typeof(this.value)) range.array;
     }
 
     this(inout(string) value) inout pure {

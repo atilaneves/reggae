@@ -106,24 +106,52 @@ imported!"reggae.build".Target dubDependant(
 
 // mostly runtime version
 imported!"reggae.build".Target dubDependant
-    (alias sourcesFunc)
+    (alias sourcesFunc, A...)
     (
         in imported!"reggae.options".Options options,
         in imported!"reggae.types".TargetName targetName,
         DubPackageTargetType targetType,
-        in imported!"reggae.types".CompilerFlags compilerFlags,
-        in imported!"reggae.types".LinkerFlags linkerFlags,
-        in imported!"reggae.types".ImportPaths importPaths,
-        in imported!"reggae.types".StringImportPaths stringImportPaths,
-        DubPath[] dubPaths...
+        // the other arguments can be:
+        // * DubPath
+        // * CompilerFlags
+        // * LinkerFlags
+        // * ImportPaths
+        // * StringImportPaths
+        auto ref A args,
     )
 {
+    //import reggae.rules.dub: oneOptionalOf, isOfType;
     import reggae.rules.common: objectFiles;
     import reggae.rules.d: dlink;
     import reggae.types: TargetName, CompilerFlags, LinkerFlags, ImportPaths, StringImportPaths;
     import std.algorithm: map, joiner;
     import std.array: array;
     import std.range: chain;
+    import std.traits: Unqual;
+
+    DubPath[] dubPaths;
+    static foreach(arg; args) {
+        static if(is(Unqual!(typeof(arg)) == DubPath))
+            dubPaths ~= arg;
+    }
+
+    template oneOptionalOf(T) {
+        import std.meta: staticIndexOf;
+        enum index = staticIndexOf!(T, A);
+        static if(index == -1) {
+            T oneOptionalOf() {
+                return T();
+            }
+        } else {
+            T oneOptionalOf() {
+                return args[index];
+            }
+        }
+    }
+    const compilerFlags     = oneOptionalOf!CompilerFlags;
+    const linkerFlags       = oneOptionalOf!LinkerFlags;
+    const importPaths       = oneOptionalOf!ImportPaths;
+    const stringImportPaths = oneOptionalOf!StringImportPaths;
 
     auto dubPathDependencies = dubPaths
         .map!(p => DubPathDependency(options, p))

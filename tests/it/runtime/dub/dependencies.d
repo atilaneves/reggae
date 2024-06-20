@@ -107,10 +107,6 @@ unittest {
                             options,
                             TargetName("myapp"),
                             DubPackageTargetType.executable,
-                            CompilerFlags(),
-                            LinkerFlags(),
-                            ImportPaths(),
-                            StringImportPaths(),
                             DubPath("over/there"),
                         );
                 }

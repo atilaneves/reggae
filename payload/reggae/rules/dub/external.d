@@ -49,38 +49,8 @@ imported!"reggae.build".Target dubPackage(DubVersion dubVersion)() {
 }
 
 imported!"reggae.build".Target dubPackage(in imported!"reggae.options".Options options, in DubVersion dubVersion) {
-    import std.path: buildPath;
-    import std.file: exists;
-    import std.process: execute;
-    import std.conv: text;
-
-    const simpleVersion = dubVersion.version_[1..$]; // remove the leading 'v'
-    const path = buildPath(dubPkgsDir, dubVersion.name, simpleVersion, dubVersion.name);
-
-    if(!path.exists) {
-        const ret = execute(["dub", "fetch", dubVersion.name ~ "@" ~ simpleVersion]);
-        if(ret.status != 0)
-            throw new Exception(text("Could not fetch ", dubVersion, ": ", ret.output));
-        if(!path.exists)
-            throw new Exception(text("Expected path ", path, " does not exist after dub fetch"));
-    }
-
-    const dubPath = DubPath(path, dubVersion.config);
-    return DubPathDependency(options, dubPath).target;
+    return DubPathDependency(options, dubVersion).target;
 }
-
-private string dubPkgsDir() {
-    import std.process: environment;
-    import std.path: buildPath;
-
-    version(Windows)
-        const root = buildPath(environment["APPDATA"], "dub");
-    else
-        const root = buildPath(environment["HOME"], ".dub");
-
-    return buildPath(root, "packages");
-}
-
 
 /**
    A target that depends on dub packages but isn't one itself.
@@ -196,6 +166,38 @@ private struct DubPathDependency {
     string projectPath;
     Options subOptions; // options for the dub dependency
     DubInfo dubInfo;
+
+    this(in Options reggaeOptions, in DubVersion dubVersion) {
+        import std.path: buildPath;
+        import std.file: exists;
+        import std.process: execute;
+        import std.conv: text;
+
+        const simpleVersion = dubVersion.version_[1..$]; // remove the leading 'v'
+        const path = buildPath(dubPkgsDir, dubVersion.name, simpleVersion, dubVersion.name);
+
+        if(!path.exists) {
+            const ret = execute(["dub", "fetch", dubVersion.name ~ "@" ~ simpleVersion]);
+            if(ret.status != 0)
+                throw new Exception(text("Could not fetch ", dubVersion, ": ", ret.output));
+            if(!path.exists)
+                throw new Exception(text("Expected path ", path, " does not exist after dub fetch"));
+        }
+
+        this(reggaeOptions, DubPath(path, dubVersion.config));
+    }
+
+    static private string dubPkgsDir() {
+        import std.process: environment;
+        import std.path: buildPath;
+
+        version(Windows)
+            const root = buildPath(environment["APPDATA"], "dub");
+        else
+            const root = buildPath(environment["HOME"], ".dub");
+
+        return buildPath(root, "packages");
+    }
 
     this(in Options reggaeOptions, in DubPath dubPath) {
         import reggae.dub.interop: dubInfos;

@@ -417,7 +417,7 @@ string[] sourcesToFileNames(alias sourcesFunc = Sources!())(in imported!"reggae.
         .sort
         .map!(a => removeProjectPath(options.projectPath, a))
         .filter!(srcs.filterFunc)
-        .filter!(a => a != "reggaefile.d")
+        .filter!(a => a != "reggaefile.d" || options.includeReggaefileInSources)
         .array
         ;
 

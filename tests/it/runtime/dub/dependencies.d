@@ -471,7 +471,7 @@ unittest {
     }
 }
 
-@("dubPackage.exe.naked")
+@("dubPackage.path.exe.naked")
 @Tags("dub", "ninja")
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -507,7 +507,29 @@ unittest {
     }
 }
 
-@("dubPackage.exe.phony")
+@("dubPackage.version.exe.naked")
+@Tags("dub", "ninja")
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+                alias dubDep = dubPackage!(DubVersion("dubnull", "v0.0.1"));
+                mixin build!dubDep;
+            }
+        );
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        version(linux) {
+            fileShouldContain(inSandboxPath("build.ninja"), "libdubnull.a");
+        }
+    }
+}
+
+
+@("dubPackage.path.exe.phony")
 @Tags("dub", "ninja")
 unittest {
     with(immutable ReggaeSandbox()) {
@@ -546,7 +568,7 @@ unittest {
 }
 
 
-@("dubPackage.lib.config")
+@("dubPackage.path.lib.config")
 @Tags("dub", "ninja")
 unittest {
     import reggae.rules.common: exeExt;
@@ -589,7 +611,7 @@ unittest {
     }
 }
 
-@("dubPackage.lib.timing")
+@("dubPackage.path.lib.timing")
 @Flaky
 @Tags("dub", "ninja")
 unittest {

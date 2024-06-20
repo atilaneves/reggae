@@ -152,6 +152,7 @@ imported!"reggae.build".Target dubDependant
     );
 
     auto objs = objectFiles!sourcesFunc(
+        options,
         compilerFlags,
         const ImportPaths(allImportPaths),
         const StringImportPaths(allStringImportPaths),

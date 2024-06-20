@@ -61,6 +61,7 @@ imported!"reggae.build".Target dubDependant(
     alias sourcesFunc,
     // the other arguments can be:
     // * DubPath
+    // * DubVersion
     // * CompilerFlags
     // * LinkerFlags
     // * ImportPaths
@@ -82,6 +83,7 @@ imported!"reggae.build".Target dubDependant
         DubPackageTargetType targetType,
         // the other arguments can be:
         // * DubPath
+        // * DubVersion
         // * CompilerFlags
         // * LinkerFlags
         // * ImportPaths
@@ -96,12 +98,6 @@ imported!"reggae.build".Target dubDependant
     import std.array: array;
     import std.range: chain;
     import std.traits: Unqual;
-
-    DubPath[] dubPaths;
-    static foreach(arg; args) {
-        static if(is(Unqual!(typeof(arg)) == DubPath))
-            dubPaths ~= arg;
-    }
 
     template oneOptionalOf(T) {
         import std.meta: staticIndexOf;
@@ -121,22 +117,39 @@ imported!"reggae.build".Target dubDependant
     const importPaths       = oneOptionalOf!ImportPaths;
     const stringImportPaths = oneOptionalOf!StringImportPaths;
 
+    DubPath[] dubPaths;
+    static foreach(arg; args) {
+        static if(is(Unqual!(typeof(arg)) == DubPath))
+            dubPaths ~= arg;
+    }
+
+    DubVersion[] dubVersions;
+    static foreach(arg; args) {
+        static if(is(Unqual!(typeof(arg)) == DubVersion))
+            dubVersions ~= arg;
+    }
+
     auto dubPathDependencies = dubPaths
-        .map!(p => DubPathDependency(options, p))
+        .map!(d => DubPathDependency(options, d))
         .array
         ;
 
-    auto allImportPaths = dubPathDependencies
-        .map!(d => d.dubInfo.packages.map!(p => p.importPaths).joiner)
-        .joiner
-        .chain(importPaths.value)
+    auto dubVersDependencies = dubVersions
+        .map!(d => DubPathDependency(options, d))
+        .array
         ;
 
-    auto allStringImportPaths = dubPathDependencies
-        .map!(d => d.dubInfo.packages.map!(p => p.stringImportPaths).joiner)
-        .joiner
-        .chain(stringImportPaths.value)
-        ;
+    auto allImportPaths = chain(
+        importPaths.value,
+        dubPathDependencies.map!(d => d.dubInfo.packages.map!(p => p.importPaths).joiner).joiner,
+        dubVersDependencies.map!(d => d.dubInfo.packages.map!(p => p.importPaths).joiner).joiner,
+    );
+
+    auto allStringImportPaths = chain(
+        stringImportPaths.value,
+        dubVersDependencies.map!(d => d.dubInfo.packages.map!(p => p.stringImportPaths).joiner).joiner,
+        dubVersDependencies.map!(d => d.dubInfo.packages.map!(p => p.stringImportPaths).joiner).joiner,
+    );
 
     auto objs = objectFiles!sourcesFunc(
         compilerFlags,
@@ -144,10 +157,10 @@ imported!"reggae.build".Target dubDependant
         const StringImportPaths(allStringImportPaths),
     );
 
-    auto dubDepsObjs = dubPathDependencies
-        .map!(d => d.target)
-        .array
-        ;
+    auto dubDepsObjs = chain(
+        dubPathDependencies.map!(d => d.target),
+        dubVersDependencies.map!(d => d.target),
+    ).array;
 
     const targetNameWithExt = withExtension(targetName, targetType);
 

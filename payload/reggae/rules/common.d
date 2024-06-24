@@ -45,9 +45,23 @@ Target[] objectFiles
     ) {
 
     import reggae.config: options;
+    return objectFiles!sourcesFunc(flags, includes, stringImports);
+}
+
+/// ditto
+Target[] objectFiles
+    (alias sourcesFunc = Sources!())
+    (
+        in imported!"reggae.options".Options options,
+        in CompilerFlags flags = CompilerFlags(),
+        in ImportPaths includes = ImportPaths(),
+        in StringImportPaths stringImports = StringImportPaths(),
+    )
+{
     const srcFiles = sourcesToFileNames!sourcesFunc(options);
     return srcFilesToObjectTargets(options, srcFiles, flags, includes, stringImports);
 }
+
 
 
 /**
@@ -399,11 +413,14 @@ string[] sourcesToFileNames(alias sourcesFunc = Sources!())(in imported!"reggae.
         modules ~= buildNormalizedPath(buildPath(options.projectPath, module_));
     }
 
-    return modules.sort.
-        map!(a => removeProjectPath(options.projectPath, a)).
-        filter!(srcs.filterFunc).
-        filter!(a => a != "reggaefile.d").
-        array;
+    return modules
+        .sort
+        .map!(a => removeProjectPath(options.projectPath, a))
+        .filter!(srcs.filterFunc)
+        .filter!(a => a != "reggaefile.d" || options.includeReggaefileInSources)
+        .array
+        ;
+
 }
 
 //run-time version

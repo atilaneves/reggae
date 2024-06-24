@@ -43,7 +43,7 @@ private struct DubConfigurations {
     }
 }
 
-package struct Dub {
+public struct Dub {
     import reggae.dub.info: DubInfo;
     import reggae.options: Options;
     import dub.dub: DubClass = Dub;

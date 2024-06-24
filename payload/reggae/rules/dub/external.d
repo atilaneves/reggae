@@ -13,6 +13,16 @@ struct DubPath {
     Configuration config;
 }
 
+/*
+  A dub version-based dependency.
+ */
+struct DubVersion {
+    import reggae.types: Configuration;
+    string name;
+    string version_;
+    Configuration config;
+}
+
 /**
    The types of binaries that a target that has dub dependencies (but
    isn't a dub package itself) can have.
@@ -33,6 +43,15 @@ imported!"reggae.build".Target dubPackage(in imported!"reggae.options".Options o
     return DubPathDependency(options, dubPath).target;
 }
 
+imported!"reggae.build".Target dubPackage(DubVersion dubVersion)() {
+    import reggae.config: reggaeOptions = options; // the ones used to run reggae
+    return dubPackage(reggaeOptions, dubVersion);
+}
+
+imported!"reggae.build".Target dubPackage(in imported!"reggae.options".Options options, in DubVersion dubVersion) {
+    return DubPathDependency(options, dubVersion).target;
+}
+
 /**
    A target that depends on dub packages but isn't one itself.
  */
@@ -42,6 +61,7 @@ imported!"reggae.build".Target dubDependant(
     alias sourcesFunc,
     // the other arguments can be:
     // * DubPath
+    // * DubVersion
     // * CompilerFlags
     // * LinkerFlags
     // * ImportPaths
@@ -63,6 +83,7 @@ imported!"reggae.build".Target dubDependant
         DubPackageTargetType targetType,
         // the other arguments can be:
         // * DubPath
+        // * DubVersion
         // * CompilerFlags
         // * LinkerFlags
         // * ImportPaths
@@ -77,12 +98,6 @@ imported!"reggae.build".Target dubDependant
     import std.array: array;
     import std.range: chain;
     import std.traits: Unqual;
-
-    DubPath[] dubPaths;
-    static foreach(arg; args) {
-        static if(is(Unqual!(typeof(arg)) == DubPath))
-            dubPaths ~= arg;
-    }
 
     template oneOptionalOf(T) {
         import std.meta: staticIndexOf;
@@ -102,33 +117,51 @@ imported!"reggae.build".Target dubDependant
     const importPaths       = oneOptionalOf!ImportPaths;
     const stringImportPaths = oneOptionalOf!StringImportPaths;
 
+    DubPath[] dubPaths;
+    static foreach(arg; args) {
+        static if(is(Unqual!(typeof(arg)) == DubPath))
+            dubPaths ~= arg;
+    }
+
+    DubVersion[] dubVersions;
+    static foreach(arg; args) {
+        static if(is(Unqual!(typeof(arg)) == DubVersion))
+            dubVersions ~= arg;
+    }
+
     auto dubPathDependencies = dubPaths
-        .map!(p => DubPathDependency(options, p))
+        .map!(d => DubPathDependency(options, d))
         .array
         ;
 
-    auto allImportPaths = dubPathDependencies
-        .map!(d => d.dubInfo.packages.map!(p => p.importPaths).joiner)
-        .joiner
-        .chain(importPaths.value)
+    auto dubVersDependencies = dubVersions
+        .map!(d => DubPathDependency(options, d))
+        .array
         ;
 
-    auto allStringImportPaths = dubPathDependencies
-        .map!(d => d.dubInfo.packages.map!(p => p.stringImportPaths).joiner)
-        .joiner
-        .chain(stringImportPaths.value)
-        ;
+    auto allImportPaths = chain(
+        importPaths.value,
+        dubPathDependencies.map!(d => d.dubInfo.packages.map!(p => p.importPaths).joiner).joiner,
+        dubVersDependencies.map!(d => d.dubInfo.packages.map!(p => p.importPaths).joiner).joiner,
+    );
+
+    auto allStringImportPaths = chain(
+        stringImportPaths.value,
+        dubVersDependencies.map!(d => d.dubInfo.packages.map!(p => p.stringImportPaths).joiner).joiner,
+        dubVersDependencies.map!(d => d.dubInfo.packages.map!(p => p.stringImportPaths).joiner).joiner,
+    );
 
     auto objs = objectFiles!sourcesFunc(
+        options,
         compilerFlags,
         const ImportPaths(allImportPaths),
         const StringImportPaths(allStringImportPaths),
     );
 
-    auto dubDepsObjs = dubPathDependencies
-        .map!(d => d.target)
-        .array
-        ;
+    auto dubDepsObjs = chain(
+        dubPathDependencies.map!(d => d.target),
+        dubVersDependencies.map!(d => d.target),
+    ).array;
 
     const targetNameWithExt = withExtension(targetName, targetType);
 
@@ -147,6 +180,37 @@ private struct DubPathDependency {
     string projectPath;
     Options subOptions; // options for the dub dependency
     DubInfo dubInfo;
+
+    this(in Options reggaeOptions, in DubVersion dubVersion) {
+        import std.path: buildPath;
+        import std.file: exists;
+        import std.process: execute;
+        import std.conv: text;
+
+        const path = buildPath(dubPkgsDir, dubVersion.name, dubVersion.version_, dubVersion.name);
+
+        if(!path.exists) {
+            const ret = execute(["dub", "fetch", dubVersion.name ~ "@" ~ dubVersion.version_]);
+            if(ret.status != 0)
+                throw new Exception(text("Could not fetch ", dubVersion, ": ", ret.output));
+            if(!path.exists)
+                throw new Exception(text("Expected path ", path, " does not exist after dub fetch"));
+        }
+
+        this(reggaeOptions, DubPath(path, dubVersion.config));
+    }
+
+    static private string dubPkgsDir() {
+        import std.process: environment;
+        import std.path: buildPath;
+
+        version(Windows)
+            const root = buildPath(environment["LOCALAPPDATA"], "dub");
+        else
+            const root = buildPath(environment["HOME"], ".dub");
+
+        return buildPath(root, "packages");
+    }
 
     this(in Options reggaeOptions, in DubPath dubPath) {
         import reggae.dub.interop: dubInfos;

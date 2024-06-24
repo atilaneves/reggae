@@ -69,6 +69,7 @@ struct Options {
     bool buildReggaefileSingle; // single-threaded build using the binary backend
     bool buildReggaefileOptimise; // compile the build description with optimisations
     bool forceReggaefileDeps;
+    package bool includeReggaefileInSources; // for internal usage to build the reggaefile itself
     string[string] userVars; // must be last
 
     Options dup() @safe pure const nothrow scope {

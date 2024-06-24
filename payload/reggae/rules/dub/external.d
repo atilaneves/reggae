@@ -205,7 +205,7 @@ private struct DubPathDependency {
         import std.path: buildPath;
 
         version(Windows)
-            const root = buildPath(environment["APPDATA"], "dub");
+            const root = buildPath(environment["LOCALAPPDATA"], "dub");
         else
             const root = buildPath(environment["HOME"], ".dub");
 

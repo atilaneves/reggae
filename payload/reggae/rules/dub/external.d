@@ -91,12 +91,37 @@ imported!"reggae.build".Target dubDependant
         auto ref A args,
     )
 {
-    import reggae.rules.common: objectFiles;
+    import reggae.rules.common: sourcesToFileNames;
+    import std.functional: forward;
+
+    const srcFiles = sourcesToFileNames!sourcesFunc(options);
+    return dubDependant(options, targetName, targetType, srcFiles, forward!args);
+}
+
+// runtime version
+imported!"reggae.build".Target dubDependant
+    (A...)
+    (
+        in imported!"reggae.options".Options options,
+        in imported!"reggae.types".TargetName targetName,
+        DubPackageTargetType targetType,
+        in string[] srcFiles,
+        // the other arguments can be:
+        // * DubPath
+        // * DubVersion
+        // * CompilerFlags
+        // * LinkerFlags
+        // * ImportPaths
+        // * StringImportPaths
+        auto ref A args,
+    )
+{
+    import reggae.rules.common: objectFiles, srcFilesToObjectTargets;
     import reggae.rules.d: dlink;
     import reggae.types: TargetName, CompilerFlags, LinkerFlags, ImportPaths, StringImportPaths;
     import std.algorithm: map, joiner;
     import std.array: array;
-    import std.range: chain;
+    import std.range: chain, only;
     import std.traits: Unqual;
 
     template oneOptionalOf(T) {
@@ -151,8 +176,14 @@ imported!"reggae.build".Target dubDependant
         dubVersDependencies.map!(d => d.dubInfo.packages.map!(p => p.stringImportPaths).joiner).joiner,
     );
 
-    auto objs = objectFiles!sourcesFunc(
+    // auto allLinkerFlags = chain(
+    //     "-L--no-as-needed".only,
+    //     linkerFlags.value,
+    // );
+
+    auto objs = srcFilesToObjectTargets(
         options,
+        srcFiles,
         compilerFlags,
         const ImportPaths(allImportPaths),
         const StringImportPaths(allStringImportPaths),
@@ -168,9 +199,10 @@ imported!"reggae.build".Target dubDependant
     return dlink(
         TargetName(targetNameWithExt),
         objs ~ dubDepsObjs,
-        linkerFlags,
+        linkerFlags, //const LinkerFlags(allLinkerFlags),
     );
 }
+
 
 private struct DubPathDependency {
     import reggae.options: Options;

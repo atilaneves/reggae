@@ -52,6 +52,8 @@ struct CompilerFlags {
 }
 
 struct LinkerFlags {
+    import std.range.primitives: isInputRange;
+
     string[] value;
 
     this(string value) @trusted pure {
@@ -61,6 +63,11 @@ struct LinkerFlags {
 
     this(string[] values...) @safe pure nothrow {
         this.value = values.dup;
+    }
+
+    this(R)(R range) inout @trusted /*array*/ if(isInputRange!R) {
+        import std.array: array;
+        this.value = cast(typeof(this.value)) range.array;
     }
 
     this(inout(string)[] values) inout @safe @nogc pure nothrow {

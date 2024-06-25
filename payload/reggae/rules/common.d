@@ -548,7 +548,7 @@ private string staticLibraryShellCommand() @safe {
     }
 }
 
-private Target[] srcFilesToObjectTargets(
+Target[] srcFilesToObjectTargets(
     in imported!"reggae.options".Options options,
     in string[] srcFiles,
     in CompilerFlags flags,

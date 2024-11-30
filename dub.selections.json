@@ -1,7 +1,10 @@
 {
 	"fileVersion": 1,
 	"versions": {
-		"dub": "1.39.0-beta.1",
+		"dub": {
+			"repository": "git+https://github.com/dlang/dub.git",
+			"version": "ec809a547edbad6252c0ed195efc2f3d87ab11c2"
+		},
 		"unit-threaded": "2.2.0"
 	}
 }

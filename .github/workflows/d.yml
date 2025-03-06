@@ -55,10 +55,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-12, windows-2022]
+        os: [ubuntu-22.04, macos-13, windows-2022]
         dc:
+          - dmd-2.110.0
           - dmd-2.108.0
-          - dmd-2.105.2
           - ldc-1.37.0
     runs-on: ${{ matrix.os }}
     defaults:

@@ -85,23 +85,7 @@ struct DubPackage {
     }
 
     const(string)[] compilerFlags(in string compilerBinName) @safe pure const {
-        import std.algorithm: among, startsWith;
-
-        const(string)[] pkgDflags = dflags;
-        if(compilerBinName.among("ldc", "ldc2")) {
-            if (pkgDflags.length) {
-                // For LDC, dub implicitly adds `--oq -od=…/obj` to avoid object-file collisions.
-                // Remove that workaround for reggae; it's not needed and unexpected.
-                foreach (i; 0 .. pkgDflags.length - 1) {
-                    if (pkgDflags[i] == "--oq" && pkgDflags[i+1].startsWith("-od=")) {
-                        pkgDflags = pkgDflags[0 .. i] ~ pkgDflags[i+2 .. $];
-                        break;
-                    }
-                }
-            }
-        }
-
-        return pkgDflags;
+        return dflags;
     }
 }
 

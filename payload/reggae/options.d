@@ -242,8 +242,20 @@ struct Options {
             maybeDubDeps ~= _dubProjectFile;
 
             const selectionsJsonPath = buildPath(projectPath, "dub.selections.json");
-            if (selectionsJsonPath.exists)
+            if (selectionsJsonPath.exists) {
                 maybeDubDeps ~= selectionsJsonPath;
+            } else version(Have_dub) {
+                import dub.packagemanager: PackageManager;
+                import dub.internal.vibecompat.inet.path: NativePath;
+
+                () @trusted {
+                    auto projectRoot = NativePath(projectPath);
+                    auto pm = new PackageManager(projectRoot);
+                    const res = pm.readSelections(projectRoot);
+                    if (!res.isNull())
+                        maybeDubDeps ~= res.get().absolutePath.toNativeString();
+                }();
+            }
         }
 
         return ranFromPath ~ maybeReggaeFile ~ maybeReggaeFileDeps ~ maybeDubDeps ~ dependencies;

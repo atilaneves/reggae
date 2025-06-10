@@ -316,7 +316,7 @@ struct Target {
         return _implicits;
     }
 
-    @property string[] dependenciesInProjectPath(in string projectPath) @safe pure const scope {
+    @property string[] dependenciesInProjectPath(in string projectPath) @safe pure const {
         return depsInProjectPath(_dependencies, projectPath);
     }
 

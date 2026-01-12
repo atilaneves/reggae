@@ -105,7 +105,7 @@ bool isObjectFile(in string fileName) @safe pure nothrow {
 
 string inDubPackagePath(in string packagePath, in string filePath) @safe pure nothrow {
     import std.algorithm: startsWith;
-    import std.path: buildPath;
+    import reggae.path: buildPath;
 
     return filePath.startsWith("$project")
         ? buildPath(filePath)
@@ -153,7 +153,7 @@ struct DubInfo {
         in CompilerFlags extraCompilerFlags)
         @safe pure const
     {
-        import reggae.path: deabsolutePath;
+        import reggae.path: buildPath, deabsolutePath;
         import reggae.types;
         import std.range: chain, only;
         import std.algorithm: filter, map;
@@ -161,7 +161,6 @@ struct DubInfo {
         import std.functional: not;
         import std.path: dirSeparator, baseName;
         import std.string: indexOf, stripRight;
-        import std.path: buildPath;
 
         const importPaths = dubPackage.packagePaths(
             dubPackage.importPaths ~ dubPackage.cImportPaths);
@@ -387,6 +386,6 @@ struct DubInfo {
 private string[] packagePaths(in DubPackage dubPackage, const string[] paths) @safe pure nothrow {
     import std.algorithm: map;
     import std.array: array;
-    import std.path: buildPath;
+    import reggae.path: buildPath;
     return paths.map!(a => buildPath(dubPackage.path, a)).array;
 }

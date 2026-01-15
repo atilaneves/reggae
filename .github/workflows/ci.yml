@@ -10,7 +10,6 @@ jobs:
         os:
           - ubuntu-24.04
           - windows-2022
-          - macos-14
         # Remember to change the compiler versions further below as well as here
         dc:
           - dmd-2.112.0
@@ -61,7 +60,6 @@ jobs:
         os:
           - ubuntu-24.04
           - windows-2022
-          - macos-14
         dc:
           - dmd-2.112.0
           - dmd-2.108.0

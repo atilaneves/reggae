@@ -28,9 +28,9 @@ jobs:
         with:
           compiler: ${{ matrix.dc }}
       - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
         with:
           arch: x64
-
 
       - name: "Posix: Run tests"
         if: runner.os != 'Windows'

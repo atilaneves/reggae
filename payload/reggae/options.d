@@ -246,7 +246,7 @@ struct Options {
                 maybeDubDeps ~= selectionsJsonPath;
             } else version(Have_dub) {
                 import dub.packagemanager: PackageManager;
-                import dub.internal.vibecompat.inet.path: NativePath;
+                import dub.internal.vibecompat.inet.path: NativePath, toNativeString;
 
                 () @trusted {
                     auto projectRoot = NativePath(projectPath);

@@ -382,6 +382,7 @@ class InfoGenerator: imported!"dub.generators.generator".ProjectGenerator {
     {
 
         import dub.compilers.buildsettings: BuildSetting;
+        import dub.internal.vibecompat.inet.path: toNativeString;
         import std.file: exists, mkdirRecurse;
 
         DubPackage nameToDubPackage(in string targetName,

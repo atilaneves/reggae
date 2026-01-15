@@ -8,15 +8,15 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          # - ubuntu-24.04
+          - ubuntu-24.04
           - windows-2022
-          # - macos-14
+          - macos-14
         # Remember to change the compiler versions further below as well as here
         dc:
           - dmd-2.112.0
-          # - dmd-2.105.2
-          #- ldc-1.41.0
-          #- ldc-1.37.0
+          - dmd-2.105.2
+          - ldc-1.41.0
+          - ldc-1.37.0
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -53,49 +53,49 @@ jobs:
             dub -q test -- -s %RUNNER_ARGS% || exit /b
           )
 
-  # bootstrap:
-  #   name: Bootstrap
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       os:
-  #         - ubuntu-24.04
-  #         - windows-2022
-  #         - macos-14
-  #       dc:
-  #         - dmd-2.112.0
-  #         - dmd-2.108.0
-  #         - ldc-1.41.0
-  #         - ldc-1.37.0
-  #   runs-on: ${{ matrix.os }}
-  #   defaults:
-  #     run:
-  #       shell: bash
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: "Windows: Install ninja"
-  #       if: runner.os == 'Windows'
-  #       uses: seanmiddleditch/gha-setup-ninja@master
-  #     - name: Install D compiler
-  #       uses: dlang-community/setup-dlang@v2
-  #       with:
-  #         compiler: ${{ matrix.dc }}
-  #     - name: Set OS-specific SCRIPT_CMD environment variable
-  #       run: |
-  #         if [[ '${{ runner.os }}' == 'Windows' ]]; then
-  #           if [[ '${{ matrix.dc }}' = ldc* ]]; then
-  #             # avoid out-of-memory kills by using a single ninja job
-  #             echo "SCRIPT_CMD=cmd.exe //c call bootstrap.bat -j1" >> $GITHUB_ENV
-  #           else
-  #             echo "SCRIPT_CMD=cmd.exe //c call bootstrap.bat" >> $GITHUB_ENV
-  #           fi
-  #         else
-  #           echo "SCRIPT_CMD=./bootstrap.sh" >> $GITHUB_ENV
-  #         fi
+  bootstrap:
+    name: Bootstrap
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-24.04
+          - windows-2022
+          - macos-14
+        dc:
+          - dmd-2.112.0
+          - dmd-2.108.0
+          - ldc-1.41.0
+          - ldc-1.37.0
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: "Windows: Install ninja"
+        if: runner.os == 'Windows'
+        uses: seanmiddleditch/gha-setup-ninja@master
+      - name: Install D compiler
+        uses: dlang-community/setup-dlang@v2
+        with:
+          compiler: ${{ matrix.dc }}
+      - name: Set OS-specific SCRIPT_CMD environment variable
+        run: |
+          if [[ '${{ runner.os }}' == 'Windows' ]]; then
+            if [[ '${{ matrix.dc }}' = ldc* ]]; then
+              # avoid out-of-memory kills by using a single ninja job
+              echo "SCRIPT_CMD=cmd.exe //c call bootstrap.bat -j1" >> $GITHUB_ENV
+            else
+              echo "SCRIPT_CMD=cmd.exe //c call bootstrap.bat" >> $GITHUB_ENV
+            fi
+          else
+            echo "SCRIPT_CMD=./bootstrap.sh" >> $GITHUB_ENV
+          fi
 
-  #     - name: Bootstrap with DC=${{ env.DC }}
-  #       run: ${{ env.SCRIPT_CMD }}
+      - name: Bootstrap with DC=${{ env.DC }}
+        run: ${{ env.SCRIPT_CMD }}
 
-  #     - name: "LDC: Bootstrap with DC=ldmd2"
-  #       if: startsWith(matrix.dc, 'ldc')
-  #       run: DC=ldmd2 ${{ env.SCRIPT_CMD }}
+      - name: "LDC: Bootstrap with DC=ldmd2"
+        if: startsWith(matrix.dc, 'ldc')
+        run: DC=ldmd2 ${{ env.SCRIPT_CMD }}

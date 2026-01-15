@@ -34,7 +34,9 @@ jobs:
 
       - name: "Posix: Run tests"
         if: runner.os != 'Windows'
-        run: dub -q test -- ~@tup ~@travis_oops
+        run: |
+          sudo apt-get update && sudo apt-get install -y libfreetype6-dev libfontconfig1-dev
+          dub -q test -- ~@tup ~@travis_oops
 
       - name: "Windows: Run tests"
         if: runner.os == 'Windows'

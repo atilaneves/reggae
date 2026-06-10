@@ -12,6 +12,16 @@ shared static this() nothrow {
     import std.algorithm: map, find;
 
     try {
+        // When the build files generated in test sandboxes call back into
+        // this binary for the reggae rerun check, the current directory is
+        // the sandbox: the reggae top dir can't be found, nor is it needed.
+        {
+            import core.runtime: Runtime;
+            import std.algorithm: canFind;
+            if(Runtime.args.canFind("--rerun-check"))
+                return;
+        }
+
         auto paths = [".", ".."].map!(a => buildNormalizedPath(getcwd, a))
             .find!(a => buildNormalizedPath(a, "dub.json").exists);
         assert(!paths.empty, "Error: Cannot find reggae top dir using dub.json");

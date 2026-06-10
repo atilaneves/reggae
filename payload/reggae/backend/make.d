@@ -75,6 +75,7 @@ struct Makefile {
     //includes rerunning reggae
     string output() @safe {
 
+        import reggae.backend: rerunCommand;
         import std.array: join;
         import std.range: chain;
         import std.algorithm: sort, uniq;
@@ -85,10 +86,14 @@ struct Makefile {
             ret = options.eraseProjectPath(ret);
         } else {
             // add a dependency on the Makefile to reggae itself and the build description,
-            // but only if not exporting a build
+            // but only if not exporting a build. The dependencies (which
+            // include the source directories) only determine when the rerun
+            // check is invoked; the check itself decides whether reggae
+            // actually needs to be rerun, so that editing an existing
+            // source file doesn't regenerate the build.
             auto srcDirs = _srcDirs.sort.uniq;
             const flattenedInputs = chain(options.reggaeFileDependencies, srcDirs).join(" ");
-            const rerunLine = "\t" ~ options.rerunArgs.join(" ") ~ "\n";
+            const rerunLine = "\t" ~ rerunCommand(options) ~ "\n";
 
             ret ~= fileName() ~ ": " ~ flattenedInputs ~ "\n";
             ret ~= rerunLine;
@@ -102,12 +107,15 @@ struct Makefile {
     }
 
     void writeBuild() @safe {
+        import reggae.backend: writeRerunState;
         import std.stdio: File;
         import reggae.path: buildPath;
 
         auto output = output();
         auto file = File(buildPath(options.workingDir, fileName), "w");
         file.write(output);
+
+        writeRerunState(options, _srcDirs);
     }
 
     //the only reason this is needed is to add auto dependency

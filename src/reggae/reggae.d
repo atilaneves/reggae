@@ -50,8 +50,44 @@ mixin template ReggaeMain() {
 }
 
 void run(T)(auto ref T output, string[] args) {
+    import std.algorithm: canFind, filter;
+    import std.array: array;
+
+    // the generated build files call back into reggae with this flag
+    // when any of the build's dependencies is out of date
+    if(args.canFind("--rerun-check")) {
+        runRerunCheck(output, args.filter!(a => a != "--rerun-check").array);
+        return;
+    }
+
     auto options = getOptions(args);
     run(output, options);
+}
+
+// Rerun reggae if the build files need regenerating, do nothing
+// otherwise. Editing a source file bumps its directory's timestamp,
+// which triggers the build files' rerun dependency, but only
+// adding/removing files (or changing the build description itself)
+// requires regenerating the build.
+private void runRerunCheck(T)(auto ref T output, string[] args) {
+    import reggae.backend: rerunIsNeeded, skipRerun;
+    import reggae.io: log;
+
+    auto options = getOptions(args);
+
+    bool rerun = true;
+    // any failure to determine staleness means erring on the side of
+    // regenerating the build
+    try
+        rerun = rerunIsNeeded(options);
+    catch(Exception _) {}
+
+    if(rerun) {
+        run(output, options);
+    } else {
+        output.log("Build description unchanged, not rerunning reggae");
+        skipRerun(options);
+    }
 }
 
 void run(T)(auto ref T output, Options options) {

@@ -482,6 +482,53 @@ unittest {
 
 version(DigitalMars) {
     static foreach(backend; ["ninja", "make"]) {
+        @("rerun.changed.file." ~ backend)
+        @Tags(backend)
+        unittest {
+            import std.file: rename, timeLastModified;
+
+            with(immutable ReggaeSandbox()) {
+                writeFile(
+                    "reggaefile.d",
+                    q{
+                        import reggae;
+                        alias lib = staticLibrary!(
+                            "mylib",
+                            Sources!("source")
+                        );
+                        mixin build!lib;
+                    }
+                );
+                writeFile("source/app.d", "void main() {}");
+
+                runReggae("-b", backend, "--verbose");
+                mixin(backend).shouldExecuteOk;
+
+                static if(backend == "ninja")
+                    const before = timeLastModified(inSandboxPath("build.ninja"));
+
+                // Simulate an editor save by renaming a temp file over the
+                // source. Editors such as Emacs do this, and it bumps the
+                // parent directory's mtime without changing the source set.
+                writeFile("source/app.d.tmp", "void main() {}");
+                rename(
+                    inSandboxPath("source/app.d.tmp"),
+                    inSandboxPath("source/app.d"),
+                );
+
+                mixin(backend)
+                    .shouldExecuteOk
+                    .shouldContain("Build description unchanged");
+
+                // make has no equivalent of ninja's restat, so the
+                // Makefile's timestamp gets bumped to settle the rerun
+                // dependency; build.ninja must remain untouched.
+                static if(backend == "ninja")
+                    timeLastModified(inSandboxPath("build.ninja"))
+                        .shouldEqual(before);
+            }
+        }
+
         @("rerun.deleted.dir." ~ backend)
         @Tags(backend)
         unittest {
@@ -517,7 +564,10 @@ version(DigitalMars) {
                 else
                     static assert(false, "unknown backend");
 
-                mixin(backend).shouldFailToExecute.shouldNotContain(msg);
+                // instead of choking on the missing inputs, the rerun
+                // regenerates the build without the deleted directory
+                // and the build succeeds
+                mixin(backend).shouldExecuteOk.shouldNotContain(msg);
             }
         }
 

@@ -74,12 +74,18 @@ struct Ninja {
 
     //includes rerunning reggae
     const(NinjaEntry)[] allRuleEntries() @safe pure const {
-        import std.array: join;
+        import reggae.backend: rerunCommand;
 
+        // The rerun command checks whether reggae actually needs to be
+        // rerun and does nothing otherwise, leaving build.ninja
+        // untouched. `restat = 1` then stops ninja from running the
+        // check again on the next build (the source directories'
+        // timestamps would otherwise keep triggering it).
         return ruleEntries ~ defaultRules(_options) ~
             NinjaEntry("rule _rerun",
-                       ["command = " ~ _options.rerunArgs.join(" "),
+                       ["command = " ~ rerunCommand(_options),
                         "generator = 1",
+                        "restat = 1",
                            ]);
     }
 
@@ -94,6 +100,7 @@ struct Ninja {
     }
 
     void writeBuild() @safe {
+        import reggae.backend: writeRerunState;
         import std.stdio: File;
         import reggae.path: buildPath;
 
@@ -102,6 +109,8 @@ struct Ninja {
 
         auto rulesNinja = File(buildPath(_options.workingDir, "rules.ninja"), "w");
         rulesNinja.writeln(rulesOutput);
+
+        writeRerunState(_options, _srcDirs);
     }
 
 private:
@@ -114,17 +123,10 @@ private:
     string[] _srcDirs;
 
     void defaultRule(Target target) @safe {
-        import reggae.backend: maybeAddDirDependencies;
+        import reggae.backend: flattenShellArgs, maybeAddDirDependencies;
         import std.algorithm: canFind, map, startsWith;
         import std.array: join, replace;
         import std.path: extension;
-
-        static string flattenShellArgs(in string[] args) {
-            static string quoteArgIfNeeded(string a) {
-                return !a.canFind(' ') ? a : `"` ~ a.replace(`"`, `\"`) ~ `"`;
-            }
-            return args.map!quoteArgIfNeeded.join(" ");
-        }
 
         string[] paramLines;
         foreach(immutable param; target.commandParamNames) {

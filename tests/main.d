@@ -3,6 +3,25 @@ import unit_threaded;
 int main(string[] args) {
     import unit_threaded.runner.runner: runTests;
 
+    // The integration tests run reggae in-process, so the build files
+    // they generate in sandboxes call back into this very binary to
+    // check whether reggae needs rerunning (in production it would be
+    // the actual reggae binary). Act like reggae's main in that case.
+    {
+        import std.algorithm: canFind;
+        if(args.canFind("--rerun-check")) {
+            import reggae.reggae: run;
+            import std.stdio: stdout, stderr;
+            try
+                run(stdout, args);
+            catch(Exception ex) {
+                stderr.writeln(ex.msg);
+                return 1;
+            }
+            return 0;
+        }
+    }
+
     primeDubBuild;
 
     return args.runTests!(

@@ -31,14 +31,12 @@ version(DigitalMars) {
 
                 runReggae("-b", backend, "--verbose");
                 mixin(backend).shouldExecuteOk;
+                shouldSucceed("foo");
 
-                // Rerunning reggae fails in this fake environment because there is no
-                // reggae binary to rerun. So this is a hack because it tracks whether or
-                // not we rerun reggae by having the call to reggae fail at runtime.
-                // We trigger this by writing to constants.d which should have correctly
-                // been identified as an implicit dependency of the reggaefile.
-                // If things actually worked, we'd assert that there's now a file named
-                // `bar`.
+                // Writing to constants.d, which should have correctly been
+                // identified as an implicit dependency of the reggaefile,
+                // reruns reggae and the build now produces `bar` instead
+                // of `foo`.
                 writeFile(
                     "other/constants.d",
                     q{
@@ -46,14 +44,14 @@ version(DigitalMars) {
                         enum exeName = "bar"; void lefoo() { }
                     }
                 );
-                mixin(backend).shouldFailToExecute.shouldContain("reggae");
-
-                runReggae("-b", backend); // but this should be fine
-                mixin(backend).shouldExecuteOk; // it's rerun, so make/ninja succeeds
+                mixin(backend).shouldExecuteOk;
+                shouldSucceed("bar");
 
                 // test that adding a file triggers a rerun
                 writeFile("source/foo.d");
-                mixin(backend).shouldFailToExecute.shouldContain("reggae");
+                mixin(backend)
+                    .shouldExecuteOk
+                    .shouldNotContain("Build description unchanged");
             }
         }
  }

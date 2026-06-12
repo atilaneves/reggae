@@ -648,3 +648,120 @@ unittest {
         dur2.shouldBeSmallerThan((dur1 * 7) / 10);
     }
 }
+
+// Issue #301: editing the dub recipe of a package depended on via
+// dubPackage should rerun reggae so the build reflects the new recipe.
+@("dubPackage.path.rerun.recipe")
+@Tags("dub", "ninja")
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile(
+            "over/there/dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "executable"`,
+            ]
+        );
+        writeFile(
+            "over/there/source/app.d",
+            q{
+                int main() {
+                    version(purple)
+                        return 0;
+                    else
+                        return 1;
+                }
+            }
+        );
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+                alias dubDep = dubPackage!(DubPath("over/there"));
+                mixin build!dubDep;
+            }
+        );
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldFail("over/there/foo");
+
+        // change the recipe so the package is compiled with -version=purple
+        writeFile(
+            "over/there/dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "executable"`,
+                `versions "purple"`,
+            ]
+        );
+
+        ninja.shouldExecuteOk;
+        shouldSucceed("over/there/foo");
+    }
+}
+
+// Issue #301: editing the dub recipe of a package depended on via
+// dubDependant should rerun reggae so the build reflects the new recipe.
+@("dubDependant.ct.path.rerun.recipe")
+@MaybeFlaky
+@Tags("dub", "ninja")
+unittest {
+    with(immutable ReggaeSandbox()) {
+        writeFile(
+            "over/there/dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "library"`,
+            ]
+        );
+        writeFile(
+            "over/there/source/foo.d",
+            q{
+                version(purple)
+                    int result() { return 0; }
+                else
+                    int result() { return 1; }
+            }
+        );
+        writeFile(
+            "src/app.d",
+            q{
+                import foo;
+                int main() {
+                    return result;
+                }
+            }
+        );
+        writeFile(
+            "reggaefile.d",
+            q{
+                import reggae;
+                alias app = dubDependant!(
+                    TargetName("myapp"),
+                    DubPackageTargetType.executable,
+                    Sources!(Files("src/app.d")),
+                    DubPath("over/there"),
+                );
+                mixin build!app;
+            }
+        );
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+        shouldFail("myapp");
+
+        // change the recipe so the dependency is compiled with -version=purple
+        writeFile(
+            "over/there/dub.sdl",
+            [
+                `name "foo"`,
+                `targetType "library"`,
+                `versions "purple"`,
+            ]
+        );
+
+        ninja.shouldExecuteOk;
+        shouldSucceed("myapp");
+    }
+}

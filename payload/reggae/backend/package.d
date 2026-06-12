@@ -53,6 +53,25 @@ private auto trustedArray(R)(auto ref scope R rng) @trusted {
 
 private alias Options = imported!"reggae.options".Options;
 
+// Files read while computing the build description that
+// `Options.reggaeFileDependencies` knows nothing about, such as the
+// recipes of dub packages depended on via `dubPackage`/`dubDependant`.
+// Editing them changes the build description, so they need to trigger
+// a reggae rerun. Rules register them when the build description is
+// evaluated; the backends then write them to the generated build files
+// and to the rerun state (the rerun check runs in a separate process).
+private string[] gExtraRerunDeps;
+
+package(reggae) void registerRerunDependencies(in string[] paths...) @safe {
+    gExtraRerunDeps ~= paths;
+}
+
+package(reggae) string[] extraRerunDependencies() @safe {
+    import std.algorithm: sort, uniq;
+    import std.array: array;
+    return gExtraRerunDeps.dup.sort.uniq.array;
+}
+
 // What the generated build files run when any of the build
 // description's dependencies (including the source directories) is out
 // of date. `--rerun-check` only actually reruns reggae if the build
@@ -83,11 +102,11 @@ bool rerunIsNeeded(in Options options) @safe {
         return true;
 
     const buildFileTime = buildFile.timeLastModified;
-    foreach(dep; options.reggaeFileDependencies)
+    const state = readRerunState(options);
+    foreach(dep; options.reggaeFileDependencies ~ state.dependencies)
         if(!dep.exists || dep.timeLastModified > buildFileTime)
             return true;
 
-    const state = readRerunState(options);
     return scanSrcFiles(options.workingDir, state.srcDirs) != state.srcFiles;
 }
 
@@ -126,6 +145,7 @@ private string buildFilePath(in Options options) @safe pure {
 private struct RerunState {
     string[] srcDirs;
     string[] srcFiles;
+    string[] dependencies;
 }
 
 private string rerunStatePath(in Options options) @safe pure {
@@ -146,6 +166,7 @@ private RerunState readRerunState(in Options options) @safe {
     RerunState ret;
     ret.srcDirs = json.objectNoRef["srcDirs"].arrayNoRef.map!(a => a.str).array;
     ret.srcFiles = json.objectNoRef["srcFiles"].arrayNoRef.map!(a => a.str).array;
+    ret.dependencies = json.objectNoRef["dependencies"].arrayNoRef.map!(a => a.str).array;
     return ret;
 }
 
@@ -168,6 +189,7 @@ package void writeRerunState(in Options options, in string[] srcDirs) @safe {
     auto json = JSONValue([
         "srcDirs": JSONValue(sortedSrcDirs),
         "srcFiles": JSONValue(scanSrcFiles(options.workingDir, sortedSrcDirs)),
+        "dependencies": JSONValue(extraRerunDependencies),
     ]);
 
     auto file = File(statePath, "w");

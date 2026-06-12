@@ -259,6 +259,25 @@ private struct DubPathDependency {
         // only really one key.
         auto output = () @trusted { return stdout; }();
         dubInfo = dubInfos(output, subOptions)[dubPath.config.value];
+
+        registerRecipeFiles;
+    }
+
+    // The targets derive from the recipes of the dub packages involved,
+    // which `Options.reggaeFileDependencies` knows nothing about, so
+    // register them to trigger a reggae rerun when they change.
+    private void registerRecipeFiles() {
+        import reggae.backend: registerRerunDependencies;
+        import std.file: exists;
+        import std.path: buildPath;
+
+        foreach(ref pkg; dubInfo.packages) {
+            foreach(fileName; ["dub.sdl", "dub.json", "package.json", "dub.selections.json"]) {
+                const path = buildPath(pkg.path, fileName);
+                if(path.exists)
+                    registerRerunDependencies(path);
+            }
+        }
     }
 
     Target target() {

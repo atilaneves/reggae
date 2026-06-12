@@ -43,13 +43,15 @@ struct Ninja {
         import std.range: chain, only;
 
         const(NinjaEntry)[] rerunEntries() {
+            import reggae.backend: extraRerunDependencies;
+
             // if exporting the build system, don't include rerunning reggae
             if(_options.export_)
                 return [];
 
             auto srcDirs = _srcDirs.sort.uniq;
             const flattenedInputs = flattenEntriesInBuildLine(
-                chain(_options.reggaeFileDependencies, srcDirs).array
+                chain(_options.reggaeFileDependencies, extraRerunDependencies, srcDirs).array
             );
             auto paramLines = _options.oldNinja ? [] : ["pool = console"];
 

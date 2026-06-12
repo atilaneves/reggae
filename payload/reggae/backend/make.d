@@ -75,7 +75,7 @@ struct Makefile {
     //includes rerunning reggae
     string output() @safe {
 
-        import reggae.backend: rerunCommand;
+        import reggae.backend: rerunCommand, extraRerunDependencies;
         import std.array: join;
         import std.range: chain;
         import std.algorithm: sort, uniq;
@@ -92,7 +92,7 @@ struct Makefile {
             // actually needs to be rerun, so that editing an existing
             // source file doesn't regenerate the build.
             auto srcDirs = _srcDirs.sort.uniq;
-            const flattenedInputs = chain(options.reggaeFileDependencies, srcDirs).join(" ");
+            const flattenedInputs = chain(options.reggaeFileDependencies, extraRerunDependencies, srcDirs).join(" ");
             const rerunLine = "\t" ~ rerunCommand(options) ~ "\n";
 
             ret ~= fileName() ~ ": " ~ flattenedInputs ~ "\n";

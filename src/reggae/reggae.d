@@ -594,7 +594,9 @@ private string buildReggaefileWithReggae(O)
     // the actual build at all.
     auto newOptions = options.dup;
     newOptions.backend = Backend.binary;
-    newOptions.dubObjsDir = buildgenDubObjsDir;
+    newOptions.dubObjsDir = options.dubObjsDir == ""
+        ? buildgenDubObjsDir
+        : options.dubObjsDir;
     newOptions.projectPath = dubRecipeDir;
     newOptions.workingDir = dubRecipeDir;
     newOptions.dubTargetPathAbs = true; // use absolute paths in `dubBuild`.

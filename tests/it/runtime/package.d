@@ -92,7 +92,6 @@ struct ReggaeSandbox {
 private:
 
     auto runImpl(string[] args, string project = "") const {
-        import reggae.reggae: buildgenDubObjsDir;
         import std.algorithm: canFind;
         import std.path: buildPath;
 
@@ -110,7 +109,7 @@ private:
         else
             static assert(false, "Unknown D compiler");
 
-        const dubObjsDir = buildPath(buildgenDubObjsDir, "test");
+        const dubObjsDir = buildPath(testPath, ".reggae", "dub_objs");
         // tell the binary backend to use a single thread since we'll
         // be using many of them to run the tests themselves.
         return testRun(

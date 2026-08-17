@@ -301,6 +301,7 @@ unittest {
 
         const barObjsDir = buildPath(dubObjsDir, "bar");
         shouldExist(barObjsDir);
+        shouldExist(buildPath(dubObjsDir, "reggae"));
         const hashDir = getSingleSubdir(barObjsDir);
         const objPath = buildPath(hashDir, "source_bar" ~ objExt);
         shouldExist(objPath);

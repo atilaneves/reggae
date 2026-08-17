@@ -95,7 +95,10 @@ private void primeDubBuild() {
     stdout.log("Priming libdub");
     scope(exit) stdout.log("Primed\n");
 
-    const dubObjsDir = buildgenDubObjsDir;
+    version(linux)
+        const dubObjsDir = "/dev/shm/reggae-test-objs";
+    else
+        const dubObjsDir = buildgenDubObjsDir;
     const reggaefile = buildPath(dubObjsDir, "prime", "reggaefile.d");
     if(!reggaefile.dirName.exists)
         mkdirRecurse(reggaefile.dirName);

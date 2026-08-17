@@ -39,6 +39,12 @@ shared static this() nothrow {
         writelnUt("[IT] Creating new test path ", testsPath);
         mkdirRecurse(testsPath);
 
+        version(linux) {
+            const dubObjsPath = "/dev/shm/reggae-test-objs";
+            if(dubObjsPath.exists) rmdirRecurse(dubObjsPath);
+            mkdirRecurse(dubObjsPath);
+        }
+
     } catch(Exception e) {
         import std.stdio: stderr;
         try

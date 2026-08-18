@@ -282,8 +282,13 @@ public struct Dub {
 // parsing every recipe in there. Now it caches the package manager.
 auto fullDub(in string projectPath) @trusted {
     import dub.dub: DubClass = Dub;
+    import dub.internal.logging: LogLevel, setLogLevel;
     import dub.packagemanager: PackageManager;
     import dub.internal.vibecompat.inet.path: NativePath;
+
+    // Reggae embeds DUB as a library, so DUB's package-recipe warnings are
+    // not actionable by its callers (and include transitive dependencies).
+    setLogLevel(LogLevel.error);
 
     // Cache the PackageManager.
     // A reggaefile.d with lots of dub{Package,Dependant} targets benefits from
@@ -302,7 +307,9 @@ auto fullDub(in string projectPath) @trusted {
                 // reggae project directory as our local root.
                 import reggae.config: options;
                 auto localRoot = NativePath(options.projectPath);
-                cachedPM = new PackageManager(localRoot, m_dirs.userPackages, m_dirs.systemSettings, false);
+                import dub.internal.io.realfs: RealFS;
+                cachedPM = new PackageManager(new RealFS(), localRoot ~ ".dub/packages/",
+                    m_dirs.userPackages ~ "packages/", m_dirs.systemSettings ~ "packages/");
             }
             return cachedPM;
         }

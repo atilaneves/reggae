@@ -136,10 +136,13 @@ Target inTopLevelObjDirOf(Target target, string objDir, Flag!"topLevel" isTopLev
 
     auto outputs = target._outputs.map!(a => expandOutput(a, gProjdir, baseDir)).array;
 
-    return Target(outputs,
-                  target._command.expandVariables,
-                  target._dependencies.map!(a => a.inTopLevelObjDirOf(objDir)).array,
-                  target._implicits.map!(a => a.inTopLevelObjDirOf(objDir)).array);
+    auto ret = Target(outputs,
+                      target._command.expandVariables,
+                      target._dependencies.map!(a => a.inTopLevelObjDirOf(objDir)).array,
+                      target._implicits.map!(a => a.inTopLevelObjDirOf(objDir)).array);
+    ret._commandOptions = target._commandOptions;
+    ret._hasCommandOptions = target._hasCommandOptions;
+    return ret;
 }
 
 
@@ -273,6 +276,8 @@ struct Target {
     private Command _command; ///see $(D Command) struct
     private Target[] _dependencies;
     private Target[] _implicits;
+    private Options _commandOptions;
+    private bool _hasCommandOptions;
 
     enum Target[] noTargets = [];
 
@@ -355,7 +360,28 @@ struct Target {
     ///returns a command string to be run by the shell
     string shellCommand(in Options options,
                         Flag!"dependencies" deps = Yes.dependencies) @safe pure const {
-        return _command.shellCommand(options, getLanguage(), _outputs, inputs(options.projectPath), deps);
+        const commandOptions = _hasCommandOptions ? _commandOptions : options;
+        return _command.shellCommand(commandOptions, getLanguage(), _outputs,
+                                     inputs(commandOptions.projectPath), deps);
+    }
+
+    /**
+       Return a target whose command has been rendered with the supplied
+       options. This is needed when one build contains targets for more than
+       one compiler or build mode.
+    */
+    Target withOptions(in Options options) @safe pure {
+        import std.algorithm: map;
+        import std.array: array;
+
+        auto ret = this;
+        if (ret._command.isDefaultCommand) {
+            ret._commandOptions = options.dup;
+            ret._hasCommandOptions = true;
+        }
+        ret._dependencies = _dependencies.map!(a => a.withOptions(options)).array;
+        ret._implicits = _implicits.map!(a => a.withOptions(options)).array;
+        return ret;
     }
 
     string describe(in Options options) {
@@ -369,6 +395,15 @@ struct Target {
 
     bool hasDefaultCommand() @safe const pure {
         return _command.isDefaultCommand;
+    }
+
+    bool hasCommandOptions() @safe const pure nothrow {
+        return _hasCommandOptions;
+    }
+
+    string[] defaultCommandTemplate(in Options options) @safe pure const {
+        const commandOptions = _hasCommandOptions ? _commandOptions : options;
+        return Command.builtinTemplate(_command.getType, getLanguage(), commandOptions);
     }
 
     CommandType getCommandType() @safe pure const nothrow scope {
@@ -412,6 +447,11 @@ struct Target {
         }
 
         bytes ~= arrayToBytes(shellCommand(options));
+        bytes ~= [cast(ubyte) _hasCommandOptions];
+        if (_hasCommandOptions) {
+            bytes ~= arrayToBytes(_commandOptions.dCompiler);
+            bytes ~= arrayToBytes(_commandOptions.dubBuildType);
+        }
 
         bytes ~= setUshort(cast(ushort)_dependencies.length);
         foreach(dep; _dependencies) bytes ~= dep.toBytes(options);
@@ -431,6 +471,8 @@ struct Target {
         }
 
         auto command = Command(cast(string)bytesToArray!char(bytes));
+        immutable hasCommandOptions = cast(bool) bytes[0];
+        bytes = bytes[1 .. $];
 
         Target[] dependencies;
         immutable numDeps = getUshort(bytes);
@@ -440,7 +482,15 @@ struct Target {
         immutable numImps = getUshort(bytes);
         foreach(i; 0..numImps) implicits ~= Target.fromBytes(bytes);
 
-        return Target(outputs, command, dependencies, implicits);
+        auto target = Target(outputs, command, dependencies, implicits);
+        if (hasCommandOptions) {
+            target._hasCommandOptions = true;
+            target._commandOptions.dCompiler =
+                cast(string) bytesToArray!char(bytes);
+            target._commandOptions.dubBuildType =
+                cast(string) bytesToArray!char(bytes);
+        }
+        return target;
     }
 
     bool opEquals()(auto ref const Target other) @safe pure const {

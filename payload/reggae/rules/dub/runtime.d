@@ -7,6 +7,8 @@ module reggae.rules.dub.runtime;
 import reggae.rules.dub: CompilationMode;
 import reggae.types : Configuration;
 import reggae.dub.info: DubInfo;
+import std.algorithm: map;
+import std.array: array;
 
 
 imported!"reggae.build".Target dubTest(C)
@@ -63,11 +65,11 @@ imported!"reggae.build".Target dubBuild(
         compilationMode,
         dubObjsDir(options, dubInfo),
         extraCompilerFlags,
-    );
+    ).map!(a => a.withOptions(dubInfo.options)).array;
 
     const targetPath = dubInfo.targetPath(options);
     const name = fixNameForPostBuild(buildPath(targetPath, dubInfo.targetName.value), dubInfo);
-    auto target = objectsToTarget(dubInfo, name, allObjs);
+    auto target = objectsToTarget(dubInfo, name, allObjs).withOptions(dubInfo.options);
     const combinedPostBuildCommands = dubInfo.postBuildCommands;
 
     return combinedPostBuildCommands.length == 0

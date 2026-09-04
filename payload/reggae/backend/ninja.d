@@ -141,7 +141,16 @@ private:
             paramLines ~= param ~ " = " ~ flat.replace("$", "$$");
         }
 
-        const ruleName = cmdTypeToNinjaRuleName(target.getCommandType, target.getLanguage);
+        auto ruleName = cmdTypeToNinjaRuleName(target.getCommandType, target.getLanguage);
+        if (target.hasCommandOptions) {
+            import std.conv: text;
+            ruleName ~= "_" ~ text(_counter++);
+            ruleEntries ~= NinjaEntry(
+                "rule " ~ ruleName,
+                initializeRuleParamLines(target.getLanguage,
+                                          target.defaultCommandTemplate(_options))
+            );
+        }
         // includeImplicitInputs used to be set to `false` here, and I don't know why.
         // No tests fail if set to true, and one test in particular
         // (tests.it.runtime.dependencies.ninja) *requires* it to pass.

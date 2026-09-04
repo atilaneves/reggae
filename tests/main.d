@@ -62,6 +62,7 @@ int main(string[] args) {
         "tests.it.buildgen.outputs_in_project_path",
         "tests.it.buildgen.two_builds_reggaefile",
         "tests.it.buildgen.empty_reggaefile",
+        "tests.it.buildgen.mixed_options",
         "tests.it",
         "tests.it.rules.scriptlike",
         "tests.it.rules.json_build",

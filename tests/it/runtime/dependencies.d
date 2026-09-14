@@ -234,3 +234,85 @@ unittest {
         }
     }
 }
+
+
+// Regression test for a bug where a Ninja rule for a target with its own
+// per-target compiler options (`Target.withOptions`, as applied to every
+// dub target by `rules.dub.runtime.dubBuild`) got a numbered rule
+// (`_dcompile_N`) that was missing the `deps`/`depfile` lines the generic
+// rule has. Ninja never read the `-makedeps` output for such targets, so
+// editing an imported module didn't rebuild objects that imported it.
+@("reggaefile.imports.rebuild.numbered-rule.ninja")
+@Tags("ninja")
+unittest {
+    import reggae.rules.common: objExt;
+    import std.file: timeLastModified;
+    import core.thread: Thread;
+    import core.time: msecs;
+
+    with(immutable ReggaeSandbox()) {
+        writeFile("b.d", q{
+            module b;
+            enum bValue = 1;
+        });
+        writeFile("a.d", q{
+            module a;
+            import b;
+            enum aValue = bValue;
+        });
+        writeFile("unrelated.d", q{
+            module unrelated;
+            enum unrelatedValue = 1;
+        });
+
+        // Give `a.o` and `unrelated.o` their own per-target compiler
+        // options (identical to the global ones is enough) so Ninja
+        // generates numbered `_dcompile_N` rules for them, the same way
+        // it does for every object file of every dub target.
+        writeFile("reggaefile.d", q{
+            import reggae;
+            import reggae.config: options;
+
+            auto obj(string source) {
+                auto targetOptions = options.dup;
+                return objectFile(targetOptions, SourceFile(source))
+                    .withOptions(targetOptions);
+            }
+
+            Build reggaeBuild() {
+                return Build(obj("a.d"), obj("unrelated.d"));
+            }
+
+            mixin BuildgenMain;
+        });
+
+        runReggae("-b", "ninja");
+        ninja.shouldExecuteOk;
+
+        const aObj = inSandboxPath("a" ~ objExt);
+        const unrelatedObj = inSandboxPath("unrelated" ~ objExt);
+        shouldExist(aObj);
+        shouldExist(unrelatedObj);
+
+        // Some filesystems only have 1-second mtime resolution; sleep so
+        // that a rebuild is guaranteed to bump the recorded mtime.
+        Thread.sleep(1100.msecs);
+
+        const aBefore = timeLastModified(aObj);
+        const unrelatedBefore = timeLastModified(unrelatedObj);
+
+        // `b.d` is not a `Sources()` input of `a.o`'s target: it's only
+        // known to Ninja via the depfile dmd writes with `-makedeps`.
+        // Ninja must still rebuild `a.o` when `b.d` changes, but must
+        // leave the unrelated object alone.
+        writeFile("b.d", q{
+            module b;
+            enum bValue = 2;
+        });
+
+        ninja.shouldExecuteOk;
+
+        (timeLastModified(aObj) > aBefore).should == true;
+        timeLastModified(unrelatedObj).should == unrelatedBefore;
+    }
+}

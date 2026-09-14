@@ -149,6 +149,7 @@ private:
                 "rule " ~ ruleName,
                 initializeRuleParamLines(target.getLanguage,
                                           target.defaultCommandTemplate(_options))
+                    ~ depFileParamLines(target.getCommandType, target.getLanguage, _options)
             );
         }
         // includeImplicitInputs used to be set to `false` here, and I don't know why.
@@ -320,6 +321,39 @@ private bool hasDepFile(in CommandType type) @safe pure nothrow {
     return type == CommandType.compile || type == CommandType.compileAndLink;
 }
 
+// The `deps`/`depfile` lines for a rule that compiles code. Shared between
+// the generic per-language rules in `defaultRules` and the numbered
+// per-target rules `defaultRule` emits for targets with their own command
+// options (see `Target.hasCommandOptions`), so both kinds of rule make
+// Ninja read the `-makedeps` output and rebuild on header/import changes.
+private string[] depFileParamLines(in CommandType type, in Language language, in Options options) @safe pure {
+
+    if(!hasDepFile(type)) return [];
+
+    string[] paramLines;
+
+    version(Windows)
+        const isMSVC = language == Language.C || language == Language.Cplusplus;
+    else
+        enum isMSVC = false;
+
+    if (isMSVC) {
+        paramLines ~= "deps = msvc";
+    } else {
+        // Disable the ninja deps database (.ninja_deps file) with --dub-objs-dir
+        // to enable sharing the build artifacts (incl. .dep files) across reggae
+        // builds with identical --dub-objs-dir.
+        // Ninja otherwise complains about local .ninja_deps being out of date when
+        // the shared build output is more recent, and rebuilds.
+        if (options.dubObjsDir.length == 0)
+            paramLines ~= "deps = gcc";
+
+        paramLines ~= "depfile = $out.dep";
+    }
+
+    return paramLines;
+}
+
 /**
  * Pre-built rules
  */
@@ -331,28 +365,8 @@ NinjaEntry[] defaultRules(in Options options) @safe pure {
 
         const command = Command.builtinTemplate(type, language, options);
 
-        string[] paramLines = initializeRuleParamLines(language, command);
-
-        if(hasDepFile(type)) {
-            version(Windows)
-                const isMSVC = language == Language.C || language == Language.Cplusplus;
-            else
-                enum isMSVC = false;
-
-            if (isMSVC) {
-                paramLines ~= "deps = msvc";
-            } else {
-                // Disable the ninja deps database (.ninja_deps file) with --dub-objs-dir
-                // to enable sharing the build artifacts (incl. .dep files) across reggae
-                // builds with identical --dub-objs-dir.
-                // Ninja otherwise complains about local .ninja_deps being out of date when
-                // the shared build output is more recent, and rebuilds.
-                if (options.dubObjsDir.length == 0)
-                    paramLines ~= "deps = gcc";
-
-                paramLines ~= "depfile = $out.dep";
-            }
-        }
+        string[] paramLines = initializeRuleParamLines(language, command)
+            ~ depFileParamLines(type, language, options);
 
         string getDescription() {
             switch(type) with(CommandType) {

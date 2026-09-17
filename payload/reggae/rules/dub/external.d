@@ -269,11 +269,11 @@ private struct DubPathDependency {
     private void registerRecipeFiles() {
         import reggae.backend: registerRerunDependencies;
         import std.file: exists;
-        import std.path: buildPath;
+        import std.path: buildNormalizedPath;
 
         foreach(ref pkg; dubInfo.packages) {
             foreach(fileName; ["dub.sdl", "dub.json", "package.json", "dub.selections.json"]) {
-                const path = buildPath(pkg.path, fileName);
+                const path = buildNormalizedPath(pkg.path, fileName);
                 if(path.exists)
                     registerRerunDependencies(path);
             }

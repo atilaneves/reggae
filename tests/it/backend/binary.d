@@ -154,3 +154,74 @@ unittest {
         shouldExist("baz.txt");
     }
 }
+
+@("binary.out-of-tree.timestamps-and-depfile") unittest {
+    import reggae.path: buildPath;
+    import std.datetime: Clock;
+    import core.time: seconds;
+
+    with(immutable Sandbox()) {
+        const workDir = inSandboxPath("build");
+        mkdirRecurse(workDir);
+        writeFile("source.txt", "first");
+        writeFile("build/extra.txt", "extra");
+        const source = inSandboxPath("source.txt");
+        const result = buildPath(workDir, "copy.txt");
+        version(Windows)
+            enum command = "copy $in $out";
+        else
+            enum command = "cp $in $out";
+        auto options = getOptions(["reggae", "-b", "binary", "-C", workDir]);
+        auto file = FakeFile();
+        auto binary = Binary(Build(Target("copy.txt", command, Target(source))), options, file);
+        auto args = ["build", "--norerun", "--single"];
+
+        binary.run(args);
+        readText(result).strip.shouldEqual("first");
+        file.lines = [];
+        binary.run(args);
+        file.lines.shouldEqual(["[build] Nothing to do"]);
+
+        writeFile("source.txt", "second");
+        auto earlier = Clock.currTime - 2.seconds;
+        setTimes(result, earlier, earlier);
+        binary.run(args);
+        readText(result).strip.shouldEqual("second");
+
+        writeFile("build/copy.txt.dep", "copy.txt: extra.txt");
+        const oldSource = Clock.currTime - 4.seconds;
+        setTimes(source, oldSource, oldSource);
+        earlier = Clock.currTime - 2.seconds;
+        setTimes(result, earlier, earlier);
+        file.lines = [];
+        binary.run(args);
+        file.lines.shouldNotEqual(["[build] Nothing to do"]);
+        setTimes(buildPath(workDir, "extra.txt"), earlier, earlier);
+        file.lines = [];
+        binary.run(args);
+        file.lines.shouldEqual(["[build] Nothing to do"]);
+    }
+}
+
+@("binary.out-of-tree.creates-output-directory") unittest {
+    import reggae.path: buildPath;
+    import std.path: baseName;
+
+    with(immutable Sandbox()) {
+        const workDir = inSandboxPath("build");
+        mkdirRecurse(workDir);
+        writeFile("source.txt", "nested");
+        const outputDir = "result-" ~ testPath.baseName;
+        scope(exit) if(outputDir.exists) rmdirRecurse(outputDir);
+        version(Windows)
+            enum command = "copy $in $out";
+        else
+            enum command = "cp $in $out";
+        auto options = getOptions(["reggae", "-b", "binary", "-C", workDir]);
+        auto binary = Binary(Build(Target(buildPath(outputDir, "copy.txt"), command,
+            Target(inSandboxPath("source.txt")))), options);
+        binary.run(["build", "--norerun", "--single"]);
+        readText(buildPath(workDir, outputDir, "copy.txt")).strip.shouldEqual("nested");
+        outputDir.exists.shouldBeFalse;
+    }
+}

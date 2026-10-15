@@ -56,6 +56,20 @@ shared static this() nothrow {
     }
 }
 
+// This runs on every test-runner thread because Sandbox.sandboxesPath is TLS.
+// Rerun children clear unit-threaded's default directory before main runs.
+static this() {
+    import core.runtime: Runtime;
+    import std.algorithm: canFind;
+    import unit_threaded.integration: Sandbox;
+
+    if(Runtime.args.canFind("--rerun-check"))
+        return;
+
+    Sandbox.setPath(buildPath(testsPath, "sandboxes"));
+}
+
+
 private void writeFile(string fileName)() {
     import std.stdio;
     auto file = File(buildPath(testsPath, fileName), "w");

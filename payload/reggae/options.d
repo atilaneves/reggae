@@ -50,6 +50,7 @@ struct Options {
     bool cacheBuildInfo;
     string[] args;
     string workingDir;
+    string invocationDir;
     bool version_;
     bool export_;
     bool verbose;
@@ -97,10 +98,11 @@ struct Options {
     //finished setup
     void finalize(string[] args) @safe {
         import std.process;
-        import std.file: thisExePath;
+        import std.file: thisExePath, getcwd;
 
         this.args = args;
         ranFromPath = thisExePath;
+        invocationDir = getcwd;
 
         setExePath(  cCompiler, "CC",  defaultCC );
         setExePath(cppCompiler, "CXX", defaultCXX);
@@ -316,8 +318,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
 
     Options options = defaultOptions;
 
-    //escape spaces so that if we try using these arguments again the shell won't complain
-    auto origArgs = args.map!(a => a.canFind(" ") ? `"` ~ a ~ `"` : a).array;
+    auto origArgs = args.dup;
 
     string legacyDflags;
     try {
@@ -335,7 +336,7 @@ Options getOptions(Options defaultOptions, string[] args) @trusted {
             "old-ninja", "Generate a Ninja build compatible with older versions of Ninja", &options.oldNinja,
             "no-comp-db", "Don't generate a JSON compilation database", &options.noCompilationDB,
             "cache-build-info", "Cache the build information", &options.cacheBuildInfo,
-            "C", "Change directory to run in (similar to make -C and ninja -C)", &options.workingDir,
+            "C", "Directory for generated build files (default current directory)", &options.workingDir,
             "version", "Prints version information", &options.version_,
             "export", "Export build system - removes dependencies on reggae itself", &options.export_,
             "verbose", "Verbose output", &options.verbose,

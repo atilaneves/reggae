@@ -75,16 +75,31 @@ package(reggae) string[] extraRerunDependencies() @safe {
 // What the generated build files run when any of the build
 // description's dependencies (including the source directories) is out
 // of date. `--rerun-check` only actually reruns reggae if the build
-// description could have changed - see `rerunIsNeeded`.
+// description could have changed - see `rerunReason`.
 package string rerunCommand(in Options options) @safe pure {
+    import std.process: escapeShellCommand;
+
     string[] args = [options.ranFromPath, "--rerun-check"];
     if(options.rerunArgs.length > 1)
         args ~= options.rerunArgs[1 .. $];
-    return flattenShellArgs(args);
+    const command = escapeShellCommand(args);
+    if(options.invocationDir.length == 0)
+        return command;
+
+    version(Windows)
+        enum changeDirectory = "cd /d ";
+    else
+        enum changeDirectory = "cd ";
+    return changeDirectory ~ escapeShellCommand(options.invocationDir) ~ " && " ~ command;
+}
+
+/// Whether the build description needs regenerating.
+bool rerunIsNeeded(in Options options) @safe {
+    return rerunReason(options).length != 0;
 }
 
 /**
-   Whether reggae needs to be rerun to regenerate the build files.
+   Why reggae needs to regenerate the build files, or null if unchanged.
 
    Editing an existing source file bumps its directory's timestamp
    (editors that save via a temporary file rename do this), which makes
@@ -94,23 +109,40 @@ package string rerunCommand(in Options options) @safe pure {
    build was generated, and check if the build description itself (the
    reggaefile and its dependencies) is newer than the generated build.
  */
-bool rerunIsNeeded(in Options options) @safe {
+string rerunReason(in Options options) @safe {
     import std.file: exists, timeLastModified;
+    import std.algorithm: setDifference;
 
     const buildFile = buildFilePath(options);
-    if(buildFile is null || !buildFile.exists)
-        return true;
+    if(buildFile is null)
+        return "backend requires regeneration";
+    if(!buildFile.exists)
+        return "missing build file: " ~ buildFile;
+
+    const statePath = rerunStatePath(options);
+    if(!statePath.exists)
+        return "missing rerun state: " ~ statePath;
 
     const buildFileTime = buildFile.timeLastModified;
     const state = readRerunState(options);
-    foreach(dep; options.reggaeFileDependencies ~ state.dependencies)
-        if(!dep.exists || dep.timeLastModified > buildFileTime)
-            return true;
+    foreach(dep; options.reggaeFileDependencies ~ state.dependencies) {
+        if(!dep.exists)
+            return "missing build description dependency: " ~ dep;
+        if(dep.timeLastModified > buildFileTime)
+            return "build description dependency changed: " ~ dep;
+    }
 
-    return scanSrcFiles(options.workingDir, state.srcDirs) != state.srcFiles;
+    const currentFiles = scanSrcFiles(options.workingDir, state.srcDirs);
+    auto added = setDifference(currentFiles, state.srcFiles);
+    if(!added.empty)
+        return "directory entry added: " ~ added.front;
+    auto removed = setDifference(state.srcFiles, currentFiles);
+    if(!removed.empty)
+        return "directory entry removed: " ~ removed.front;
+    return null;
 }
 
-// Called when `rerunIsNeeded` returns false. Make would otherwise run
+// Called when `rerunReason` returns null. Make would otherwise run
 // the rerun check on every invocation since the source directories
 // stay newer than the Makefile, so bump the latter's timestamp. Ninja
 // needs no equivalent (and the file must not be touched so that

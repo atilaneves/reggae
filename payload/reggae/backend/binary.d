@@ -8,7 +8,7 @@ import reggae.file;
 import std.algorithm;
 import std.range;
 import std.file: thisExePath, exists;
-import std.process: execute, executeShell;
+import std.process: execute, executeShell, Config;
 import std.typecons: tuple;
 import std.exception;
 import std.stdio;
@@ -165,7 +165,7 @@ private:
 
     void handleTarget(Target target, ref bool didAnything) @safe {
         const outs = target.expandOutputs(options.projectPath);
-        immutable depFileName = outs[0] ~ ".dep";
+        immutable depFileName = inWorkingDir(outs[0] ~ ".dep", options.workingDir);
 
         if(depFileName.exists) {
             didAnything = checkDeps(target, depFileName) || didAnything;
@@ -202,9 +202,10 @@ private:
         auto deps = chain(options.reggaeFileDependencies, srcDirs);
 
         immutable myPath = thisExePath;
-        if(deps.any!(a => a.newerThan(myPath))) {
+        if(deps.any!(a => inWorkingDir(a, options.workingDir).newerThan(myPath))) {
             log(options.rerunArgs.join(" "));
-            immutable reggaeRes = execute(options.rerunArgs);
+            immutable reggaeRes = execute(options.rerunArgs, null,
+                Config.none, size_t.max, options.invocationDir);
             enforce(reggaeRes.status == 0,
                     text("Could not run ", options.rerunArgs.join(" "), " to regenerate build:\n",
                          reggaeRes.output));
@@ -233,7 +234,7 @@ private:
         foreach(dep; allDeps) {
             if(anyNewer(options.projectPath,
                         dep.expandOutputs(options.projectPath),
-                        target)) {
+                        target, options.workingDir)) {
                 executeCommand(target);
                 return true;
             }
@@ -265,7 +266,7 @@ private:
             ;
         auto dependencies = dependenciesFromFile(lines);
 
-        if(anyNewer(options.projectPath, dependencies, target)) {
+        if(anyNewer(options.projectPath, dependencies, target, options.workingDir)) {
             executeCommand(target);
             return true;
         }
@@ -292,8 +293,9 @@ private:
         import std.path: dirName;
 
         foreach(output; target.expandOutputs(options.projectPath)) {
-            if(!output.dirName.exists)
-                mkdirRecurse(output.dirName);
+            const directory = inWorkingDir(output, options.workingDir).dirName;
+            if(!directory.exists)
+                mkdirRecurse(directory);
         }
     }
 
@@ -304,9 +306,17 @@ private:
 }
 
 
-bool anyNewer(in string projectPath, in string[] dependencies, in Target target) @safe {
+private string inWorkingDir(in string path, in string workingDir) @safe pure nothrow {
+    import std.path: isAbsolute;
+    import reggae.path: buildPath;
+
+    return path.isAbsolute ? path : buildPath(workingDir, path);
+}
+
+bool anyNewer(in string projectPath, in string[] dependencies, in Target target,
+              in string workingDir = "") @safe {
     return cartesianProduct(dependencies, target.expandOutputs(projectPath)).
-        any!(a => a[0].newerThan(a[1]));
+        any!(a => inWorkingDir(a[0], workingDir).newerThan(inWorkingDir(a[1], workingDir)));
 }
 
 string[] dependenciesFromFile(R)(R lines) if(isInputRange!R) {

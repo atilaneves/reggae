@@ -70,19 +70,21 @@ void run(T)(auto ref T output, string[] args) {
 // adding/removing files (or changing the build description itself)
 // requires regenerating the build.
 private void runRerunCheck(T)(auto ref T output, string[] args) {
-    import reggae.backend: rerunIsNeeded, skipRerun;
+    import reggae.backend: rerunReason, skipRerun;
     import reggae.io: log;
 
     auto options = getOptions(args);
 
-    bool rerun = true;
+    string reason;
     // any failure to determine staleness means erring on the side of
     // regenerating the build
     try
-        rerun = rerunIsNeeded(options);
-    catch(Exception _) {}
+        reason = rerunReason(options);
+    catch(Exception ex)
+        reason = "could not check build description: " ~ ex.msg;
 
-    if(rerun) {
+    if(reason.length) {
+        output.log("Regenerating build: ", reason);
         run(output, options);
     } else {
         output.log("Build description unchanged, not rerunning reggae");

@@ -316,3 +316,31 @@ unittest {
         timeLastModified(unrelatedObj).should == unrelatedBefore;
     }
 }
+
+@("rerun.relative-project-and-output")
+@Tags("ninja")
+unittest {
+    import reggae.backend.ninja: Ninja;
+    import std.path: relativePath;
+    import std.file: getcwd, mkdirRecurse;
+    import std.algorithm: find, startsWith;
+    import std.range: front;
+    import std.process: executeShell, Config;
+
+    with(immutable ReggaeSandbox()) {
+        writeFile("source dir/reggaefile.d", "import reggae;");
+        const outputDir = inSandboxPath("build dir");
+        mkdirRecurse(outputDir);
+        const project = inSandboxPath("source dir").relativePath(getcwd);
+        auto options = getOptions(["reggae", "-b", "ninja", "-C",
+            outputDir.relativePath(getcwd), project]);
+        auto ninja = Ninja(Build(Target("result", "echo $out")), options);
+        ninja.writeBuild;
+        auto rule = ninja.allRuleEntries.find!(r => r.mainLine == "rule _rerun").front;
+        const prefix = "command = ";
+        const command = rule.paramLines.find!(s => s.startsWith(prefix)).front[prefix.length .. $];
+        const result = executeShell(command, null, Config.none, size_t.max, outputDir);
+        result.output.shouldContain("Build description unchanged");
+        result.status.shouldEqual(0);
+    }
+}

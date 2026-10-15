@@ -484,6 +484,7 @@ unittest {
 @Tags("ninja")
 unittest {
     import reggae.backend: rerunIsNeeded;
+    import reggae.path: buildPath;
     import std.file: remove;
 
     with(immutable ReggaeSandbox()) {
@@ -501,10 +502,10 @@ unittest {
         writeFile("source/notes.txt", "a new directory entry");
         rerunIsNeeded(options).shouldBeTrue;
         runReggae("-b", "ninja", "--rerun-check").lines
-            .shouldContain("directory entry added: " ~ inSandboxPath("source/notes.txt"));
-        remove(inSandboxPath("source/notes.txt"));
+            .shouldContain("directory entry added: " ~ inSandboxPath(buildPath("source", "notes.txt")));
+        remove(inSandboxPath(buildPath("source", "notes.txt")));
         runReggae("-b", "ninja", "--rerun-check").lines
-            .shouldContain("directory entry removed: " ~ inSandboxPath("source/notes.txt"));
+            .shouldContain("directory entry removed: " ~ inSandboxPath(buildPath("source", "notes.txt")));
 
         writeFile(".reggae/rerun-state.json", "invalid json");
         runReggae("-b", "ninja", "--rerun-check").lines

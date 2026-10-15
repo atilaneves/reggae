@@ -325,7 +325,7 @@ unittest {
     import std.file: getcwd, mkdirRecurse;
     import std.algorithm: find, startsWith;
     import std.range: front;
-    import std.process: executeShell, Config;
+    import std.process: execute, Config;
 
     with(immutable ReggaeSandbox()) {
         writeFile("source dir/reggaefile.d", "import reggae;");
@@ -339,7 +339,10 @@ unittest {
         auto rule = ninja.allRuleEntries.find!(r => r.mainLine == "rule _rerun").front;
         const prefix = "command = ";
         const command = rule.paramLines.find!(s => s.startsWith(prefix)).front[prefix.length .. $];
-        const result = executeShell(command, null, Config.none, size_t.max, outputDir);
+        writeFile("build dir/replay.ninja",
+            "rule replay\n  command = " ~ command ~ "\nbuild replay: replay\n");
+        const result = execute(["ninja", "-f", "replay.ninja"],
+            null, Config.none, size_t.max, outputDir);
         result.output.shouldContain("Build description unchanged");
         result.status.shouldEqual(0);
     }

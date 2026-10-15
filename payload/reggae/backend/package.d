@@ -86,11 +86,11 @@ package string rerunCommand(in Options options) @safe pure {
     if(options.invocationDir.length == 0)
         return command;
 
+    const directory = escapeShellCommand(options.invocationDir);
     version(Windows)
-        enum changeDirectory = "cd /d ";
+        return `cmd /s /c "cd /d ` ~ directory ~ " && " ~ command ~ `"`;
     else
-        enum changeDirectory = "cd ";
-    return changeDirectory ~ escapeShellCommand(options.invocationDir) ~ " && " ~ command;
+        return "cd " ~ directory ~ " && " ~ command;
 }
 
 /// Whether the build description needs regenerating.

@@ -196,6 +196,7 @@ unittest {
         file.lines = [];
         binary.run(args);
         file.lines.shouldNotEqual(["[build] Nothing to do"]);
+        earlier = result.timeLastModified - 2.seconds;
         setTimes(buildPath(workDir, "extra.txt"), earlier, earlier);
         file.lines = [];
         binary.run(args);

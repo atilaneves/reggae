@@ -168,7 +168,7 @@ unittest {
         const source = inSandboxPath("source.txt");
         const result = buildPath(workDir, "copy.txt");
         version(Windows)
-            enum command = "copy $in $out";
+            enum command = "copy /Y $in $out";
         else
             enum command = "cp $in $out";
         auto options = getOptions(["reggae", "-b", "binary", "-C", workDir]);
@@ -214,7 +214,7 @@ unittest {
         const outputDir = "result-" ~ testPath.baseName;
         scope(exit) if(outputDir.exists) rmdirRecurse(outputDir);
         version(Windows)
-            enum command = "copy $in $out";
+            enum command = "copy /Y $in $out";
         else
             enum command = "cp $in $out";
         auto options = getOptions(["reggae", "-b", "binary", "-C", workDir]);

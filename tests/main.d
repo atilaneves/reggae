@@ -1,4 +1,5 @@
 import unit_threaded;
+import tests.sandbox;
 
 int main(string[] args) {
     import unit_threaded.runner.runner: runTests;

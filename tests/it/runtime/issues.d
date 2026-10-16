@@ -480,6 +480,44 @@ unittest {
     }
 }
 
+@("rerun.reasons.ninja")
+@Tags("ninja")
+unittest {
+    import reggae.backend: rerunIsNeeded;
+    import reggae.path: buildPath;
+    import std.file: remove;
+
+    with(immutable ReggaeSandbox()) {
+        writeFile("reggaefile.d", q{
+            import reggae;
+            mixin build!(staticLibrary!("mylib", Sources!("source")));
+        });
+        writeFile("source/app.d", "void app() {}");
+        runReggae("-b", "ninja");
+        const options = getOptions(["reggae", "-b", "ninja", "-C", testPath, testPath]);
+        rerunIsNeeded(options).shouldBeFalse;
+        runReggae("-b", "ninja", "--rerun-check").lines
+            .shouldContain("Build description unchanged");
+
+        writeFile("source/notes.txt", "a new directory entry");
+        rerunIsNeeded(options).shouldBeTrue;
+        runReggae("-b", "ninja", "--rerun-check").lines
+            .shouldContain("directory entry added: " ~ inSandboxPath(buildPath("source", "notes.txt")));
+        remove(inSandboxPath(buildPath("source", "notes.txt")));
+        runReggae("-b", "ninja", "--rerun-check").lines
+            .shouldContain("directory entry removed: " ~ inSandboxPath(buildPath("source", "notes.txt")));
+
+        writeFile(".reggae/rerun-state.json", "invalid json");
+        runReggae("-b", "ninja", "--rerun-check").lines
+            .shouldContain("could not check build description:");
+        remove(inSandboxPath(".reggae/rerun-state.json"));
+        runReggae("-b", "ninja", "--rerun-check").lines
+            .shouldContain("missing rerun state:");
+        runReggae("-b", "ninja", "--rerun-check").lines
+            .shouldContain("Build description unchanged");
+    }
+}
+
 version(DigitalMars) {
     static foreach(backend; ["ninja", "make"]) {
         @("rerun.changed.file." ~ backend)

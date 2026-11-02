@@ -448,16 +448,17 @@ struct Target {
 
         bytes ~= arrayToBytes(shellCommand(options));
         bytes ~= [cast(ubyte) _hasCommandOptions];
-        if (_hasCommandOptions) {
-            bytes ~= arrayToBytes(_commandOptions.dCompiler);
-            bytes ~= arrayToBytes(_commandOptions.dubBuildType);
-        }
 
         bytes ~= setUshort(cast(ushort)_dependencies.length);
         foreach(dep; _dependencies) bytes ~= dep.toBytes(options);
 
         bytes ~= setUshort(cast(ushort)_implicits.length);
         foreach(imp; _implicits) bytes ~= imp.toBytes(options);
+
+        if (_hasCommandOptions) {
+            bytes ~= arrayToBytes(_commandOptions.dCompiler);
+            bytes ~= arrayToBytes(_commandOptions.dubBuildType);
+        }
 
         return bytes;
     }

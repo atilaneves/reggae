@@ -59,3 +59,18 @@ import unit_threaded;
         Build(Target("foo.o", "dmd -offoo.o -c " ~ srcFoo, Target(srcFoo)),
               Target("bar.o", "dmd -ofbar.o -c " ~ srcBar, Target(srcBar))));
 }
+
+@trusted
+@("Build with per-target command options") unittest {
+    import reggae.config: gDefaultOptions;
+    import std.range: front;
+
+    auto options = gDefaultOptions.withProjectPath("/path/to");
+    options.dCompiler = "custom-dmd";
+    options.dubBuildType = "release";
+    auto target = objectFile(options, SourceFile("foo.d")).withOptions(options);
+    auto bytes = Build(target).toBytes(options);
+    auto restored = Build.fromBytes(bytes);
+
+    restored.targets.front.shellCommand(options).shouldEqual(target.shellCommand(options));
+}
